@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { Redis } from '@upstash/redis';
 import type { SubscriptionPlan } from '@/types';
 
 // Lazy initialization to avoid build-time errors
@@ -16,6 +17,38 @@ function getSupabase() {
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_KEY!
   );
+}
+
+let redis: Redis | null = null;
+function getRedis(): Redis {
+  if (!redis) {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_URL!,
+      token: process.env.UPSTASH_REDIS_TOKEN!,
+    });
+  }
+  return redis;
+}
+
+// Generar código corto aleatorio
+function generateShortCode(length: number = 8): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+// Crear URL corta para pago
+async function createShortPaymentUrl(stripeUrl: string): Promise<string> {
+  const code = generateShortCode();
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loomi-insurtech-5cna.vercel.app';
+
+  // Guardar en Redis por 24 horas
+  await getRedis().set(`pay:${code}`, stripeUrl, { ex: 86400 });
+
+  return `${baseUrl}/pay/${code}`;
 }
 
 // Mapeo de planes a Price IDs de Stripe (lazy evaluated)
@@ -48,6 +81,7 @@ interface CreateCheckoutParams {
  */
 export async function createCheckoutSession(params: CreateCheckoutParams): Promise<{
   url: string;
+  shortUrl: string;
   sessionId: string;
   accountId: string;
 }> {
@@ -152,8 +186,12 @@ export async function createCheckoutSession(params: CreateCheckoutParams): Promi
 
   console.log(`[Stripe] Checkout session created: ${session.id} for plan ${plan}`);
 
+  // Crear URL corta
+  const shortUrl = await createShortPaymentUrl(session.url!);
+
   return {
     url: session.url!,
+    shortUrl,
     sessionId: session.id,
     accountId,
   };

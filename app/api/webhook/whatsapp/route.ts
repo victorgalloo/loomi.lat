@@ -305,14 +305,14 @@ async function handleEmailForPendingPlan(
   console.log(`[Webhook] Creating checkout for ${email}, plan: ${pendingPlan.plan}`);
 
   try {
-    const { url } = await createCheckoutSession({
+    const { shortUrl } = await createCheckoutSession({
       email,
       phone: message.phone,
       plan: pendingPlan.plan
     });
 
     const planName = getPlanDisplayName(pendingPlan.plan);
-    const sent = await sendPaymentLink(message.phone, url, planName);
+    const sent = await sendPaymentLink(message.phone, shortUrl, planName);
 
     // Clear pending plan
     await clearPendingPlan(message.phone);
@@ -320,7 +320,7 @@ async function handleEmailForPendingPlan(
     if (!sent) {
       return {
         handled: true,
-        response: `Aquí está tu link de pago:\n${url}`
+        response: `Aquí está tu link de pago:\n${shortUrl}`
       };
     }
 

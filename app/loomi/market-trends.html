@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loomi Market Opportunity</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --neon-green: #00FF66;
+      --text-dark: #0A0A0A;
+      --text-muted: #71717A;
+      --text-light: #A1A1AA;
+      --bg-white: #FFFFFF;
+      --bg-light: #FAFAFA;
+      --border-light: #E4E4E7;
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      color: var(--text-dark);
+      background: var(--bg-white);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      width: 210mm;
+      height: 297mm;
+      padding: 28px 36px;
+      margin: 0 auto;
+      background: var(--bg-white);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Background glow */
+    .page::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse at center, rgba(0,255,102,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--neon-green);
+      border-radius: 50%;
+    }
+
+    .logo {
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .logo::before {
+      content: 'LOOMI';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      filter: blur(25px);
+      opacity: 0.4;
+      color: var(--neon-green);
+      z-index: -1;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    .title span {
+      color: var(--neon-green);
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px 28px;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--neon-green);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-title::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: var(--neon-green);
+      border-radius: 50%;
+    }
+
+    .section h3 {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .section h3 span {
+      color: var(--neon-green);
+    }
+
+    .section p {
+      font-size: 10px;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    /* WhatsApp Bars */
+    .wa-bars {
+      margin: 10px 0;
+    }
+
+    .wa-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .wa-bar-label {
+      font-size: 9px;
+      font-weight: 500;
+      width: 70px;
+      color: var(--text-muted);
+    }
+
+    .wa-bar-track {
+      flex: 1;
+      height: 16px;
+      background: var(--bg-light);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .wa-bar-fill {
+      height: 100%;
+      background: var(--neon-green);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 6px;
+    }
+
+    .wa-bar-value {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    /* Stats Row */
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin: 10px 0;
+    }
+
+    .stat {
+      text-align: center;
+      flex: 1;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--neon-green);
+    }
+
+    .stat-label {
+      font-size: 8px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Mini Table */
+    .mini-table {
+      width: 100%;
+      font-size: 9px;
+      margin: 8px 0;
+    }
+
+    .mini-table th {
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 8px;
+    }
+
+    .mini-table td {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .mini-table .green {
+      color: var(--neon-green);
+      font-weight: 700;
+    }
+
+    /* Competitor Box */
+    .competitor {
+      background: var(--bg-light);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+
+    .competitor h4 {
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .competitor p {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .competitor .highlight {
+      color: var(--neon-green);
+      font-weight: 600;
+    }
+
+    /* Checklist */
+    .checklist {
+      list-style: none;
+      margin: 8px 0;
+    }
+
+    .checklist li {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .checklist li::before {
+      content: '✓';
+      color: var(--neon-green);
+      font-weight: 700;
+      font-size: 10px;
+    }
+
+    /* Timing Grid */
+    .timing-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin: 10px 0;
+    }
+
+    .timing-item {
+      text-align: center;
+      padding: 8px 4px;
+      background: var(--bg-light);
+      border-radius: 6px;
+    }
+
+    .timing-item .icon {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .timing-item p {
+      font-size: 7px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* Key Insight */
+    .insight {
+      background: linear-gradient(90deg, rgba(0,255,102,0.08) 0%, transparent 100%);
+      border-left: 2px solid var(--neon-green);
+      padding: 6px 10px;
+      margin-top: 8px;
+    }
+
+    .insight p {
+      font-size: 9px;
+      color: var(--text-dark);
+      font-weight: 500;
+    }
+
+    /* Full Width */
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* Footer */
+    .footer {
+      position: absolute;
+      bottom: 20px;
+      left: 36px;
+      right: 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8px;
+      color: var(--text-light);
+      padding-top: 12px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .footer-logo {
+      font-weight: 900;
+      font-size: 10px;
+      color: var(--text-dark);
+    }
+
+    @media print {
+      .page {
+        margin: 0;
+      }
+    }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Header -->
+    <div class="header">
+      <div class="badge">Market Opportunity Analysis</div>
+      <div class="logo">LOOMI</div>
+      <h1 class="title">WhatsApp AI Sales Agents in <span>Emerging Markets</span></h1>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-grid">
+
+      <!-- WhatsApp Dominance -->
+      <div class="section">
+        <div class="section-title">WhatsApp Dominance</div>
+        <h3>The #1 Business Channel in <span>LATAM & MENA</span></h3>
+        <div class="wa-bars">
+          <div class="wa-bar">
+            <span class="wa-bar-label">India</span>
+            <div class="wa-bar-track">
+              <div class="wa-bar-fill" style="width: 97%;">
+                <span class="wa-bar-value">97%</span>
+              </div>
+            </div>
+          </div>
+          <div class="wa-bar">
+            <span class="wa-bar-label">Latin America</span>
+            <div class="wa-bar-track">
+              <div class="wa-bar-fill" style="width: 95%;">
+                <span class="wa-bar-value">95%</span>
+              </div>
+            </div>
+          </div>
+          <div class="wa-bar">
+            <span class="wa-bar-label">MENA / UAE</span>
+            <div class="wa-bar-track">
+              <div class="wa-bar-fill" style="width: 85%;">
+                <span class="wa-bar-value">85%</span>
+              </div>
+            </div>
+          </div>
+          <div class="wa-bar">
+            <span class="wa-bar-label">Europe</span>
+            <div class="wa-bar-track">
+              <div class="wa-bar-fill" style="width: 65%; background: #d4d4d8;">
+                <span class="wa-bar-value" style="color: #71717A;">65%</span>
+              </div>
+            </div>
+          </div>
+          <div class="wa-bar">
+            <span class="wa-bar-label">USA</span>
+            <div class="wa-bar-track">
+              <div class="wa-bar-fill" style="width: 28%; background: #d4d4d8;">
+                <span class="wa-bar-value" style="color: #71717A;">28%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="insight">
+          <p>WhatsApp is THE business channel in emerging markets—not email, not SMS.</p>
+        </div>
+      </div>
+
+      <!-- Market Size -->
+      <div class="section">
+        <div class="section-title">Market Size</div>
+        <h3>$23B+ <span>Total Addressable Market</span></h3>
+        <div class="stats-row">
+          <div class="stat">
+            <div class="stat-value">$72B</div>
+            <div class="stat-label">Conv. Commerce 2028</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">23%</div>
+            <div class="stat-label">CAGR Growth</div>
+          </div>
+        </div>
+        <table class="mini-table">
+          <tr>
+            <td>LATAM SMB Tools TAM</td>
+            <td class="green">$15B+</td>
+          </tr>
+          <tr>
+            <td>MENA SMB Tools TAM</td>
+            <td class="green">$8B+</td>
+          </tr>
+          <tr>
+            <td>LATAM SMBs</td>
+            <td>30M+ businesses</td>
+          </tr>
+          <tr>
+            <td>GCC SMBs</td>
+            <td>5M+ businesses</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Cost Problem -->
+      <div class="section">
+        <div class="section-title">The Cost Problem We Solve</div>
+        <h3>60-85% <span>Cost Savings</span></h3>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Market</th>
+              <th>Human Rep</th>
+              <th>Loomi</th>
+              <th>Savings</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>LATAM</td>
+              <td>$800-1,500</td>
+              <td>$199-499</td>
+              <td class="green">60-80%</td>
+            </tr>
+            <tr>
+              <td>UAE/GCC</td>
+              <td>$2,000-3,000</td>
+              <td>$199-499</td>
+              <td class="green">75-85%</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="insight">
+          <p>ROI is even stronger in UAE where labor costs are 2-3x higher than LATAM.</p>
+        </div>
+      </div>
+
+      <!-- Competitor Validation -->
+      <div class="section">
+        <div class="section-title">Competitor Validation</div>
+        <h3>Market Demand <span>Proven</span></h3>
+        <div class="competitor">
+          <h4>Vambe (Chile) — WhatsApp AI Sales</h4>
+          <p><span class="highlight">$20K → $1M ARR</span> in 18 months. Proves strong demand.</p>
+        </div>
+        <table class="mini-table">
+          <tr>
+            <td>Truora (Colombia)</td>
+            <td class="green">$15M+ raised</td>
+          </tr>
+          <tr>
+            <td>Yalo (Mexico)</td>
+            <td class="green">$75M+ raised</td>
+          </tr>
+          <tr>
+            <td>Respond.io</td>
+            <td class="green">$7M raised</td>
+          </tr>
+        </table>
+        <div class="insight">
+          <p>No dominant player in SMB + AI + Voice + Payments. Loomi fills the gap.</p>
+        </div>
+      </div>
+
+      <!-- UAE Alignment -->
+      <div class="section">
+        <div class="section-title">UAE Strategic Alignment</div>
+        <h3>Government <span>Tailwinds</span></h3>
+        <ul class="checklist">
+          <li><strong>UAE AI Strategy 2031</strong> — Government prioritizing AI adoption</li>
+          <li><strong>Dubai D33 Agenda</strong> — 2x digital economy by 2033</li>
+          <li><strong>SMB Growth Push</strong> — Entrepreneurship & digital transformation</li>
+        </ul>
+        <p style="font-size: 9px; color: var(--text-muted); margin-top: 8px;">
+          <strong>Why Dubai:</strong> Gateway to GCC ($2T+ GDP) · Tax-free · 200+ nationalities · Strong fintech ecosystem
+        </p>
+      </div>
+
+      <!-- Timing -->
+      <div class="section">
+        <div class="section-title">Timing is Now</div>
+        <h3>Technology Stack <span>Just Became Possible</span></h3>
+        <div class="timing-grid">
+          <div class="timing-item">
+            <div class="icon">🤖</div>
+            <p>AI/LLMs accessible (GPT-4, Claude)</p>
+          </div>
+          <div class="timing-item">
+            <div class="icon">🎤</div>
+            <p>Voice AI ready (Eleven Labs)</p>
+          </div>
+          <div class="timing-item">
+            <div class="icon">💬</div>
+            <p>WhatsApp Business API open</p>
+          </div>
+          <div class="timing-item">
+            <div class="icon">💳</div>
+            <p>Stripe expanding in MENA</p>
+          </div>
+          <div class="timing-item">
+            <div class="icon">🚀</div>
+            <p>SMBs need automation</p>
+          </div>
+        </div>
+        <div class="insight">
+          <p>The technology stack to build Loomi only became possible in 2023-2024.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span><span class="footer-logo">LOOMI</span> by Anthana</span>
+      <span>Sources: Statista, Grand View Research, McKinsey, UAE Government, Crunchbase</span>
+      <span>loomi.ai · 2026</span>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,263 @@
+/**
+ * Rate Limiting and Redis Operations
+ * Uses Upstash Redis for rate limiting and temporary state
+ */
+
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+// Initialize Redis client
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_URL || '',
+  token: process.env.UPSTASH_REDIS_TOKEN || ''
+});
+
+// Rate limiters
+const minuteRateLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, '1m'),  // 20 messages per minute per user
+  analytics: true,
+  prefix: 'ratelimit:minute:'
+});
+
+const hourRateLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(100, '1h'),  // 100 messages per hour per user
+  analytics: true,
+  prefix: 'ratelimit:hour:'
+});
+
+const globalRateLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(1000, '1m'),  // 1000 messages per minute globally
+  analytics: true,
+  prefix: 'ratelimit:global:'
+});
+
+export interface RateLimitResult {
+  allowed: boolean;
+  reason?: 'minute_limit' | 'hour_limit' | 'global_limit';
+  remaining?: number;
+}
+
+/**
+ * Check rate limits for a phone number
+ */
+export async function checkRateLimit(phone: string): Promise<RateLimitResult> {
+  try {
+    // Check minute limit
+    const minuteResult = await minuteRateLimiter.limit(phone);
+    if (!minuteResult.success) {
+      return { allowed: false, reason: 'minute_limit', remaining: minuteResult.remaining };
+    }
+
+    // Check hour limit
+    const hourResult = await hourRateLimiter.limit(phone);
+    if (!hourResult.success) {
+      return { allowed: false, reason: 'hour_limit', remaining: hourResult.remaining };
+    }
+
+    // Check global limit
+    const globalResult = await globalRateLimiter.limit('global');
+    if (!globalResult.success) {
+      return { allowed: false, reason: 'global_limit', remaining: globalResult.remaining };
+    }
+
+    return { allowed: true, remaining: minuteResult.remaining };
+
+  } catch (error) {
+    console.error('[RateLimit] Error:', error);
+    // On error, allow the message (fail open)
+    return { allowed: true };
+  }
+}
+
+// ============================================
+// Message Processing Lock
+// ============================================
+
+const PROCESSING_TTL = 30; // 30 seconds
+
+/**
+ * Check if a message is already being processed
+ */
+export async function isProcessing(messageId: string): Promise<boolean> {
+  try {
+    const key = `processing:${messageId}`;
+    const existing = await redis.get(key);
+
+    if (existing) {
+      return true;
+    }
+
+    // Set processing flag
+    await redis.set(key, '1', { ex: PROCESSING_TTL });
+    return false;
+
+  } catch (error) {
+    console.error('[Processing] Error:', error);
+    return false; // Fail open
+  }
+}
+
+/**
+ * Clear processing flag for a message
+ */
+export async function clearProcessing(messageId: string): Promise<void> {
+  try {
+    await redis.del(`processing:${messageId}`);
+  } catch (error) {
+    console.error('[Processing] Clear error:', error);
+  }
+}
+
+// ============================================
+// Pending Slot Storage
+// ============================================
+
+export interface PendingSlot {
+  date: string;
+  time: string;
+  displayText: string;
+  selectedAt: number;
+}
+
+const PENDING_SLOT_TTL = 3600; // 1 hour
+
+/**
+ * Store a pending slot selection
+ */
+export async function setPendingSlot(phone: string, slot: PendingSlot): Promise<void> {
+  try {
+    const key = `pending_slot:${phone}`;
+    await redis.set(key, JSON.stringify(slot), { ex: PENDING_SLOT_TTL });
+  } catch (error) {
+    console.error('[PendingSlot] Set error:', error);
+  }
+}
+
+/**
+ * Get a pending slot selection
+ */
+export async function getPendingSlot(phone: string): Promise<PendingSlot | null> {
+  try {
+    const key = `pending_slot:${phone}`;
+    const data = await redis.get(key);
+
+    if (!data) return null;
+
+    return typeof data === 'string' ? JSON.parse(data) : data as PendingSlot;
+
+  } catch (error) {
+    console.error('[PendingSlot] Get error:', error);
+    return null;
+  }
+}
+
+/**
+ * Clear a pending slot selection
+ */
+export async function clearPendingSlot(phone: string): Promise<void> {
+  try {
+    await redis.del(`pending_slot:${phone}`);
+  } catch (error) {
+    console.error('[PendingSlot] Clear error:', error);
+  }
+}
+
+// ============================================
+// Pending Plan Storage (Stripe)
+// ============================================
+
+export interface PendingPlan {
+  plan: 'starter' | 'growth' | 'business';
+  displayText: string;
+  selectedAt: number;
+}
+
+const PENDING_PLAN_TTL = 3600; // 1 hour
+
+/**
+ * Store a pending plan selection
+ */
+export async function setPendingPlan(phone: string, plan: PendingPlan): Promise<void> {
+  try {
+    const key = `pending_plan:${phone}`;
+    await redis.set(key, JSON.stringify(plan), { ex: PENDING_PLAN_TTL });
+  } catch (error) {
+    console.error('[PendingPlan] Set error:', error);
+  }
+}
+
+/**
+ * Get a pending plan selection
+ */
+export async function getPendingPlan(phone: string): Promise<PendingPlan | null> {
+  try {
+    const key = `pending_plan:${phone}`;
+    const data = await redis.get(key);
+
+    if (!data) return null;
+
+    return typeof data === 'string' ? JSON.parse(data) : data as PendingPlan;
+
+  } catch (error) {
+    console.error('[PendingPlan] Get error:', error);
+    return null;
+  }
+}
+
+/**
+ * Clear a pending plan selection
+ */
+export async function clearPendingPlan(phone: string): Promise<void> {
+  try {
+    await redis.del(`pending_plan:${phone}`);
+  } catch (error) {
+    console.error('[PendingPlan] Clear error:', error);
+  }
+}
+
+// ============================================
+// Conversation State Storage
+// ============================================
+
+const CONVERSATION_STATE_TTL = 86400; // 24 hours
+
+/**
+ * Store conversation state
+ */
+export async function setConversationState(
+  phone: string,
+  state: Record<string, unknown>
+): Promise<void> {
+  try {
+    const key = `conversation_state:${phone}`;
+    await redis.set(key, JSON.stringify(state), { ex: CONVERSATION_STATE_TTL });
+  } catch (error) {
+    console.error('[ConversationState] Set error:', error);
+  }
+}
+
+/**
+ * Get conversation state
+ */
+export async function getConversationState(
+  phone: string
+): Promise<Record<string, unknown> | null> {
+  try {
+    const key = `conversation_state:${phone}`;
+    const data = await redis.get(key);
+
+    if (!data) return null;
+
+    return typeof data === 'string' ? JSON.parse(data) : data as Record<string, unknown>;
+
+  } catch (error) {
+    console.error('[ConversationState] Get error:', error);
+    return null;
+  }
+}
+
+// Export Redis client for direct use if needed
+export { redis };

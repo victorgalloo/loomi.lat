@@ -1,8 +1,8 @@
 /**
  * Multi-Agent System - Venta de Seguros
  *
- * Agente 1 (Razonamiento - gpt-5.2-pro): Analiza contexto completo, decide estrategia
- * Agente 2 (Chat - gpt-5.2-chat): Ejecuta la estrategia con personalidad de Sofi
+ * Agente 1 (Razonamiento - o3-mini): Analiza contexto completo, decide estrategia
+ * Agente 2 (Chat - gpt-5.2): Ejecuta la estrategia con personalidad de Sofi
  */
 
 import { generateObject } from 'ai';
@@ -69,7 +69,7 @@ export async function analyzeMessage(
   const clientName = leadContext?.name || 'desconocido';
 
   const result = await generateObject({
-    model: openai('gpt-5.2-pro-2025-12-11'),
+    model: openai('o3-mini'),  // Modelo avanzado de razonamiento
     schema: AnalysisSchema,
     prompt: `Eres un analista experto en ventas de seguros. Tu trabajo es analizar la conversación y dar instrucciones PRECISAS a Sofi (la vendedora) sobre qué hacer.
 
@@ -131,7 +131,7 @@ Analiza TODO el historial y determina:
 Sé MUY específico en la instrucción. Ejemplo:
 - MAL: "Pregunta sobre su situación"
 - BIEN: "Ya sabemos que le interesó el precio. Ahora pregunta: '¿Tienes hijos o alguien que dependa de ti económicamente?'"`,
-    temperature: 0.2,
+    // temperature not supported for o3-mini reasoning model
   });
 
   console.log('[Razonamiento] Fase:', result.object.fase_actual);
@@ -142,9 +142,9 @@ Sé MUY específico en la instrucción. Ejemplo:
 }
 
 export function generateSellerInstructions(analysis: ConversationAnalysis): string {
-  // Construir instrucciones claras basadas en el análisis de gpt-5.2-pro
+  // Construir instrucciones claras basadas en el análisis de o3-mini
   let instructions = `
-# ANÁLISIS DE LA CONVERSACIÓN (por gpt-5.2-pro)
+# ANÁLISIS DE LA CONVERSACIÓN (por o3-mini)
 
 ## Fase actual: ${analysis.fase_actual.toUpperCase()}
 

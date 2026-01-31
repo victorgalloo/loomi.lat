@@ -931,7 +931,7 @@ NO menciones tu producto hasta saber más sobre su situación.`
 
   try {
     const result = await generateText({
-      model: openai('gpt-4o'),
+      model: openai('gpt-5.2-chat-latest'),
       system: systemWithContext,
       messages: history,
       tools,

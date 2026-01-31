@@ -613,32 +613,6 @@ export async function POST(request: NextRequest) {
 
       console.log(`Response: ${result.response.substring(0, 50)}...`);
 
-      // Handle schedule list trigger
-      if (result.showScheduleList) {
-        console.log(`[Webhook] Agent triggered schedule list`);
-        waitUntil(
-          (async () => {
-            try {
-              if (result.response) {
-                await sendWhatsAppMessage(message.phone, result.response);
-                saveMessage(context.conversation.id, 'assistant', result.response, context.lead.id).catch(console.error);
-              }
-
-              const slots = await getAvailableTimeSlots();
-              if (slots.length > 0) {
-                await sendScheduleList(message.phone, slots);
-                saveMessage(context.conversation.id, 'assistant', '[Lista de horarios]', context.lead.id).catch(console.error);
-              } else {
-                await sendWhatsAppMessage(message.phone, 'No hay horarios disponibles. ¿Qué día te funcionaría?');
-              }
-            } catch (error) {
-              console.error(`[Webhook Background] Error:`, error);
-            }
-          })()
-        );
-        return NextResponse.json({ status: 'ok', flow: 'schedule_list_triggered' });
-      }
-
       // Send response
       await sendWhatsAppMessage(message.phone, result.response);
       await saveMessage(context.conversation.id, 'assistant', result.response, context.lead.id);
@@ -652,46 +626,22 @@ export async function POST(request: NextRequest) {
           }
 
           // Schedule "said later" follow-up
-          if (result.saidLater && !context.hasActiveAppointment) {
+          if (result.saidLater) {
             await scheduleSaidLaterFollowUp(context.lead.id, context.lead);
           }
 
-          // Handle appointment booking
-          if (result.appointmentBooked) {
-            const { eventId, date, time, email, meetingUrl } = result.appointmentBooked;
-            const scheduledAt = new Date(`${date}T${time}:00`);
-
-            const appointment = await createAppointment(context.lead.id, scheduledAt, eventId);
-            await updateLeadStage(context.lead.phone, 'demo_scheduled');
-            await scheduleDemoReminders(context.lead.id, appointment.id, scheduledAt, context.lead);
-
-            await syncLeadToHubSpot({
-              phone: context.lead.phone,
-              name: context.lead.name,
-              email,
-              company: context.lead.company,
-              stage: 'demo_scheduled',
-              messages: [
-                ...context.recentMessages,
-                { role: 'user', content: message.text },
-                { role: 'assistant', content: result.response }
-              ],
-              appointmentBooked: { date, time, meetingUrl }
-            });
-          } else {
-            // Sync without appointment
-            await syncLeadToHubSpot({
-              phone: context.lead.phone,
-              name: context.lead.name,
-              company: context.lead.company,
-              stage: context.lead.stage,
-              messages: [
-                ...context.recentMessages,
-                { role: 'user', content: message.text },
-                { role: 'assistant', content: result.response }
-              ]
-            });
-          }
+          // Sync to HubSpot
+          await syncLeadToHubSpot({
+            phone: context.lead.phone,
+            name: context.lead.name,
+            company: context.lead.company,
+            stage: context.lead.stage,
+            messages: [
+              ...context.recentMessages,
+              { role: 'user', content: message.text },
+              { role: 'assistant', content: result.response }
+            ]
+          });
 
           // Generate memory if needed
           if (await shouldGenerateMemory(context.conversation.startedAt, context.recentMessages.length + 2)) {

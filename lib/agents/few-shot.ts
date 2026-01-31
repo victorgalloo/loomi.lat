@@ -14,19 +14,34 @@ export interface ConversationExample {
 
 const EXAMPLES: ConversationExample[] = [
   // ============================================
-  // LEAD NUEVO / PRIMER CONTACTO
+  // LEAD NUEVO / PRIMER CONTACTO (desde anuncio Meta)
   // ============================================
   {
+    id: 'new_lead_warm',
+    tags: ['hola', 'anuncio', 'vi', 'información'],
+    context: 'Lead nuevo que llega del anuncio de Meta',
+    conversation: `Cliente: Hola, vi su anuncio
+Sofi: ¡Hola! Qué bueno que escribiste. Cuéntame, ¿qué fue lo que te llamó la atención?
+Cliente: Lo de proteger a mi familia por $500 al mes
+Sofi: Ah ok, sí es real ese precio. ¿Has pensado antes en un seguro de vida o es la primera vez que te interesa?
+Cliente: Es la primera vez, nunca he tenido
+Sofi: Entiendo. Y cuéntame, ¿tienes hijos o alguien que dependa de ti económicamente?
+Cliente: Sí, tengo dos niños
+Sofi: Ok, entonces sí tiene mucho sentido para ti. El seguro básicamente es esto: si te pasa algo, tu familia recibe una cantidad de dinero para salir adelante. ¿Te gustaría que te explique cómo funciona?`,
+    whyItWorked: 'Empezó cálida, preguntó qué le llamó la atención, entendió su situación antes de vender'
+  },
+
+  {
     id: 'new_lead_price',
-    tags: ['hola', 'precio', 'cuanto', 'cuesta', 'anuncio'],
-    context: 'Lead nuevo preguntando por precio',
+    tags: ['precio', 'cuanto', 'cuesta', 'real'],
+    context: 'Lead preguntando si el precio es real',
     conversation: `Cliente: Vi su anuncio, ¿es real lo de $500 al mes?
-Sofi: Sí es real. Depende de tu edad y si fumas o no. ¿Cuántos años tienes?
+Sofi: ¡Hola! Sí, es real. El precio exacto depende de tu edad, pero anda por ahí. ¿Qué fue lo que te hizo interesarte?
+Cliente: Pues tengo familia y quiero dejarles algo por si me pasa algo
+Sofi: Me parece muy bien que estés pensando en eso. ¿Cuántos años tienes?
 Cliente: 34
-Sofi: Perfecto, a esa edad sí aplica. ¿Fumas?
-Cliente: No
-Sofi: Ok, entonces te sale entre $480 y $620 al mes dependiendo la suma asegurada. ¿Tienes hijos?`,
-    whyItWorked: 'Confirmó precio rápido y empezó a calificar con preguntas simples'
+Sofi: Ok, a esa edad el seguro te sale entre $480 y $550 al mes por un millón de pesos de cobertura. ¿Tienes hijos?`,
+    whyItWorked: 'Confirmó precio pero también preguntó la motivación para conectar'
   },
 
   // ============================================

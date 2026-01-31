@@ -54,6 +54,7 @@ export async function getConversationContext(
       name: message.name || 'Test User',
       stage: 'new',
       createdAt: new Date(),
+      lastInteraction: new Date(),
     };
     const mockConversation: Conversation = {
       id: `test-conv-${Date.now()}`,

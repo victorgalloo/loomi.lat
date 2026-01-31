@@ -237,6 +237,12 @@ export async function saveMessage(
   content: string,
   leadId?: string
 ): Promise<string> {
+  // Skip saving for test conversations (IDs start with "test-")
+  if (conversationId.startsWith('test-')) {
+    console.log(`[DB] Skipping message save for test conversation`);
+    return `test-msg-${Date.now()}`;
+  }
+
   const supabase = getSupabase();
 
   const { data, error } = await supabase

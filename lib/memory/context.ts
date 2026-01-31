@@ -22,6 +22,22 @@ import {
   getSupabase
 } from './supabase';
 
+// Números de prueba que NO se guardan como leads (siempre se tratan como nuevos)
+const TEST_PHONE_NUMBERS = new Set([
+  '4779083304',
+  '524779083304',
+  '5214779083304',
+]);
+
+/**
+ * Check if phone number is a test number
+ */
+function isTestNumber(phone: string): boolean {
+  // Normalizar: quitar prefijos comunes
+  const normalized = phone.replace(/^\+?52?1?/, '');
+  return TEST_PHONE_NUMBERS.has(phone) || TEST_PHONE_NUMBERS.has(normalized);
+}
+
 /**
  * Get or create conversation context for a message
  * Optimized: Parallel database operations
@@ -29,6 +45,33 @@ import {
 export async function getConversationContext(
   message: ParsedWhatsAppMessage
 ): Promise<ConversationContext> {
+  // Si es número de prueba, retornar contexto vacío (siempre nuevo)
+  if (isTestNumber(message.phone)) {
+    console.log(`[Context] Test number detected: ${message.phone} - treating as new lead`);
+    const mockLead: Lead = {
+      id: `test-${Date.now()}`,
+      phone: message.phone,
+      name: message.name || 'Test User',
+      stage: 'new',
+      created_at: new Date().toISOString(),
+    };
+    const mockConversation: Conversation = {
+      id: `test-conv-${Date.now()}`,
+      lead_id: mockLead.id,
+      started_at: new Date().toISOString(),
+      status: 'active',
+    };
+    return {
+      lead: mockLead,
+      conversation: mockConversation,
+      recentMessages: [],
+      memory: null,
+      hasActiveAppointment: false,
+      isFirstConversation: true,
+      totalConversations: 1,
+    };
+  }
+
   // Start lead lookup immediately (async-api-routes)
   const leadPromise = getLeadByPhone(message.phone);
 

@@ -1,34 +1,58 @@
-# Contexto del Proyecto - Loomi Insurtech
+# Contexto del Proyecto - NetBrokrs Insurtech
 
 ## Qué es
 
-Bot de WhatsApp que actúa como **Sofi**, una agente de seguros de NetBrokrs. Vende seguros de vida accesibles a personas que quieren proteger a sus familias.
+Bot de WhatsApp que actúa como **Sofi**, una agente de seguros de NetBrokrs. Vende seguros de vida de bajo costo a personas que quieren proteger a sus familias.
+
+Este es un **POC (Proof of Concept)** acordado con Pablo Tiscornia de NetBrokrs para demostrar la venta de seguros de vida accesibles a través de WhatsApp con IA.
+
+---
+
+## NetBrokrs
+
+NetBrokrs es la **primera Red Internacional de Distribución de Seguros** impulsada por tecnología Insurtech.
+
+- **Presencia:** México, Colombia, Perú, Chile, España, Estados Unidos
+- **Corredores afiliados:** +5,000
+- **Plataforma:** "Agent Intelligence" - automatiza el flujo completo del corredor
+- **Resultado:** Crecimiento promedio de ventas del 60-70% anual para afiliados
+- **Contacto clave:** Pablo Tiscornia
+
+### Problema que resuelven
+Los corredores de seguros en Latinoamérica tienen aversión, miedo o falta de acceso a la tecnología. NetBrokrs les provee herramientas que convierten a los escépticos en "amigos de la tecnología" al ver crecer sus ingresos.
 
 ---
 
 ## El Personaje: Sofi
 
 - **Edad:** 28 años
-- **Experiencia:** 4 años vendiendo seguros
-- **Estilo:** Directa, sin rodeos, pero con onda
+- **Experiencia:** 4 años ayudando a familias
+- **Estilo:** Cálida, empática, genuina - NO es vendedora fría
+- **Filosofía:** "Prefiero que NO compre si no le conviene"
 - **Muletillas:** "va que va", "sale", "órale", "a ver cuéntame"
-- **Tono:** Tutea, mensajes cortos (2-3 líneas), sin emojis excesivos
+- **Tono:** Tutea, mensajes cortos (2-3 líneas), conversacional
 
 ---
 
 ## Producto que Vende
 
-### Seguro de Vida Accesible
+### Seguro de Vida de BAJO COSTO
+
+**Precio base: desde $400 MXN/mes (~$20-25 USD)**
+
+Este es el producto estrella de NetBrokrs, probado en México, Colombia y Uruguay.
 
 | Edad | Precio/mes | Suma Asegurada |
 |------|------------|----------------|
-| 25-30 | $380-450 MXN | $1,000,000 |
-| 31-35 | $450-520 MXN | $1,000,000 |
-| 36-40 | $520-600 MXN | $1,000,000 |
-| 41-45 | $600-750 MXN | $1,000,000 |
-| 46-50 | $750-950 MXN | $1,000,000 |
+| 25-30 | $350-420 MXN | $500,000-1,000,000 |
+| 31-35 | $420-480 MXN | $500,000-1,000,000 |
+| 36-40 | $480-550 MXN | $500,000-1,000,000 |
+| 41-45 | $550-650 MXN | $500,000-1,000,000 |
+| 46-50 | $650-800 MXN | $500,000-1,000,000 |
 
-**Fumadores:** +40-50% al precio
+**Fumadores:** +40% al precio
+
+**Punto de venta clave:** "Son como $15 pesos al día - menos que un café"
 
 ### Coberturas
 - Muerte por cualquier causa
@@ -99,19 +123,28 @@ Bot de WhatsApp que actúa como **Sofi**, una agente de seguros de NetBrokrs. Ve
 - **Frontend:** Next.js 14, Tailwind CSS
 - **Backend:** API Routes (Vercel Serverless)
 - **Base de datos:** Supabase (PostgreSQL)
-- **IA:** OpenAI GPT-4o / GPT-5.2
+- **IA Razonamiento:** OpenAI GPT-5.2-pro (análisis de contexto)
+- **IA Chat:** OpenAI GPT-5.2-chat (respuestas naturales)
 - **Mensajería:** WhatsApp Business API (Meta)
 - **Pagos:** Stripe
 - **Caché/Rate Limiting:** Upstash Redis
 
-### Sistema Multi-Agente
+### Sistema de Dos Modelos
 ```
-Mensaje → Few-Shot (ejemplos) → Analista (estrategia) → Sofi (responde)
+Mensaje → GPT-5.2-pro (razonamiento) → GPT-5.2-chat (respuesta)
 ```
 
-1. **Few-Shot Dinámico:** Detecta contexto e inyecta ejemplos relevantes
-2. **Agente Analista:** Analiza intención, objeciones, estado de calificación
-3. **Agente Vendedor (Sofi):** Ejecuta la estrategia con personalidad
+1. **GPT-5.2-pro (Razonamiento):**
+   - Analiza conversación completa
+   - Determina qué ya preguntamos (para no repetir)
+   - Identifica qué sabemos del cliente
+   - Decide el siguiente paso lógico
+   - Da instrucciones específicas al modelo de chat
+
+2. **GPT-5.2-chat (Respuesta):**
+   - Recibe instrucciones del modelo pro
+   - Genera respuesta con personalidad de Sofi
+   - Conversación natural y empática
 
 ### Archivos Clave
 ```

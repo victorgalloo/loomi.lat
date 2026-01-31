@@ -19,6 +19,8 @@ import { createCheckoutSession, getPlanDisplayName } from '@/lib/stripe/checkout
 import { generateReasoningFast, formatReasoningForPrompt } from './reasoning';
 import { getSentimentInstruction } from './sentiment';
 import { getIndustryPromptSection } from './industry';
+import { getFewShotContext } from './few-shot';
+import { getSellerStrategy } from './multi-agent';
 
 // Hoisted Sets for O(1) keyword lookups (js-set-map-lookups)
 const BUSINESS_KEYWORDS = new Set([
@@ -383,7 +385,34 @@ export async function simpleAgent(
   console.log(JSON.stringify(history, null, 2));
 
   // ============================================
-  // STEP 1: Generate reasoning analysis
+  // STEP 0: Get Few-Shot Context (ejemplos relevantes)
+  // ============================================
+  const fewShotContext = getFewShotContext(message, history);
+  if (fewShotContext) {
+    console.log('=== FEW-SHOT CONTEXT ADDED ===');
+  }
+
+  // ============================================
+  // STEP 1: Multi-Agent Analysis (Analista → Estrategia)
+  // ============================================
+  const { analysis: sellerAnalysis, instructions: sellerInstructions } = await getSellerStrategy(
+    message,
+    history,
+    {
+      name: context.lead.name,
+      company: context.lead.company,
+      industry: context.lead.industry,
+      previousInteractions: context.recentMessages.length,
+    }
+  );
+  console.log('=== SELLER STRATEGY ===');
+  console.log(`Stage: ${sellerAnalysis.stage}, Strategy: ${sellerAnalysis.recommendedStrategy}`);
+  if (sellerAnalysis.hasObjection) {
+    console.log(`Objection detected: ${sellerAnalysis.objectionType}`);
+  }
+
+  // ============================================
+  // STEP 2: Generate reasoning analysis
   // ============================================
   const reasoning = await generateReasoningFast(message, context);
   console.log('=== REASONING ===');
@@ -590,8 +619,16 @@ export async function simpleAgent(
     systemWithContext += `\n\n# CONTEXTO\n${contextParts.join('\n')}`;
   }
 
+  // Add few-shot examples (ejemplos relevantes para el contexto)
+  if (fewShotContext) {
+    systemWithContext += `\n\n${fewShotContext}`;
+  }
+
+  // Add multi-agent seller strategy
+  systemWithContext += `\n\n${sellerInstructions}`;
+
   // Add reasoning analysis
-  systemWithContext += `\n\n# ANÁLISIS DE SITUACIÓN\n${formatReasoningForPrompt(reasoning)}`;
+  systemWithContext += `\n\n# ANÁLISIS ADICIONAL\n${formatReasoningForPrompt(reasoning)}`;
 
   // Add sentiment instruction if relevant
   if (sentimentInstruction) {

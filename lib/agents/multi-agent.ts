@@ -1,76 +1,71 @@
 /**
- * Multi-Agent System
+ * Multi-Agent System - Venta de Seguros
  *
  * Agente 1 (Analista): Analiza el mensaje, detecta objeciones, define estrategia
  * Agente 2 (Vendedor): Ejecuta la estrategia con el tono de Sofi
  */
 
-import { generateObject, generateText } from 'ai';
+import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 
-// Schema para el análisis del Agente Analista
 const AnalysisSchema = z.object({
-  // Análisis del mensaje
   literalMessage: z.string().describe('¿Qué dijo el cliente literalmente?'),
   realIntent: z.string().describe('¿Qué quiere decir realmente? La intención detrás'),
 
-  // Estado del prospecto
   stage: z.enum([
     'curiosidad',      // Solo preguntando, no comprometido
-    'interes',         // Muestra interés real
-    'evaluacion',      // Comparando opciones, evaluando
-    'decision',        // Listo para decidir
+    'interes',         // Muestra interés real en proteger a su familia
+    'evaluacion',      // Evaluando si le conviene
+    'decision',        // Listo para comprar
     'objecion',        // Tiene una objeción que resolver
     'rechazo'          // No interesado
-  ]).describe('Etapa del prospecto en el funnel'),
+  ]).describe('Etapa del prospecto'),
 
-  // Detección de objeciones
-  hasObjection: z.boolean().describe('¿Hay una objeción oculta o explícita?'),
+  hasObjection: z.boolean().describe('¿Hay una objeción?'),
   objectionType: z.enum([
     'none',
     'price',           // Muy caro, no tengo presupuesto
-    'trust',           // No confío en bots/tecnología
-    'need',            // No lo necesito, ya tengo algo
+    'trust',           // No confío en seguros, no pagan
+    'need',            // No lo necesito, ya tengo del trabajo
     'timing',          // No es el momento, lo pienso
-    'authority',       // Tengo que consultarlo
-    'competitor'       // Estoy viendo otras opciones
-  ]).describe('Tipo de objeción si existe'),
+    'young',           // Soy joven, no tengo hijos
+    'fear'             // Miedo a hablar de muerte
+  ]).describe('Tipo de objeción'),
 
-  // Señales detectadas
   signals: z.object({
-    expressedPain: z.boolean().describe('¿Expresó un dolor o problema?'),
-    mentionedVolume: z.boolean().describe('¿Mencionó volumen de mensajes/clientes?'),
-    mentionedProduct: z.string().describe('Producto de seguro mencionado (vida, gmm, pensiones, etc). Usar "none" si no mencionó ninguno'),
-    isReferral: z.boolean().describe('¿Es un referido?'),
-    readyToSchedule: z.boolean().describe('¿Está listo para agendar?'),
+    hasKids: z.boolean().describe('¿Mencionó que tiene hijos?'),
+    mentionedAge: z.boolean().describe('¿Mencionó su edad?'),
+    isSmoker: z.boolean().describe('¿Mencionó si fuma?'),
+    hasDebt: z.boolean().describe('¿Mencionó deudas (hipoteca, carro)?'),
+    isMainProvider: z.boolean().describe('¿Es el sostén principal de la familia?'),
+    readyToBuy: z.boolean().describe('¿Está listo para comprar?'),
     askedPrice: z.boolean().describe('¿Preguntó por precio?'),
   }),
 
-  // Estrategia recomendada
+  qualificationStatus: z.enum([
+    'not_qualified',   // Falta info básica (edad, fuma, hijos)
+    'partially',       // Tiene algo pero falta
+    'qualified'        // Tenemos edad, fuma, dependientes
+  ]).describe('Estado de calificación'),
+
   recommendedStrategy: z.enum([
-    'qualify',           // Hacer preguntas para calificar
-    'empathize_pain',    // Mostrar empatía con su dolor
-    'handle_objection',  // Manejar la objeción detectada
-    'present_value',     // Presentar propuesta de valor
-    'propose_demo',      // Proponer demo/llamada
-    'close',             // Intentar cerrar
-    'let_go',            // Soltar amablemente (no es buen fit)
-    're_engage'          // Re-enganchar un prospecto frío
-  ]).describe('Estrategia recomendada para este mensaje'),
+    'qualify_age',        // Preguntar edad
+    'qualify_smoker',     // Preguntar si fuma
+    'qualify_dependents', // Preguntar por hijos/dependientes
+    'calculate_sum',      // Calcular suma asegurada
+    'handle_objection',   // Manejar objeción
+    'present_price',      // Presentar precio
+    'close',              // Cerrar la venta
+    'let_go'              // No es buen fit, soltar
+  ]).describe('Siguiente paso'),
 
-  // Instrucción específica para el vendedor
-  instruction: z.string().describe('Instrucción específica de qué hacer y qué NO hacer'),
-
-  // Pregunta clave a hacer (si aplica)
-  keyQuestion: z.string().describe('Pregunta clave que debería hacer el vendedor. Usar "none" si no aplica'),
+  instruction: z.string().describe('Instrucción específica de qué hacer'),
+  keyQuestion: z.string().describe('Pregunta clave a hacer. "none" si no aplica'),
 });
 
 export type ConversationAnalysis = z.infer<typeof AnalysisSchema>;
 
-/**
- * Agente Analista: Analiza el mensaje y define estrategia
- */
 export async function analyzeMessage(
   message: string,
   history: Array<{ role: 'user' | 'assistant'; content: string }>,
@@ -86,125 +81,116 @@ export async function analyzeMessage(
     .map(m => `${m.role === 'user' ? 'Cliente' : 'Sofi'}: ${m.content}`)
     .join('\n');
 
-  const contextText = leadContext
-    ? `
-Información del lead:
-- Nombre: ${leadContext.name || 'Desconocido'}
-- Empresa: ${leadContext.company || 'No especificada'}
-- Industria: ${leadContext.industry || 'No detectada'}
-- Interacciones previas: ${leadContext.previousInteractions || 0}
-`
-    : '';
-
   const result = await generateObject({
     model: openai('gpt-4o-mini'),
     schema: AnalysisSchema,
-    prompt: `Eres un analista de ventas experto. Tu trabajo es analizar conversaciones de WhatsApp con agentes de seguros para definir la mejor estrategia de venta.
+    prompt: `Eres un analista de ventas de seguros. Analiza esta conversación para ayudar a Sofi a vender un seguro de vida.
 
-CONTEXTO DEL NEGOCIO:
-- Vendemos Loomi: un bot de IA para WhatsApp especializado en seguros
-- Precio: $199-599 USD/mes
-- Clientes ideales: agentes de seguros, brokers, promotorías
-- El bot califica prospectos, recopila datos para cotizaciones, agenda citas
+PRODUCTO: Seguro de vida desde $500 MXN/mes ($25-30 USD)
+- Suma asegurada: $500,000 a $1,500,000 MXN
+- Precio depende de: edad y si fuma
+- Sin examen médico hasta $1.5M
 
-${contextText}
+PROCESO DE CALIFICACIÓN:
+1. Edad (determina precio)
+2. ¿Fuma? (+40-50% si fuma)
+3. ¿Tiene dependientes? (hijos, esposa, padres)
 
-HISTORIAL DE CONVERSACIÓN:
+PARA CERRAR necesitamos:
+- Nombre completo
+- Fecha de nacimiento
+- Beneficiario
+- Cuestionario de salud básico
+
+HISTORIAL:
 ${historyText}
 
-MENSAJE ACTUAL DEL CLIENTE:
+MENSAJE ACTUAL:
 "${message}"
 
-Analiza este mensaje y define la mejor estrategia de respuesta. Sé específico en tu instrucción.`,
+Analiza y define la mejor estrategia.`,
     temperature: 0.3,
   });
 
-  console.log('[Analyst] Analysis:', JSON.stringify(result.object, null, 2));
+  console.log('[Analyst] Stage:', result.object.stage, 'Strategy:', result.object.recommendedStrategy);
 
   return result.object;
 }
 
-/**
- * Genera instrucciones para el vendedor basadas en el análisis
- */
 export function generateSellerInstructions(analysis: ConversationAnalysis): string {
   let instructions = `
-# ANÁLISIS DE LA SITUACIÓN
-- El cliente dijo: "${analysis.literalMessage}"
-- Lo que realmente quiere: ${analysis.realIntent}
-- Etapa actual: ${analysis.stage.toUpperCase()}
-${analysis.hasObjection ? `- OBJECIÓN DETECTADA: ${analysis.objectionType}` : ''}
+# ANÁLISIS
+- Cliente dijo: "${analysis.literalMessage}"
+- Intención real: ${analysis.realIntent}
+- Etapa: ${analysis.stage.toUpperCase()}
+- Calificación: ${analysis.qualificationStatus}
+${analysis.hasObjection ? `- OBJECIÓN: ${analysis.objectionType}` : ''}
 
 # ESTRATEGIA: ${analysis.recommendedStrategy.toUpperCase()}
 ${analysis.instruction}
 
-${analysis.keyQuestion && analysis.keyQuestion !== 'none' ? `# PREGUNTA CLAVE A HACER:\n"${analysis.keyQuestion}"` : ''}
+${analysis.keyQuestion && analysis.keyQuestion !== 'none' ? `# PREGUNTA A HACER:\n"${analysis.keyQuestion}"` : ''}
 
-# SEÑALES DETECTADAS:
-${analysis.signals.expressedPain ? '✓ Expresó dolor/problema - APROVECHA ESTO' : ''}
-${analysis.signals.mentionedVolume ? '✓ Mencionó volumen - CUANTIFICA EL IMPACTO' : ''}
-${analysis.signals.mentionedProduct && analysis.signals.mentionedProduct !== 'none' ? `✓ Producto: ${analysis.signals.mentionedProduct} - USA EJEMPLOS ESPECÍFICOS` : ''}
-${analysis.signals.isReferral ? '✓ Es referido - USA PRUEBA SOCIAL' : ''}
-${analysis.signals.readyToSchedule ? '✓ Listo para agendar - CIERRA AHORA' : ''}
-${analysis.signals.askedPrice ? '✓ Preguntó precio - CONECTA CON ROI' : ''}
+# INFO DEL CLIENTE:
+${analysis.signals.hasKids ? '✓ Tiene hijos - USAR ESTO' : '? No sabemos si tiene hijos'}
+${analysis.signals.mentionedAge ? '✓ Ya dio edad' : '? Falta preguntar edad'}
+${analysis.signals.isSmoker ? '✓ Ya sabemos si fuma' : '? Falta preguntar si fuma'}
+${analysis.signals.hasDebt ? '✓ Tiene deudas - INCLUIR EN SUMA' : ''}
+${analysis.signals.isMainProvider ? '✓ Es sostén de familia - URGENCIA' : ''}
+${analysis.signals.readyToBuy ? '✓ LISTO PARA CERRAR' : ''}
 `;
 
-  // Instrucciones específicas por tipo de objeción
   if (analysis.hasObjection) {
-    const objectionHandlers: Record<string, string> = {
+    const handlers: Record<string, string> = {
       price: `
-# MANEJO DE OBJECIÓN DE PRECIO:
-- NO bajes el precio ni ofrezcas descuento
-- Pregunta por su comisión promedio por póliza
-- Haz el cálculo: "Si el bot te ayuda a cerrar 1 póliza extra..."
-- Reencuadra como inversión, no gasto`,
+# OBJECIÓN DE PRECIO:
+- Pregunta: "¿Cuánto es lo máximo que podrías pagar sin que te duela?"
+- Ofrece suma menor: $300/mes = $500,000 de cobertura
+- Haz la cuenta: "Son $20/día, menos que un Uber"
+- NO bajes precio, ajusta cobertura`,
 
       trust: `
-# MANEJO DE OBJECIÓN DE CONFIANZA:
-- Valida su experiencia negativa anterior
-- Diferencia: "Este está entrenado específicamente para seguros"
-- Ofrece demo corta para que vea la diferencia
-- NO te pongas a la defensiva`,
+# OBJECIÓN DE CONFIANZA ("no pagan"):
+- Valida: "Entiendo, hay muchas historias así"
+- Diferencia: "En vida es simple: si te mueres, pagan. Punto."
+- Explica las ÚNICAS 2 exclusiones: suicidio año 1, mentir en cuestionario
+- Pregunta: "¿Tienes alguna enfermedad que no me hayas dicho?"`,
 
       need: `
-# MANEJO DE OBJECIÓN DE NECESIDAD:
-- Pregunta qué usa actualmente y cómo le funciona
-- Busca el hueco: "¿Y qué pasa cuando...?"
+# OBJECIÓN "YA TENGO DEL TRABAJO":
+- Pregunta: "¿Sabes de cuánto es?"
+- Haz ver el riesgo: "¿Y si cambias de trabajo o te corren?"
 - Posiciona como complemento, no reemplazo
-- Si realmente no lo necesita, suéltalo`,
+- "El del trabajo es temporal, este es tuyo para siempre"`,
 
       timing: `
-# MANEJO DE OBJECIÓN DE TIMING:
-- Pregunta qué le hace dudar específicamente
-- Haz preguntas que revelen el costo de esperar
-- "¿Cuántos prospectos se te fueron la semana pasada?"
-- No presiones, pero planta la semilla`,
+# OBJECIÓN "LO PIENSO":
+- Pregunta: "¿Qué te hace dudar?"
+- Si tiene hijos, pregunta directo: "¿Qué pasa con ellos si mañana no llegas?"
+- No presiones pero planta la semilla
+- Ofrece: "Si quieres lo dejamos y me escribes cuando estés listo"`,
 
-      authority: `
-# MANEJO DE OBJECIÓN DE AUTORIDAD:
-- Pregunta quién más decide
-- Ofrece incluirlo en la demo
-- "¿Quieres que les mande info antes para que lleguen con contexto?"`,
+      young: `
+# OBJECIÓN "SOY JOVEN / SIN HIJOS":
+- Valida: "Honestamente a tu edad no es urgente"
+- Busca otra razón: "¿Ayudas a tus papás económicamente?"
+- Si no hay dependientes, puede no ser buen fit - suéltalo`,
 
-      competitor: `
-# MANEJO DE OBJECIÓN DE COMPETIDOR:
-- Pregunta qué están evaluando
-- NO tires a la competencia
-- Pregunta qué es lo más importante para ellos
-- Diferencia con especialización en seguros`,
+      fear: `
+# OBJECIÓN DE MIEDO A HABLAR DE MUERTE:
+- Normaliza: "Nadie quiere pensar en esto, pero es importante"
+- Enfoca en los que quedan: "No es para ti, es para los que amas"
+- No uses lenguaje morboso`,
     };
 
     if (analysis.objectionType !== 'none') {
-      instructions += objectionHandlers[analysis.objectionType] || '';
+      instructions += handlers[analysis.objectionType] || '';
     }
   }
 
   return instructions;
 }
 
-/**
- * Sistema completo: Analiza → Genera instrucciones
- */
 export async function getSellerStrategy(
   message: string,
   history: Array<{ role: 'user' | 'assistant'; content: string }>,

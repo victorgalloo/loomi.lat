@@ -1,8 +1,7 @@
 /**
- * Few-Shot Dinámico
+ * Few-Shot Dinámico - Venta de Seguros a Clientes
  *
  * Selecciona ejemplos de conversaciones relevantes según el contexto actual.
- * Esto mejora dramáticamente la calidad de las respuestas.
  */
 
 export interface ConversationExample {
@@ -13,162 +12,167 @@ export interface ConversationExample {
   whyItWorked: string;
 }
 
-// Banco de ejemplos de conversaciones exitosas
 const EXAMPLES: ConversationExample[] = [
   // ============================================
-  // OBJECIONES DE PRECIO
+  // LEAD NUEVO / PRIMER CONTACTO
   // ============================================
   {
-    id: 'price_objection_1',
-    tags: ['precio', 'caro', 'presupuesto', 'no tengo', 'muy caro'],
-    context: 'Prospecto dice que está caro o no tiene presupuesto',
-    conversation: `Cliente: Es muy caro para mí
-Sofi: Entiendo. ¿Cuánto es tu comisión promedio por póliza?
-Cliente: Como 3,000 pesos
-Sofi: Entonces si el bot te ayuda a cerrar 1 póliza extra al mes, ya recuperaste la inversión 3 veces. ¿Qué te frena más, el precio o no estar seguro de que funcione?`,
-    whyItWorked: 'Conectó el precio con el ROI inmediato usando sus propios números'
-  },
-  {
-    id: 'price_objection_2',
-    tags: ['precio', 'barato', 'descuento', 'promoción'],
-    context: 'Prospecto pide descuento o precio especial',
-    conversation: `Cliente: ¿No tienen algún descuento?
-Sofi: Mira, el precio ya está ajustado porque sabemos que los agentes independientes no tienen presupuestos enormes. La pregunta es: ¿cuántos prospectos se te van al mes por no contestar rápido?
-Cliente: Pues sí, varios
-Sofi: Si son 5 al mes y cierras 1 extra con el bot, el descuento te lo das tú solo con las comisiones. ¿Agendamos para que veas cómo funciona?`,
-    whyItWorked: 'Reencuadró el descuento como ROI en vez de pelear por precio'
+    id: 'new_lead_price',
+    tags: ['hola', 'precio', 'cuanto', 'cuesta', 'anuncio'],
+    context: 'Lead nuevo preguntando por precio',
+    conversation: `Cliente: Vi su anuncio, ¿es real lo de $500 al mes?
+Sofi: Sí es real. Depende de tu edad y si fumas o no. ¿Cuántos años tienes?
+Cliente: 34
+Sofi: Perfecto, a esa edad sí aplica. ¿Fumas?
+Cliente: No
+Sofi: Ok, entonces te sale entre $480 y $620 al mes dependiendo la suma asegurada. ¿Tienes hijos?`,
+    whyItWorked: 'Confirmó precio rápido y empezó a calificar con preguntas simples'
   },
 
   // ============================================
-  // OBJECIONES DE CONFIANZA / ESCEPTICISMO
+  // OBJECIÓN: NO CREO EN SEGUROS
   // ============================================
   {
-    id: 'skeptic_chatbots',
-    tags: ['chatbot', 'bot', 'no sirve', 'probé', 'no funciona', 'genérico'],
-    context: 'Prospecto tuvo mala experiencia con chatbots',
-    conversation: `Cliente: Ya probé chatbots y no sirven para seguros
-Sofi: ¿Qué pasó con el anterior?
-Cliente: Respondía muy genérico y los clientes se frustraban
-Sofi: Tiene sentido. Esos bots genéricos no entienden que vender un GMM es distinto a vender zapatos. Este está entrenado específicamente para seguros: sabe preguntar por preexistencias, dependientes, sumas aseguradas. ¿Te late ver la diferencia en una demo de 15 min?`,
-    whyItWorked: 'Validó la experiencia negativa y diferenció el producto'
-  },
-  {
-    id: 'skeptic_personal',
-    tags: ['personal', 'humano', 'trato', 'asesoría', 'confianza'],
-    context: 'Prospecto cree que sus clientes necesitan trato humano',
-    conversation: `Cliente: Mis clientes necesitan trato personal, no un robot
-Sofi: 100% de acuerdo. La pregunta es: ¿qué pasa con los que te escriben a las 10pm o cuando estás en una cita?
-Cliente: Pues les contesto después
-Sofi: ¿Y cuántos de esos "después" se convierten en venta?
-Cliente: La verdad pocos
-Sofi: El bot no reemplaza tu asesoría, te consigue más oportunidades para darla. Tú sigues cerrando, pero con leads que ya vienen calificados. ¿Tiene sentido?`,
-    whyItWorked: 'Usó pregunta incómoda para mostrar el costo de oportunidad'
+    id: 'objection_no_trust',
+    tags: ['no creo', 'no confío', 'no pagan', 'fraude', 'estafa'],
+    context: 'Cliente escéptico de los seguros',
+    conversation: `Cliente: La neta no creo mucho en los seguros, siento que nunca pagan
+Sofi: ¿Por qué? ¿Mala experiencia o nomás no le ves el punto?
+Cliente: Es que siempre tienen pretextos para no pagar
+Sofi: Entiendo, hay muchas historias así. El tema de "no pagan" es real en seguros de gastos médicos donde hay letra chiquita. En vida es más simple: si te mueres, pagan. Punto. Solo hay 2 exclusiones: suicidio en el primer año y si mientes en el cuestionario de salud. ¿Tienes alguna enfermedad que no me hayas dicho?
+Cliente: No, estoy sano
+Sofi: Entonces no hay letra chiquita. ¿Tienes hijos?`,
+    whyItWorked: 'No peleó, validó la preocupación y explicó las exclusiones reales'
   },
 
   // ============================================
-  // SEGUROS DE VIDA ESPECÍFICO
+  // OBJECIÓN: MUY CARO / NO TENGO
   // ============================================
   {
-    id: 'life_insurance_agent',
-    tags: ['vida', 'seguro de vida', 'beneficiarios', 'fallecimiento'],
-    context: 'Agente que vende seguros de vida',
-    conversation: `Cliente: Vendo seguros de vida principalmente
-Sofi: Qué bien. ¿Cómo calificas a tus prospectos ahorita? ¿Les preguntas edad, si fuman, esas cosas por WhatsApp?
-Cliente: Sí, pero es un rollo porque hay que sacarles la info poco a poco
-Sofi: Exacto. El bot puede hacer esas preguntas por ti: edad, si fuma, cuántos dependientes, suma asegurada que buscan. Cuando te llega el lead, ya sabes si es asegurable y qué producto ofrecerle. ¿Cuánto tiempo te ahorrarías?`,
-    whyItWorked: 'Entendió el proceso específico de vida y mostró valor concreto'
+    id: 'objection_price',
+    tags: ['caro', 'no tengo', 'presupuesto', 'mucho', 'apretado'],
+    context: 'Cliente dice que está caro o no tiene dinero',
+    conversation: `Cliente: Me interesa pero ahorita ando muy apretado
+Sofi: Entiendo. ¿Cuánto es lo máximo que podrías pagar al mes sin que te duela?
+Cliente: Como $300 a lo mucho
+Sofi: Ok, con $300 te alcanza para una suma de $500,000. Es menos protección pero es mejor que nada. ¿Tienes deudas grandes? ¿Hipoteca, carro?
+Cliente: Debo como $80,000 del carro
+Sofi: Perfecto, entonces los $500,000 cubren la deuda del carro y le quedan $420,000 para gastos. ¿Le entramos con eso y cuando mejore tu situación lo subimos?`,
+    whyItWorked: 'Preguntó presupuesto real y ofreció opción ajustada'
   },
 
   // ============================================
-  // GMM / GASTOS MÉDICOS
+  // JOVEN SIN HIJOS
   // ============================================
   {
-    id: 'gmm_agent',
-    tags: ['gmm', 'gastos médicos', 'médicos mayores', 'salud', 'preexistencias'],
-    context: 'Agente que vende GMM',
-    conversation: `Cliente: Manejo principalmente gastos médicos mayores
-Sofi: GMM es donde más se pierde tiempo en la calificación, ¿no? Entre preexistencias, edad de dependientes, tipo de cobertura...
-Cliente: Sí, a veces tardo días en armar una cotización porque me falta info
-Sofi: El bot puede pedirle todo eso al prospecto antes de que tú intervengas: preexistencias, cuántos van en la póliza, edades, hospital preferido, deducible. Tú ya solo cotizas y cierras. ¿Cuántas cotizaciones pendientes tienes ahorita por falta de datos?`,
-    whyItWorked: 'Identificó el cuello de botella específico de GMM'
+    id: 'young_no_kids',
+    tags: ['soltero', 'sin hijos', 'joven', '25', '27', '28'],
+    context: 'Persona joven sin dependientes',
+    conversation: `Cliente: Tengo 27 años, soltero, sin hijos. ¿Me conviene?
+Sofi: Honestamente a tu edad el seguro de vida no es urgente. ¿Por qué te interesó?
+Cliente: Mi papá falleció el año pasado y dejó un desmadre
+Sofi: Lamento lo de tu papá. ¿Él no tenía seguro?
+Cliente: No, nada
+Sofi: Entiendo. A los 27 sin hijos, el seguro tiene sentido si ayudas económicamente a alguien. ¿Le das dinero a tus papás o hermanos?
+Cliente: Sí, le doy $5,000 al mes a mi mamá
+Sofi: Ok, si te pasa algo, tu mamá pierde esos $5,000/mes. Con un seguro de $600,000, ella tendría para cubrir 10 años de esa ayuda. Te sale como $380/mes. ¿Tiene sentido para ti?`,
+    whyItWorked: 'No vendió por vender, validó si tenía sentido y encontró la motivación real'
   },
 
   // ============================================
-  // VOLUMEN ALTO
+  // YA TENGO SEGURO DEL TRABAJO
   // ============================================
   {
-    id: 'high_volume',
-    tags: ['muchos', 'volumen', '30', '40', '50', 'mensajes', 'no doy abasto'],
-    context: 'Agente con alto volumen de mensajes',
-    conversation: `Cliente: Recibo como 50 mensajes al día y no doy abasto
-Sofi: 50 al día es bastante. ¿Cuántos de esos son prospectos reales vs. gente que solo pregunta precio y desaparece?
-Cliente: Como la mitad son serios
-Sofi: Entonces 25 oportunidades reales al día. Si el bot filtra a los curiosos y te pasa solo los calificados, ¿cuántos más podrías cerrar al mes?
-Cliente: Pues sí, varios más
-Sofi: Va que va. ¿Agendamos 20 min para mostrarte cómo quedaría para tu volumen?`,
-    whyItWorked: 'Cuantificó el impacto potencial con sus propios números'
+    id: 'has_work_insurance',
+    tags: ['trabajo', 'empresa', 'ya tengo', 'prestación'],
+    context: 'Cliente que tiene seguro por su empleo',
+    conversation: `Cliente: Ya tengo seguro de vida por mi trabajo
+Sofi: Ah qué bien. ¿Sabes de cuánto es?
+Cliente: Creo que como 2 años de sueldo
+Sofi: Ok, ¿y qué pasa si cambias de trabajo o te corren?
+Cliente: Pues... se acaba supongo
+Sofi: Exacto. El seguro del trabajo es temporal. El día que salgas, quedas descubierto. ¿Cuántos años tienes?
+Cliente: 36
+Sofi: Si te corren a los 45 y ya tienes diabetes o algo, va a ser carísimo conseguir seguro. El chiste de tener uno propio es que te lo llevas a donde vayas. Además, 2 años de sueldo no es mucho si tienes hipoteca e hijos. ¿Tienes?`,
+    whyItWorked: 'No dijo que el seguro del trabajo no sirve, mostró el riesgo futuro'
   },
 
   // ============================================
-  // PROMOTORÍA / AGENCIA
+  // FOLLOW UP A FANTASMA
   // ============================================
   {
-    id: 'agency',
-    tags: ['promotoría', 'agencia', 'agentes', 'equipo', 'varios'],
-    context: 'Promotoría o agencia con múltiples agentes',
-    conversation: `Cliente: Tengo una promotoría con 6 agentes
-Sofi: Órale. ¿Cada quien tiene su WhatsApp o tienen uno centralizado?
-Cliente: Cada quien el suyo, es un desmadre
-Sofi: Me imagino. El bot puede manejar un número centralizado que califique y distribuya: si el prospecto quiere vida, va con el agente de vida; si quiere GMM, va con el de salud. Todo automático. ¿Cuántos leads se les pierden entre los 6 por no saber quién debe atenderlo?`,
-    whyItWorked: 'Entendió la complejidad de coordinar equipo y ofreció solución específica'
+    id: 'follow_up_ghost',
+    tags: ['no responde', 'fantasma', 'seguimiento'],
+    context: 'Lead que dejó de responder',
+    conversation: `[Día 1]
+Cliente: ¿Cuánto cuesta el seguro de vida?
+Sofi: Depende de tu edad. ¿Cuántos años tienes?
+Cliente: 41
+[No responde]
+
+[Día 3]
+Sofi: Oye, ¿sigues interesado o te caché en mal momento?
+[No responde]
+
+[Día 5]
+Sofi: Última vez que te molesto. Para alguien de 41 no fumador, el seguro sale en $590/mes por $1 millón. Si te interesa, aquí ando. Si no, no hay bronca.
+Cliente: Perdón, se me fue. Sí me interesa, ¿qué necesitas?
+Sofi: Tranqui. Necesito nombre completo, fecha de nacimiento, y si tienes alguna enfermedad crónica. Y me dices quién sería tu beneficiario.`,
+    whyItWorked: 'Follow-up espaciado, no acosó, dio precio concreto, ofreció salida'
   },
 
   // ============================================
-  // "LO PIENSO" / POSTERGAR
+  // COMPARANDO CON COMPETENCIA
+  // ============================================
+  {
+    id: 'comparing_competitor',
+    tags: ['gnp', 'metlife', 'cotización', 'comparar', 'otra'],
+    context: 'Cliente comparando con otra aseguradora',
+    conversation: `Cliente: Ya me cotizaron en GNP $800/mes, ¿ustedes qué ofrecen?
+Sofi: ¿Por cuánto te cotizaron? ¿Suma asegurada?
+Cliente: $1.5 millones
+Sofi: Ok. ¿Qué edad tienes y fumas?
+Cliente: 38, no fumo
+Sofi: Para $1.5 millones te puedo conseguir entre $650 y $750 dependiendo la aseguradora. Te ahorras como $50-150 al mes. ¿Quieres que te cotice?
+Cliente: Sí, a ver
+Sofi: Dame 10 min y te paso opciones.`,
+    whyItWorked: 'No tiró a la competencia, comparó manzanas con manzanas'
+  },
+
+  // ============================================
+  // LO PIENSO / DESPUÉS
   // ============================================
   {
     id: 'think_about_it',
     tags: ['pienso', 'pensar', 'después', 'luego', 'no sé'],
-    context: 'Prospecto quiere postergar la decisión',
+    context: 'Cliente quiere postergar',
     conversation: `Cliente: Déjame pensarlo
-Sofi: Va, sin presión. Solo por curiosidad, ¿qué es lo que te hace dudar?
+Sofi: Va, sin presión. ¿Qué te hace dudar?
 Cliente: Es que no sé si realmente lo necesito
-Sofi: Honesto. A ver, ¿cuántos prospectos te escribieron la semana pasada que no pudiste atender a tiempo?
-Cliente: Como 5 o 6
-Sofi: ¿Y cuántos de esos cerraste?
-Cliente: Ninguno la verdad
-Sofi: Ahí está tu respuesta. Pero tú decides. Si quieres, agendamos para que lo veas funcionando y decides con más info. ¿Te late?`,
-    whyItWorked: 'No presionó pero hizo preguntas que revelaron la necesidad'
+Sofi: Honesto. ¿Tienes hijos?
+Cliente: Sí, dos
+Sofi: ¿Qué pasaría con ellos si mañana te atropellan? ¿Tu pareja puede mantener todo sola?
+Cliente: Pues estaría difícil
+Sofi: Ese es el único punto del seguro de vida. No es para ti, es para ellos. Pero tú decides. Si quieres lo dejamos aquí y si algún día te animas me escribes.`,
+    whyItWorked: 'No presionó pero hizo la pregunta incómoda que revela la necesidad'
   },
 
   // ============================================
-  // YA TIENE ALGO
+  // QUIERE CERRAR
   // ============================================
   {
-    id: 'already_has_something',
-    tags: ['ya tengo', 'uso', 'crm', 'sistema', 'herramienta'],
-    context: 'Prospecto ya usa alguna herramienta',
-    conversation: `Cliente: Ya tengo un CRM para seguimiento
-Sofi: Qué bien, ¿cuál usas?
-Cliente: HubSpot
-Sofi: Perfecto. El bot no reemplaza tu CRM, lo alimenta. La bronca del CRM es que tú tienes que meter los datos. El bot los captura automático y los manda a HubSpot ya calificados. ¿Cuánto tiempo te toma meter un lead nuevo al CRM ahorita?`,
-    whyItWorked: 'Posicionó como complemento, no competencia'
-  },
-
-  // ============================================
-  // REFERIDO
-  // ============================================
-  {
-    id: 'referral',
-    tags: ['recomendó', 'referido', 'me pasaron', 'me dieron tu número'],
-    context: 'Lead llegó por referido',
-    conversation: `Cliente: Me recomendó Juan Pérez tu servicio
-Sofi: Ah qué bien, Juan es cliente. ¿Qué te contó?
-Cliente: Que le ayudó mucho con las cotizaciones
-Sofi: Sí, Juan maneja GMM y le ahorra como 3 horas al día en recopilación de datos. ¿Tú qué líneas manejas?
-Cliente: También GMM y algo de vida
-Sofi: Entonces te caería igual de bien. ¿Agendamos para mostrarte cómo lo tiene configurado Juan?`,
-    whyItWorked: 'Usó la referencia como prueba social inmediata'
+    id: 'ready_to_close',
+    tags: ['va', 'sí', 'quiero', 'contratar', 'activar', 'dale'],
+    context: 'Cliente listo para comprar',
+    conversation: `Cliente: Ok va, sí me interesa. ¿Qué necesitas?
+Sofi: Perfecto. Necesito:
+- Tu nombre completo
+- Fecha de nacimiento
+- ¿Tienes diabetes, hipertensión o alguna enfermedad crónica?
+- ¿A quién pongo como beneficiario?
+Cliente: Juan Pérez López, 15 marzo 1988, no tengo enfermedades, beneficiaria mi esposa María
+Sofi: Listo Juan. Te mando el link de pago. Son $540/mes. En cuanto pagues, en 24 horas tienes tu póliza activa. ¿Va?`,
+    whyItWorked: 'Proceso simple, pidió solo lo necesario, no complicó'
   },
 ];
 
@@ -179,48 +183,31 @@ function detectTags(message: string, recentMessages: string[]): string[] {
   const allText = [message, ...recentMessages].join(' ').toLowerCase();
   const detectedTags: Set<string> = new Set();
 
-  // Keywords to tags mapping
   const keywordMap: Record<string, string[]> = {
     // Precio
-    'caro': ['precio', 'caro'],
-    'precio': ['precio'],
-    'cuesta': ['precio'],
-    'presupuesto': ['precio', 'presupuesto'],
-    'descuento': ['precio', 'descuento'],
-    'barato': ['precio', 'barato'],
+    'caro': ['caro', 'precio'],
+    'precio': ['precio', 'cuanto'],
+    'cuanto': ['cuanto', 'precio'],
+    'cuesta': ['cuesta', 'precio'],
+    'presupuesto': ['presupuesto', 'caro'],
+    'apretado': ['apretado', 'caro'],
+    'no tengo': ['no tengo', 'caro'],
 
     // Escepticismo
-    'chatbot': ['chatbot', 'bot'],
-    'bot': ['chatbot', 'bot'],
-    'no sirve': ['no sirve', 'no funciona'],
-    'no funciona': ['no funciona'],
-    'probé': ['probé'],
-    'personal': ['personal', 'humano'],
-    'humano': ['humano', 'personal'],
+    'no creo': ['no creo', 'no confío'],
+    'no pagan': ['no pagan', 'no creo'],
+    'estafa': ['estafa', 'no creo'],
+    'fraude': ['fraude', 'no creo'],
 
-    // Productos
-    'vida': ['vida', 'seguro de vida'],
-    'gmm': ['gmm', 'gastos médicos'],
-    'gastos médicos': ['gmm', 'gastos médicos'],
-    'médicos mayores': ['gmm', 'gastos médicos'],
-    'pensiones': ['pensiones', 'retiro'],
-    'retiro': ['pensiones', 'retiro'],
-    'ahorro': ['ahorro'],
+    // Ya tiene algo
+    'ya tengo': ['ya tengo', 'trabajo'],
+    'trabajo': ['trabajo', 'empresa'],
+    'empresa': ['empresa', 'trabajo'],
+    'prestación': ['prestación', 'trabajo'],
 
-    // Volumen
-    'mensajes': ['mensajes', 'volumen'],
-    'no doy abasto': ['no doy abasto', 'volumen'],
-    '30': ['volumen'],
-    '40': ['volumen'],
-    '50': ['volumen'],
-    'muchos': ['muchos', 'volumen'],
-
-    // Estructura
-    'promotoría': ['promotoría', 'agencia'],
-    'promotoria': ['promotoría', 'agencia'],
-    'agencia': ['agencia', 'promotoría'],
-    'agentes': ['agentes', 'equipo'],
-    'equipo': ['equipo'],
+    // Joven
+    'soltero': ['soltero', 'joven'],
+    'sin hijos': ['sin hijos', 'joven'],
 
     // Postergar
     'pienso': ['pienso', 'pensar'],
@@ -228,16 +215,19 @@ function detectTags(message: string, recentMessages: string[]): string[] {
     'después': ['después', 'luego'],
     'luego': ['luego', 'después'],
 
-    // Ya tiene algo
-    'ya tengo': ['ya tengo', 'uso'],
-    'ya uso': ['ya tengo', 'uso'],
-    'crm': ['crm', 'sistema'],
+    // Comparar
+    'gnp': ['gnp', 'comparar'],
+    'metlife': ['metlife', 'comparar'],
+    'cotización': ['cotización', 'comparar'],
 
-    // Referido
-    'recomendó': ['recomendó', 'referido'],
-    'recomendo': ['recomendó', 'referido'],
-    'referido': ['referido'],
-    'me pasaron': ['referido'],
+    // Cerrar
+    'quiero': ['quiero', 'contratar'],
+    'contratar': ['contratar', 'activar'],
+    'dale': ['dale', 'va'],
+
+    // Nuevo
+    'hola': ['hola', 'anuncio'],
+    'anuncio': ['anuncio', 'hola'],
   };
 
   for (const [keyword, tags] of Object.entries(keywordMap)) {
@@ -255,13 +245,11 @@ function detectTags(message: string, recentMessages: string[]): string[] {
 function selectExamples(tags: string[], maxExamples: number = 2): ConversationExample[] {
   if (tags.length === 0) return [];
 
-  // Score each example by tag matches
   const scored = EXAMPLES.map(example => {
     const matchCount = example.tags.filter(tag => tags.includes(tag)).length;
     return { example, score: matchCount };
   });
 
-  // Sort by score descending and take top N
   return scored
     .filter(s => s.score > 0)
     .sort((a, b) => b.score - a.score)
@@ -283,8 +271,7 @@ ${ex.conversation}
 `).join('\n');
 
   return `
-# EJEMPLOS RELEVANTES PARA ESTA CONVERSACIÓN
-Imita este estilo y estrategia:
+# EJEMPLOS RELEVANTES - IMITA ESTE ESTILO
 ${formatted}
 `;
 }
@@ -296,40 +283,30 @@ export function getFewShotContext(
   currentMessage: string,
   recentMessages: Array<{ role: string; content: string }>
 ): string {
-  // Extract recent user messages for context
   const userMessages = recentMessages
     .filter(m => m.role === 'user')
     .map(m => m.content)
     .slice(-5);
 
-  // Detect relevant tags
   const tags = detectTags(currentMessage, userMessages);
-
   if (tags.length === 0) return '';
 
-  // Select best examples
   const examples = selectExamples(tags, 2);
-
   if (examples.length === 0) return '';
 
-  console.log(`[Few-Shot] Detected tags: ${tags.join(', ')}`);
-  console.log(`[Few-Shot] Selected examples: ${examples.map(e => e.id).join(', ')}`);
+  console.log(`[Few-Shot] Tags: ${tags.join(', ')}, Examples: ${examples.map(e => e.id).join(', ')}`);
 
   return formatExamples(examples);
 }
 
-/**
- * Obtiene ejemplos específicos por categoría
- */
 export function getExamplesByCategory(category: string): ConversationExample[] {
   const categoryTags: Record<string, string[]> = {
-    'price': ['precio', 'caro', 'presupuesto'],
-    'skeptic': ['chatbot', 'no funciona', 'personal'],
-    'life': ['vida', 'seguro de vida'],
-    'gmm': ['gmm', 'gastos médicos'],
-    'volume': ['volumen', 'mensajes', 'no doy abasto'],
-    'agency': ['promotoría', 'agencia', 'equipo'],
-    'postpone': ['pienso', 'después', 'luego'],
+    'price': ['precio', 'caro'],
+    'skeptic': ['no creo', 'no pagan'],
+    'work_insurance': ['trabajo', 'ya tengo'],
+    'young': ['joven', 'soltero'],
+    'postpone': ['pienso', 'después'],
+    'close': ['quiero', 'contratar'],
   };
 
   const tags = categoryTags[category] || [];

@@ -14,12 +14,13 @@ const AnalysisSchema = z.object({
   realIntent: z.string().describe('¿Qué quiere decir realmente? La intención detrás'),
 
   stage: z.enum([
-    'curiosidad',      // Solo preguntando, no comprometido
-    'interes',         // Muestra interés real en proteger a su familia
-    'evaluacion',      // Evaluando si le conviene
-    'decision',        // Listo para comprar
-    'objecion',        // Tiene una objeción que resolver
-    'rechazo'          // No interesado
+    'primer_contacto',  // Primer mensaje, necesita conexión
+    'curiosidad',       // Solo preguntando, no comprometido
+    'interes',          // Muestra interés real en proteger a su familia
+    'evaluacion',       // Evaluando si le conviene
+    'decision',         // Listo para comprar
+    'objecion',         // Tiene una objeción que resolver
+    'rechazo'           // No interesado
   ]).describe('Etapa del prospecto'),
 
   hasObjection: z.boolean().describe('¿Hay una objeción?'),
@@ -34,6 +35,7 @@ const AnalysisSchema = z.object({
   ]).describe('Tipo de objeción'),
 
   signals: z.object({
+    isFirstMessage: z.boolean().describe('¿Es el primer mensaje del cliente? (solo "hola", "vi el anuncio", etc.)'),
     hasKids: z.boolean().describe('¿Mencionó que tiene hijos?'),
     mentionedAge: z.boolean().describe('¿Mencionó su edad?'),
     isSmoker: z.boolean().describe('¿Mencionó si fuma?'),
@@ -41,18 +43,22 @@ const AnalysisSchema = z.object({
     isMainProvider: z.boolean().describe('¿Es el sostén principal de la familia?'),
     readyToBuy: z.boolean().describe('¿Está listo para comprar?'),
     askedPrice: z.boolean().describe('¿Preguntó por precio?'),
+    mentionedMotivation: z.boolean().describe('¿Ya explicó qué le llamó la atención o por qué escribe?'),
   }),
 
   qualificationStatus: z.enum([
+    'not_started',     // No hemos empezado a calificar (primer contacto)
     'not_qualified',   // Falta info básica (edad, fuma, hijos)
     'partially',       // Tiene algo pero falta
     'qualified'        // Tenemos edad, fuma, dependientes
   ]).describe('Estado de calificación'),
 
   recommendedStrategy: z.enum([
+    'connect_warm',       // PRIMERO: Saludar cálido y preguntar qué le llamó la atención
+    'understand_why',     // Entender su motivación / situación familiar
+    'qualify_dependents', // Preguntar por hijos/dependientes
     'qualify_age',        // Preguntar edad
     'qualify_smoker',     // Preguntar si fuma
-    'qualify_dependents', // Preguntar por hijos/dependientes
     'calculate_sum',      // Calcular suma asegurada
     'handle_objection',   // Manejar objeción
     'present_price',      // Presentar precio
@@ -81,34 +87,45 @@ export async function analyzeMessage(
     .map(m => `${m.role === 'user' ? 'Cliente' : 'Sofi'}: ${m.content}`)
     .join('\n');
 
+  // Count actual conversation turns (excluding the current message)
+  const conversationTurns = history.filter(m => m.role === 'user').length;
+  const isFirstContact = conversationTurns <= 1;
+
   const result = await generateObject({
     model: openai('gpt-4o-mini'),
     schema: AnalysisSchema,
     prompt: `Eres un analista de ventas de seguros. Analiza esta conversación para ayudar a Sofi a vender un seguro de vida.
 
-PRODUCTO: Seguro de vida desde $500 MXN/mes ($25-30 USD)
+CONTEXTO CRÍTICO:
+Los leads llegan desde anuncios de Meta (Facebook/Instagram). Algo les llamó la atención del anuncio. NO están comprometidos aún - solo tienen curiosidad.
+
+REGLA #1 - MUY IMPORTANTE:
+Si es el PRIMER mensaje del cliente (solo "hola", "vi el anuncio", "información", etc.):
+- stage DEBE ser "primer_contacto"
+- recommendedStrategy DEBE ser "connect_warm"
+- La pregunta debe ser: "¿Qué fue lo que te llamó la atención del anuncio?"
+- NUNCA preguntes edad, si fuma, o datos de calificación en el primer contacto
+
+PROCESO GRADUAL (en orden):
+1. CONECTAR: Agradecer que escribieron, preguntar qué les llamó la atención
+2. ENTENDER: ¿Primera vez que piensa en seguro? ¿Tiene familia que dependa de él?
+3. CALIFICAR: Edad, si fuma, dependientes (solo después de conectar)
+4. EDUCAR: Explicar cómo funciona, dar precio aproximado
+5. CERRAR: Solo cuando esté listo
+
+PRODUCTO: Seguro de vida desde $500 MXN/mes
 - Suma asegurada: $500,000 a $1,500,000 MXN
 - Precio depende de: edad y si fuma
-- Sin examen médico hasta $1.5M
 
-PROCESO DE CALIFICACIÓN:
-1. Edad (determina precio)
-2. ¿Fuma? (+40-50% si fuma)
-3. ¿Tiene dependientes? (hijos, esposa, padres)
-
-PARA CERRAR necesitamos:
-- Nombre completo
-- Fecha de nacimiento
-- Beneficiario
-- Cuestionario de salud básico
+${isFirstContact ? '⚠️ ESTE ES EL PRIMER CONTACTO - USA "connect_warm" OBLIGATORIAMENTE' : ''}
 
 HISTORIAL:
-${historyText}
+${historyText || '(Sin historial previo - es primer mensaje)'}
 
 MENSAJE ACTUAL:
 "${message}"
 
-Analiza y define la mejor estrategia.`,
+Analiza y define la mejor estrategia. Recuerda: si es primer contacto, CONECTA primero.`,
     temperature: 0.3,
   });
 
@@ -118,6 +135,34 @@ Analiza y define la mejor estrategia.`,
 }
 
 export function generateSellerInstructions(analysis: ConversationAnalysis): string {
+  // Special handling for first contact - override everything
+  if (analysis.stage === 'primer_contacto' || analysis.signals.isFirstMessage) {
+    return `
+# PRIMER CONTACTO - CONEXIÓN OBLIGATORIA
+
+El cliente acaba de escribir por primera vez. Viene de un anuncio de Meta.
+NO preguntes edad, si fuma, ni datos de calificación aún.
+
+TU ÚNICA TAREA:
+1. Saludar cálidamente
+2. Preguntar qué le llamó la atención del anuncio
+
+RESPUESTA IDEAL:
+"¡Hola! Qué bueno que escribiste. Cuéntame, ¿qué fue lo que te llamó la atención del anuncio?"
+
+VARIANTES ACEPTABLES:
+- "¡Hola! Gracias por escribir. ¿Qué fue lo que te interesó del anuncio?"
+- "¡Hola! Qué gusto. Cuéntame, ¿qué te llamó la atención?"
+
+NO HAGAS:
+- No preguntes la edad
+- No preguntes si fuma
+- No preguntes si tiene hijos
+- No expliques el producto aún
+- No des precios
+`;
+  }
+
   let instructions = `
 # ANÁLISIS
 - Cliente dijo: "${analysis.literalMessage}"
@@ -132,6 +177,7 @@ ${analysis.instruction}
 ${analysis.keyQuestion && analysis.keyQuestion !== 'none' ? `# PREGUNTA A HACER:\n"${analysis.keyQuestion}"` : ''}
 
 # INFO DEL CLIENTE:
+${analysis.signals.mentionedMotivation ? '✓ Ya sabemos qué le llamó la atención' : '? Falta preguntar qué le llamó la atención'}
 ${analysis.signals.hasKids ? '✓ Tiene hijos - USAR ESTO' : '? No sabemos si tiene hijos'}
 ${analysis.signals.mentionedAge ? '✓ Ya dio edad' : '? Falta preguntar edad'}
 ${analysis.signals.isSmoker ? '✓ Ya sabemos si fuma' : '? Falta preguntar si fuma'}
@@ -139,6 +185,23 @@ ${analysis.signals.hasDebt ? '✓ Tiene deudas - INCLUIR EN SUMA' : ''}
 ${analysis.signals.isMainProvider ? '✓ Es sostén de familia - URGENCIA' : ''}
 ${analysis.signals.readyToBuy ? '✓ LISTO PARA CERRAR' : ''}
 `;
+
+  // Add strategy-specific instructions
+  if (analysis.recommendedStrategy === 'connect_warm') {
+    instructions += `
+# CONEXIÓN CÁLIDA:
+- Saluda con calidez
+- Pregunta qué le llamó la atención del anuncio
+- NO califiques aún (no preguntes edad, si fuma, etc.)
+`;
+  } else if (analysis.recommendedStrategy === 'understand_why') {
+    instructions += `
+# ENTENDER SU SITUACIÓN:
+- ¿Ha pensado antes en un seguro de vida?
+- ¿Tiene familia que dependa de él económicamente?
+- Escucha su motivación real antes de calificar
+`;
+  }
 
   if (analysis.hasObjection) {
     const handlers: Record<string, string> = {

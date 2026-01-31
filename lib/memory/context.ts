@@ -53,13 +53,12 @@ export async function getConversationContext(
       phone: message.phone,
       name: message.name || 'Test User',
       stage: 'new',
-      created_at: new Date().toISOString(),
+      createdAt: new Date(),
     };
     const mockConversation: Conversation = {
       id: `test-conv-${Date.now()}`,
-      lead_id: mockLead.id,
-      started_at: new Date().toISOString(),
-      status: 'active',
+      leadId: mockLead.id,
+      startedAt: new Date(),
     };
     return {
       lead: mockLead,

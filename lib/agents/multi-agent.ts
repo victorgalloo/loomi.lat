@@ -41,7 +41,7 @@ const AnalysisSchema = z.object({
   signals: z.object({
     expressedPain: z.boolean().describe('¿Expresó un dolor o problema?'),
     mentionedVolume: z.boolean().describe('¿Mencionó volumen de mensajes/clientes?'),
-    mentionedProduct: z.string().optional().describe('Producto de seguro mencionado (vida, gmm, etc)'),
+    mentionedProduct: z.string().nullable().describe('Producto de seguro mencionado (vida, gmm, etc) o null si no mencionó'),
     isReferral: z.boolean().describe('¿Es un referido?'),
     readyToSchedule: z.boolean().describe('¿Está listo para agendar?'),
     askedPrice: z.boolean().describe('¿Preguntó por precio?'),
@@ -63,7 +63,7 @@ const AnalysisSchema = z.object({
   instruction: z.string().describe('Instrucción específica de qué hacer y qué NO hacer'),
 
   // Pregunta clave a hacer (si aplica)
-  keyQuestion: z.string().optional().describe('Pregunta clave que debería hacer el vendedor'),
+  keyQuestion: z.string().nullable().describe('Pregunta clave que debería hacer el vendedor, o null si no aplica'),
 });
 
 export type ConversationAnalysis = z.infer<typeof AnalysisSchema>;

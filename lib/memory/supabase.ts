@@ -74,7 +74,11 @@ export async function getLeadById(leadId: string): Promise<Lead | null> {
   };
 }
 
-export async function createLead(phone: string, name: string = 'Usuario'): Promise<Lead> {
+export async function createLead(
+  phone: string,
+  name: string = 'Usuario',
+  options?: { isTest?: boolean }
+): Promise<Lead> {
   const supabase = getSupabase();
 
   const { data, error } = await supabase
@@ -82,7 +86,8 @@ export async function createLead(phone: string, name: string = 'Usuario'): Promi
     .insert({
       phone,
       name,
-      stage: 'initial'
+      stage: 'initial',
+      is_test: options?.isTest ?? false
     })
     .select()
     .single();
@@ -237,12 +242,6 @@ export async function saveMessage(
   content: string,
   leadId?: string
 ): Promise<string> {
-  // Skip saving for test conversations (IDs start with "test-")
-  if (conversationId.startsWith('test-')) {
-    console.log(`[DB] Skipping message save for test conversation`);
-    return `test-msg-${Date.now()}`;
-  }
-
   const supabase = getSupabase();
 
   const { data, error } = await supabase
@@ -461,4 +460,78 @@ export async function getFirstInteractionDate(leadId: string): Promise<Date | nu
 
   if (error || !data) return null;
   return new Date(data.created_at);
+}
+
+// ============================================
+// Test Data Management
+// ============================================
+
+/**
+ * Reset test data for a specific phone number
+ * Deletes lead, conversations, and messages
+ */
+export async function resetTestLead(phone: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = getSupabase();
+
+  try {
+    // Get the lead
+    const { data: lead } = await supabase
+      .from('leads')
+      .select('id')
+      .eq('phone', phone)
+      .eq('is_test', true)
+      .single();
+
+    if (!lead) {
+      return { success: false, error: 'Test lead not found' };
+    }
+
+    // Delete messages from all conversations
+    const { data: conversations } = await supabase
+      .from('conversations')
+      .select('id')
+      .eq('lead_id', lead.id);
+
+    if (conversations && conversations.length > 0) {
+      const convIds = conversations.map(c => c.id);
+      await supabase.from('messages').delete().in('conversation_id', convIds);
+      await supabase.from('conversations').delete().eq('lead_id', lead.id);
+    }
+
+    // Delete lead memory
+    await supabase.from('lead_memory').delete().eq('lead_id', lead.id);
+
+    // Delete the lead
+    await supabase.from('leads').delete().eq('id', lead.id);
+
+    console.log(`[DB] Reset test lead: ${phone}`);
+    return { success: true };
+
+  } catch (error) {
+    console.error('[DB] Error resetting test lead:', error);
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
+ * Reset ALL test data (all leads with is_test=true)
+ */
+export async function resetAllTestData(): Promise<{ success: boolean; count: number; error?: string }> {
+  const supabase = getSupabase();
+
+  try {
+    // Call the SQL function we created
+    const { error } = await supabase.rpc('reset_test_data');
+
+    if (error) {
+      throw error;
+    }
+
+    console.log('[DB] All test data reset');
+    return { success: true, count: 0 };
+
+  } catch (error) {
+    console.error('[DB] Error resetting all test data:', error);
+    return { success: false, count: 0, error: String(error) };
+  }
 }

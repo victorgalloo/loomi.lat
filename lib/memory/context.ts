@@ -22,7 +22,7 @@ import {
   getSupabase
 } from './supabase';
 
-// Números de prueba que NO se guardan como leads (siempre se tratan como nuevos)
+// Números de prueba - se guardan con is_test=true para poder resetear
 const TEST_PHONE_NUMBERS = new Set([
   '4779083304',
   '524779083304',
@@ -45,31 +45,10 @@ function isTestNumber(phone: string): boolean {
 export async function getConversationContext(
   message: ParsedWhatsAppMessage
 ): Promise<ConversationContext> {
-  // Si es número de prueba, retornar contexto vacío (siempre nuevo)
-  if (isTestNumber(message.phone)) {
-    console.log(`[Context] Test number detected: ${message.phone} - treating as new lead`);
-    const mockLead: Lead = {
-      id: `test-${Date.now()}`,
-      phone: message.phone,
-      name: message.name || 'Test User',
-      stage: 'new',
-      createdAt: new Date(),
-      lastInteraction: new Date(),
-    };
-    const mockConversation: Conversation = {
-      id: `test-conv-${Date.now()}`,
-      leadId: mockLead.id,
-      startedAt: new Date(),
-    };
-    return {
-      lead: mockLead,
-      conversation: mockConversation,
-      recentMessages: [],
-      memory: null,
-      hasActiveAppointment: false,
-      isFirstConversation: true,
-      totalConversations: 1,
-    };
+  const isTest = isTestNumber(message.phone);
+
+  if (isTest) {
+    console.log(`[Context] Test number detected: ${message.phone} - persisting with is_test=true`);
   }
 
   // Start lead lookup immediately (async-api-routes)
@@ -79,7 +58,8 @@ export async function getConversationContext(
   let lead = await leadPromise;
 
   if (!lead) {
-    lead = await createLead(message.phone, message.name);
+    // Create lead with is_test flag if it's a test number
+    lead = await createLead(message.phone, message.name, { isTest });
   } else if (lead.name === 'Usuario' && message.name && message.name !== 'Usuario') {
     // Update name in background (non-blocking)
     Promise.resolve(

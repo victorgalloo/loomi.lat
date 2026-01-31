@@ -315,7 +315,7 @@ export async function simpleAgent(
       previousInteractions: context.recentMessages.length,
     }
   );
-  console.log('=== ANÁLISIS (gpt-5.2-pro) ===');
+  console.log('=== ANÁLISIS (o3-mini) ===');
   console.log(`Fase: ${sellerAnalysis.fase_actual}`);
   console.log(`Siguiente paso: ${sellerAnalysis.siguiente_paso}`);
   if (sellerAnalysis.hay_objecion) {
@@ -502,11 +502,11 @@ Sé cálida, haz UNA pregunta a la vez, mensajes cortos.`
 
   try {
     const result = await generateText({
-      model: openai('gpt-5.2-chat-latest'),
+      model: openai('gpt-5.2'),  // GPT 5.2 para respuestas naturales
       system: systemWithContext,
       messages: history,
       tools,
-      temperature: 0.4,
+      // temperature not supported for gpt-5.2 reasoning model
       maxOutputTokens: 250,
       onStepFinish: async (step) => {
         if (step.toolResults) {

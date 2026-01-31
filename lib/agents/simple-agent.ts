@@ -94,7 +94,10 @@ Frases tuyas:
 
 ## 1. CONECTAR PRIMERO (siempre)
 Si escriben "Hola" o "Vi su anuncio":
-→ "¡Hola! Qué bueno que escribiste. Cuéntame, ¿qué fue lo que te llamó la atención?"
+→ "¡Hola [NOMBRE]! Qué bueno que escribiste. Cuéntame, ¿qué fue lo que te llamó la atención?"
+
+IMPORTANTE: Si tienes el nombre del cliente en el contexto, SIEMPRE úsalo en el saludo.
+Ejemplo: "¡Hola Victor!" no "¡Hola!"
 
 Luego ESCUCHA su respuesta y COMENTA sobre ella antes de hacer otra pregunta.
 
@@ -325,9 +328,12 @@ export async function simpleAgent(
 
   // Construir contexto del cliente
   const contextParts: string[] = [];
+  const leadName = context.lead.name && context.lead.name !== 'Usuario' ? context.lead.name : null;
+  const firstName = leadName ? leadName.split(' ')[0] : null;
 
-  if (context.lead.name && context.lead.name !== 'Usuario') {
-    contextParts.push(`Cliente: ${context.lead.name}`);
+  if (leadName) {
+    contextParts.push(`NOMBRE DEL CLIENTE: ${leadName}`);
+    contextParts.push(`USA SU NOMBRE: Salúdalo como "${firstName}" en tu primer mensaje`);
   }
   if (context.memory) {
     contextParts.push(`Info previa: ${context.memory}`);

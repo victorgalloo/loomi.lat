@@ -1,8 +1,8 @@
 /**
  * Multi-Agent System - Venta de Seguros
  *
- * Agente 1 (Analista): Analiza el mensaje, detecta objeciones, define estrategia
- * Agente 2 (Vendedor): Ejecuta la estrategia con el tono de Sofi
+ * Agente 1 (Razonamiento - gpt-5.2-pro): Analiza contexto completo, decide estrategia
+ * Agente 2 (Chat - gpt-5.2-chat): Ejecuta la estrategia con personalidad de Sofi
  */
 
 import { generateObject } from 'ai';
@@ -10,64 +10,42 @@ import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 
 const AnalysisSchema = z.object({
-  literalMessage: z.string().describe('¿Qué dijo el cliente literalmente?'),
-  realIntent: z.string().describe('¿Qué quiere decir realmente? La intención detrás'),
+  // Análisis de la conversación
+  fase_actual: z.enum([
+    'primer_contacto',      // Acaba de escribir, necesita saludo cálido
+    'conociendo_motivacion', // Descubriendo qué le llamó la atención
+    'entendiendo_situacion', // Entendiendo su vida (familia, hijos, trabajo)
+    'calificando',          // Obteniendo datos (edad, fuma, dependientes)
+    'educando',             // Explicando cómo funciona el seguro
+    'presentando_precio',   // Dando cotización
+    'cerrando',             // Pidiendo datos para contratar
+    'manejando_objecion',   // Resolviendo una duda/objeción
+    'seguimiento'           // Ya habíamos hablado antes
+  ]).describe('Fase actual de la conversación'),
 
-  stage: z.enum([
-    'primer_contacto',  // Primer mensaje, necesita conexión
-    'curiosidad',       // Solo preguntando, no comprometido
-    'interes',          // Muestra interés real en proteger a su familia
-    'evaluacion',       // Evaluando si le conviene
-    'decision',         // Listo para comprar
-    'objecion',         // Tiene una objeción que resolver
-    'rechazo'           // No interesado
-  ]).describe('Etapa del prospecto'),
+  // Lo que ya sabemos (para no repetir)
+  ya_preguntamos: z.array(z.string()).describe('Lista de cosas que YA preguntamos (ej: "qué le llamó la atención", "si tiene hijos")'),
 
-  hasObjection: z.boolean().describe('¿Hay una objeción?'),
-  objectionType: z.enum([
-    'none',
-    'price',           // Muy caro, no tengo presupuesto
-    'trust',           // No confío en seguros, no pagan
-    'need',            // No lo necesito, ya tengo del trabajo
-    'timing',          // No es el momento, lo pienso
-    'young',           // Soy joven, no tengo hijos
-    'fear'             // Miedo a hablar de muerte
-  ]).describe('Tipo de objeción'),
+  ya_sabemos: z.object({
+    nombre: z.string().describe('Nombre del cliente o "desconocido"'),
+    motivacion: z.string().describe('Qué le llamó la atención o "desconocido"'),
+    tiene_hijos: z.string().describe('"si", "no", o "desconocido"'),
+    num_hijos: z.string().describe('Número de hijos o "desconocido"'),
+    edad: z.string().describe('Edad del cliente o "desconocido"'),
+    fuma: z.string().describe('"si", "no", o "desconocido"'),
+    situacion_familiar: z.string().describe('Resumen de su situación o "desconocido"'),
+  }).describe('Información que ya tenemos del cliente'),
 
-  signals: z.object({
-    isFirstMessage: z.boolean().describe('¿Es el primer mensaje del cliente? (solo "hola", "vi el anuncio", etc.)'),
-    hasKids: z.boolean().describe('¿Mencionó que tiene hijos?'),
-    mentionedAge: z.boolean().describe('¿Mencionó su edad?'),
-    isSmoker: z.boolean().describe('¿Mencionó si fuma?'),
-    hasDebt: z.boolean().describe('¿Mencionó deudas (hipoteca, carro)?'),
-    isMainProvider: z.boolean().describe('¿Es el sostén principal de la familia?'),
-    readyToBuy: z.boolean().describe('¿Está listo para comprar?'),
-    askedPrice: z.boolean().describe('¿Preguntó por precio?'),
-    mentionedMotivation: z.boolean().describe('¿Ya explicó qué le llamó la atención o por qué escribe?'),
-  }),
+  // Detección de objeciones
+  hay_objecion: z.boolean().describe('¿El cliente expresó una objeción o duda?'),
+  tipo_objecion: z.string().describe('Tipo de objeción: "precio", "desconfianza", "timing", "no_necesita", "joven", o "ninguna"'),
 
-  qualificationStatus: z.enum([
-    'not_started',     // No hemos empezado a calificar (primer contacto)
-    'not_qualified',   // Falta info básica (edad, fuma, hijos)
-    'partially',       // Tiene algo pero falta
-    'qualified'        // Tenemos edad, fuma, dependientes
-  ]).describe('Estado de calificación'),
+  // Decisión estratégica
+  siguiente_paso: z.string().describe('Qué debe hacer Sofi ahora (ser específico)'),
+  pregunta_a_hacer: z.string().describe('La pregunta exacta que debe hacer, o "ninguna" si no aplica'),
 
-  recommendedStrategy: z.enum([
-    'connect_warm',       // PRIMERO: Saludar cálido y preguntar qué le llamó la atención
-    'understand_why',     // Entender su motivación / situación familiar
-    'qualify_dependents', // Preguntar por hijos/dependientes
-    'qualify_age',        // Preguntar edad
-    'qualify_smoker',     // Preguntar si fuma
-    'calculate_sum',      // Calcular suma asegurada
-    'handle_objection',   // Manejar objeción
-    'present_price',      // Presentar precio
-    'close',              // Cerrar la venta
-    'let_go'              // No es buen fit, soltar
-  ]).describe('Siguiente paso'),
-
-  instruction: z.string().describe('Instrucción específica de qué hacer'),
-  keyQuestion: z.string().describe('Pregunta clave a hacer. "none" si no aplica'),
+  // Instrucción para el modelo de chat
+  instruccion_para_sofi: z.string().describe('Instrucción detallada de cómo debe responder Sofi, qué decir y qué NO decir'),
 });
 
 export type ConversationAnalysis = z.infer<typeof AnalysisSchema>;
@@ -82,204 +60,149 @@ export async function analyzeMessage(
     previousInteractions?: number;
   }
 ): Promise<ConversationAnalysis> {
+  // Formatear historial completo para análisis
   const historyText = history
-    .slice(-10)
-    .map(m => `${m.role === 'user' ? 'Cliente' : 'Sofi'}: ${m.content}`)
+    .map((m, i) => `[${i + 1}] ${m.role === 'user' ? 'CLIENTE' : 'SOFI'}: ${m.content}`)
     .join('\n');
 
-  // Count actual conversation turns (excluding the current message)
-  const conversationTurns = history.filter(m => m.role === 'user').length;
-  const isFirstContact = conversationTurns <= 1;
+  const messageCount = history.filter(m => m.role === 'user').length;
+  const clientName = leadContext?.name || 'desconocido';
 
   const result = await generateObject({
-    model: openai('gpt-4o-mini'),
+    model: openai('gpt-5.2-pro-2025-12-11'),
     schema: AnalysisSchema,
-    prompt: `Eres un analista de ventas de seguros. Analiza esta conversación para ayudar a Sofi a vender un seguro de vida.
+    prompt: `Eres un analista experto en ventas de seguros. Tu trabajo es analizar la conversación y dar instrucciones PRECISAS a Sofi (la vendedora) sobre qué hacer.
 
-CONTEXTO CRÍTICO:
-Los leads llegan desde anuncios de Meta (Facebook/Instagram). Algo les llamó la atención del anuncio. NO están comprometidos aún - solo tienen curiosidad.
+# CONTEXTO DEL NEGOCIO
+- Vendemos seguros de vida desde $500 MXN/mes
+- Los leads llegan de anuncios de Meta (Facebook/Instagram)
+- No están comprometidos - solo tienen curiosidad por el anuncio
 
-REGLA #1 - MUY IMPORTANTE:
-Si es el PRIMER mensaje del cliente (solo "hola", "vi el anuncio", "información", etc.):
-- stage DEBE ser "primer_contacto"
-- recommendedStrategy DEBE ser "connect_warm"
-- La pregunta debe ser: "¿Qué fue lo que te llamó la atención del anuncio?"
-- NUNCA preguntes edad, si fuma, o datos de calificación en el primer contacto
+# PRODUCTO
+| Edad | Precio/mes | Suma asegurada |
+|------|------------|----------------|
+| 25-30 | $380-450 | $1,000,000 |
+| 31-35 | $450-520 | $1,000,000 |
+| 36-40 | $520-600 | $1,000,000 |
+| 41-45 | $600-750 | $1,000,000 |
+| 46-50 | $750-950 | $1,000,000 |
+Fumadores: +40-50%
 
-REGLA #2 - NO REPETIR PREGUNTAS:
-Si el cliente YA RESPONDIÓ qué le llamó la atención (ej: "el precio", "la protección", "por mi familia"):
-- signals.mentionedMotivation DEBE ser true
-- recommendedStrategy DEBE ser "understand_why" (no "connect_warm")
-- AVANZA a la siguiente fase: entender su situación familiar
-- NO vuelvas a preguntar qué le llamó la atención
+# PROCESO DE VENTA (en orden estricto)
+1. **PRIMER CONTACTO**: Saludar cálido + preguntar qué le llamó la atención
+2. **CONOCER MOTIVACIÓN**: Escuchar por qué le interesó
+3. **ENTENDER SITUACIÓN**: ¿Tiene familia? ¿Hijos? ¿Primera vez que piensa en seguro?
+4. **CALIFICAR**: Edad, si fuma, cuántos dependientes
+5. **EDUCAR**: Explicar cómo funciona el seguro de forma simple
+6. **PRESENTAR PRECIO**: Dar cotización basada en su edad
+7. **CERRAR**: Pedir datos (nombre completo, fecha nacimiento, beneficiario)
 
-PROCESO GRADUAL (en orden):
-1. CONECTAR: Agradecer que escribieron, preguntar qué les llamó la atención
-2. ENTENDER: ¿Primera vez que piensa en seguro? ¿Tiene familia que dependa de él?
-3. CALIFICAR: Edad, si fuma, dependientes (solo después de conectar)
-4. EDUCAR: Explicar cómo funciona, dar precio aproximado
-5. CERRAR: Solo cuando esté listo
+# REGLAS CRÍTICAS
+1. **NUNCA REPETIR PREGUNTAS** - Si ya preguntamos algo, no volver a preguntar
+2. **UNA PREGUNTA A LA VEZ** - No bombardear con múltiples preguntas
+3. **PROGRESAR** - Cada mensaje debe avanzar la conversación
+4. **ESCUCHAR** - Comentar sobre lo que dice el cliente antes de preguntar otra cosa
 
-IMPORTANTE: Cada fase se hace UNA vez. Si ya preguntaste algo, NO lo preguntes de nuevo.
+# INFORMACIÓN DEL CLIENTE
+- Nombre: ${clientName}
+- Mensajes previos: ${messageCount}
 
-PRODUCTO: Seguro de vida desde $500 MXN/mes
-- Suma asegurada: $500,000 a $1,500,000 MXN
-- Precio depende de: edad y si fuma
+# CONVERSACIÓN COMPLETA
+${historyText || '(Sin historial - este es el primer mensaje)'}
 
-${isFirstContact ? '⚠️ ESTE ES EL PRIMER CONTACTO - USA "connect_warm" OBLIGATORIAMENTE' : ''}
-
-HISTORIAL:
-${historyText || '(Sin historial previo - es primer mensaje)'}
-
-MENSAJE ACTUAL:
+# MENSAJE ACTUAL DEL CLIENTE
 "${message}"
 
-Analiza y define la mejor estrategia. Recuerda: si es primer contacto, CONECTA primero.`,
-    temperature: 0.3,
+# TU TAREA
+Analiza TODO el historial y determina:
+1. ¿Qué ya preguntamos? (para no repetir)
+2. ¿Qué ya sabemos del cliente?
+3. ¿En qué fase estamos?
+4. ¿Cuál es el siguiente paso lógico?
+5. ¿Qué instrucción específica darle a Sofi?
+
+Sé MUY específico en la instrucción. Ejemplo:
+- MAL: "Pregunta sobre su situación"
+- BIEN: "Ya sabemos que le interesó el precio. Ahora pregunta: '¿Tienes hijos o alguien que dependa de ti económicamente?'"`,
+    temperature: 0.2,
   });
 
-  console.log('[Analyst] Stage:', result.object.stage, 'Strategy:', result.object.recommendedStrategy);
+  console.log('[Razonamiento] Fase:', result.object.fase_actual);
+  console.log('[Razonamiento] Ya sabemos:', JSON.stringify(result.object.ya_sabemos));
+  console.log('[Razonamiento] Siguiente paso:', result.object.siguiente_paso);
 
   return result.object;
 }
 
 export function generateSellerInstructions(analysis: ConversationAnalysis): string {
-  // Special handling for first contact - override everything
-  if (analysis.stage === 'primer_contacto' || analysis.signals.isFirstMessage) {
-    return `
-# PRIMER CONTACTO - CONEXIÓN OBLIGATORIA
-
-El cliente acaba de escribir por primera vez. Viene de un anuncio de Meta.
-NO preguntes edad, si fuma, ni datos de calificación aún.
-
-TU ÚNICA TAREA:
-1. Saludar cálidamente USANDO SU NOMBRE (si está en el contexto)
-2. Preguntar qué le llamó la atención del anuncio
-
-RESPUESTA IDEAL (usa el nombre del contexto):
-"¡Hola [NOMBRE]! Qué bueno que escribiste. Cuéntame, ¿qué fue lo que te llamó la atención del anuncio?"
-
-Ejemplo si el nombre es Victor:
-"¡Hola Victor! Qué bueno que escribiste. Cuéntame, ¿qué fue lo que te llamó la atención del anuncio?"
-
-IMPORTANTE: SIEMPRE usa el nombre del cliente si está disponible en el contexto.
-
-NO HAGAS:
-- No preguntes la edad
-- No preguntes si fuma
-- No preguntes si tiene hijos
-- No expliques el producto aún
-- No des precios
-`;
-  }
-
+  // Construir instrucciones claras basadas en el análisis de gpt-5.2-pro
   let instructions = `
-# ANÁLISIS
-- Cliente dijo: "${analysis.literalMessage}"
-- Intención real: ${analysis.realIntent}
-- Etapa: ${analysis.stage.toUpperCase()}
-- Calificación: ${analysis.qualificationStatus}
-${analysis.hasObjection ? `- OBJECIÓN: ${analysis.objectionType}` : ''}
+# ANÁLISIS DE LA CONVERSACIÓN (por gpt-5.2-pro)
 
-# ESTRATEGIA: ${analysis.recommendedStrategy.toUpperCase()}
-${analysis.instruction}
+## Fase actual: ${analysis.fase_actual.toUpperCase()}
 
-${analysis.keyQuestion && analysis.keyQuestion !== 'none' ? `# PREGUNTA A HACER:\n"${analysis.keyQuestion}"` : ''}
+## Lo que YA preguntamos (NO REPETIR):
+${analysis.ya_preguntamos.length > 0 ? analysis.ya_preguntamos.map(p => `- ${p}`).join('\n') : '- (Nada aún)'}
 
-# INFO DEL CLIENTE:
-${analysis.signals.mentionedMotivation ? '✓ Ya sabemos qué le llamó la atención' : '? Falta preguntar qué le llamó la atención'}
-${analysis.signals.hasKids ? '✓ Tiene hijos - USAR ESTO' : '? No sabemos si tiene hijos'}
-${analysis.signals.mentionedAge ? '✓ Ya dio edad' : '? Falta preguntar edad'}
-${analysis.signals.isSmoker ? '✓ Ya sabemos si fuma' : '? Falta preguntar si fuma'}
-${analysis.signals.hasDebt ? '✓ Tiene deudas - INCLUIR EN SUMA' : ''}
-${analysis.signals.isMainProvider ? '✓ Es sostén de familia - URGENCIA' : ''}
-${analysis.signals.readyToBuy ? '✓ LISTO PARA CERRAR' : ''}
+## Lo que YA sabemos del cliente:
+- Nombre: ${analysis.ya_sabemos.nombre}
+- Motivación: ${analysis.ya_sabemos.motivacion}
+- Tiene hijos: ${analysis.ya_sabemos.tiene_hijos}
+- Edad: ${analysis.ya_sabemos.edad}
+- Fuma: ${analysis.ya_sabemos.fuma}
+- Situación: ${analysis.ya_sabemos.situacion_familiar}
+
+${analysis.hay_objecion ? `## ⚠️ OBJECIÓN DETECTADA: ${analysis.tipo_objecion}` : ''}
+
+## SIGUIENTE PASO:
+${analysis.siguiente_paso}
+
+${analysis.pregunta_a_hacer !== 'ninguna' ? `## PREGUNTA A HACER:\n"${analysis.pregunta_a_hacer}"` : ''}
+
+## INSTRUCCIÓN ESPECÍFICA PARA TI:
+${analysis.instruccion_para_sofi}
+
+# REGLAS IMPORTANTES:
+1. NO repitas ninguna pregunta de la lista "YA preguntamos"
+2. Usa la información de "YA sabemos" para personalizar
+3. Haz SOLO UNA pregunta por mensaje
+4. Mensajes cortos (2-3 líneas máximo)
+5. Sé cálida y conversacional
 `;
 
-  // Add strategy-specific instructions
-  if (analysis.recommendedStrategy === 'connect_warm') {
-    instructions += `
-# CONEXIÓN CÁLIDA:
-- Saluda con calidez
-- Pregunta qué le llamó la atención del anuncio
-- NO califiques aún (no preguntes edad, si fuma, etc.)
-`;
-  } else if (analysis.recommendedStrategy === 'understand_why') {
-    instructions += `
-# ENTENDER SU SITUACIÓN:
-Ya sabes qué le llamó la atención. NO vuelvas a preguntar eso.
-Ahora averigua:
-- "¿Has pensado antes en un seguro de vida o es la primera vez?"
-- "¿Tienes hijos o alguien que dependa de ti?"
-
-Ejemplo de respuesta:
-"Ah ok, tiene sentido. Oye, ¿es la primera vez que piensas en un seguro de vida o ya habías considerado antes?"
-
-NO preguntes:
-- Qué le llamó la atención (ya lo dijo)
-- Edad o si fuma (aún no es momento)
-`;
-  } else if (analysis.recommendedStrategy === 'qualify_dependents') {
-    instructions += `
-# CALIFICAR - DEPENDIENTES:
-Ya conectaste y entiendes su situación.
-Pregunta: "¿Cuántas personas dependen de ti económicamente?"
-O si ya mencionó hijos: "¿Cuántos años tienen tus hijos?"
-`;
-  } else if (analysis.recommendedStrategy === 'qualify_age') {
-    instructions += `
-# CALIFICAR - EDAD:
-Ya sabes su situación familiar.
-Pregunta natural: "¿Cuántos años tienes? Para darte un precio aproximado."
-`;
-  }
-
-  if (analysis.hasObjection) {
+  // Agregar manejo de objeciones si aplica
+  if (analysis.hay_objecion && analysis.tipo_objecion !== 'ninguna') {
     const handlers: Record<string, string> = {
-      price: `
-# OBJECIÓN DE PRECIO:
-- Pregunta: "¿Cuánto es lo máximo que podrías pagar sin que te duela?"
-- Ofrece suma menor: $300/mes = $500,000 de cobertura
-- Haz la cuenta: "Son $20/día, menos que un Uber"
-- NO bajes precio, ajusta cobertura`,
+      'precio': `
+# MANEJO DE OBJECIÓN - PRECIO:
+- "¿Cuánto es lo máximo que podrías pagar al mes sin que te duela?"
+- Ofrece ajustar cobertura: $300/mes = $500,000
+- "Son como $15 al día, menos que un café"`,
 
-      trust: `
-# OBJECIÓN DE CONFIANZA ("no pagan"):
+      'desconfianza': `
+# MANEJO DE OBJECIÓN - DESCONFIANZA:
 - Valida: "Entiendo, hay muchas historias así"
-- Diferencia: "En vida es simple: si te mueres, pagan. Punto."
-- Explica las ÚNICAS 2 exclusiones: suicidio año 1, mentir en cuestionario
-- Pregunta: "¿Tienes alguna enfermedad que no me hayas dicho?"`,
+- "En vida es simple: si falleces, pagan. Punto."
+- Solo 2 exclusiones: suicidio año 1, mentir en cuestionario`,
 
-      need: `
-# OBJECIÓN "YA TENGO DEL TRABAJO":
-- Pregunta: "¿Sabes de cuánto es?"
-- Haz ver el riesgo: "¿Y si cambias de trabajo o te corren?"
-- Posiciona como complemento, no reemplazo
-- "El del trabajo es temporal, este es tuyo para siempre"`,
+      'timing': `
+# MANEJO DE OBJECIÓN - TIMING:
+- "¿Qué te hace dudar?"
+- Sin presión: "Si quieres lo dejamos y me escribes cuando estés listo"`,
 
-      timing: `
-# OBJECIÓN "LO PIENSO":
-- Pregunta: "¿Qué te hace dudar?"
-- Si tiene hijos, pregunta directo: "¿Qué pasa con ellos si mañana no llegas?"
-- No presiones pero planta la semilla
-- Ofrece: "Si quieres lo dejamos y me escribes cuando estés listo"`,
+      'no_necesita': `
+# MANEJO DE OBJECIÓN - YA TIENE:
+- "¿Sabes de cuánto es el que tienes?"
+- "¿Y qué pasa si cambias de trabajo?"`,
 
-      young: `
-# OBJECIÓN "SOY JOVEN / SIN HIJOS":
-- Valida: "Honestamente a tu edad no es urgente"
-- Busca otra razón: "¿Ayudas a tus papás económicamente?"
-- Si no hay dependientes, puede no ser buen fit - suéltalo`,
-
-      fear: `
-# OBJECIÓN DE MIEDO A HABLAR DE MUERTE:
-- Normaliza: "Nadie quiere pensar en esto, pero es importante"
-- Enfoca en los que quedan: "No es para ti, es para los que amas"
-- No uses lenguaje morboso`,
+      'joven': `
+# MANEJO DE OBJECIÓN - JOVEN/SIN HIJOS:
+- "Honestamente a tu edad no es urgente"
+- "¿Ayudas a tus papás económicamente?"
+- Si no hay dependientes, puede no ser buen fit`,
     };
 
-    if (analysis.objectionType !== 'none') {
-      instructions += handlers[analysis.objectionType] || '';
-    }
+    instructions += handlers[analysis.tipo_objecion] || '';
   }
 
   return instructions;

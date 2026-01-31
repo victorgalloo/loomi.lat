@@ -286,10 +286,11 @@ export async function simpleAgent(
       previousInteractions: context.recentMessages.length,
     }
   );
-  console.log('=== SELLER STRATEGY ===');
-  console.log(`Stage: ${sellerAnalysis.stage}, Strategy: ${sellerAnalysis.recommendedStrategy}`);
-  if (sellerAnalysis.hasObjection) {
-    console.log(`Objection detected: ${sellerAnalysis.objectionType}`);
+  console.log('=== ANÁLISIS (gpt-5.2-pro) ===');
+  console.log(`Fase: ${sellerAnalysis.fase_actual}`);
+  console.log(`Siguiente paso: ${sellerAnalysis.siguiente_paso}`);
+  if (sellerAnalysis.hay_objecion) {
+    console.log(`Objeción detectada: ${sellerAnalysis.tipo_objecion}`);
   }
 
   // ============================================

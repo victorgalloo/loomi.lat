@@ -12,7 +12,7 @@ import {
   DragStartEvent,
   DragEndEvent,
 } from '@dnd-kit/core';
-import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import KanbanColumn, { PipelineStage } from './KanbanColumn';
 import LeadCard, { Lead } from './LeadCard';
 import LeadDetailModal from './LeadDetailModal';
@@ -22,6 +22,7 @@ interface KanbanBoardProps {
   initialLeads: Lead[];
   onLeadMove?: (leadId: string, newStage: string) => Promise<void>;
   onLeadUpdate?: (leadId: string, data: Partial<Lead>) => Promise<void>;
+  isDarkMode?: boolean;
 }
 
 export default function KanbanBoard({
@@ -29,6 +30,7 @@ export default function KanbanBoard({
   initialLeads,
   onLeadMove,
   onLeadUpdate,
+  isDarkMode = false,
 }: KanbanBoardProps) {
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -62,7 +64,6 @@ export default function KanbanBoard({
     const activeLeadId = active.id as string;
     const overId = over.id as string;
 
-    // Check if dropped over a column (stage name) or another card
     const isOverColumn = stages.some(s => s.name === overId);
     const newStage = isOverColumn
       ? overId
@@ -73,18 +74,15 @@ export default function KanbanBoard({
     const activeLead = leads.find(l => l.id === activeLeadId);
     if (!activeLead || activeLead.stage === newStage) return;
 
-    // Optimistic update
     setLeads(prevLeads =>
       prevLeads.map(lead =>
         lead.id === activeLeadId ? { ...lead, stage: newStage } : lead
       )
     );
 
-    // Call API
     try {
       await onLeadMove?.(activeLeadId, newStage);
     } catch (error) {
-      // Revert on error
       setLeads(prevLeads =>
         prevLeads.map(lead =>
           lead.id === activeLeadId ? { ...lead, stage: activeLead.stage } : lead
@@ -98,7 +96,6 @@ export default function KanbanBoard({
   };
 
   const handleLeadSave = async (leadId: string, data: Partial<Lead>) => {
-    // Optimistic update
     setLeads(prevLeads =>
       prevLeads.map(lead =>
         lead.id === leadId ? { ...lead, ...data } : lead
@@ -119,7 +116,7 @@ export default function KanbanBoard({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4">
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2">
           {stages
             .sort((a, b) => a.position - b.position)
             .map((stage) => (
@@ -128,26 +125,27 @@ export default function KanbanBoard({
                 stage={stage}
                 leads={getLeadsByStage(stage.name)}
                 onLeadClick={handleLeadClick}
+                isDarkMode={isDarkMode}
               />
             ))}
         </div>
 
         <DragOverlay>
           {activeLead && (
-            <div className="rotate-3 opacity-90">
-              <LeadCard lead={activeLead} />
+            <div className="rotate-2 scale-105">
+              <LeadCard lead={activeLead} isDarkMode={isDarkMode} />
             </div>
           )}
         </DragOverlay>
       </DndContext>
 
-      {/* Lead Detail Modal */}
       {selectedLead && (
         <LeadDetailModal
           lead={selectedLead}
           stages={stages}
           onClose={() => setSelectedLead(null)}
           onSave={handleLeadSave}
+          isDarkMode={isDarkMode}
         />
       )}
     </>

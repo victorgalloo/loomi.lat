@@ -1,6 +1,9 @@
 /**
  * WhatsApp Message Sender
  * Sends messages via WhatsApp Cloud API
+ *
+ * Supports multi-tenant: All functions accept optional TenantCredentials
+ * Falls back to environment variables for backward compatibility
  */
 
 export interface TimeSlot {
@@ -10,26 +13,87 @@ export interface TimeSlot {
   displayText: string;
 }
 
-const WHATSAPP_API_URL = `https://graph.facebook.com/v22.0/${process.env.WHATSAPP_PHONE_ID}/messages`;
+/**
+ * Credentials for multi-tenant WhatsApp messaging
+ */
+export interface TenantCredentials {
+  phoneNumberId: string;
+  accessToken: string;
+  tenantId?: string;
+}
+
+// Graph API version
+const GRAPH_API_VERSION = 'v22.0';
 
 /**
- * Send headers for WhatsApp API
+ * Get WhatsApp API URL for a phone number ID
  */
-function getHeaders() {
+function getApiUrl(phoneNumberId?: string): string {
+  const phoneId = phoneNumberId || process.env.WHATSAPP_PHONE_ID;
+  if (!phoneId) {
+    throw new Error('No phone number ID available');
+  }
+  return `https://graph.facebook.com/${GRAPH_API_VERSION}/${phoneId}/messages`;
+}
+
+/**
+ * Get headers for WhatsApp API
+ */
+function getHeaders(accessToken?: string): Record<string, string> {
+  const token = accessToken || process.env.WHATSAPP_ACCESS_TOKEN;
+  if (!token) {
+    throw new Error('No access token available');
+  }
   return {
-    'Authorization': `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+    'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json'
   };
 }
 
 /**
+ * Mark a message as read (shows blue checkmarks)
+ */
+export async function markAsRead(
+  messageId: string,
+  credentials?: TenantCredentials
+): Promise<boolean> {
+  try {
+    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+      method: 'POST',
+      headers: getHeaders(credentials?.accessToken),
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        status: 'read',
+        message_id: messageId
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('[WhatsApp] Mark as read error:', error);
+      return false;
+    }
+
+    console.log('[WhatsApp] Message marked as read:', messageId);
+    return true;
+  } catch (error) {
+    console.error('[WhatsApp] Mark as read error:', error);
+    return false;
+  }
+}
+
+/**
  * Send a text message
  */
-export async function sendWhatsAppMessage(phone: string, text: string): Promise<boolean> {
+export async function sendWhatsAppMessage(
+  phone: string,
+  text: string,
+  credentials?: TenantCredentials
+): Promise<boolean> {
   try {
-    const response = await fetch(WHATSAPP_API_URL, {
+    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         to: phone,
@@ -58,7 +122,8 @@ export async function sendScheduleList(
   phone: string,
   slots: TimeSlot[],
   headerText: string = 'Horarios disponibles',
-  bodyText: string = 'Elige el horario que más te convenga:'
+  bodyText: string = 'Elige el horario que más te convenga:',
+  credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
     // WhatsApp list can have max 10 items
@@ -70,9 +135,9 @@ export async function sendScheduleList(
       description: slot.date && slot.time ? `${slot.date} ${slot.time}` : ''
     }));
 
-    const response = await fetch(WHATSAPP_API_URL, {
+    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         to: phone,
@@ -117,12 +182,13 @@ export async function sendScheduleList(
  */
 export async function sendConfirmationButtons(
   phone: string,
-  bodyText: string
+  bodyText: string,
+  credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(WHATSAPP_API_URL, {
+    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         to: phone,
@@ -173,12 +239,13 @@ export async function sendConfirmationButtons(
 export async function sendWhatsAppLink(
   phone: string,
   url: string,
-  caption: string
+  caption: string,
+  credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
     // For links, we send as text with the URL
     const text = `${caption}\n\n${url}`;
-    return await sendWhatsAppMessage(phone, text);
+    return await sendWhatsAppMessage(phone, text, credentials);
   } catch (error) {
     console.error('[WhatsApp] Link error:', error);
     return false;
@@ -196,8 +263,10 @@ export async function escalateToHuman(params: {
   recentMessages?: string[];
   isUrgent?: boolean;
   isVIP?: boolean;
+  credentials?: TenantCredentials;
+  fallbackPhone?: string;
 }): Promise<boolean> {
-  const fallbackPhone = process.env.FALLBACK_PHONE;
+  const fallbackPhone = params.fallbackPhone || process.env.FALLBACK_PHONE;
 
   if (!fallbackPhone) {
     console.error('[WhatsApp] No fallback phone configured');
@@ -237,7 +306,7 @@ ${conversationContext}
 
 wa.me/${params.clientPhone.replace('+', '')}`;
 
-    return await sendWhatsAppMessage(fallbackPhone, message);
+    return await sendWhatsAppMessage(fallbackPhone, message, params.credentials);
   } catch (error) {
     console.error('[WhatsApp] Escalation error:', error);
     return false;
@@ -253,8 +322,10 @@ export async function notifyFallback(params: {
   clientName?: string;
   error?: string;
   details?: string;
+  credentials?: TenantCredentials;
+  fallbackPhone?: string;
 }): Promise<boolean> {
-  const fallbackPhone = process.env.FALLBACK_PHONE;
+  const fallbackPhone = params.fallbackPhone || process.env.FALLBACK_PHONE;
 
   if (!fallbackPhone) {
     return false;
@@ -273,7 +344,7 @@ export async function notifyFallback(params: {
       message += `Detalles: ${params.details}\n`;
     }
 
-    return await sendWhatsAppMessage(fallbackPhone, message);
+    return await sendWhatsAppMessage(fallbackPhone, message, params.credentials);
   } catch (error) {
     console.error('[WhatsApp] Notify fallback error:', error);
     return false;
@@ -290,19 +361,20 @@ export async function notifyFallback(params: {
 export async function sendWhatsAppDocument(
   to: string,
   documentUrl: string,
-  caption?: string
+  caption?: string,
+  credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(WHATSAPP_API_URL, {
+    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         to,
         type: 'document',
         document: {
           link: documentUrl,
-          caption: caption || 'Información de Anthana',
+          caption: caption || 'Información',
         },
       }),
     });
@@ -322,11 +394,15 @@ export async function sendWhatsAppDocument(
 /**
  * Send an audio message
  */
-export async function sendWhatsAppAudio(to: string, audioUrl: string): Promise<boolean> {
+export async function sendWhatsAppAudio(
+  to: string,
+  audioUrl: string,
+  credentials?: TenantCredentials
+): Promise<boolean> {
   try {
-    const response = await fetch(WHATSAPP_API_URL, {
+    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         to,
@@ -356,12 +432,13 @@ export async function sendWhatsAppAudio(to: string, audioUrl: string): Promise<b
 export async function sendWhatsAppImage(
   to: string,
   imageUrl: string,
-  caption?: string
+  caption?: string,
+  credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(WHATSAPP_API_URL, {
+    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         to,
@@ -392,12 +469,13 @@ export async function sendWhatsAppImage(
 export async function sendWhatsAppVideo(
   to: string,
   videoUrl: string,
-  caption?: string
+  caption?: string,
+  credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(WHATSAPP_API_URL, {
+    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         to,
@@ -431,7 +509,8 @@ export async function sendWhatsAppVideo(
  */
 export async function sendDemoWelcome(
   to: string,
-  leadName?: string
+  leadName?: string,
+  credentials?: TenantCredentials
 ): Promise<boolean> {
   const name = leadName && leadName !== 'Usuario' ? ` ${leadName}` : '';
 
@@ -441,17 +520,20 @@ Soy un agente de IA que responde WhatsApp 24/7.
 
 Hazme una pregunta como si fueras cliente de tu negocio y te muestro cómo respondo en segundos`;
 
-  return sendWhatsAppMessage(to, message);
+  return sendWhatsAppMessage(to, message, credentials);
 }
 
 /**
  * Send challenge list (step 1)
  */
-export async function sendChallengeList(to: string): Promise<boolean> {
+export async function sendChallengeList(
+  to: string,
+  credentials?: TenantCredentials
+): Promise<boolean> {
   try {
-    const response = await fetch(WHATSAPP_API_URL, {
+    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         to,
@@ -495,11 +577,14 @@ export async function sendChallengeList(to: string): Promise<boolean> {
 /**
  * Send volume list (step 2)
  */
-export async function sendVolumeList(to: string): Promise<boolean> {
+export async function sendVolumeList(
+  to: string,
+  credentials?: TenantCredentials
+): Promise<boolean> {
   try {
-    const response = await fetch(WHATSAPP_API_URL, {
+    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         to,
@@ -543,11 +628,14 @@ export async function sendVolumeList(to: string): Promise<boolean> {
 /**
  * Send industry list (step 3)
  */
-export async function sendIndustryList(to: string): Promise<boolean> {
+export async function sendIndustryList(
+  to: string,
+  credentials?: TenantCredentials
+): Promise<boolean> {
   try {
-    const response = await fetch(WHATSAPP_API_URL, {
+    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         to,
@@ -599,7 +687,8 @@ export async function sendIndustryList(to: string): Promise<boolean> {
 export async function sendPaymentLink(
   to: string,
   checkoutUrl: string,
-  planName: string
+  planName: string,
+  credentials?: TenantCredentials
 ): Promise<boolean> {
   const message = `Perfecto, aquí está tu link de pago para el plan ${planName}:
 
@@ -607,17 +696,20 @@ ${checkoutUrl}
 
 Una vez que completes el pago, tu agente estará activo en menos de 24 horas.`;
 
-  return sendWhatsAppMessage(to, message);
+  return sendWhatsAppMessage(to, message, credentials);
 }
 
 /**
  * Send plan selection buttons
  */
-export async function sendPlanSelection(to: string): Promise<boolean> {
+export async function sendPlanSelection(
+  to: string,
+  credentials?: TenantCredentials
+): Promise<boolean> {
   try {
-    const response = await fetch(WHATSAPP_API_URL, {
+    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         to,
@@ -686,7 +778,8 @@ const DEMO_VOICE_TEXT = `Hola, soy un agente de inteligencia artificial. Puedo r
 export async function sendAutoDemoSequence(
   to: string,
   leadName?: string,
-  slots?: TimeSlot[]
+  slots?: TimeSlot[],
+  credentials?: TenantCredentials
 ): Promise<boolean> {
   const name = leadName && leadName !== 'Usuario' ? ` ${leadName}` : '';
 
@@ -695,7 +788,7 @@ export async function sendAutoDemoSequence(
   try {
     // Step 1: Send welcome text (immediate)
     const welcomeText = `Hola${name}! Soy Loomi, tu agente de IA para WhatsApp.`;
-    await sendWhatsAppMessage(to, welcomeText);
+    await sendWhatsAppMessage(to, welcomeText, credentials);
     console.log(`[AutoDemo] Step 1: Welcome text sent`);
 
     // Step 2: Send voice note (1.5s delay)
@@ -706,12 +799,12 @@ export async function sendAutoDemoSequence(
     const voiceUrl = await getDemoVoiceUrl();
 
     if (voiceUrl) {
-      await sendWhatsAppAudio(to, voiceUrl);
+      await sendWhatsAppAudio(to, voiceUrl, credentials);
       console.log(`[AutoDemo] Step 2: Voice note sent`);
     } else {
       // Fallback: send text instead of voice
       console.log(`[AutoDemo] Step 2: Voice generation failed, sending text fallback`);
-      await sendWhatsAppMessage(to, DEMO_VOICE_TEXT);
+      await sendWhatsAppMessage(to, DEMO_VOICE_TEXT, credentials);
     }
 
     // Step 3: Send image (2s delay)
@@ -721,7 +814,8 @@ export async function sendAutoDemoSequence(
       await sendWhatsAppImage(
         to,
         DEMO_IMAGE_URL,
-        'Respondo en segundos, hablo con voz, agendo citas automatico'
+        'Respondo en segundos, hablo con voz, agendo citas automatico',
+        credentials
       );
       console.log(`[AutoDemo] Step 3: Image sent`);
     } else {
@@ -736,14 +830,16 @@ export async function sendAutoDemoSequence(
         to,
         slots,
         'Agenda una demo',
-        '¿Te gustaria ver como funcionaria en tu negocio?'
+        '¿Te gustaria ver como funcionaria en tu negocio?',
+        credentials
       );
       console.log(`[AutoDemo] Step 4: Schedule list sent with ${slots.length} slots`);
     } else {
       // Send CTA without schedule list
       await sendWhatsAppMessage(
         to,
-        '¿Te gustaria ver como funcionaria en tu negocio? Responde "demo" para agendar una llamada de 20 minutos.'
+        '¿Te gustaria ver como funcionaria en tu negocio? Responde "demo" para agendar una llamada de 20 minutos.',
+        credentials
       );
       console.log(`[AutoDemo] Step 4: CTA text sent (no slots available)`);
     }

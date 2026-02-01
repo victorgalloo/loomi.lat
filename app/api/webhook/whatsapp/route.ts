@@ -1,6 +1,11 @@
 /**
  * WhatsApp Webhook Handler
  *
+ * Multi-tenant support:
+ * - Routes messages by phone_number_id to correct tenant
+ * - Loads tenant-specific credentials and agent config
+ * - Uses tenant credentials for all WhatsApp API calls
+ *
  * Optimized with:
  * - Promise.all() for parallel operations (async-parallel)
  * - Start promises early, await late (async-api-routes)
@@ -17,7 +22,9 @@ import {
   sendWhatsAppMessage,
   sendScheduleList,
   notifyFallback,
-  TimeSlot
+  markAsRead,
+  TimeSlot,
+  TenantCredentials
 } from '@/lib/whatsapp/send';
 import { getConversationContext } from '@/lib/memory/context';
 import { simpleAgent } from '@/lib/agents/simple-agent';
@@ -46,6 +53,7 @@ import {
   scheduleSaidLaterFollowUp,
   cancelFollowUps
 } from '@/lib/followups/scheduler';
+import { getTenantFromPhoneNumberId, getAgentConfig, AgentConfig } from '@/lib/tenant/context';
 
 // Hoisted RegExp for email extraction (js-hoist-regexp)
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
@@ -448,19 +456,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: 'duplicate' });
     }
 
+    // Multi-tenant: Get tenant credentials from phone_number_id
+    let credentials: TenantCredentials | undefined;
+    let tenantId: string | undefined;
+    let agentConfig: AgentConfig | undefined;
+
+    if (message.phoneNumberId) {
+      const tenantData = await getTenantFromPhoneNumberId(message.phoneNumberId);
+      if (tenantData) {
+        tenantId = tenantData.tenantId;
+        credentials = {
+          phoneNumberId: message.phoneNumberId,
+          accessToken: tenantData.accessToken,
+          tenantId: tenantData.tenantId
+        };
+        // Load agent config for this tenant
+        agentConfig = await getAgentConfig(tenantId) || undefined;
+        console.log(`[Webhook] Multi-tenant: Routing to tenant ${tenantId}`);
+      } else {
+        // Fallback to environment variables for backward compatibility
+        console.log(`[Webhook] No tenant found for phone_number_id ${message.phoneNumberId}, using env vars`);
+      }
+    }
+
     try {
       // Check rate limits
       const rateLimit = await checkRateLimit(message.phone);
       if (!rateLimit.allowed) {
         console.log(`Rate limited: ${message.phone} - ${rateLimit.reason}`);
         if (rateLimit.reason === 'minute_limit') {
-          await sendWhatsAppMessage(message.phone, 'Dame un momento para procesar tus mensajes anteriores.');
+          await sendWhatsAppMessage(message.phone, 'Dame un momento para procesar tus mensajes anteriores.', credentials);
         }
         return NextResponse.json({ status: 'rate_limited' });
       }
 
-      // Get conversation context
-      const context = await getConversationContext(message);
+      // Mark message as read immediately (shows blue checkmarks)
+      await markAsRead(message.messageId, credentials);
+
+      // Get conversation context (with tenant_id if available)
+      const context = await getConversationContext(message, tenantId);
 
       // Save message and cancel re-engagement in parallel (async-parallel)
       await Promise.all([
@@ -481,17 +515,17 @@ export async function POST(request: NextRequest) {
             (async () => {
               const moreSlots = await getAvailableTimeSlots(2, 3);
               if (moreSlots.length > 0) {
-                await sendScheduleList(message.phone, moreSlots, 'Más horarios', 'Aquí tienes más opciones:');
+                await sendScheduleList(message.phone, moreSlots, 'Más horarios', 'Aquí tienes más opciones:', credentials);
                 saveMessage(context.conversation.id, 'assistant', '[Lista de más horarios]', context.lead.id).catch(console.error);
               } else {
-                await sendWhatsAppMessage(message.phone, 'No hay más horarios disponibles esta semana. ¿Te escribo la próxima?');
+                await sendWhatsAppMessage(message.phone, 'No hay más horarios disponibles esta semana. ¿Te escribo la próxima?', credentials);
               }
             })()
           );
           return NextResponse.json({ status: 'ok', flow: 'more_days_requested' });
         }
 
-        await sendWhatsAppMessage(message.phone, slotSelection.response!);
+        await sendWhatsAppMessage(message.phone, slotSelection.response!, credentials);
         await saveMessage(context.conversation.id, 'assistant', slotSelection.response!, context.lead.id);
         return NextResponse.json({ status: 'ok', flow: 'slot_selected' });
       }
@@ -501,13 +535,13 @@ export async function POST(request: NextRequest) {
         console.log(`[Webhook] User asking for other days via text`);
         waitUntil(
           (async () => {
-            await sendWhatsAppMessage(message.phone, 'Claro, déjame mostrarte más opciones.');
+            await sendWhatsAppMessage(message.phone, 'Claro, déjame mostrarte más opciones.', credentials);
             const moreSlots = await getAvailableTimeSlots(2, 3);
             if (moreSlots.length > 0) {
-              await sendScheduleList(message.phone, moreSlots, 'Más horarios', 'Aquí tienes más opciones:');
+              await sendScheduleList(message.phone, moreSlots, 'Más horarios', 'Aquí tienes más opciones:', credentials);
               saveMessage(context.conversation.id, 'assistant', '[Lista de más horarios]', context.lead.id).catch(console.error);
             } else {
-              await sendWhatsAppMessage(message.phone, 'No hay más horarios disponibles esta semana. ¿Te escribo la próxima?');
+              await sendWhatsAppMessage(message.phone, 'No hay más horarios disponibles esta semana. ¿Te escribo la próxima?', credentials);
             }
           })()
         );
@@ -520,10 +554,10 @@ export async function POST(request: NextRequest) {
         console.log(`[Webhook] User wants to change time`);
         const slots = await getAvailableTimeSlots();
         if (slots.length > 0) {
-          await sendScheduleList(message.phone, slots, 'Elige otro horario', 'Estos son los horarios disponibles:');
+          await sendScheduleList(message.phone, slots, 'Elige otro horario', 'Estos son los horarios disponibles:', credentials);
           await saveMessage(context.conversation.id, 'assistant', '[Lista de horarios enviada]', context.lead.id);
         } else {
-          await sendWhatsAppMessage(message.phone, 'No hay horarios disponibles en este momento. Te contactamos pronto.');
+          await sendWhatsAppMessage(message.phone, 'No hay horarios disponibles en este momento. Te contactamos pronto.', credentials);
           await saveMessage(context.conversation.id, 'assistant', 'No hay horarios disponibles.', context.lead.id);
         }
         return NextResponse.json({ status: 'ok', flow: 'schedule_list_sent' });
@@ -532,7 +566,7 @@ export async function POST(request: NextRequest) {
       // 3. Handle email for pending slot
       const emailResult = await handleEmailForPendingSlot(message, context);
       if (emailResult.handled) {
-        await sendWhatsAppMessage(message.phone, emailResult.response!);
+        await sendWhatsAppMessage(message.phone, emailResult.response!, credentials);
         await saveMessage(context.conversation.id, 'assistant', emailResult.response!, context.lead.id);
 
         if (emailResult.appointmentBooked) {
@@ -567,7 +601,7 @@ export async function POST(request: NextRequest) {
       // 4. Handle plan selection (Stripe)
       const planSelection = await handlePlanSelection(message);
       if (planSelection.handled) {
-        await sendWhatsAppMessage(message.phone, planSelection.response!);
+        await sendWhatsAppMessage(message.phone, planSelection.response!, credentials);
         await saveMessage(context.conversation.id, 'assistant', planSelection.response!, context.lead.id);
         return NextResponse.json({ status: 'ok', flow: 'plan_selected' });
       }
@@ -575,7 +609,7 @@ export async function POST(request: NextRequest) {
       // 5. Handle email for pending plan (Stripe checkout)
       const planEmailResult = await handleEmailForPendingPlan(message);
       if (planEmailResult.handled) {
-        await sendWhatsAppMessage(message.phone, planEmailResult.response!);
+        await sendWhatsAppMessage(message.phone, planEmailResult.response!, credentials);
         await saveMessage(context.conversation.id, 'assistant', planEmailResult.response!, context.lead.id);
 
         if (planEmailResult.paymentLinkSent) {
@@ -598,23 +632,25 @@ export async function POST(request: NextRequest) {
 
       let result;
       try {
-        result = await simpleAgent(message.text, context);
+        // Pass agent config for tenant-specific behavior
+        result = await simpleAgent(message.text, context, agentConfig);
       } catch (agentError) {
         console.error('Agent error:', agentError);
         notifyFallback({
           type: 'agent_error',
           clientPhone: message.phone,
           clientName: context.lead.name,
-          error: String(agentError)
+          error: String(agentError),
+          credentials
         }).catch(console.error);
-        await sendWhatsAppMessage(message.phone, 'Perdón, tuve un problema técnico. Te contacto en un momento.');
+        await sendWhatsAppMessage(message.phone, 'Perdón, tuve un problema técnico. Te contacto en un momento.', credentials);
         return NextResponse.json({ status: 'agent_error' });
       }
 
       console.log(`Response: ${result.response.substring(0, 50)}...`);
 
       // Send response
-      await sendWhatsAppMessage(message.phone, result.response);
+      await sendWhatsAppMessage(message.phone, result.response, credentials);
       await saveMessage(context.conversation.id, 'assistant', result.response, context.lead.id);
 
       // Background operations
@@ -670,6 +706,7 @@ export async function POST(request: NextRequest) {
       type: 'general_error',
       error: String(error),
       details: 'Error en webhook principal'
+      // Note: credentials not available in outer catch, uses env fallback
     }).catch(console.error);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }

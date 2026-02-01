@@ -9,6 +9,7 @@ export interface ParsedWhatsAppMessage {
   text: string;
   messageId: string;
   timestamp: Date;
+  phoneNumberId: string;       // The phone_number_id of the receiving WABA (for multi-tenant routing)
   interactiveId?: string;      // e.g., "2026-01-28_16:00" for slot selection
   interactiveType?: 'list_reply' | 'button_reply' | 'nfm_reply';
   flowResponseJson?: string;   // JSON response from WhatsApp Flow
@@ -23,6 +24,10 @@ export function parseWhatsAppWebhook(body: unknown): ParsedWhatsAppMessage | nul
       entry?: Array<{
         changes?: Array<{
           value?: {
+            metadata?: {
+              phone_number_id: string;
+              display_phone_number: string;
+            };
             messages?: Array<{
               id: string;
               from: string;
@@ -63,6 +68,7 @@ export function parseWhatsAppWebhook(body: unknown): ParsedWhatsAppMessage | nul
     const phone = message.from;
     const messageId = message.id;
     const timestamp = new Date(parseInt(message.timestamp) * 1000);
+    const phoneNumberId = value?.metadata?.phone_number_id || process.env.WHATSAPP_PHONE_ID || '';
 
     let text = '';
     let interactiveId: string | undefined;
@@ -130,6 +136,7 @@ export function parseWhatsAppWebhook(body: unknown): ParsedWhatsAppMessage | nul
       text,
       messageId,
       timestamp,
+      phoneNumberId,
       interactiveId,
       interactiveType,
       flowResponseJson

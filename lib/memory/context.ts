@@ -11,6 +11,7 @@ import { ConversationContext, Lead, Conversation } from '@/types';
 import { ParsedWhatsAppMessage } from '@/lib/whatsapp/parse';
 import {
   getLeadByPhone,
+  getLeadByPhoneAndTenant,
   createLead,
   getActiveConversation,
   createConversation,
@@ -41,9 +42,11 @@ function isTestNumber(phone: string): boolean {
 /**
  * Get or create conversation context for a message
  * Optimized: Parallel database operations
+ * Multi-tenant: Optional tenantId for data isolation
  */
 export async function getConversationContext(
-  message: ParsedWhatsAppMessage
+  message: ParsedWhatsAppMessage,
+  tenantId?: string
 ): Promise<ConversationContext> {
   const isTest = isTestNumber(message.phone);
 
@@ -52,14 +55,17 @@ export async function getConversationContext(
   }
 
   // Start lead lookup immediately (async-api-routes)
-  const leadPromise = getLeadByPhone(message.phone);
+  // For multi-tenant, we look up by phone + tenant_id
+  const leadPromise = tenantId
+    ? getLeadByPhoneAndTenant(message.phone, tenantId)
+    : getLeadByPhone(message.phone);
 
   // Await lead to check if we need to create one
   let lead = await leadPromise;
 
   if (!lead) {
     // Create lead with is_test flag if it's a test number
-    lead = await createLead(message.phone, message.name, { isTest });
+    lead = await createLead(message.phone, message.name, { isTest, tenantId });
   } else if (lead.name === 'Usuario' && message.name && message.name !== 'Usuario') {
     // Update name in background (non-blocking)
     Promise.resolve(

@@ -50,6 +50,34 @@ export async function getLeadByPhone(phone: string): Promise<Lead | null> {
   };
 }
 
+/**
+ * Get lead by phone and tenant_id (multi-tenant)
+ */
+export async function getLeadByPhoneAndTenant(phone: string, tenantId: string): Promise<Lead | null> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from('leads')
+    .select('*')
+    .eq('phone', phone)
+    .eq('tenant_id', tenantId)
+    .single();
+
+  if (error || !data) return null;
+
+  return {
+    id: data.id,
+    phone: data.phone,
+    name: data.name,
+    email: data.email,
+    company: data.company,
+    industry: data.industry,
+    stage: data.stage,
+    createdAt: new Date(data.created_at),
+    lastInteraction: new Date(data.last_interaction)
+  };
+}
+
 export async function getLeadById(leadId: string): Promise<Lead | null> {
   const supabase = getSupabase();
 
@@ -77,18 +105,25 @@ export async function getLeadById(leadId: string): Promise<Lead | null> {
 export async function createLead(
   phone: string,
   name: string = 'Usuario',
-  options?: { isTest?: boolean }
+  options?: { isTest?: boolean; tenantId?: string }
 ): Promise<Lead> {
   const supabase = getSupabase();
 
+  const insertData: Record<string, unknown> = {
+    phone,
+    name,
+    stage: 'initial',
+    is_test: options?.isTest ?? false
+  };
+
+  // Add tenant_id for multi-tenant leads
+  if (options?.tenantId) {
+    insertData.tenant_id = options.tenantId;
+  }
+
   const { data, error } = await supabase
     .from('leads')
-    .insert({
-      phone,
-      name,
-      stage: 'initial',
-      is_test: options?.isTest ?? false
-    })
+    .insert(insertData)
     .select()
     .single();
 

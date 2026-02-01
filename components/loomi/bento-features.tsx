@@ -26,6 +26,20 @@ const FEATURES = [
     visual: 'calendar',
     color: 'neon-cyan',
   },
+  {
+    title: 'CRM integrado',
+    highlight: 'sin salir de Loomi',
+    description: 'Pipeline visual tipo Kanban. Ve cada lead, en qué etapa está, y todo el historial de conversaciones en un solo lugar.',
+    visual: 'crm',
+    color: 'neon-green',
+  },
+  {
+    title: 'Optimiza tus',
+    highlight: 'campañas de Meta',
+    description: 'Conversions API server-side. Reporta cada conversión real a Meta para optimizar campañas y bajar tu costo por lead.',
+    visual: 'meta',
+    color: 'neon-purple',
+  },
 ];
 
 

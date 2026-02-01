@@ -10,6 +10,8 @@ import {
   Target,
   Database,
   BarChart3,
+  Users,
+  TrendingUp,
 } from 'lucide-react';
 
 const FEATURES = [
@@ -46,19 +48,19 @@ const FEATURES = [
     color: 'from-red-500/20 to-red-500/5',
   },
   {
-    icon: Database,
-    title: 'Memoria Contextual',
+    icon: Users,
+    title: 'CRM Integrado',
     description:
-      'Cada conversación se resume y almacena. El bot recuerda interacciones pasadas, industria y pain points del lead.',
-    tech: 'Supabase + pgvector',
+      'Pipeline visual tipo Kanban. Ve cada lead en qué etapa está, historial completo de conversaciones y contexto centralizado.',
+    tech: 'Built-in CRM',
     color: 'from-yellow-500/20 to-yellow-500/5',
   },
   {
-    icon: BarChart3,
-    title: 'HubSpot Sync',
+    icon: TrendingUp,
+    title: 'Meta Conversions API',
     description:
-      'Sincronización bidireccional con tu CRM. Leads calificados, etapas actualizadas y notas automáticas.',
-    tech: 'HubSpot API',
+      'Tracking server-side que evita bloqueadores. Reporta conversiones reales a Meta para optimizar tus campañas y bajar el CPL.',
+    tech: 'Meta CAPI',
     color: 'from-orange-500/20 to-orange-500/5',
   },
 ];

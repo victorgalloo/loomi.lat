@@ -12,16 +12,24 @@ interface ThemeContextType {
 interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: Theme;
+  forceTheme?: Theme;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children, defaultTheme = 'light' }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme);
+export function ThemeProvider({ children, defaultTheme = 'light', forceTheme }: ThemeProviderProps) {
+  const [theme, setTheme] = useState<Theme>(forceTheme || defaultTheme);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+
+    // If forceTheme is set, always use it and ignore localStorage
+    if (forceTheme) {
+      document.documentElement.setAttribute('data-theme', forceTheme);
+      return;
+    }
+
     // Set the theme immediately on mount
     document.documentElement.setAttribute('data-theme', defaultTheme);
 
@@ -30,14 +38,14 @@ export function ThemeProvider({ children, defaultTheme = 'light' }: ThemeProvide
       setTheme(stored);
       document.documentElement.setAttribute('data-theme', stored);
     }
-  }, [defaultTheme]);
+  }, [defaultTheme, forceTheme]);
 
   useEffect(() => {
-    if (mounted) {
+    if (mounted && !forceTheme) {
       document.documentElement.setAttribute('data-theme', theme);
       localStorage.setItem('loomi-theme', theme);
     }
-  }, [theme, mounted]);
+  }, [theme, mounted, forceTheme]);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');

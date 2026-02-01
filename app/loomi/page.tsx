@@ -1,9 +1,9 @@
 import { Navbar } from '@/components/loomi/Navbar';
 import { Hero } from '@/components/loomi/Hero';
 import { Stats } from '@/components/loomi/stats';
-import { BentoFeatures } from '@/components/loomi/bento-features';
 import { InteractiveDemo } from '@/components/loomi/interactive-demo';
 import { HowItWorks } from '@/components/loomi/how-it-works';
+import { MetaLoop } from '@/components/loomi/meta-loop';
 import { Pricing } from '@/components/loomi/Pricing';
 import { Testimonials } from '@/components/loomi/Testimonials';
 import { CTA } from '@/components/loomi/cta';
@@ -17,10 +17,10 @@ export default function LoomiPage() {
       <main className="min-h-screen bg-background">
         <Navbar />
         <Hero />
-        <HowItWorks />
         <Stats />
-        <BentoFeatures />
+        <HowItWorks />
         <InteractiveDemo />
+        <MetaLoop />
         <Pricing />
         <Testimonials />
         <CTA />

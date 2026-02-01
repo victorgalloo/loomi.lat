@@ -395,17 +395,34 @@ export function Hero() {
 
       {/* Main content - centered and minimal */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6">
-        {/* Small badge */}
+        {/* Meta Tech Provider Badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="mb-8"
         >
-          <span className="inline-flex items-center gap-2 text-sm text-muted/80 tracking-wide uppercase">
-            <span className="w-2 h-2 rounded-full bg-neon-green animate-pulse" />
-            Powered by Claude AI
-          </span>
+          <div className="inline-flex flex-col items-center gap-6">
+            {/* Meta Logo + Tech Provider Badge */}
+            <div className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-surface/50 border border-border backdrop-blur-sm">
+              <Image
+                src="/logos/meta-logo.png"
+                alt="Meta"
+                width={120}
+                height={40}
+                className="object-contain"
+              />
+              <div className="h-8 w-px bg-border" />
+              <div className="flex flex-col">
+                <span className="text-xs text-muted uppercase tracking-wider">Official</span>
+                <span className="text-sm font-semibold text-foreground">Tech Provider</span>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-2 text-sm text-muted/80 tracking-wide uppercase">
+              <span className="w-2 h-2 rounded-full bg-neon-green animate-pulse" />
+              Powered by Claude AI
+            </span>
+          </div>
         </motion.div>
 
         {/* Main logo/title with dramatic glow */}

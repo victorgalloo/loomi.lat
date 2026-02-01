@@ -185,6 +185,105 @@ function CalendarVisual() {
   );
 }
 
+function CRMVisual() {
+  const stages = [
+    { name: 'Nuevo', count: 12, color: 'neon-purple' },
+    { name: 'Contactado', count: 8, color: 'neon-yellow' },
+    { name: 'Demo', count: 5, color: 'neon-cyan' },
+    { name: 'Cerrado', count: 3, color: 'neon-green' },
+  ];
+
+  return (
+    <div className="relative">
+      {/* Kanban columns */}
+      <div className="flex gap-3 overflow-hidden">
+        {stages.map((stage, i) => (
+          <motion.div
+            key={stage.name}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.1 }}
+            className="flex-1 min-w-0"
+          >
+            <div className={`p-3 rounded-lg border border-border bg-surface/30`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-muted truncate">{stage.name}</span>
+                <motion.span
+                  className={`text-xs font-mono text-${stage.color}`}
+                  animate={{ opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+                >
+                  {stage.count}
+                </motion.span>
+              </div>
+              <div className={`h-1 rounded-full bg-${stage.color}/30`}>
+                <motion.div
+                  className={`h-full rounded-full bg-${stage.color}`}
+                  initial={{ width: '0%' }}
+                  whileInView={{ width: `${(stage.count / 12) * 100}%` }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 + 0.3, duration: 0.5 }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MetaVisual() {
+  return (
+    <div className="relative">
+      {/* Meta stats */}
+      <div className="space-y-4">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          className="flex items-center gap-4"
+        >
+          <div className="w-10 h-10 rounded-lg bg-neon-purple/10 flex items-center justify-center">
+            <span className="text-neon-purple text-lg font-bold">M</span>
+          </div>
+          <div className="flex-1">
+            <p className="text-xs text-muted">Meta Conversions API</p>
+            <p className="text-sm text-foreground font-medium">Server-side tracking</p>
+          </div>
+          <motion.span
+            className="px-2 py-1 bg-neon-green/10 text-neon-green text-xs rounded-full"
+            animate={{ opacity: [0.7, 1, 0.7] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            Activo
+          </motion.span>
+        </motion.div>
+
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { label: 'CPL', value: '-32%', color: 'neon-green' },
+            { label: 'ROAS', value: '+48%', color: 'neon-cyan' },
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 + i * 0.1 }}
+              className="p-3 rounded-lg border border-border bg-surface/30 text-center"
+            >
+              <p className="text-xs text-muted mb-1">{stat.label}</p>
+              <p className={`text-xl font-bold text-${stat.color}`}>{stat.value}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FeatureSection({ feature, index }: { feature: typeof FEATURES[0]; index: number }) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -225,6 +324,8 @@ function FeatureSection({ feature, index }: { feature: typeof FEATURES[0]; index
           {feature.visual === 'reasoning' && <ReasoningVisual />}
           {feature.visual === 'speed' && <SpeedVisual />}
           {feature.visual === 'calendar' && <CalendarVisual />}
+          {feature.visual === 'crm' && <CRMVisual />}
+          {feature.visual === 'meta' && <MetaVisual />}
         </motion.div>
       </div>
     </motion.div>

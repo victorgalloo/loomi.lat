@@ -19,7 +19,7 @@ export default function LoomiLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ThemeProvider defaultTheme="light">
+    <ThemeProvider forceTheme="light">
       <div className="antialiased bg-background text-foreground transition-colors duration-300">
         {children}
       </div>

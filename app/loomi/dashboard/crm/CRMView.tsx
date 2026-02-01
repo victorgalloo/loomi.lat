@@ -125,19 +125,21 @@ export default function CRMView({ stages, leads }: CRMViewProps) {
       </div>
 
       {/* Kanban Board */}
-      {filteredLeads.length > 0 || leads.length === 0 ? (
-        <KanbanBoard
-          stages={stages}
-          initialLeads={filteredLeads}
-          isDarkMode={isDarkMode}
-        />
-      ) : (
-        <div className="text-center py-12">
-          <p className={`text-sm ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
-            No se encontraron resultados para &quot;{searchQuery}&quot;
-          </p>
-        </div>
-      )}
+      <div className="overflow-x-auto -mx-6 px-6">
+        {filteredLeads.length > 0 || leads.length === 0 ? (
+          <KanbanBoard
+            stages={stages}
+            initialLeads={filteredLeads}
+            isDarkMode={isDarkMode}
+          />
+        ) : (
+          <div className="text-center py-12">
+            <p className={`text-sm ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+              No se encontraron resultados para &quot;{searchQuery}&quot;
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Empty State */}
       {leads.length === 0 && (

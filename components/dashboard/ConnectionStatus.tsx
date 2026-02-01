@@ -97,7 +97,7 @@ export default function ConnectionStatus({
           </div>
         ) : (
           <Link
-            href="/dashboard/connect"
+            href="/loomi/dashboard/connect"
             className="group flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-colors"
           >
             Conectar

@@ -3,7 +3,7 @@
 -- Modifies existing tables to support multi-tenancy
 
 -- 1. Tabla de Tenants (clientes de Loomi)
-CREATE TABLE tenants (
+CREATE TABLE IF NOT EXISTS tenants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE tenants (
 );
 
 -- 2. Tabla de WhatsApp Accounts (WABAs conectadas)
-CREATE TABLE whatsapp_accounts (
+CREATE TABLE IF NOT EXISTS whatsapp_accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   waba_id TEXT NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE whatsapp_accounts (
 );
 
 -- 3. Tabla de Configuración del Agente AI
-CREATE TABLE agent_configs (
+CREATE TABLE IF NOT EXISTS agent_configs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   business_name TEXT,
@@ -57,15 +57,15 @@ ALTER TABLE conversations ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES ten
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id);
 
 -- 5. Índices para performance
-CREATE INDEX idx_whatsapp_accounts_phone_number_id ON whatsapp_accounts(phone_number_id);
-CREATE INDEX idx_whatsapp_accounts_tenant_id ON whatsapp_accounts(tenant_id);
-CREATE INDEX idx_whatsapp_accounts_status ON whatsapp_accounts(status);
-CREATE INDEX idx_leads_tenant_id ON leads(tenant_id);
-CREATE INDEX idx_conversations_tenant_id ON conversations(tenant_id);
-CREATE INDEX idx_messages_tenant_id ON messages(tenant_id);
-CREATE INDEX idx_agent_configs_tenant_id ON agent_configs(tenant_id);
-CREATE INDEX idx_tenants_email ON tenants(email);
-CREATE INDEX idx_tenants_stripe_customer_id ON tenants(stripe_customer_id);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_accounts_phone_number_id ON whatsapp_accounts(phone_number_id);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_accounts_tenant_id ON whatsapp_accounts(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_accounts_status ON whatsapp_accounts(status);
+CREATE INDEX IF NOT EXISTS idx_leads_tenant_id ON leads(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_tenant_id ON conversations(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_messages_tenant_id ON messages(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_agent_configs_tenant_id ON agent_configs(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_tenants_email ON tenants(email);
+CREATE INDEX IF NOT EXISTS idx_tenants_stripe_customer_id ON tenants(stripe_customer_id);
 
 -- 6. Enable RLS on new tables
 ALTER TABLE tenants ENABLE ROW LEVEL SECURITY;
@@ -73,38 +73,47 @@ ALTER TABLE whatsapp_accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agent_configs ENABLE ROW LEVEL SECURITY;
 
 -- 7. RLS Policies - Service role has full access
+DROP POLICY IF EXISTS "Service role full access tenants" ON tenants;
 CREATE POLICY "Service role full access tenants" ON tenants
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Service role full access whatsapp_accounts" ON whatsapp_accounts;
 CREATE POLICY "Service role full access whatsapp_accounts" ON whatsapp_accounts
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Service role full access agent_configs" ON agent_configs;
 CREATE POLICY "Service role full access agent_configs" ON agent_configs
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- 8. RLS Policies - Users can only see their own tenant data
+DROP POLICY IF EXISTS "Users read own tenant" ON tenants;
 CREATE POLICY "Users read own tenant" ON tenants
   FOR SELECT TO authenticated
   USING (email = auth.jwt()->>'email');
 
+DROP POLICY IF EXISTS "Users update own tenant" ON tenants;
 CREATE POLICY "Users update own tenant" ON tenants
   FOR UPDATE TO authenticated
   USING (email = auth.jwt()->>'email')
   WITH CHECK (email = auth.jwt()->>'email');
 
+DROP POLICY IF EXISTS "Users read own whatsapp_accounts" ON whatsapp_accounts;
 CREATE POLICY "Users read own whatsapp_accounts" ON whatsapp_accounts
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT id FROM tenants WHERE email = auth.jwt()->>'email'));
 
+DROP POLICY IF EXISTS "Users manage own whatsapp_accounts" ON whatsapp_accounts;
 CREATE POLICY "Users manage own whatsapp_accounts" ON whatsapp_accounts
   FOR ALL TO authenticated
   USING (tenant_id IN (SELECT id FROM tenants WHERE email = auth.jwt()->>'email'))
   WITH CHECK (tenant_id IN (SELECT id FROM tenants WHERE email = auth.jwt()->>'email'));
 
+DROP POLICY IF EXISTS "Users read own agent_configs" ON agent_configs;
 CREATE POLICY "Users read own agent_configs" ON agent_configs
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT id FROM tenants WHERE email = auth.jwt()->>'email'));
 
+DROP POLICY IF EXISTS "Users manage own agent_configs" ON agent_configs;
 CREATE POLICY "Users manage own agent_configs" ON agent_configs
   FOR ALL TO authenticated
   USING (tenant_id IN (SELECT id FROM tenants WHERE email = auth.jwt()->>'email'))
@@ -168,11 +177,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_tenants_updated_at ON tenants;
 CREATE TRIGGER update_tenants_updated_at
   BEFORE UPDATE ON tenants
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_agent_configs_updated_at ON agent_configs;
 CREATE TRIGGER update_agent_configs_updated_at
   BEFORE UPDATE ON agent_configs
   FOR EACH ROW

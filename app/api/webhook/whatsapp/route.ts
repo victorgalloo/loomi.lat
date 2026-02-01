@@ -54,6 +54,7 @@ import {
   cancelFollowUps
 } from '@/lib/followups/scheduler';
 import { getTenantFromPhoneNumberId, getAgentConfig, AgentConfig } from '@/lib/tenant/context';
+import { trackDemoScheduled } from '@/lib/integrations/meta-conversions';
 
 // Hoisted RegExp for email extraction (js-hoist-regexp)
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
@@ -588,6 +589,14 @@ export async function POST(request: NextRequest) {
                 stage: 'demo_scheduled',
                 messages: [...context.recentMessages, { role: 'user', content: message.text }],
                 appointmentBooked: { date, time, meetingUrl }
+              });
+
+              // Track conversion event for Meta
+              await trackDemoScheduled({
+                phone: context.lead.phone,
+                leadId: context.lead.id,
+                name: context.lead.name,
+                email
               });
             } catch (err) {
               console.error('[Webhook] After error:', err);

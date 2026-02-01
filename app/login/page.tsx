@@ -43,7 +43,7 @@ export default function LoginPage() {
 
       if (data.user) {
         await new Promise(resolve => setTimeout(resolve, 100));
-        router.push("/dashboard");
+        router.push("/loomi/dashboard");
         router.refresh();
       }
     } catch (err: unknown) {

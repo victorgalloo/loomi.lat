@@ -129,7 +129,7 @@ export default function TenantDashboard({
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
-            <Link href="/dashboard/connect" className="group">
+            <Link href="/loomi/dashboard/connect" className="group">
               <motion.div
                 whileHover={{ scale: 1.02, y: -2 }}
                 className="p-5 bg-emerald-50 rounded-xl border border-emerald-100 hover:border-emerald-200 hover:shadow-md transition-all duration-300"
@@ -149,7 +149,7 @@ export default function TenantDashboard({
               </motion.div>
             </Link>
 
-            <Link href="/dashboard/agent" className="group">
+            <Link href="/loomi/dashboard/agent" className="group">
               <motion.div
                 whileHover={{ scale: 1.02, y: -2 }}
                 className="p-5 bg-gray-50 rounded-xl border border-gray-100 hover:border-purple-200 hover:bg-purple-50/50 hover:shadow-md transition-all duration-300"
@@ -167,7 +167,7 @@ export default function TenantDashboard({
               </motion.div>
             </Link>
 
-            <Link href="/dashboard/analytics" className="group">
+            <Link href="/loomi/dashboard/analytics" className="group">
               <motion.div
                 whileHover={{ scale: 1.02, y: -2 }}
                 className="p-5 bg-gray-50 rounded-xl border border-gray-100 hover:border-cyan-200 hover:bg-cyan-50/50 hover:shadow-md transition-all duration-300"
@@ -254,7 +254,7 @@ export default function TenantDashboard({
             </div>
           </div>
           <Link
-            href="/dashboard/settings"
+            href="/loomi/dashboard/settings"
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
           >
             Ver detalles

@@ -19,7 +19,7 @@ export default async function SettingsPage() {
   // Only allow tenant users
   const userRole = await getUserRole(user.email);
   if (userRole !== "tenant") {
-    redirect("/dashboard");
+    redirect("/loomi/dashboard");
   }
 
   const tenantId = await getTenantIdForUser(user.email);
@@ -65,7 +65,7 @@ export default async function SettingsPage() {
         <div className="absolute -top-10 -left-10 w-32 h-32 bg-purple-500/5 blur-[60px] rounded-full pointer-events-none" />
 
         <Link
-          href="/dashboard"
+          href="/loomi/dashboard"
           className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-emerald-600 mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -182,7 +182,7 @@ export default async function SettingsPage() {
               </div>
             </div>
             <Link
-              href="/dashboard/connect"
+              href="/loomi/dashboard/connect"
               className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-xl hover:border-emerald-300 hover:text-emerald-600 transition-all"
             >
               Administrar
@@ -192,7 +192,7 @@ export default async function SettingsPage() {
           <div className="flex items-center justify-between">
             <p className="text-gray-600">No hay cuenta de WhatsApp conectada</p>
             <Link
-              href="/dashboard/connect"
+              href="/loomi/dashboard/connect"
               className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/20"
             >
               Conectar WhatsApp

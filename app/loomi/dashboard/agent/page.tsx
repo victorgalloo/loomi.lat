@@ -20,7 +20,7 @@ export default async function AgentConfigPage() {
   // Only allow tenant users
   const userRole = await getUserRole(user.email);
   if (userRole !== "tenant") {
-    redirect("/dashboard");
+    redirect("/loomi/dashboard");
   }
 
   const tenantId = await getTenantIdForUser(user.email);
@@ -65,7 +65,7 @@ export default async function AgentConfigPage() {
         <div className="absolute -top-10 -left-10 w-32 h-32 bg-purple-500/5 blur-[60px] rounded-full pointer-events-none" />
 
         <Link
-          href="/dashboard"
+          href="/loomi/dashboard"
           className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-emerald-600 mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />

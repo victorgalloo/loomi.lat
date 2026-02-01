@@ -22,7 +22,7 @@ export default async function ConversationDetailPage({ params }: PageProps) {
   // Only allow tenant users
   const userRole = await getUserRole(user.email);
   if (userRole !== "tenant") {
-    redirect("/dashboard");
+    redirect("/loomi/dashboard");
   }
 
   const tenantId = await getTenantIdForUser(user.email);
@@ -91,7 +91,7 @@ export default async function ConversationDetailPage({ params }: PageProps) {
       {/* Header */}
       <div>
         <Link
-          href="/dashboard/conversations"
+          href="/loomi/dashboard/conversations"
           className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-4"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

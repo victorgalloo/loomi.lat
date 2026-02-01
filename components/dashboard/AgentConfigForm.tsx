@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Building2, MessageSquare, Sliders, Sparkles, Check } from 'lucide-react';
 
 interface AgentConfig {
   businessName: string | null;
@@ -19,10 +21,10 @@ interface AgentConfigFormProps {
 }
 
 const toneOptions = [
-  { value: 'professional', label: 'Profesional', description: 'Formal pero accesible' },
-  { value: 'friendly', label: 'Amigable', description: 'Cercano y conversacional' },
-  { value: 'casual', label: 'Casual', description: 'Relajado e informal' },
-  { value: 'formal', label: 'Formal', description: 'Muy profesional y serio' },
+  { value: 'professional', label: 'Profesional', description: 'Formal pero accesible', color: 'purple' },
+  { value: 'friendly', label: 'Amigable', description: 'Cercano y conversacional', color: 'emerald' },
+  { value: 'casual', label: 'Casual', description: 'Relajado e informal', color: 'cyan' },
+  { value: 'formal', label: 'Formal', description: 'Muy profesional y serio', color: 'amber' },
 ];
 
 export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFormProps) {
@@ -49,18 +51,34 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
+  const inputClasses = `
+    w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl
+    text-gray-900 placeholder:text-gray-400
+    focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500
+    transition-all duration-200
+  `;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {/* Business Info */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Informacion del negocio</h2>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm relative overflow-hidden"
+      >
+        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 blur-[60px] rounded-full pointer-events-none" />
+
+        <h2 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+          <Building2 className="w-5 h-5 text-purple-600" />
+          Informacion del negocio
+        </h2>
         <p className="text-sm text-gray-600 mb-6">
           Esta informacion ayuda al agente a entender tu negocio y responder mejor a los clientes.
         </p>
 
-        <div className="space-y-4">
+        <div className="space-y-4 relative z-10">
           <div>
-            <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-2">
               Nombre del negocio
             </label>
             <input
@@ -69,12 +87,12 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
               value={config.businessName || ''}
               onChange={(e) => handleChange('businessName', e.target.value)}
               placeholder="Ej: Clinica Dental Sonrisa"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className={inputClasses}
             />
           </div>
 
           <div>
-            <label htmlFor="businessDescription" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="businessDescription" className="block text-sm font-medium text-gray-700 mb-2">
               Descripcion del negocio
             </label>
             <textarea
@@ -83,12 +101,12 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
               onChange={(e) => handleChange('businessDescription', e.target.value)}
               rows={3}
               placeholder="Describe brevemente que hace tu negocio..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className={inputClasses}
             />
           </div>
 
           <div>
-            <label htmlFor="productsServices" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="productsServices" className="block text-sm font-medium text-gray-700 mb-2">
               Productos o servicios principales
             </label>
             <textarea
@@ -97,51 +115,107 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
               onChange={(e) => handleChange('productsServices', e.target.value)}
               rows={3}
               placeholder="Lista los productos o servicios que ofreces..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className={inputClasses}
             />
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Tone */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Tono de comunicacion</h2>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+      >
+        <h2 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+          <Sliders className="w-5 h-5 text-cyan-600" />
+          Tono de comunicacion
+        </h2>
         <p className="text-sm text-gray-600 mb-6">
           Elige como quieres que el agente se comunique con tus clientes.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {toneOptions.map((option) => (
-            <label
-              key={option.value}
-              className={`
-                flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-colors
-                ${config.tone === option.value
-                  ? 'border-green-500 bg-green-50'
-                  : 'border-gray-200 hover:border-gray-300'
-                }
-              `}
-            >
-              <input
-                type="radio"
-                name="tone"
-                value={option.value}
-                checked={config.tone === option.value}
-                onChange={() => handleChange('tone', option.value as AgentConfig['tone'])}
-                className="mt-1"
-              />
-              <div>
-                <span className="font-medium text-gray-900">{option.label}</span>
-                <p className="text-sm text-gray-600">{option.description}</p>
-              </div>
-            </label>
-          ))}
+          {toneOptions.map((option) => {
+            const isSelected = config.tone === option.value;
+            const colorClasses: Record<string, string> = {
+              purple: isSelected ? 'border-purple-400 bg-purple-50' : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50',
+              emerald: isSelected ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50',
+              cyan: isSelected ? 'border-cyan-400 bg-cyan-50' : 'border-gray-200 hover:border-cyan-300 hover:bg-cyan-50/50',
+              amber: isSelected ? 'border-amber-400 bg-amber-50' : 'border-gray-200 hover:border-amber-300 hover:bg-amber-50/50',
+            };
+            const textColors: Record<string, string> = {
+              purple: 'text-purple-700',
+              emerald: 'text-emerald-700',
+              cyan: 'text-cyan-700',
+              amber: 'text-amber-700',
+            };
+            const dotColors: Record<string, string> = {
+              purple: 'bg-purple-500',
+              emerald: 'bg-emerald-500',
+              cyan: 'bg-cyan-500',
+              amber: 'bg-amber-500',
+            };
+
+            return (
+              <motion.label
+                key={option.value}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`
+                  relative flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300
+                  ${colorClasses[option.color]}
+                `}
+              >
+                <input
+                  type="radio"
+                  name="tone"
+                  value={option.value}
+                  checked={isSelected}
+                  onChange={() => handleChange('tone', option.value as AgentConfig['tone'])}
+                  className="sr-only"
+                />
+                <div className={`
+                  w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 flex-shrink-0
+                  ${isSelected ? `border-${option.color}-500` : 'border-gray-300'}
+                `}>
+                  {isSelected && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className={`w-2.5 h-2.5 rounded-full ${dotColors[option.color]}`}
+                    />
+                  )}
+                </div>
+                <div>
+                  <span className={`font-medium ${isSelected ? textColors[option.color] : 'text-gray-900'}`}>
+                    {option.label}
+                  </span>
+                  <p className="text-sm text-gray-600">{option.description}</p>
+                </div>
+                {isSelected && (
+                  <Check className={`absolute top-4 right-4 w-4 h-4 ${textColors[option.color]}`} />
+                )}
+              </motion.label>
+            );
+          })}
         </div>
-      </div>
+      </motion.div>
 
       {/* Custom Instructions */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Instrucciones personalizadas</h2>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm relative overflow-hidden"
+      >
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/5 blur-[60px] rounded-full pointer-events-none" />
+
+        <h2 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-emerald-600" />
+          Instrucciones personalizadas
+        </h2>
         <p className="text-sm text-gray-600 mb-6">
           Agrega instrucciones especificas para que el agente siga al responder.
         </p>
@@ -152,17 +226,25 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
           onChange={(e) => handleChange('customInstructions', e.target.value)}
           rows={5}
           placeholder="Ej: Siempre menciona que tenemos envio gratis en compras mayores a $500. No ofrezcas descuentos sin autorizacion..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className={inputClasses}
         />
-      </div>
+      </motion.div>
 
       {/* Messages */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Mensajes predeterminados</h2>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+      >
+        <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-amber-600" />
+          Mensajes predeterminados
+        </h2>
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="greetingMessage" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="greetingMessage" className="block text-sm font-medium text-gray-700 mb-2">
               Mensaje de saludo (opcional)
             </label>
             <textarea
@@ -171,12 +253,12 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
               onChange={(e) => handleChange('greetingMessage', e.target.value)}
               rows={2}
               placeholder="Mensaje que se envia cuando un nuevo cliente escribe por primera vez..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className={inputClasses}
             />
           </div>
 
           <div>
-            <label htmlFor="fallbackMessage" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="fallbackMessage" className="block text-sm font-medium text-gray-700 mb-2">
               Mensaje de fallback (opcional)
             </label>
             <textarea
@@ -185,14 +267,19 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
               onChange={(e) => handleChange('fallbackMessage', e.target.value)}
               rows={2}
               placeholder="Mensaje cuando el agente no puede responder..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className={inputClasses}
             />
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Auto Reply Toggle */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+      >
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Respuestas automaticas</h2>
@@ -206,39 +293,54 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
             aria-checked={config.autoReplyEnabled}
             onClick={() => handleChange('autoReplyEnabled', !config.autoReplyEnabled)}
             className={`
-              relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
-              transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
-              ${config.autoReplyEnabled ? 'bg-green-500' : 'bg-gray-200'}
+              relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
+              transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:ring-offset-2
+              ${config.autoReplyEnabled ? 'bg-emerald-500' : 'bg-gray-200'}
             `}
           >
             <span
               className={`
-                pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
+                pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-300 ease-in-out
                 ${config.autoReplyEnabled ? 'translate-x-5' : 'translate-x-0'}
               `}
             />
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Save Button */}
-      <div className="flex items-center justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="flex items-center justify-between pt-4"
+      >
         {saveMessage && (
-          <p className={`text-sm ${saveMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+          <motion.p
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className={`text-sm flex items-center gap-1 ${saveMessage.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}
+          >
+            {saveMessage.type === 'success' && <Check className="w-4 h-4" />}
             {saveMessage.text}
-          </p>
+          </motion.p>
         )}
-        <button
+        <motion.button
           type="submit"
           disabled={isSaving}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           className={`
-            ml-auto px-6 py-3 rounded-lg font-medium text-white transition-colors
-            ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}
+            ml-auto px-6 py-3 rounded-xl font-medium transition-all duration-300
+            ${isSaving
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/20'
+            }
           `}
         >
           {isSaving ? 'Guardando...' : 'Guardar configuracion'}
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
     </form>
   );
 }

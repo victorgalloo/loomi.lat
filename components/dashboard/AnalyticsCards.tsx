@@ -1,5 +1,8 @@
 'use client';
 
+import { motion } from 'framer-motion';
+import { Users, MessageCircle, Mail, Calendar, TrendingUp, Target } from 'lucide-react';
+
 interface AnalyticsData {
   totalLeads: number;
   newLeadsThisMonth: number;
@@ -22,50 +25,58 @@ export default function AnalyticsCards({ data }: AnalyticsCardsProps) {
       value: data.totalLeads,
       change: data.newLeadsThisMonth,
       changeLabel: 'este mes',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      ),
-      color: 'blue'
+      icon: Users,
+      color: 'cyan',
+      gradient: 'from-cyan-50 to-cyan-100/50'
     },
     {
       label: 'Conversaciones',
       value: data.totalConversations,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-      ),
-      color: 'green'
+      icon: MessageCircle,
+      color: 'emerald',
+      gradient: 'from-emerald-50 to-emerald-100/50'
     },
     {
       label: 'Mensajes este mes',
       value: data.messagesThisMonth,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      ),
-      color: 'purple'
+      icon: Mail,
+      color: 'purple',
+      gradient: 'from-purple-50 to-purple-100/50'
     },
     {
       label: 'Citas agendadas',
       value: data.appointmentsBooked,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
-      color: 'orange'
+      icon: Calendar,
+      color: 'amber',
+      gradient: 'from-amber-50 to-amber-100/50'
     }
   ];
 
-  const colorClasses = {
-    blue: { bg: 'bg-blue-50', icon: 'text-blue-600' },
-    green: { bg: 'bg-green-50', icon: 'text-green-600' },
-    purple: { bg: 'bg-purple-50', icon: 'text-purple-600' },
-    orange: { bg: 'bg-orange-50', icon: 'text-orange-600' }
+  const colorClasses: Record<string, { icon: string; text: string; bg: string; border: string }> = {
+    cyan: {
+      icon: 'text-cyan-600',
+      text: 'text-cyan-700',
+      bg: 'bg-cyan-100',
+      border: 'border-cyan-200'
+    },
+    emerald: {
+      icon: 'text-emerald-600',
+      text: 'text-emerald-700',
+      bg: 'bg-emerald-100',
+      border: 'border-emerald-200'
+    },
+    purple: {
+      icon: 'text-purple-600',
+      text: 'text-purple-700',
+      bg: 'bg-purple-100',
+      border: 'border-purple-200'
+    },
+    amber: {
+      icon: 'text-amber-600',
+      text: 'text-amber-700',
+      bg: 'bg-amber-100',
+      border: 'border-amber-200'
+    }
   };
 
   const stageLabels: Record<string, string> = {
@@ -78,32 +89,45 @@ export default function AnalyticsCards({ data }: AnalyticsCardsProps) {
     cold: 'Frios'
   };
 
+  const stageColors = ['bg-emerald-500', 'bg-cyan-500', 'bg-purple-500', 'bg-amber-500', 'bg-pink-500', 'bg-blue-500', 'bg-orange-500'];
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Main Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {mainMetrics.map((metric) => {
-          const colors = colorClasses[metric.color as keyof typeof colorClasses];
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {mainMetrics.map((metric, index) => {
+          const colors = colorClasses[metric.color];
+          const Icon = metric.icon;
           return (
-            <div
+            <motion.div
               key={metric.label}
-              className="bg-white rounded-xl border border-gray-200 p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02, y: -2 }}
+              className="bg-white rounded-2xl border border-gray-100 p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-shadow"
             >
-              <div className="flex items-start justify-between">
-                <div>
+              {/* Hover gradient */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${metric.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+
+              <div className="relative z-10">
+                <div className="flex items-start justify-between mb-4">
                   <p className="text-sm text-gray-600">{metric.label}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-1">{metric.value.toLocaleString()}</p>
-                  {metric.change !== undefined && (
-                    <p className="text-sm text-green-600 mt-1">
-                      +{metric.change} {metric.changeLabel}
-                    </p>
-                  )}
+                  <div className={`w-10 h-10 ${colors.bg} rounded-xl flex items-center justify-center`}>
+                    <Icon className={`w-5 h-5 ${colors.icon}`} />
+                  </div>
                 </div>
-                <div className={`w-12 h-12 ${colors.bg} rounded-xl flex items-center justify-center`}>
-                  <span className={colors.icon}>{metric.icon}</span>
-                </div>
+                <p className={`text-3xl font-bold ${colors.text}`}>
+                  {metric.value.toLocaleString()}
+                </p>
+                {metric.change !== undefined && (
+                  <p className="text-sm text-emerald-600 mt-2 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" />
+                    +{metric.change} {metric.changeLabel}
+                  </p>
+                )}
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -111,56 +135,95 @@ export default function AnalyticsCards({ data }: AnalyticsCardsProps) {
       {/* Secondary Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Lead Quality */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Calidad de leads</h3>
-          <div className="space-y-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-2xl border border-gray-100 p-6 relative overflow-hidden shadow-sm"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[60px] rounded-full pointer-events-none" />
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+            <Target className="w-5 h-5 text-emerald-600" />
+            Calidad de leads
+          </h3>
+          <div className="space-y-6 relative z-10">
             <div>
-              <div className="flex justify-between text-sm mb-1">
+              <div className="flex justify-between text-sm mb-2">
                 <span className="text-gray-600">Leads calificados</span>
-                <span className="font-medium">{data.qualifiedLeads} / {data.totalLeads}</span>
+                <span className="font-medium text-gray-900">{data.qualifiedLeads} / {data.totalLeads}</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-green-500 h-2 rounded-full"
-                  style={{ width: `${data.totalLeads > 0 ? (data.qualifiedLeads / data.totalLeads) * 100 : 0}%` }}
+              <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-emerald-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${data.totalLeads > 0 ? (data.qualifiedLeads / data.totalLeads) * 100 : 0}%` }}
+                  transition={{ duration: 1, ease: 'easeOut' }}
                 />
               </div>
             </div>
             <div>
-              <div className="flex justify-between text-sm mb-1">
+              <div className="flex justify-between text-sm mb-2">
                 <span className="text-gray-600">Tasa de respuesta</span>
-                <span className="font-medium">{data.responseRate}%</span>
+                <span className="font-medium text-gray-900">{data.responseRate}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-500 h-2 rounded-full"
-                  style={{ width: `${data.responseRate}%` }}
+              <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-cyan-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${data.responseRate}%` }}
+                  transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
                 />
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Stage Breakdown */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Leads por etapa</h3>
-          <div className="space-y-3">
-            {Object.entries(data.stageBreakdown).map(([stage, count]) => (
-              <div key={stage} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{stageLabels[stage] || stage}</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-green-500 h-2 rounded-full"
-                      style={{ width: `${data.totalLeads > 0 ? (count / data.totalLeads) * 100 : 0}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-medium text-gray-900 w-8 text-right">{count}</span>
-                </div>
-              </div>
-            ))}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            </svg>
+            Leads por etapa
+          </h3>
+          <div className="space-y-4">
+            {Object.entries(data.stageBreakdown).length > 0 ? (
+              Object.entries(data.stageBreakdown).map(([stage, count], index) => {
+                const colorClass = stageColors[index % stageColors.length];
+                const percentage = data.totalLeads > 0 ? (count / data.totalLeads) * 100 : 0;
+
+                return (
+                  <motion.div
+                    key={stage}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 + index * 0.1 }}
+                    className="flex items-center gap-4"
+                  >
+                    <span className="text-sm text-gray-600 w-32 truncate">{stageLabels[stage] || stage}</span>
+                    <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                      <motion.div
+                        className={`h-full rounded-full ${colorClass}`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percentage}%` }}
+                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900 w-8 text-right">{count}</span>
+                  </motion.div>
+                );
+              })
+            ) : (
+              <p className="text-gray-500 text-sm text-center py-4">No hay datos de etapas disponibles</p>
+            )}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

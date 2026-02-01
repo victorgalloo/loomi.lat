@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import AnalyticsCards from "@/components/dashboard/AnalyticsCards";
 import Link from "next/link";
+import { ArrowLeft, BarChart3, Sparkles, Clock } from "lucide-react";
 
 export default async function AnalyticsPage() {
   const supabase = await createClient();
@@ -87,7 +88,7 @@ export default async function AnalyticsPage() {
     stageBreakdown[stage] = (stageBreakdown[stage] || 0) + 1;
   });
 
-  // Calculate response rate (simplified: leads with more than 1 conversation / total leads)
+  // Calculate response rate
   const responseRate = totalLeadsResult.count && totalLeadsResult.count > 0
     ? Math.round((conversationsResult.count || 0) / totalLeadsResult.count * 100)
     : 0;
@@ -95,18 +96,27 @@ export default async function AnalyticsPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
+      <div className="relative">
+        <div className="absolute -top-10 -left-10 w-32 h-32 bg-cyan-500/5 blur-[60px] rounded-full pointer-events-none" />
+
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-4"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-emerald-600 mb-4 transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <ArrowLeft className="w-4 h-4" />
           Volver al dashboard
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Analiticas</h1>
-        <p className="text-gray-600 mt-1">
+
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 bg-cyan-100 border border-cyan-200 rounded-xl flex items-center justify-center">
+            <BarChart3 className="w-5 h-5 text-cyan-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Analiticas</h1>
+          </div>
+        </div>
+        <p className="text-gray-600 mt-2 flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-cyan-600" />
           Metricas de rendimiento de tu agente AI.
         </p>
       </div>
@@ -126,14 +136,14 @@ export default async function AnalyticsPage() {
       />
 
       {/* Coming Soon */}
-      <div className="bg-gray-50 rounded-xl border border-gray-200 p-8 text-center">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
+      <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center relative overflow-hidden shadow-sm">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-transparent pointer-events-none" />
+
+        <div className="w-16 h-16 bg-purple-100 border border-purple-200 rounded-2xl flex items-center justify-center mx-auto mb-4 relative z-10">
+          <Clock className="w-8 h-8 text-purple-600" />
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Mas analiticas proximamente</h3>
-        <p className="text-gray-600 max-w-md mx-auto">
+        <h3 className="text-lg font-medium text-gray-900 mb-2 relative z-10">Mas analiticas proximamente</h3>
+        <p className="text-gray-600 max-w-md mx-auto relative z-10">
           Estamos trabajando en graficas de tendencias, analisis de sentimiento, y reportes exportables.
         </p>
       </div>

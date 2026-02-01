@@ -23,7 +23,7 @@ export default async function DashboardLayout({
   // Determine user role
   const userRole = await getUserRole(user.email);
 
-  // Tenant users get the new multi-tenant dashboard
+  // Tenant users get the new multi-tenant dashboard with cinematic dark theme
   if (userRole === "tenant") {
     const tenantId = await getTenantIdForUser(user.email);
     let isConnected = false;
@@ -34,13 +34,41 @@ export default async function DashboardLayout({
     }
 
     return (
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-[#FAFBFC]">
+        {/* Background effects - light mode */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          {/* Subtle green glow */}
+          <div
+            className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full opacity-40"
+            style={{
+              background: 'radial-gradient(circle, rgba(0,255,102,0.06) 0%, transparent 60%)',
+            }}
+          />
+          {/* Purple accent */}
+          <div
+            className="absolute bottom-0 left-1/4 w-[500px] h-[500px] rounded-full opacity-30"
+            style={{
+              background: 'radial-gradient(circle, rgba(168,85,247,0.05) 0%, transparent 60%)',
+            }}
+          />
+          {/* Subtle grid */}
+          <div
+            className="absolute inset-0 opacity-[0.4]"
+            style={{
+              backgroundImage: 'linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px)',
+              backgroundSize: '40px 40px'
+            }}
+          />
+        </div>
+
         <Sidebar
           userName={user.email}
           isConnected={isConnected}
         />
-        <main className="flex-1 p-8">
-          {children}
+        <main className="flex-1 p-8 relative z-10 overflow-auto">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     );
@@ -71,5 +99,3 @@ export default async function DashboardLayout({
     </PortalLayout>
   );
 }
-
-

@@ -4,6 +4,7 @@ import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import { getAgentConfig, updateAgentConfig } from "@/lib/tenant/context";
 import AgentConfigForm from "@/components/dashboard/AgentConfigForm";
 import Link from "next/link";
+import { Bot, ArrowLeft, Sparkles } from "lucide-react";
 
 export default async function AgentConfigPage() {
   const supabase = await createClient();
@@ -60,18 +61,27 @@ export default async function AgentConfigPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       {/* Header */}
-      <div>
+      <div className="relative">
+        <div className="absolute -top-10 -left-10 w-32 h-32 bg-purple-500/5 blur-[60px] rounded-full pointer-events-none" />
+
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-4"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-emerald-600 mb-4 transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <ArrowLeft className="w-4 h-4" />
           Volver al dashboard
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Configurar Agente AI</h1>
-        <p className="text-gray-600 mt-1">
+
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 bg-purple-100 border border-purple-200 rounded-xl flex items-center justify-center">
+            <Bot className="w-5 h-5 text-purple-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Configurar Agente AI</h1>
+          </div>
+        </div>
+        <p className="text-gray-600 mt-2 flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-purple-600" />
           Personaliza como tu agente responde a los clientes.
         </p>
       </div>

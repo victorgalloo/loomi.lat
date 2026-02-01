@@ -5,6 +5,7 @@ import { getWhatsAppAccount } from "@/lib/tenant/context";
 import WhatsAppConnectFlow from "@/components/dashboard/WhatsAppConnectFlow";
 import ConnectionStatus from "@/components/dashboard/ConnectionStatus";
 import Link from "next/link";
+import { ArrowLeft, MessageCircle, CheckCircle, HelpCircle } from "lucide-react";
 
 export default async function ConnectPage() {
   const supabase = await createClient();
@@ -34,18 +35,26 @@ export default async function ConnectPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       {/* Header */}
-      <div>
+      <div className="relative">
+        <div className="absolute -top-10 -left-10 w-32 h-32 bg-emerald-500/5 blur-[60px] rounded-full pointer-events-none" />
+
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-4"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-emerald-600 mb-4 transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <ArrowLeft className="w-4 h-4" />
           Volver al dashboard
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Conexion WhatsApp</h1>
-        <p className="text-gray-600 mt-1">
+
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 bg-emerald-100 border border-emerald-200 rounded-xl flex items-center justify-center">
+            <MessageCircle className="w-5 h-5 text-emerald-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Conexion WhatsApp</h1>
+          </div>
+        </div>
+        <p className="text-gray-600 mt-2">
           Administra tu conexion de WhatsApp Business.
         </p>
       </div>
@@ -58,32 +67,35 @@ export default async function ConnectPage() {
       />
 
       {/* Connect or Reconnect */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
         {isConnected ? (
           <div className="p-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Detalles de conexion</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+              Detalles de conexion
+            </h2>
             <dl className="space-y-4">
-              <div>
-                <dt className="text-sm text-gray-500">Numero de telefono</dt>
-                <dd className="text-gray-900 font-medium">{whatsappAccount?.displayPhoneNumber || 'No disponible'}</dd>
+              <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                <dt className="text-gray-600">Numero de telefono</dt>
+                <dd className="text-gray-900 font-mono">{whatsappAccount?.displayPhoneNumber || 'No disponible'}</dd>
               </div>
-              <div>
-                <dt className="text-sm text-gray-500">Nombre del negocio</dt>
+              <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                <dt className="text-gray-600">Nombre del negocio</dt>
                 <dd className="text-gray-900 font-medium">{whatsappAccount?.businessName || 'No disponible'}</dd>
               </div>
-              <div>
-                <dt className="text-sm text-gray-500">ID de cuenta</dt>
-                <dd className="text-gray-900 font-mono text-sm">{whatsappAccount?.wabaId}</dd>
+              <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                <dt className="text-gray-600">ID de cuenta</dt>
+                <dd className="text-gray-500 font-mono text-sm">{whatsappAccount?.wabaId}</dd>
               </div>
-              <div>
-                <dt className="text-sm text-gray-500">Estado</dt>
+              <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                <dt className="text-gray-600">Estado</dt>
                 <dd className="inline-flex items-center gap-2">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span className="text-green-700 font-medium">Activo</span>
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full" />
+                  <span className="text-emerald-600 font-medium">Activo</span>
                 </dd>
               </div>
-              <div>
-                <dt className="text-sm text-gray-500">Conectado desde</dt>
+              <div className="flex justify-between items-center py-3">
+                <dt className="text-gray-600">Conectado desde</dt>
                 <dd className="text-gray-900">
                   {whatsappAccount?.connectedAt
                     ? new Date(whatsappAccount.connectedAt).toLocaleDateString('es-MX', {
@@ -97,12 +109,12 @@ export default async function ConnectPage() {
               </div>
             </dl>
 
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Acciones</h3>
+            <div className="mt-8 pt-6 border-t border-gray-100">
+              <h3 className="text-sm font-medium text-gray-900 mb-4">Acciones</h3>
               <div className="flex gap-4">
                 <button
                   type="button"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-xl hover:border-emerald-300 hover:text-emerald-600 transition-all"
                 >
                   Reconectar
                 </button>
@@ -110,7 +122,7 @@ export default async function ConnectPage() {
                   <input type="hidden" name="action" value="disconnect" />
                   <button
                     type="submit"
-                    className="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors"
                   >
                     Desconectar
                   </button>
@@ -124,25 +136,22 @@ export default async function ConnectPage() {
       </div>
 
       {/* Help Section */}
-      <div className="bg-gray-50 rounded-xl border border-gray-200 p-6">
-        <h3 className="text-sm font-medium text-gray-900 mb-3">Necesitas ayuda?</h3>
-        <ul className="space-y-2 text-sm text-gray-600">
-          <li className="flex items-start gap-2">
-            <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+      <div className="bg-gray-50 rounded-2xl border border-gray-200 p-6">
+        <h3 className="text-sm font-medium text-gray-900 mb-4 flex items-center gap-2">
+          <HelpCircle className="w-4 h-4 text-cyan-600" />
+          Necesitas ayuda?
+        </h3>
+        <ul className="space-y-3 text-sm text-gray-600">
+          <li className="flex items-start gap-3">
+            <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
             Necesitas una cuenta de Facebook Business Manager
           </li>
-          <li className="flex items-start gap-2">
-            <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+          <li className="flex items-start gap-3">
+            <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
             El numero de telefono debe poder recibir SMS o llamadas
           </li>
-          <li className="flex items-start gap-2">
-            <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+          <li className="flex items-start gap-3">
+            <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
             El proceso toma aproximadamente 5 minutos
           </li>
         </ul>

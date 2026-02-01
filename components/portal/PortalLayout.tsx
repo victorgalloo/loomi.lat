@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 
 interface PortalLayoutProps {
   children: React.ReactNode;
-  userRole: "admin" | "client";
+  userRole: "admin" | "client" | "tenant";
   userName?: string;
   clientName?: string;
 }

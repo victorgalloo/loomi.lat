@@ -278,9 +278,21 @@ export interface SimpleAgentResult {
   saidLater?: boolean;  // User said "later" - trigger follow-up
 }
 
+// Optional agent configuration for multi-tenant customization
+interface AgentConfigOptions {
+  businessName?: string | null;
+  businessDescription?: string | null;
+  productsServices?: string | null;
+  tone?: 'professional' | 'friendly' | 'casual' | 'formal';
+  customInstructions?: string | null;
+  greetingMessage?: string | null;
+  fallbackMessage?: string | null;
+}
+
 export async function simpleAgent(
   message: string,
-  context: ConversationContext
+  context: ConversationContext,
+  agentConfig?: AgentConfigOptions
 ): Promise<SimpleAgentResult> {
   const history = context.recentMessages
     .slice(-20)

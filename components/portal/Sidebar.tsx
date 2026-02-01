@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 
 interface SidebarProps {
-  userRole: "admin" | "client";
+  userRole: "admin" | "client" | "tenant";
   userName?: string;
   clientName?: string;
   onLogout: () => void;

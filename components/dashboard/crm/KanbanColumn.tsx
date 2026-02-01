@@ -51,7 +51,15 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, isDarkMode = false
   };
 
   return (
-    <div className="flex flex-col w-[280px] flex-shrink-0">
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: '280px',
+        minWidth: '280px',
+        flexShrink: 0
+      }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">

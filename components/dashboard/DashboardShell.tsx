@@ -5,18 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useTheme } from './ThemeProvider';
-import {
-  Home,
-  MessageCircle,
-  Bot,
-  Users,
-  BarChart3,
-  Settings,
-  LogOut,
-  Sun,
-  Moon,
-  Zap
-} from 'lucide-react';
+import { LogOut, Sun, Moon, Circle } from 'lucide-react';
 
 interface DashboardShellProps {
   children: ReactNode;
@@ -25,13 +14,11 @@ interface DashboardShellProps {
 }
 
 const navItems = [
-  { href: '/loomi/dashboard', label: 'Overview', icon: Home },
-  { href: '/loomi/dashboard/connect', label: 'WhatsApp', icon: MessageCircle },
-  { href: '/loomi/dashboard/agent', label: 'Agente', icon: Bot },
-  { href: '/loomi/dashboard/crm', label: 'CRM', icon: Users },
-  { href: '/loomi/dashboard/conversations', label: 'Inbox', icon: MessageCircle },
-  { href: '/loomi/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '/loomi/dashboard/settings', label: 'Settings', icon: Settings },
+  { href: '/loomi/dashboard', label: 'Overview' },
+  { href: '/loomi/dashboard/crm', label: 'Pipeline' },
+  { href: '/loomi/dashboard/conversations', label: 'Inbox' },
+  { href: '/loomi/dashboard/agent', label: 'Agente' },
+  { href: '/loomi/dashboard/settings', label: 'Settings' },
 ];
 
 export default function DashboardShell({ children, userName, isConnected }: DashboardShellProps) {
@@ -47,155 +34,105 @@ export default function DashboardShell({ children, userName, isConnected }: Dash
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-black' : 'bg-zinc-50'}`}>
-      {/* Top Navigation */}
+    <div className={`min-h-screen ${isDark ? 'bg-black' : 'bg-white'}`}>
+      {/* Header */}
       <header className={`
-        fixed top-0 left-0 right-0 z-50 h-14 border-b backdrop-blur-xl
-        ${isDark ? 'bg-black/80 border-zinc-800' : 'bg-white/80 border-zinc-200'}
+        fixed top-0 left-0 right-0 z-50 h-12 border-b
+        ${isDark ? 'bg-black border-zinc-900' : 'bg-white border-zinc-100'}
       `}>
-        <div className="h-full max-w-[1800px] mx-auto px-4 flex items-center justify-between">
+        <div className="h-full max-w-6xl mx-auto px-4 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/loomi/dashboard" className="flex items-center gap-2">
-            <div className={`
-              w-7 h-7 rounded-lg flex items-center justify-center
-              ${isDark ? 'bg-white' : 'bg-black'}
-            `}>
-              <Zap className={`w-4 h-4 ${isDark ? 'text-black' : 'text-white'}`} />
-            </div>
-            <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-              Loomi
-            </span>
+          <Link
+            href="/loomi/dashboard"
+            className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}
+          >
+            loomi
           </Link>
 
-          {/* Center Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.slice(0, 6).map((item) => {
+          {/* Nav */}
+          <nav className="hidden md:flex items-center gap-6">
+            {navItems.map((item) => {
               const isActive = pathname === item.href ||
                 (item.href !== '/loomi/dashboard' && pathname.startsWith(item.href));
-              const Icon = item.icon;
 
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={`
-                    relative px-3 py-1.5 rounded-md text-sm font-medium
-                    transition-colors duration-150 flex items-center gap-2
+                    text-sm transition-colors
                     ${isActive
-                      ? isDark ? 'text-white bg-zinc-800' : 'text-zinc-900 bg-zinc-100'
-                      : isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-500 hover:text-zinc-700'
+                      ? isDark ? 'text-white' : 'text-zinc-900'
+                      : isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'
                     }
                   `}
                 >
-                  <span className="relative z-10">{item.label}</span>
+                  {item.label}
                 </Link>
               );
             })}
           </nav>
 
-          {/* Right Side */}
-          <div className="flex items-center gap-2">
-            {/* Connection Status */}
-            <div className={`
-              hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full text-xs
-              ${isDark ? 'bg-zinc-900' : 'bg-zinc-100'}
-            `}>
-              <span className={`
-                w-1.5 h-1.5 rounded-full
-                ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}
-              `} />
-              <span className={isDark ? 'text-zinc-400' : 'text-zinc-500'}>
-                {isConnected ? 'Conectado' : 'Desconectado'}
+          {/* Right */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Circle
+                className={`w-1.5 h-1.5 ${isConnected ? 'fill-emerald-500 text-emerald-500' : 'fill-amber-500 text-amber-500'}`}
+              />
+              <span className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                {isConnected ? 'Live' : 'Offline'}
               </span>
             </div>
 
-            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className={`
-                p-2 rounded-lg transition-colors
-                ${isDark
-                  ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
-                  : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'
-                }
-              `}
+              className={`p-1.5 rounded transition-colors ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'}`}
             >
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* Settings */}
-            <Link
-              href="/loomi/dashboard/settings"
-              className={`
-                p-2 rounded-lg transition-colors
-                ${isDark
-                  ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
-                  : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'
-                }
-              `}
+            <button
+              onClick={handleLogout}
+              className={`p-1.5 rounded transition-colors ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'}`}
+              title="Salir"
             >
-              <Settings className="w-4 h-4" />
-            </Link>
-
-            {/* User Menu */}
-            <div className="flex items-center gap-2 pl-2 ml-2 border-l border-zinc-800">
-              <div className={`
-                w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium
-                ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-200 text-zinc-600'}
-              `}>
-                {userName?.charAt(0).toUpperCase() || 'U'}
-              </div>
-              <button
-                onClick={handleLogout}
-                className={`
-                  p-2 rounded-lg transition-colors
-                  ${isDark
-                    ? 'text-zinc-500 hover:text-red-400 hover:bg-zinc-800'
-                    : 'text-zinc-400 hover:text-red-500 hover:bg-zinc-100'
-                  }
-                `}
-                title="Cerrar sesión"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Mobile Bottom Nav */}
+      {/* Mobile Nav */}
       <nav className={`
-        md:hidden fixed bottom-0 left-0 right-0 z-50 border-t backdrop-blur-xl
-        ${isDark ? 'bg-black/90 border-zinc-800' : 'bg-white/90 border-zinc-200'}
+        md:hidden fixed bottom-0 left-0 right-0 z-50 border-t
+        ${isDark ? 'bg-black border-zinc-900' : 'bg-white border-zinc-100'}
       `}>
-        <div className="flex items-center justify-around py-2">
-          {navItems.slice(0, 5).map((item) => {
+        <div className="flex items-center justify-around py-3">
+          {navItems.slice(0, 4).map((item) => {
             const isActive = pathname === item.href ||
               (item.href !== '/loomi/dashboard' && pathname.startsWith(item.href));
-            const Icon = item.icon;
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`
-                  flex flex-col items-center gap-1 px-3 py-1.5
+                  text-xs font-medium
                   ${isActive
                     ? isDark ? 'text-white' : 'text-zinc-900'
-                    : isDark ? 'text-zinc-500' : 'text-zinc-400'
+                    : isDark ? 'text-zinc-600' : 'text-zinc-400'
                   }
                 `}
               >
-                <Icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                {item.label}
               </Link>
             );
           })}
         </div>
       </nav>
 
-      {/* Main Content */}
-      <main className="pt-14 pb-20 md:pb-0">
+      {/* Content */}
+      <main className="pt-12 pb-16 md:pb-0">
         {children}
       </main>
     </div>

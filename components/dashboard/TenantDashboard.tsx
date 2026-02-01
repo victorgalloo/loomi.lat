@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { useTheme } from './ThemeProvider';
 import {
   MessageCircle,
@@ -10,8 +9,7 @@ import {
   Calendar,
   ArrowRight,
   Zap,
-  Bot,
-  ExternalLink
+  Bot
 } from 'lucide-react';
 
 interface TenantDashboardProps {
@@ -59,24 +57,17 @@ export default function TenantDashboard({
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
+      <div className="mb-8">
         <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
           Hola, {tenant.name.split(' ')[0]}
         </h1>
         <p className={`mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
           Resumen de tu cuenta Loomi
         </p>
-      </motion.div>
+      </div>
 
       {/* Connection Status */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+      <div
         className={`
           p-5 rounded-xl border mb-6
           ${whatsappAccount.connected
@@ -130,18 +121,15 @@ export default function TenantDashboard({
             </Link>
           )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {statCards.map((stat, index) => {
+        {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
-            <motion.div
+            <div
               key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + index * 0.05 }}
               className={`
                 p-4 rounded-xl border
                 ${isDark
@@ -159,18 +147,13 @@ export default function TenantDashboard({
               <p className={`text-xs mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
                 {stat.label}
               </p>
-            </motion.div>
+            </div>
           );
         })}
       </div>
 
       {/* Quick Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="mb-8"
-      >
+      <div className="mb-8">
         <h2 className={`text-sm font-medium mb-4 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
           Acciones rápidas
         </h2>
@@ -268,13 +251,10 @@ export default function TenantDashboard({
             </div>
           </Link>
         </div>
-      </motion.div>
+      </div>
 
       {/* Plan Info */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
+      <div
         className={`
           p-5 rounded-xl border
           ${isDark
@@ -313,7 +293,7 @@ export default function TenantDashboard({
             </Link>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

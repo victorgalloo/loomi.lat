@@ -3,7 +3,6 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { useTheme } from './ThemeProvider';
 import {
@@ -81,20 +80,13 @@ export default function DashboardShell({ children, userName, isConnected }: Dash
                   href={item.href}
                   className={`
                     relative px-3 py-1.5 rounded-md text-sm font-medium
-                    transition-colors duration-200 flex items-center gap-2
+                    transition-colors duration-150 flex items-center gap-2
                     ${isActive
-                      ? isDark ? 'text-white' : 'text-zinc-900'
+                      ? isDark ? 'text-white bg-zinc-800' : 'text-zinc-900 bg-zinc-100'
                       : isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-500 hover:text-zinc-700'
                     }
                   `}
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="nav-indicator"
-                      className={`absolute inset-0 rounded-md ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}
-                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                    />
-                  )}
                   <span className="relative z-10">{item.label}</span>
                 </Link>
               );
@@ -204,17 +196,7 @@ export default function DashboardShell({ children, userName, isConnected }: Dash
 
       {/* Main Content */}
       <main className="pt-14 pb-20 md:pb-0">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={pathname}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-          >
-            {children}
-          </motion.div>
-        </AnimatePresence>
+        {children}
       </main>
     </div>
   );

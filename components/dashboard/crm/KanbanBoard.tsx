@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo, useCallback } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -25,7 +25,7 @@ interface KanbanBoardProps {
   isDarkMode?: boolean;
 }
 
-export default function KanbanBoard({
+function KanbanBoard({
   stages,
   initialLeads,
   onLeadMove,
@@ -47,13 +47,13 @@ export default function KanbanBoard({
     })
   );
 
-  const getLeadsByStage = (stageName: string) => {
+  const getLeadsByStage = useCallback((stageName: string) => {
     return leads.filter((lead) => lead.stage === stageName);
-  };
+  }, [leads]);
 
-  const handleDragStart = (event: DragStartEvent) => {
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(event.active.id as string);
-  };
+  }, []);
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -151,3 +151,5 @@ export default function KanbanBoard({
     </>
   );
 }
+
+export default memo(KanbanBoard);

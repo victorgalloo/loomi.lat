@@ -1,8 +1,8 @@
 'use client';
 
+import { memo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { motion } from 'framer-motion';
 import LeadCard, { Lead } from './LeadCard';
 import { Plus } from 'lucide-react';
 
@@ -23,7 +23,7 @@ interface KanbanColumnProps {
   isDarkMode?: boolean;
 }
 
-export default function KanbanColumn({ stage, leads, onLeadClick, onAddLead, isDarkMode = false }: KanbanColumnProps) {
+function KanbanColumn({ stage, leads, onLeadClick, onAddLead, isDarkMode = false }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.name });
 
   const totalValue = leads.reduce((sum, lead) => sum + (lead.dealValue || 0), 0);
@@ -103,13 +103,12 @@ export default function KanbanColumn({ stage, leads, onLeadClick, onAddLead, isD
 
         {/* Add Lead Button */}
         {leads.length === 0 && (
-          <motion.button
+          <button
             onClick={onAddLead}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
             className={`
               w-full p-3 rounded-lg border border-dashed
-              transition-colors duration-200 flex items-center justify-center gap-2
+              transition-colors duration-150 flex items-center justify-center gap-2
+              hover:scale-[1.01] active:scale-[0.99]
               ${isDarkMode
                 ? 'border-zinc-700 text-zinc-600 hover:border-zinc-600 hover:text-zinc-500'
                 : 'border-zinc-200 text-zinc-400 hover:border-zinc-300 hover:text-zinc-500'
@@ -118,9 +117,11 @@ export default function KanbanColumn({ stage, leads, onLeadClick, onAddLead, isD
           >
             <Plus className="w-4 h-4" />
             <span className="text-xs font-medium">Agregar</span>
-          </motion.button>
+          </button>
         )}
       </div>
     </div>
   );
 }
+
+export default memo(KanbanColumn);

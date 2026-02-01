@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { Zap, Sun, Moon, ArrowRight, Loader2 } from "lucide-react";
 
@@ -98,12 +97,7 @@ export default function LoginPage() {
 
       {/* Main Content */}
       <div className="min-h-screen flex items-center justify-center px-6 py-20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-sm"
-        >
+        <div className="w-full max-w-sm">
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
@@ -164,27 +158,23 @@ export default function LoginPage() {
 
             {/* Error */}
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
+              <div
                 className={`
                   p-3 rounded-lg text-sm
                   ${isDark ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-red-50 text-red-600 border border-red-200'}
                 `}
               >
                 {error}
-              </motion.div>
+              </div>
             )}
 
             {/* Submit */}
-            <motion.button
+            <button
               type="submit"
               disabled={isLoading}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
               className={`
                 w-full py-2.5 rounded-lg text-sm font-medium
-                transition-all duration-200 flex items-center justify-center gap-2
+                transition-colors duration-150 flex items-center justify-center gap-2
                 disabled:opacity-50 disabled:cursor-not-allowed
                 ${isDark
                   ? 'bg-white text-black hover:bg-zinc-200'
@@ -200,7 +190,7 @@ export default function LoginPage() {
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
-            </motion.button>
+            </button>
           </form>
 
           {/* Footer */}
@@ -229,7 +219,7 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

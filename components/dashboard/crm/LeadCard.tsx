@@ -1,8 +1,8 @@
 'use client';
 
+import { memo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { motion } from 'framer-motion';
 import { MoreHorizontal } from 'lucide-react';
 
 export interface Lead {
@@ -24,7 +24,7 @@ interface LeadCardProps {
   isDarkMode?: boolean;
 }
 
-export default function LeadCard({ lead, onClick, isDarkMode = false }: LeadCardProps) {
+function LeadCard({ lead, onClick, isDarkMode = false }: LeadCardProps) {
   const {
     attributes,
     listeners,
@@ -64,7 +64,7 @@ export default function LeadCard({ lead, onClick, isDarkMode = false }: LeadCard
   };
 
   return (
-    <motion.div
+    <div
       ref={setNodeRef}
       style={style}
       {...attributes}
@@ -72,7 +72,7 @@ export default function LeadCard({ lead, onClick, isDarkMode = false }: LeadCard
       onClick={onClick}
       className={`
         group relative rounded-lg border p-3 cursor-grab active:cursor-grabbing
-        transition-all duration-200 ease-out
+        transition-all duration-150
         ${isDarkMode
           ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50'
           : 'bg-white border-zinc-200 hover:border-zinc-300 hover:shadow-sm'
@@ -134,6 +134,8 @@ export default function LeadCard({ lead, onClick, isDarkMode = false }: LeadCard
       >
         <MoreHorizontal className="w-3.5 h-3.5" />
       </button>
-    </motion.div>
+    </div>
   );
 }
+
+export default memo(LeadCard);

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useTheme } from './ThemeProvider';
-import { LogOut, Sun, Moon, Circle } from 'lucide-react';
+import { LogOut, Sun, Moon } from 'lucide-react';
 
 interface DashboardShellProps {
   children: ReactNode;
@@ -76,9 +76,7 @@ export default function DashboardShell({ children, userName, isConnected }: Dash
           {/* Right */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Circle
-                className={`w-1.5 h-1.5 ${isConnected ? 'fill-emerald-500 text-emerald-500' : 'fill-amber-500 text-amber-500'}`}
-              />
+              <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
               <span className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
                 {isConnected ? 'Live' : 'Offline'}
               </span>

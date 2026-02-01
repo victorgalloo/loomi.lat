@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useTheme } from './ThemeProvider';
-import { ArrowUpRight, Circle } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 
 interface TenantDashboardProps {
   tenant: {
@@ -47,9 +47,7 @@ export default function TenantDashboard({
       {/* Status */}
       <div className={`flex items-center gap-6 text-sm mb-12 pb-8 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
         <div className="flex items-center gap-2">
-          <Circle
-            className={`w-2 h-2 ${whatsappAccount.connected ? 'fill-emerald-500 text-emerald-500' : 'fill-amber-500 text-amber-500'}`}
-          />
+          <span className={`w-2 h-2 rounded-full ${whatsappAccount.connected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
           <span className={isDark ? 'text-zinc-400' : 'text-zinc-600'}>
             {whatsappAccount.connected ? 'Conectado' : 'Desconectado'}
           </span>

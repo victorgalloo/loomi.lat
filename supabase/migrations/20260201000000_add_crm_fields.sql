@@ -26,9 +26,11 @@ CREATE INDEX IF NOT EXISTS idx_pipeline_stages_tenant ON pipeline_stages(tenant_
 -- RLS for pipeline_stages
 ALTER TABLE pipeline_stages ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Service role full access pipeline_stages" ON pipeline_stages;
 CREATE POLICY "Service role full access pipeline_stages" ON pipeline_stages
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Users read own pipeline_stages" ON pipeline_stages;
 CREATE POLICY "Users read own pipeline_stages" ON pipeline_stages
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT id FROM tenants WHERE email = auth.jwt()->>'email'));

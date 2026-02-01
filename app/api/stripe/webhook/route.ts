@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { trackCustomerWon } from '@/lib/integrations/meta-conversions';
 
 // Lazy initialization to avoid build-time errors
 let stripe: Stripe | null = null;
@@ -109,6 +110,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const subscriptionId = session.subscription as string;
   const accountId = session.metadata?.accountId;
   const plan = session.metadata?.plan;
+  const customerEmail = session.customer_email || session.metadata?.email;
+  const customerPhone = session.metadata?.phone;
 
   console.log(`[Webhook] Checkout completed for customer ${customerId}`);
 
@@ -142,6 +145,25 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   console.log(`[Webhook] Account activated with plan: ${plan}`);
+
+  // Track conversion event for Meta (Purchase)
+  if (customerPhone) {
+    const planPrices: Record<string, number> = {
+      starter: 199,
+      growth: 349,
+      business: 599
+    };
+    const value = planPrices[plan || 'starter'] || 199;
+
+    trackCustomerWon({
+      phone: customerPhone,
+      email: customerEmail || undefined,
+      value,
+      currency: 'MXN'
+    }).catch((err) => {
+      console.error('[Meta] Failed to track customer won:', err);
+    });
+  }
 }
 
 /**

@@ -4,6 +4,7 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Lead, Conversation, Message, Appointment } from '@/types';
+import { trackLeadQualified } from '@/lib/integrations/meta-conversions';
 
 // Singleton pattern for Supabase client
 let supabaseClient: SupabaseClient | null = null;
@@ -200,6 +201,11 @@ export async function saveLeadQualification(
   }
 
   console.log(`[Supabase] Lead ${phone} qualified with:`, qualification);
+
+  // Track conversion event for Meta (non-blocking)
+  trackLeadQualified({ phone }).catch((err) => {
+    console.error('[Meta] Failed to track lead qualified:', err);
+  });
 }
 
 // ============================================

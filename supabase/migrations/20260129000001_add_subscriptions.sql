@@ -42,6 +42,7 @@ CREATE TRIGGER trigger_accounts_updated_at
 ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
 
 -- Service role can do everything
+DROP POLICY IF EXISTS "Service role full access to accounts" ON accounts;
 CREATE POLICY "Service role full access to accounts"
   ON accounts
   FOR ALL
@@ -56,17 +57,17 @@ CREATE TABLE IF NOT EXISTS pricing_tiers (
   min_volume INTEGER NOT NULL DEFAULT 0,
   max_volume INTEGER,
   price_usd DECIMAL(10,2) NOT NULL,
-  features JSONB DEFAULT '[]',
+  features TEXT[] DEFAULT '{}',
   recommended BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Insert default pricing tiers
 INSERT INTO pricing_tiers (name, min_volume, max_volume, price_usd, features, recommended) VALUES
-  ('Starter', 0, 100, 199.00, '["Respuestas 24/7", "Calificación de leads", "Agenda automática", "Dashboard básico"]', false),
-  ('Growth', 101, 300, 349.00, '["Todo de Starter", "Integraciones CRM", "Reportes avanzados", "Soporte prioritario"]', true),
-  ('Business', 301, 1000, 599.00, '["Todo de Growth", "Multi-agente", "API personalizada", "Account manager"]', false),
-  ('Enterprise', 1001, NULL, 0.00, '["Todo de Business", "SLA garantizado", "Desarrollo custom", "Soporte 24/7"]', false)
+  ('Starter', 0, 100, 199.00, ARRAY['Respuestas 24/7', 'Calificación de leads', 'Agenda automática', 'Dashboard básico'], false),
+  ('Growth', 101, 300, 349.00, ARRAY['Todo de Starter', 'Integraciones CRM', 'Reportes avanzados', 'Soporte prioritario'], true),
+  ('Business', 301, 1000, 599.00, ARRAY['Todo de Growth', 'Multi-agente', 'API personalizada', 'Account manager'], false),
+  ('Enterprise', 1001, NULL, 0.00, ARRAY['Todo de Business', 'SLA garantizado', 'Desarrollo custom', 'Soporte 24/7'], false)
 ON CONFLICT DO NOTHING;
 
 -- Knowledge base table
@@ -97,19 +98,23 @@ ALTER TABLE pricing_tiers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE knowledge_base ENABLE ROW LEVEL SECURITY;
 ALTER TABLE case_studies ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Service role full access to pricing_tiers" ON pricing_tiers;
 CREATE POLICY "Service role full access to pricing_tiers"
   ON pricing_tiers FOR ALL TO service_role
   USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Service role full access to knowledge_base" ON knowledge_base;
 CREATE POLICY "Service role full access to knowledge_base"
   ON knowledge_base FOR ALL TO service_role
   USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Service role full access to case_studies" ON case_studies;
 CREATE POLICY "Service role full access to case_studies"
   ON case_studies FOR ALL TO service_role
   USING (true) WITH CHECK (true);
 
 -- Public read access to pricing
+DROP POLICY IF EXISTS "Public read access to pricing_tiers" ON pricing_tiers;
 CREATE POLICY "Public read access to pricing_tiers"
   ON pricing_tiers FOR SELECT TO anon
   USING (true);

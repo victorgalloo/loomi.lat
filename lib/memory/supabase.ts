@@ -113,7 +113,7 @@ export async function createLead(
   const insertData: Record<string, unknown> = {
     phone,
     name,
-    stage: 'initial',
+    stage: options?.tenantId ? 'Nuevo' : 'initial', // Use CRM stage for multi-tenant
     is_test: options?.isTest ?? false
   };
 

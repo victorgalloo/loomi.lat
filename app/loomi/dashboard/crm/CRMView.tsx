@@ -36,18 +36,22 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
         (payload) => {
           if (payload.eventType === 'INSERT') {
             const newLead = payload.new;
-            setLeads(prev => [{
-              id: newLead.id,
-              name: newLead.name,
-              phone: newLead.phone,
-              companyName: newLead.company_name,
-              contactEmail: newLead.contact_email,
-              dealValue: newLead.deal_value,
-              stage: newLead.stage || 'Nuevo',
-              priority: newLead.priority || 'medium',
-              lastActivityAt: newLead.last_activity_at,
-              conversationCount: 0,
-            }, ...prev]);
+            // Only add if not already in state (prevents duplicates from manual creation)
+            setLeads(prev => {
+              if (prev.some(l => l.id === newLead.id)) return prev;
+              return [{
+                id: newLead.id,
+                name: newLead.name,
+                phone: newLead.phone,
+                companyName: newLead.company_name,
+                contactEmail: newLead.contact_email,
+                dealValue: newLead.deal_value,
+                stage: newLead.stage || 'Nuevo',
+                priority: newLead.priority || 'medium',
+                lastActivityAt: newLead.last_activity_at,
+                conversationCount: 0,
+              }, ...prev];
+            });
           } else if (payload.eventType === 'UPDATE') {
             const updated = payload.new;
             setLeads(prev => prev.map(lead =>

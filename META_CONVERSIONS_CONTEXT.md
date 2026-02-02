@@ -8,9 +8,11 @@ Integración con Meta Conversions API para enviar eventos de conversión cuando 
 
 | Variable | Valor | Ubicación |
 |----------|-------|-----------|
-| `META_PIXEL_ID` | `1309679250691627` | `.env.local` + Vercel |
+| `META_PIXEL_ID` | `912267854789790` | `.env.local` + Vercel |
 | `META_ACCESS_TOKEN` | `EAAVS2ZCFjRec...` | `.env.local` + Vercel |
 | `META_TEST_EVENT_CODE` | `TEST89740` | `.env.local` + Vercel (remover en prod) |
+
+**Dataset:** Loomi (creado 2 feb 2026)
 
 ## Pipeline CRM (8 etapas)
 

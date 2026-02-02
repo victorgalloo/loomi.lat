@@ -22,6 +22,7 @@ interface KanbanBoardProps {
   initialLeads: Lead[];
   onLeadMove?: (leadId: string, newStage: string) => Promise<void>;
   onLeadUpdate?: (leadId: string, data: Partial<Lead>) => Promise<void>;
+  onAddLead?: () => void;
   isDarkMode?: boolean;
 }
 
@@ -30,6 +31,7 @@ function KanbanBoard({
   initialLeads,
   onLeadMove,
   onLeadUpdate,
+  onAddLead,
   isDarkMode = false,
 }: KanbanBoardProps) {
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
@@ -134,6 +136,7 @@ function KanbanBoard({
                 stage={stage}
                 leads={getLeadsByStage(stage.name)}
                 onLeadClick={handleLeadClick}
+                onAddLead={onAddLead}
                 isDarkMode={isDarkMode}
               />
             ))}

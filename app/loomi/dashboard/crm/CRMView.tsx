@@ -183,6 +183,7 @@ export default function CRMView({ stages, leads: initialLeads }: CRMViewProps) {
             stages={stages}
             initialLeads={filteredLeads}
             isDarkMode={isDarkMode}
+            onAddLead={() => setShowModal(true)}
           />
         ) : (
           <div className="text-center py-12">

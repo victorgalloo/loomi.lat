@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, memo, useCallback } from 'react';
+import { useState, memo, useCallback, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -37,6 +37,11 @@ function KanbanBoard({
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+
+  // Sync leads when initialLeads changes (from realtime or parent state)
+  useEffect(() => {
+    setLeads(initialLeads);
+  }, [initialLeads]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

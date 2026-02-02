@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, memo, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -46,7 +46,7 @@ function KanbanBoard({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 3,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -169,4 +169,4 @@ function KanbanBoard({
   );
 }
 
-export default memo(KanbanBoard);
+export default KanbanBoard;

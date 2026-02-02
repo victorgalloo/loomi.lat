@@ -8,6 +8,7 @@ export async function middleware(request: NextRequest) {
     '/',           // Landing page
     '/login',      // Login page
     '/api',        // API routes handle their own auth
+    '/demo',       // Demo/sandbox pages
   ];
 
   // Check if the current path is a public route

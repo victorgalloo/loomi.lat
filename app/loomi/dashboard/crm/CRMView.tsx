@@ -1,21 +1,82 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Search, Users, X } from 'lucide-react';
 import { KanbanBoard } from '@/components/dashboard/crm';
 import { Lead } from '@/components/dashboard/crm/LeadCard';
 import { PipelineStage } from '@/components/dashboard/crm/KanbanColumn';
 import { useTheme } from '@/components/dashboard/ThemeProvider';
+import { createClient } from '@/lib/supabase/client';
 
 interface CRMViewProps {
   stages: PipelineStage[];
   leads: Lead[];
+  tenantId: string;
 }
 
-export default function CRMView({ stages, leads: initialLeads }: CRMViewProps) {
+export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMViewProps) {
   const { isDark: isDarkMode } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [leads, setLeads] = useState(initialLeads);
+
+  // Realtime subscription for leads
+  useEffect(() => {
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel('leads-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'leads',
+          filter: `tenant_id=eq.${tenantId}`
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newLead = payload.new;
+            setLeads(prev => [{
+              id: newLead.id,
+              name: newLead.name,
+              phone: newLead.phone,
+              companyName: newLead.company_name,
+              contactEmail: newLead.contact_email,
+              dealValue: newLead.deal_value,
+              stage: newLead.stage || 'Nuevo',
+              priority: newLead.priority || 'medium',
+              lastActivityAt: newLead.last_activity_at,
+              conversationCount: 0,
+            }, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = payload.new;
+            setLeads(prev => prev.map(lead =>
+              lead.id === updated.id
+                ? {
+                    ...lead,
+                    name: updated.name,
+                    phone: updated.phone,
+                    companyName: updated.company_name,
+                    contactEmail: updated.contact_email,
+                    dealValue: updated.deal_value,
+                    stage: updated.stage || 'Nuevo',
+                    priority: updated.priority || 'medium',
+                    lastActivityAt: updated.last_activity_at,
+                  }
+                : lead
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            const deleted = payload.old;
+            setLeads(prev => prev.filter(lead => lead.id !== deleted.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [tenantId]);
   const [showModal, setShowModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newLead, setNewLead] = useState({

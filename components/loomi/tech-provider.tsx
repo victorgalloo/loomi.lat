@@ -76,11 +76,11 @@ function CodeLine({ line, lineNumber }: { line: typeof CODE_LINES[0]; lineNumber
         <span
           dangerouslySetInnerHTML={{
             __html: content
-              .replace(/<kw>/g, '<span class="text-neon-purple">')
+              .replace(/<kw>/g, '<span class="text-foreground">')
               .replace(/<\/kw>/g, '</span>')
-              .replace(/<str>/g, '<span class="text-neon-green">')
+              .replace(/<str>/g, '<span class="text-brand">')
               .replace(/<\/str>/g, '</span>')
-              .replace(/<fn>/g, '<span class="text-neon-yellow">')
+              .replace(/<fn>/g, '<span class="text-amber-400">')
               .replace(/<\/fn>/g, '</span>')
           }}
         />
@@ -95,7 +95,7 @@ function StaticCodeDisplay() {
       {/* File path */}
       <div className="flex items-center gap-2 mb-3 text-[10px]">
         <span className="text-muted/50">~/loomi/</span>
-        <span className="text-neon-cyan/80">api/webhook/route.ts</span>
+        <span className="text-brand/80">api/webhook/route.ts</span>
       </div>
 
       {/* Code lines */}
@@ -132,7 +132,7 @@ function TerminalDisplay() {
         if (line.type === 'command') {
           return (
             <div key={i} className="flex items-center gap-2">
-              <span className="text-neon-green">→</span>
+              <span className="text-brand">→</span>
               <span className="text-muted/60">~</span>
               <span className="text-foreground/90">{line.text}</span>
             </div>
@@ -142,7 +142,7 @@ function TerminalDisplay() {
           <div
             key={i}
             className={`pl-5 ${
-              line.type === 'success' ? 'text-neon-green' : 'text-muted/70'
+              line.type === 'success' ? 'text-brand' : 'text-muted/70'
             }`}
           >
             {line.text}
@@ -152,7 +152,7 @@ function TerminalDisplay() {
       {/* Cursor */}
       {visibleLines < TERMINAL_LINES.length && (
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-neon-green">→</span>
+          <span className="text-brand">→</span>
           <span className="text-muted/60">~</span>
           <motion.span
             className="w-2 h-4 bg-foreground/70"
@@ -178,8 +178,7 @@ export function TechProvider() {
     <section className="py-28 sm:py-40 px-4 sm:px-6 relative overflow-hidden bg-background transition-colors duration-300">
       {/* Background */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-neon-cyan/5 blur-[150px] rounded-full" />
-        <div className="absolute bottom-1/3 left-0 w-[400px] h-[400px] bg-neon-purple/5 blur-[150px] rounded-full" />
+        <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-brand/5 blur-[150px] rounded-full" />
         {/* Grid pattern */}
         <div
           className="absolute inset-0 opacity-[0.02] dark:opacity-[0.015]"
@@ -199,12 +198,12 @@ export function TechProvider() {
           className="text-center mb-8"
         >
           <span className="inline-flex items-center gap-2 text-sm text-muted/80 tracking-wide uppercase mb-6">
-            <span className="w-2 h-2 rounded-full bg-neon-cyan animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-brand animate-pulse" />
             Built by engineers
           </span>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
             Código que{' '}
-            <span className="text-neon-cyan" style={{ textShadow: '0 0 40px rgba(78,205,196,0.3)' }}>
+            <span className="text-brand" style={{ textShadow: '0 0 40px rgba(78,205,196,0.3)' }}>
               funciona.
             </span>
           </h2>
@@ -282,15 +281,15 @@ export function TechProvider() {
                 <div className="absolute bottom-4 left-4 right-4 pt-4 border-t border-border space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted/60">Response time</span>
-                    <span className="text-neon-green font-mono">~0.8s</span>
+                    <span className="text-brand font-mono">~0.8s</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted/60">Uptime</span>
-                    <span className="text-neon-green font-mono">99.9%</span>
+                    <span className="text-brand font-mono">99.9%</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted/60">Edge regions</span>
-                    <span className="text-neon-cyan font-mono">Global</span>
+                    <span className="text-brand font-mono">Global</span>
                   </div>
                 </div>
               </div>
@@ -322,17 +321,17 @@ export function TechProvider() {
             {
               title: 'Tech Provider',
               desc: 'API de WhatsApp directo con Meta. Sin intermediarios.',
-              color: 'neon-cyan',
+              color: 'brand',
             },
             {
               title: 'Server-side',
               desc: 'Conversions API que cierra el loop con Meta Ads.',
-              color: 'neon-purple',
+              color: 'brand',
             },
             {
               title: 'Edge-first',
               desc: 'Respuestas en <100ms desde cualquier parte del mundo.',
-              color: 'neon-green',
+              color: 'brand',
             },
           ].map((item, i) => (
             <motion.div
@@ -364,7 +363,7 @@ export function TechProvider() {
           <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
             Construido por ingenieros,
             <br />
-            <span className="text-neon-cyan" style={{ textShadow: '0 0 40px rgba(78,205,196,0.3)' }}>
+            <span className="text-brand" style={{ textShadow: '0 0 40px rgba(78,205,196,0.3)' }}>
               para escalar.
             </span>
           </p>

@@ -1,10 +1,9 @@
 import { Navbar } from '@/components/loomi/Navbar';
 import { Hero } from '@/components/loomi/Hero';
 import { Stats } from '@/components/loomi/stats';
-import { InteractiveDemo } from '@/components/loomi/interactive-demo';
 import { HowItWorks } from '@/components/loomi/how-it-works';
+import { InteractiveDemo } from '@/components/loomi/interactive-demo';
 import { MetaLoop } from '@/components/loomi/meta-loop';
-import { TechProvider } from '@/components/loomi/tech-provider';
 import { Pricing } from '@/components/loomi/Pricing';
 import { Testimonials } from '@/components/loomi/Testimonials';
 import { CTA } from '@/components/loomi/cta';
@@ -22,7 +21,6 @@ export default function HomePage() {
         <HowItWorks />
         <InteractiveDemo />
         <MetaLoop />
-        <TechProvider />
         <Pricing />
         <Testimonials />
         <CTA />

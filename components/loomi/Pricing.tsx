@@ -9,67 +9,33 @@ const WHATSAPP_LINK = 'https://api.whatsapp.com/send?phone=529849800629&text=Hol
 
 const PLANS = [
   {
-    name: 'Starter',
+    name: 'starter',
     monthlyPrice: 199,
     yearlyPrice: 159,
-    description: 'Hasta 100 mensajes/día',
-    features: [
-      'Agente IA conversacional',
-      '1 número WhatsApp',
-      'Memoria de contexto',
-      'Agenda con Cal.com',
-      'Soporte por email',
-    ],
-    cta: 'Comenzar ahora',
-    highlight: false,
+    msgs: '100 msgs/día',
+    features: ['1 WhatsApp', 'Agente IA', 'Cal.com'],
   },
   {
-    name: 'Growth',
+    name: 'growth',
     monthlyPrice: 349,
     yearlyPrice: 279,
-    description: 'Hasta 300 mensajes/día',
-    features: [
-      'Todo en Starter',
-      '3 números WhatsApp',
-      'IA entrenada con tu data',
-      'CRM integrado (Kanban)',
-      'Meta Conversions API',
-      'Dashboard de analytics',
-    ],
-    cta: 'Comenzar ahora',
+    msgs: '300 msgs/día',
+    features: ['3 WhatsApp', 'CRM Kanban', 'Meta CAPI', 'Analytics'],
     highlight: true,
   },
   {
-    name: 'Business',
+    name: 'business',
     monthlyPrice: 599,
     yearlyPrice: 479,
-    description: 'Hasta 1,000 mensajes/día',
-    features: [
-      'Todo en Growth',
-      '10 números WhatsApp',
-      'Integraciones avanzadas',
-      'API access completo',
-      'Onboarding dedicado',
-      'SLA 99.9%',
-    ],
-    cta: 'Comenzar ahora',
-    highlight: false,
+    msgs: '1,000 msgs/día',
+    features: ['10 WhatsApp', 'API access', 'Onboarding', 'SLA 99.9%'],
   },
   {
-    name: 'Enterprise',
+    name: 'enterprise',
     monthlyPrice: null,
     yearlyPrice: null,
-    description: 'Volumen ilimitado',
-    features: [
-      'Todo en Business',
-      'Números ilimitados',
-      'Desarrollo a medida',
-      'Opción self-hosted',
-      'Account manager',
-      'SLA personalizado',
-    ],
-    cta: 'Hablar con ventas',
-    highlight: false,
+    msgs: 'ilimitado',
+    features: ['WhatsApp ilimitados', 'Self-hosted', 'Account manager'],
   },
 ];
 
@@ -77,65 +43,52 @@ export function Pricing() {
   const [isYearly, setIsYearly] = useState(false);
 
   return (
-    <section id="pricing" className="py-28 sm:py-40 px-4 sm:px-6 relative overflow-hidden bg-background transition-colors duration-300">
-      {/* Background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-neon-green/3 blur-[200px] rounded-full" />
-      </div>
-
+    <section id="pricing" className="py-32 sm:py-48 px-4 sm:px-6 relative overflow-hidden bg-background">
       <div className="relative max-w-6xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-20">
           <motion.h2
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl sm:text-5xl lg:text-7xl font-bold text-foreground mb-6"
+            className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-8 font-mono"
           >
-            Elige tu plan.
+            Precios
           </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-xl text-muted mb-10"
-          >
-            Paga por conversaciones, no por mensajes. Cancela cuando quieras.
-          </motion.p>
 
           {/* Toggle */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="inline-flex items-center gap-4 p-1 rounded-full bg-surface border border-border"
+            className="inline-flex items-center gap-4 font-mono"
           >
             <button
               onClick={() => setIsYearly(false)}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                !isYearly ? 'bg-foreground text-background' : 'text-muted hover:text-foreground'
-              }`}
+              className={`text-lg ${!isYearly ? 'text-foreground font-bold' : 'text-muted'}`}
             >
-              Mensual
+              mensual
             </button>
+            <div
+              onClick={() => setIsYearly(!isYearly)}
+              className={`w-14 h-8 rounded-full cursor-pointer ${isYearly ? 'bg-foreground' : 'bg-border'}`}
+            >
+              <motion.div
+                className="w-6 h-6 rounded-full bg-background mt-1"
+                animate={{ x: isYearly ? 30 : 4 }}
+              />
+            </div>
             <button
               onClick={() => setIsYearly(true)}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
-                isYearly ? 'bg-foreground text-background' : 'text-muted hover:text-foreground'
-              }`}
+              className={`text-lg flex items-center gap-2 ${isYearly ? 'text-foreground font-bold' : 'text-muted'}`}
             >
-              Anual
-              <span className={`text-xs px-2 py-0.5 rounded-full ${isYearly ? 'bg-neon-green text-gray-900' : 'bg-neon-green/20 text-neon-green'}`}>
-                -20%
-              </span>
+              anual
+              <span className="text-sm px-2 py-1 rounded bg-terminal-green/10 text-terminal-green">-20%</span>
             </button>
           </motion.div>
         </div>
 
-        {/* Plans - Grid layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {/* Plans */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-px bg-border rounded-2xl overflow-hidden">
           {PLANS.map((plan, index) => (
             <motion.div
               key={plan.name}
@@ -143,89 +96,66 @@ export function Pricing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className={`relative group ${plan.highlight ? 'md:-mt-4 md:mb-4' : ''}`}
+              className={`relative p-8 ${plan.highlight ? 'bg-foreground text-background' : 'bg-background'}`}
             >
-              {/* Highlight indicator */}
               {plan.highlight && (
-                <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-neon-green via-neon-cyan to-neon-green rounded-t-full" />
+                <span className="absolute top-4 right-4 text-xs font-mono px-3 py-1 rounded-full bg-background text-foreground">
+                  popular
+                </span>
               )}
 
-              <div className={`h-full p-6 xl:p-8 rounded-2xl transition-all duration-300 ${
-                plan.highlight
-                  ? 'bg-surface border-2 border-neon-green/30'
-                  : 'bg-surface border border-border hover:border-muted'
-              }`}>
-                {/* Plan header */}
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
-                    {plan.highlight && (
-                      <span className="text-[10px] font-medium px-2 py-0.5 bg-neon-green/10 text-neon-green rounded-full">
-                        Popular
-                      </span>
-                    )}
+              <h3 className={`text-xl font-bold font-mono mb-1 ${plan.highlight ? 'text-background' : 'text-foreground'}`}>
+                ./{plan.name}
+              </h3>
+              <p className={`text-sm font-mono mb-6 ${plan.highlight ? 'text-background/60' : 'text-muted'}`}>
+                {plan.msgs}
+              </p>
+
+              <div className="mb-6">
+                {plan.monthlyPrice ? (
+                  <div className="font-mono">
+                    <span className={`text-4xl font-black ${plan.highlight ? 'text-background' : 'text-foreground'}`}>
+                      ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
+                    </span>
+                    <span className={plan.highlight ? 'text-background/60' : 'text-muted'}>/mes</span>
                   </div>
-                  <p className="text-sm text-muted">{plan.description}</p>
-                </div>
-
-                {/* Price */}
-                <div className="mb-6">
-                  {plan.monthlyPrice ? (
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl xl:text-5xl font-bold text-foreground">
-                        ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
-                      </span>
-                      <span className="text-muted text-sm">USD/mes</span>
-                    </div>
-                  ) : (
-                    <div className="text-3xl xl:text-4xl font-bold text-foreground">
-                      Custom
-                    </div>
-                  )}
-                </div>
-
-                {/* Features */}
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, i) => (
-                    <motion.li
-                      key={feature}
-                      initial={{ opacity: 0, x: -10 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.1 + i * 0.05 }}
-                      className="flex items-start gap-2 text-sm text-foreground/80"
-                    >
-                      <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${plan.highlight ? 'text-neon-green' : 'text-muted'}`} />
-                      <span>{feature}</span>
-                    </motion.li>
-                  ))}
-                </ul>
-
-                {/* CTA */}
-                <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="block">
-                  <Button
-                    variant={plan.highlight ? 'primary' : 'secondary'}
-                    className="w-full group/btn"
-                    glow={plan.highlight}
-                  >
-                    {plan.highlight && <MessageCircle className="w-4 h-4 mr-2" />}
-                    {plan.cta}
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                  </Button>
-                </a>
+                ) : (
+                  <span className={`text-3xl font-black font-mono ${plan.highlight ? 'text-background' : 'text-foreground'}`}>
+                    custom
+                  </span>
+                )}
               </div>
+
+              <ul className="space-y-2 mb-8 font-mono">
+                {plan.features.map((feature) => (
+                  <li key={feature} className={`flex items-center gap-2 text-sm ${plan.highlight ? 'text-background/80' : 'text-muted'}`}>
+                    <Check className={`w-4 h-4 ${plan.highlight ? 'text-background' : 'text-foreground'}`} />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="block">
+                <Button
+                  variant={plan.highlight ? 'secondary' : 'primary'}
+                  className={`w-full font-mono ${plan.highlight ? 'bg-background text-foreground' : ''}`}
+                >
+                  {plan.highlight && <MessageCircle className="w-4 h-4 mr-2" />}
+                  Empezar
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </a>
             </motion.div>
           ))}
         </div>
 
-        {/* Bottom note */}
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center text-muted text-sm mt-12"
+          className="text-center text-muted text-lg mt-12 font-mono"
         >
-          Todos los planes incluyen 14 días de prueba gratis. Sin tarjeta de crédito.
+          14 días gratis · sin tarjeta
         </motion.p>
       </div>
     </section>

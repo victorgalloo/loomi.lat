@@ -4,18 +4,17 @@ import { motion } from 'framer-motion';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 const STATS = [
-  { value: 0.8, suffix: 's', decimals: 1, label: 'Tiempo de respuesta', color: 'neon-green', glow: 'rgba(0,255,102,0.3)' },
-  { value: 32, suffix: '%', prefix: '-', label: 'Costo por lead', color: 'neon-cyan', glow: 'rgba(78,205,196,0.3)' },
-  { value: 100, suffix: '%', label: 'Leads respondidos', color: 'neon-yellow', glow: 'rgba(255,217,61,0.3)' },
-  { value: 3, suffix: 'x', label: 'ROI en campañas', color: 'neon-purple', glow: 'rgba(168,85,247,0.3)' },
+  { value: 0.8, suffix: 's', decimals: 1, label: 'respuesta' },
+  { value: 100, suffix: '%', label: 'leads atendidos' },
+  { value: 3, suffix: 'x', label: 'más demos' },
+  { value: 78, suffix: '%', prefix: '-', label: 'no-shows' },
 ];
 
 export function Stats() {
   return (
-    <section className="py-24 sm:py-32 px-4 sm:px-6 relative bg-background transition-colors duration-300">
+    <section className="py-24 sm:py-32 px-4 sm:px-6 relative bg-background">
       <div className="max-w-7xl mx-auto">
-        {/* Stats - horizontal scroll on mobile, grid on desktop */}
-        <div className="flex overflow-x-auto lg:grid lg:grid-cols-4 gap-12 lg:gap-8 pb-4 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border">
           {STATS.map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -23,13 +22,9 @@ export function Stats() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              className="flex-shrink-0 min-w-[200px] lg:min-w-0 text-center"
+              className="bg-background p-8 lg:p-12 text-center"
             >
-              {/* Number */}
-              <motion.div
-                className={`text-5xl sm:text-6xl lg:text-7xl font-bold text-${stat.color} mb-3`}
-                style={{ textShadow: `0 0 40px ${stat.glow}` }}
-              >
+              <motion.div className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-4 font-mono">
                 <AnimatedCounter
                   end={stat.value}
                   suffix={stat.suffix}
@@ -38,9 +33,7 @@ export function Stats() {
                   duration={2000}
                 />
               </motion.div>
-
-              {/* Label */}
-              <div className="text-muted text-sm sm:text-base font-medium">
+              <div className="text-muted text-sm sm:text-base font-mono">
                 {stat.label}
               </div>
             </motion.div>

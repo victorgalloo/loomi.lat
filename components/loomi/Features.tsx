@@ -1,15 +1,12 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
-import { FadeIn } from '@/components/ui/fade-in';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useRef } from 'react';
 import {
   Brain,
   Calendar,
   RefreshCw,
   Target,
-  Database,
-  BarChart3,
   Users,
   TrendingUp,
 } from 'lucide-react';
@@ -17,108 +14,153 @@ import {
 const FEATURES = [
   {
     icon: Brain,
-    title: 'Razonamiento con IA',
+    title: 'reasoning()',
+    subtitle: 'Piensa antes de responder',
     description:
-      'Chain-of-thought reasoning analiza cada mensaje antes de responder. Entiende intención, detecta objeciones y personaliza la respuesta.',
+      'Chain-of-thought reasoning analiza cada mensaje. Entiende intención, detecta objeciones y personaliza la respuesta.',
     tech: 'generateReasoning()',
-    color: 'from-purple-500/20 to-purple-500/5',
   },
   {
     icon: Calendar,
-    title: 'Agenda Automática',
+    title: 'schedule()',
+    subtitle: 'Agenda sin intervención',
     description:
-      'Integración nativa con Cal.com. Detecta interés, ofrece horarios disponibles y agenda demos sin intervención humana.',
+      'Integración nativa con Cal.com. Detecta interés, ofrece horarios y agenda demos automáticamente.',
     tech: 'Cal.com API',
-    color: 'from-blue-500/20 to-blue-500/5',
   },
   {
     icon: RefreshCw,
-    title: 'Follow-ups Inteligentes',
+    title: 'followUp()',
+    subtitle: 'Nunca pierde un lead',
     description:
       'Secuencias automatizadas: recordatorios pre-demo, seguimiento post-demo, y re-engagement de leads fríos.',
     tech: 'Vercel Cron',
-    color: 'from-green-500/20 to-green-500/5',
   },
   {
     icon: Target,
-    title: 'Detección de Sentimiento',
+    title: 'sentiment()',
+    subtitle: 'Lee emociones',
     description:
-      'Analiza el tono emocional del usuario en tiempo real. Adapta respuestas para frustrados, escépticos o entusiasmados.',
+      'Analiza el tono emocional en tiempo real. Adapta respuestas para frustrados, escépticos o entusiasmados.',
     tech: 'detectSentiment()',
-    color: 'from-red-500/20 to-red-500/5',
   },
   {
     icon: Users,
-    title: 'CRM Integrado',
+    title: 'pipeline()',
+    subtitle: 'CRM integrado',
     description:
-      'Pipeline visual tipo Kanban. Ve cada lead en qué etapa está, historial completo de conversaciones y contexto centralizado.',
+      'Pipeline visual tipo Kanban. Ve cada lead, en qué etapa está, historial completo y contexto centralizado.',
     tech: 'Built-in CRM',
-    color: 'from-yellow-500/20 to-yellow-500/5',
   },
   {
     icon: TrendingUp,
-    title: 'Meta Conversions API',
+    title: 'track()',
+    subtitle: 'Optimiza campañas',
     description:
-      'Tracking server-side que evita bloqueadores. Reporta conversiones reales a Meta para optimizar tus campañas y bajar el CPL.',
+      'Tracking server-side que evita bloqueadores. Reporta conversiones reales a Meta para optimizar.',
     tech: 'Meta CAPI',
-    color: 'from-orange-500/20 to-orange-500/5',
   },
 ];
 
+function FeatureRow({ feature, index }: { feature: typeof FEATURES[0]; index: number }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start end', 'center center'],
+  });
+
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [0, 1]);
+  const x = useTransform(
+    scrollYProgress,
+    [0, 0.5],
+    [index % 2 === 0 ? -100 : 100, 0]
+  );
+
+  const isEven = index % 2 === 0;
+
+  return (
+    <motion.div
+      ref={ref}
+      style={{ opacity }}
+      className="min-h-[50vh] flex items-center py-20 border-b border-border/30 last:border-0"
+    >
+      <div className={`w-full grid lg:grid-cols-2 gap-12 lg:gap-20 items-center ${!isEven ? 'lg:direction-rtl' : ''}`}>
+        {/* Icon & Number */}
+        <motion.div
+          style={{ x: isEven ? x : undefined }}
+          className={`flex items-center gap-8 ${!isEven ? 'lg:order-2 lg:justify-end' : ''}`}
+        >
+          <span className="text-[120px] lg:text-[180px] font-black text-surface-2 leading-none font-mono select-none">
+            {String(index + 1).padStart(2, '0')}
+          </span>
+          <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl bg-surface border border-border flex items-center justify-center">
+            <feature.icon className="w-10 h-10 lg:w-12 lg:h-12 text-foreground" />
+          </div>
+        </motion.div>
+
+        {/* Text */}
+        <motion.div
+          style={{ x: !isEven ? x : undefined }}
+          className={!isEven ? 'lg:order-1 lg:text-right' : ''}
+        >
+          <p className="text-muted font-mono text-sm mb-2">{feature.tech}</p>
+          <h3 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-3 font-mono">
+            .{feature.title}
+          </h3>
+          <p className="text-xl lg:text-2xl text-muted mb-4">
+            {feature.subtitle}
+          </p>
+          <p className="text-muted leading-relaxed max-w-lg text-lg">
+            {feature.description}
+          </p>
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+}
+
 export function Features() {
   return (
-    <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 bg-white relative">
-      {/* Subtle background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
-
+    <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 bg-background relative">
       <div className="relative max-w-7xl mx-auto">
-        <FadeIn>
-          <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1 bg-neon-subtle text-neon-green-dark text-sm font-medium rounded-full mb-4">
-              Features
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              No es un chatbot básico
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Cada feature está diseñado para maximizar conversiones, no solo responder preguntas.
-            </p>
-          </div>
-        </FadeIn>
+        {/* Cinematic header */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-center mb-32"
+        >
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-muted font-mono text-sm mb-6"
+          >
+            // ./features
+          </motion.p>
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground mb-6 font-mono"
+          >
+            No es un chatbot básico
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-xl lg:text-2xl text-muted max-w-2xl mx-auto"
+          >
+            Cada feature maximiza conversiones, no solo responde preguntas.
+          </motion.p>
+        </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {FEATURES.map((feature, index) => (
-            <FadeIn key={feature.title} delay={index * 0.1}>
-              <motion.div
-                whileHover={{ y: -5, scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-                className="h-full"
-              >
-                <Card hover className="h-full group relative overflow-hidden">
-                  {/* Gradient background on hover */}
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
-                  />
-
-                  <div className="relative flex flex-col h-full">
-                    <div className="w-14 h-14 rounded-xl bg-neon-subtle flex items-center justify-center mb-4 group-hover:bg-neon-green/20 group-hover:shadow-glow-sm transition-all duration-300">
-                      <feature.icon className="w-7 h-7 text-neon-green-dark" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      {feature.title}
-                    </h3>
-                    <p className="text-gray-600 mb-4 flex-1 leading-relaxed">
-                      {feature.description}
-                    </p>
-                    <code className="text-xs font-mono text-neon-green-dark bg-neon-subtle px-3 py-1.5 rounded-lg w-fit group-hover:bg-neon-green/20 transition-colors">
-                      {feature.tech}
-                    </code>
-                  </div>
-                </Card>
-              </motion.div>
-            </FadeIn>
-          ))}
-        </div>
+        {/* Cinematic feature rows */}
+        {FEATURES.map((feature, index) => (
+          <FeatureRow key={feature.title} feature={feature} index={index} />
+        ))}
       </div>
     </section>
   );

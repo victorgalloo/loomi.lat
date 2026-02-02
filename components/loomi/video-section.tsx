@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button-loomi';
 
 const WHATSAPP_LINK = 'https://api.whatsapp.com/send?phone=529849800629&text=Hola%20Loomi%20quiero%20una%20demo';
 
-// Simulated real-time counter
 function useAnimatedCounter(end: number, duration: number = 2000, startOnView: boolean = true) {
   const [count, setCount] = useState(0);
   const [hasStarted, setHasStarted] = useState(!startOnView);
@@ -43,7 +42,6 @@ function useAnimatedCounter(end: number, duration: number = 2000, startOnView: b
   return { count, ref };
 }
 
-// Live counter that increments
 function useLiveCounter(baseValue: number, incrementPerSecond: number) {
   const [value, setValue] = useState(baseValue);
 
@@ -62,41 +60,40 @@ function Calculator() {
   const [ticket, setTicket] = useState(500);
   const [showResult, setShowResult] = useState(false);
 
-  // Assuming 30% of unanswered leads are lost, 20% would convert
   const leadsLostPerDay = Math.round(mensajes * 0.3);
   const potentialSalesLost = Math.round(leadsLostPerDay * 0.2);
   const moneyLostDaily = potentialSalesLost * ticket;
-  const moneyLostMonthly = moneyLostDaily * 22; // business days
+  const moneyLostMonthly = moneyLostDaily * 22;
 
   return (
-    <div className="bg-surface border border-border rounded-2xl p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
-          <TrendingDown className="w-4 h-4 text-red-500" />
+    <div className="p-8 lg:p-10">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-12 h-12 rounded-xl bg-terminal-red/10 flex items-center justify-center">
+          <TrendingDown className="w-6 h-6 text-terminal-red" />
         </div>
-        <h3 className="text-foreground font-semibold">Calcula tu pérdida</h3>
+        <h3 className="text-2xl font-bold text-foreground font-mono">./calcula-pérdida</h3>
       </div>
 
-      <div className="space-y-5">
+      <div className="space-y-8 font-mono">
         <div>
-          <label className="text-sm text-muted mb-2 block">Mensajes por día</label>
+          <label className="text-muted mb-3 block">mensajes_por_día</label>
           <input
             type="range"
             min="10"
             max="500"
             value={mensajes}
             onChange={(e) => setMensajes(Number(e.target.value))}
-            className="w-full accent-neon-green"
+            className="w-full accent-foreground h-2"
           />
-          <div className="flex justify-between text-sm mt-1">
+          <div className="flex justify-between text-sm mt-2">
             <span className="text-muted">10</span>
-            <span className="text-foreground font-medium">{mensajes}</span>
+            <span className="text-2xl font-bold text-foreground">{mensajes}</span>
             <span className="text-muted">500</span>
           </div>
         </div>
 
         <div>
-          <label className="text-sm text-muted mb-2 block">Ticket promedio (USD)</label>
+          <label className="text-muted mb-3 block">ticket_promedio_usd</label>
           <input
             type="range"
             min="50"
@@ -104,21 +101,21 @@ function Calculator() {
             step="50"
             value={ticket}
             onChange={(e) => setTicket(Number(e.target.value))}
-            className="w-full accent-neon-green"
+            className="w-full accent-foreground h-2"
           />
-          <div className="flex justify-between text-sm mt-1">
+          <div className="flex justify-between text-sm mt-2">
             <span className="text-muted">$50</span>
-            <span className="text-foreground font-medium">${ticket.toLocaleString()}</span>
+            <span className="text-2xl font-bold text-foreground">${ticket.toLocaleString()}</span>
             <span className="text-muted">$5,000</span>
           </div>
         </div>
 
         <motion.button
           onClick={() => setShowResult(true)}
-          className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl font-medium transition-colors"
+          className="w-full py-4 bg-terminal-red/10 hover:bg-terminal-red/20 text-terminal-red rounded-xl text-lg font-bold transition-colors border border-terminal-red/20"
           whileTap={{ scale: 0.98 }}
         >
-          Calcular pérdida
+          $ calcular
         </motion.button>
 
         <AnimatePresence>
@@ -129,18 +126,18 @@ function Calculator() {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="pt-4 border-t border-border space-y-3">
+              <div className="pt-6 border-t border-border space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted">Leads que no respondes/día</span>
-                  <span className="text-foreground font-medium">{leadsLostPerDay}</span>
+                  <span className="text-muted">leads_sin_respuesta</span>
+                  <span className="text-xl font-bold text-foreground">{leadsLostPerDay}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted">Ventas perdidas/día</span>
-                  <span className="text-foreground font-medium">{potentialSalesLost}</span>
+                  <span className="text-muted">ventas_perdidas_día</span>
+                  <span className="text-xl font-bold text-foreground">{potentialSalesLost}</span>
                 </div>
-                <div className="flex justify-between items-center pt-3 border-t border-border">
-                  <span className="text-muted font-medium">Pérdida mensual</span>
-                  <span className="text-2xl font-bold text-red-500">
+                <div className="flex justify-between items-center pt-4 border-t border-border">
+                  <span className="text-muted font-bold">pérdida_mensual</span>
+                  <span className="text-4xl font-black text-terminal-red">
                     ${moneyLostMonthly.toLocaleString()}
                   </span>
                 </div>
@@ -157,25 +154,25 @@ function BeforeAfter() {
   const [isAfter, setIsAfter] = useState(false);
 
   return (
-    <div className="bg-surface border border-border rounded-2xl p-6 h-full">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-foreground font-semibold">Tu WhatsApp</h3>
-        <div className="flex items-center gap-2 p-1 bg-background rounded-full">
+    <div className="p-8 lg:p-10 h-full">
+      <div className="flex items-center justify-between mb-8">
+        <h3 className="text-2xl font-bold text-foreground font-mono">./tu-whatsapp</h3>
+        <div className="flex items-center gap-1 p-1 bg-surface rounded-xl">
           <button
             onClick={() => setIsAfter(false)}
-            className={`px-3 py-1 text-sm rounded-full transition-colors ${
-              !isAfter ? 'bg-red-500/20 text-red-500' : 'text-muted'
+            className={`px-4 py-2 text-sm font-mono rounded-lg transition-colors ${
+              !isAfter ? 'bg-terminal-red/20 text-terminal-red' : 'text-muted'
             }`}
           >
-            Sin Loomi
+            sin_loomi
           </button>
           <button
             onClick={() => setIsAfter(true)}
-            className={`px-3 py-1 text-sm rounded-full transition-colors ${
-              isAfter ? 'bg-neon-green/20 text-neon-green' : 'text-muted'
+            className={`px-4 py-2 text-sm font-mono rounded-lg transition-colors ${
+              isAfter ? 'bg-terminal-green/20 text-terminal-green' : 'text-muted'
             }`}
           >
-            Con Loomi
+            con_loomi
           </button>
         </div>
       </div>
@@ -187,33 +184,32 @@ function BeforeAfter() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className="space-y-3"
+            className="space-y-4 font-mono"
           >
-            {/* Chaos state */}
-            <div className="flex items-center gap-3 p-3 bg-red-500/5 border border-red-500/20 rounded-xl">
-              <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+            <div className="flex items-center gap-4 p-4 bg-terminal-red/5 border border-terminal-red/20 rounded-xl">
+              <AlertTriangle className="w-6 h-6 text-terminal-red flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground truncate">47 mensajes sin leer</p>
-                <p className="text-xs text-red-500">Hace 3 horas</p>
+                <p className="text-foreground">47 mensajes sin leer</p>
+                <p className="text-sm text-terminal-red">hace 3 horas</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-red-500/5 border border-red-500/20 rounded-xl">
-              <Clock className="w-5 h-5 text-red-500 flex-shrink-0" />
+            <div className="flex items-center gap-4 p-4 bg-terminal-red/5 border border-terminal-red/20 rounded-xl">
+              <Clock className="w-6 h-6 text-terminal-red flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground truncate">"¿Siguen disponibles?"</p>
-                <p className="text-xs text-red-500">Sin respuesta - Lead perdido</p>
+                <p className="text-foreground">"¿Siguen disponibles?"</p>
+                <p className="text-sm text-terminal-red">sin respuesta - lead perdido</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-red-500/5 border border-red-500/20 rounded-xl">
-              <DollarSign className="w-5 h-5 text-red-500 flex-shrink-0" />
+            <div className="flex items-center gap-4 p-4 bg-terminal-red/5 border border-terminal-red/20 rounded-xl">
+              <DollarSign className="w-6 h-6 text-terminal-red flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground truncate">"Compré con la competencia"</p>
-                <p className="text-xs text-red-500">Venta perdida: $2,500</p>
+                <p className="text-foreground">"Compré con la competencia"</p>
+                <p className="text-sm text-terminal-red">venta perdida: $2,500</p>
               </div>
             </div>
-            <div className="mt-4 p-3 bg-red-500/10 rounded-xl text-center">
-              <p className="text-red-500 font-medium">Estrés constante</p>
-              <p className="text-xs text-muted mt-1">Siempre atrasado, siempre perdiendo</p>
+            <div className="mt-6 p-4 bg-terminal-red/10 rounded-xl text-center border border-terminal-red/20">
+              <p className="text-terminal-red font-bold text-lg">status: stress</p>
+              <p className="text-muted mt-1">// siempre atrasado</p>
             </div>
           </motion.div>
         ) : (
@@ -222,33 +218,32 @@ function BeforeAfter() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="space-y-3"
+            className="space-y-4 font-mono"
           >
-            {/* Peace state */}
-            <div className="flex items-center gap-3 p-3 bg-neon-green/5 border border-neon-green/20 rounded-xl">
-              <CheckCircle className="w-5 h-5 text-neon-green flex-shrink-0" />
+            <div className="flex items-center gap-4 p-4 bg-terminal-green/5 border border-terminal-green/20 rounded-xl">
+              <CheckCircle className="w-6 h-6 text-terminal-green flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground truncate">Todos respondidos</p>
-                <p className="text-xs text-neon-green">Tiempo promedio: 0.8s</p>
+                <p className="text-foreground">todos respondidos</p>
+                <p className="text-sm text-terminal-green">avg: 0.8s</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-neon-green/5 border border-neon-green/20 rounded-xl">
-              <Users className="w-5 h-5 text-neon-green flex-shrink-0" />
+            <div className="flex items-center gap-4 p-4 bg-terminal-green/5 border border-terminal-green/20 rounded-xl">
+              <Users className="w-6 h-6 text-terminal-green flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground truncate">12 demos agendadas</p>
-                <p className="text-xs text-neon-green">Esta semana</p>
+                <p className="text-foreground">12 demos agendadas</p>
+                <p className="text-sm text-terminal-green">esta semana</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-neon-green/5 border border-neon-green/20 rounded-xl">
-              <TrendingUp className="w-5 h-5 text-neon-green flex-shrink-0" />
+            <div className="flex items-center gap-4 p-4 bg-terminal-green/5 border border-terminal-green/20 rounded-xl">
+              <TrendingUp className="w-6 h-6 text-terminal-green flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground truncate">+340% conversiones</p>
-                <p className="text-xs text-neon-green">vs. mes anterior</p>
+                <p className="text-foreground">+340% conversiones</p>
+                <p className="text-sm text-terminal-green">vs. mes anterior</p>
               </div>
             </div>
-            <div className="mt-4 p-3 bg-neon-green/10 rounded-xl text-center">
-              <p className="text-neon-green font-medium">Cero estrés</p>
-              <p className="text-xs text-muted mt-1">Loomi trabaja 24/7 por ti</p>
+            <div className="mt-6 p-4 bg-terminal-green/10 rounded-xl text-center border border-terminal-green/20">
+              <p className="text-terminal-green font-bold text-lg">status: relax</p>
+              <p className="text-muted mt-1">// loomi trabaja 24/7</p>
             </div>
           </motion.div>
         )}
@@ -267,24 +262,24 @@ function LiveStats() {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="text-center mb-12"
+      className="text-center mb-20"
     >
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full mb-4">
+      <div className="inline-flex items-center gap-3 px-5 py-3 bg-terminal-red/10 border border-terminal-red/20 rounded-full mb-8 font-mono">
         <motion.div
-          className="w-2 h-2 rounded-full bg-red-500"
+          className="w-3 h-3 rounded-full bg-terminal-red"
           animate={{ opacity: [1, 0.5, 1] }}
           transition={{ duration: 1, repeat: Infinity }}
         />
-        <span className="text-sm text-red-500 font-medium">En vivo</span>
+        <span className="text-terminal-red font-bold">LIVE</span>
       </div>
-      <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-4">
-        <span className="text-red-500">{lostLeads.toLocaleString()}</span> leads
+      <h2 className="text-6xl sm:text-7xl lg:text-8xl font-black text-foreground mb-6 font-mono">
+        <span className="text-terminal-red">{lostLeads.toLocaleString()}</span> leads
       </h2>
-      <p className="text-xl text-muted mb-2">
+      <p className="text-2xl lg:text-3xl text-muted mb-4 font-mono">
         perdidos hoy por respuestas tardías
       </p>
-      <p className="text-sm text-muted">
-        <span className="text-red-500">+{lostToday}</span> en la última hora
+      <p className="text-lg text-muted font-mono">
+        <span className="text-terminal-red">+{lostToday}</span> en la última hora
       </p>
     </motion.div>
   );
@@ -295,7 +290,6 @@ function SlotCounter() {
   const [takenSlots, setTakenSlots] = useState(7);
 
   useEffect(() => {
-    // Occasionally increment to create urgency
     const timeout = setTimeout(() => {
       if (takenSlots < 9 && Math.random() > 0.7) {
         setTakenSlots((prev) => prev + 1);
@@ -307,98 +301,80 @@ function SlotCounter() {
   const remainingSlots = totalSlots - takenSlots;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="bg-surface border border-neon-green/30 rounded-2xl p-6 text-center"
-    >
-      <div className="flex items-center justify-center gap-2 mb-4">
-        <Zap className="w-5 h-5 text-neon-yellow" />
-        <span className="text-sm font-medium text-neon-yellow">Onboarding esta semana</span>
+    <div className="p-8 lg:p-10 text-center font-mono">
+      <div className="flex items-center justify-center gap-3 mb-8">
+        <Zap className="w-6 h-6 text-terminal-yellow" />
+        <span className="text-xl font-bold text-terminal-yellow">esta semana</span>
       </div>
 
-      <div className="flex justify-center gap-2 mb-4">
+      <div className="flex justify-center gap-3 mb-8">
         {Array.from({ length: totalSlots }).map((_, i) => (
           <motion.div
             key={i}
-            className={`w-6 h-6 rounded-full border-2 ${
+            className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center ${
               i < takenSlots
-                ? 'bg-neon-green/20 border-neon-green'
+                ? 'bg-foreground/20 border-foreground'
                 : 'border-border'
             }`}
             initial={false}
             animate={i < takenSlots ? { scale: [1, 1.2, 1] } : {}}
           >
             {i < takenSlots && (
-              <CheckCircle className="w-full h-full text-neon-green p-0.5" />
+              <CheckCircle className="w-5 h-5 text-foreground" />
             )}
           </motion.div>
         ))}
       </div>
 
-      <p className="text-foreground mb-1">
-        <span className="text-2xl font-bold text-neon-green">{remainingSlots}</span>
-        <span className="text-muted"> de {totalSlots} slots disponibles</span>
+      <p className="text-foreground mb-2">
+        <span className="text-5xl font-black">{remainingSlots}</span>
+        <span className="text-muted text-xl"> de {totalSlots} slots</span>
       </p>
-      <p className="text-sm text-muted mb-6">
-        Configuración personalizada incluida
+      <p className="text-muted mb-10">
+        // configuración personalizada incluida
       </p>
 
       <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="block">
-        <Button variant="primary" size="lg" glow className="w-full group">
-          <MessageCircle className="w-4 h-4 mr-2" />
-          Reservar mi slot
-          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+        <Button variant="primary" size="lg" className="w-full font-mono text-lg py-6">
+          <MessageCircle className="w-5 h-5 mr-2" />
+          ./reservar-slot
+          <ArrowRight className="w-5 h-5 ml-2" />
         </Button>
       </a>
 
-      <p className="text-xs text-muted mt-4">
-        Setup en 48hrs · Soporte dedicado · Sin compromiso
+      <p className="text-sm text-muted mt-6">
+        setup 48hrs · soporte dedicado · sin compromiso
       </p>
-    </motion.div>
+    </div>
   );
 }
 
 export function VideoSection() {
   return (
-    <section className="py-28 sm:py-40 px-4 sm:px-6 relative overflow-hidden bg-background transition-colors duration-300">
-      {/* Background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-0 w-[400px] h-[400px] bg-red-500/5 blur-[150px] rounded-full" />
-        <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] bg-neon-green/5 blur-[150px] rounded-full" />
-      </div>
-
-      <div className="relative max-w-6xl mx-auto">
-        {/* Live Stats Header */}
+    <section className="py-32 sm:py-48 px-4 sm:px-6 relative overflow-hidden bg-background">
+      <div className="relative max-w-7xl mx-auto">
         <LiveStats />
 
-        {/* Main Grid */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          {/* Calculator */}
-          <div className="lg:col-span-1">
+        {/* Cinematic grid with subtle separators */}
+        <div className="grid lg:grid-cols-3 gap-px bg-border rounded-2xl overflow-hidden">
+          <div className="bg-background">
             <Calculator />
           </div>
-
-          {/* Before/After */}
-          <div className="lg:col-span-1">
+          <div className="bg-background">
             <BeforeAfter />
           </div>
-
-          {/* Slot Counter CTA */}
-          <div className="lg:col-span-1">
+          <div className="bg-background">
             <SlotCounter />
           </div>
         </div>
 
-        {/* Bottom urgency message */}
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center text-muted text-sm"
+          className="text-center text-muted text-lg mt-16 font-mono"
         >
-          El 78% de los leads compran al primero que responde. ¿Vas a seguir siendo el segundo?
+          // el 78% de los leads compran al primero que responde
         </motion.p>
       </div>
     </section>

@@ -6,31 +6,23 @@ import { useRef } from 'react';
 const STEPS = [
   {
     number: '01',
-    title: 'Llega el mensaje',
-    description: 'Un lead escribe a tu WhatsApp. Antes, lo perdías porque tardabas en responder. Ahora no.',
+    title: 'Lead escribe',
     detail: '"Vi su anuncio, ¿cuánto cuesta?"',
-    colorClass: 'neon-green',
   },
   {
     number: '02',
     title: 'Loomi responde',
-    description: 'En 0.8 segundos. Entiende qué quiere, responde con contexto, y hace las preguntas correctas para calificar.',
-    detail: 'Sin scripts genéricos. Conversaciones reales.',
-    colorClass: 'neon-purple',
+    detail: '0.8s · califica · personaliza',
   },
   {
     number: '03',
-    title: 'Demo agendada',
-    description: 'Detecta que está listo para comprar y agenda directo en tu calendario. Tú solo recibes la notificación.',
-    detail: 'Mañana 10:00 AM confirmado ✓',
-    colorClass: 'neon-cyan',
+    title: 'Agenda demo',
+    detail: 'Cal.com · confirmación automática',
   },
   {
     number: '04',
-    title: 'El lead llega',
-    description: 'Recordatorios automáticos antes de la demo. El lead llega preparado y con contexto. Tú solo cierras.',
-    detail: '78% menos no-shows',
-    colorClass: 'neon-yellow',
+    title: 'Tú cierras',
+    detail: 'Lead preparado · contexto completo',
   },
 ];
 
@@ -42,58 +34,36 @@ function StepItem({ step, index, isLast }: { step: typeof STEPS[0]; index: numbe
   });
 
   const opacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.3, 1, 1]);
+  const x = useTransform(scrollYProgress, [0, 0.5], [-50, 0]);
 
   return (
     <motion.div
       ref={ref}
       style={{ opacity }}
-      className="relative pl-8 lg:pl-12 pb-16 last:pb-0"
+      className="relative pb-20 last:pb-0"
     >
-      {/* Vertical line */}
       {!isLast && (
-        <div className="absolute left-[11px] lg:left-[15px] top-10 bottom-0 w-px bg-border" />
+        <div className="absolute left-[60px] lg:left-[80px] top-28 bottom-0 w-px bg-border" />
       )}
 
-      {/* Dot on the line */}
-      <motion.div
-        className={`absolute left-0 lg:left-1 top-1 w-6 h-6 rounded-full border-2 border-${step.colorClass} bg-background flex items-center justify-center`}
-        initial={{ scale: 0 }}
-        whileInView={{ scale: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: index * 0.1, type: 'spring' }}
-      >
+      <div className="flex gap-8 lg:gap-16 items-start">
+        <motion.div style={{ x }} className="flex-shrink-0">
+          <span className="text-[80px] lg:text-[120px] font-black text-surface-2 leading-none font-mono block">
+            {step.number}
+          </span>
+        </motion.div>
+
         <motion.div
-          className={`w-2 h-2 rounded-full bg-${step.colorClass}`}
-          animate={{ scale: [1, 1.3, 1] }}
-          transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
-        />
-      </motion.div>
-
-      {/* Content */}
-      <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-12">
-        {/* Number */}
-        <motion.span
-          className={`text-6xl lg:text-8xl font-bold text-${step.colorClass}/20 leading-none`}
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: index * 0.1 }}
+          style={{ x: useTransform(scrollYProgress, [0, 0.5], [30, 0]) }}
+          className="pt-4 lg:pt-8"
         >
-          {step.number}
-        </motion.span>
-
-        {/* Text */}
-        <div className="flex-1 pt-2">
-          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
+          <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4 font-mono">
             {step.title}
           </h3>
-          <p className="text-lg text-muted mb-4 max-w-xl">
-            {step.description}
-          </p>
-          <p className={`text-sm font-mono text-${step.colorClass}`}>
+          <span className="inline-block text-lg font-mono text-muted px-4 py-2 bg-surface rounded-lg border border-border">
             {step.detail}
-          </p>
-        </div>
+          </span>
+        </motion.div>
       </div>
     </motion.div>
   );
@@ -101,29 +71,22 @@ function StepItem({ step, index, isLast }: { step: typeof STEPS[0]; index: numbe
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-28 sm:py-40 px-4 sm:px-6 relative overflow-hidden bg-background transition-colors duration-300">
-      {/* Background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-0 w-[400px] h-[400px] bg-neon-green/5 blur-[150px] rounded-full" />
-        <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] bg-neon-purple/5 blur-[150px] rounded-full" />
-      </div>
-
-      <div className="relative max-w-4xl mx-auto">
-        {/* Header */}
+    <section id="how-it-works" className="py-32 sm:py-48 px-4 sm:px-6 relative overflow-hidden bg-background">
+      <div className="relative max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-20"
+          className="text-center mb-24"
         >
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
-            De "hola" a demo agendada.
-            <br />
-            <span className="text-muted">Sin que toques el teléfono.</span>
+          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-6 font-mono">
+            De "hola" a demo
           </h2>
+          <p className="text-xl lg:text-2xl text-muted">
+            Sin que toques el teléfono
+          </p>
         </motion.div>
 
-        {/* Steps */}
         <div className="relative">
           {STEPS.map((step, index) => (
             <StepItem

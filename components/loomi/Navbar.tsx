@@ -11,9 +11,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 const WHATSAPP_LINK = 'https://api.whatsapp.com/send?phone=529849800629&text=Hola%20Loomi%20quiero%20una%20demo';
 
 const NAV_LINKS = [
-  { href: '#features', label: 'Features' },
-  { href: '#how-it-works', label: 'Proceso' },
-  { href: '#pricing', label: 'Precios' },
+  { href: '#features', label: 'features' },
+  { href: '#how-it-works', label: 'proceso' },
+  { href: '#pricing', label: 'precios' },
 ];
 
 export function Navbar() {
@@ -34,21 +34,20 @@ export function Navbar() {
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
         isScrolled
-          ? 'bg-background/90 backdrop-blur-xl border-b border-border'
+          ? 'bg-background/95 backdrop-blur-xl border-b border-border'
           : 'bg-transparent'
       )}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <motion.div
-              whileHover={{ rotate: 10 }}
-              className="w-8 h-8 rounded-lg bg-neon-green flex items-center justify-center"
-            >
-              <span className="text-gray-900 font-bold text-lg">L</span>
-            </motion.div>
-            <span className="font-semibold text-lg text-foreground">Loomi</span>
+          {/* Logo with terminal dots */}
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-terminal-red" />
+              <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
+              <div className="w-3 h-3 rounded-full bg-terminal-green" />
+            </div>
+            <span className="font-mono font-semibold text-lg text-foreground">loomi_</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -57,9 +56,9 @@ export function Navbar() {
               <motion.div key={link.href} whileHover={{ y: -2 }}>
                 <Link
                   href={link.href}
-                  className="text-muted hover:text-foreground transition-colors text-sm font-medium link-underline"
+                  className="text-muted hover:text-foreground transition-colors text-sm font-mono"
                 >
-                  {link.label}
+                  ./{link.label}
                 </Link>
               </motion.div>
             ))}
@@ -73,9 +72,9 @@ export function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Button variant="primary" size="sm" className="gap-2">
+              <Button variant="primary" size="sm" className="gap-2 font-mono">
                 <MessageCircle className="w-4 h-4" />
-                Agendar Demo
+                ./demo
               </Button>
             </a>
           </div>
@@ -107,10 +106,10 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="block text-muted hover:text-foreground text-base py-2"
+                  className="block text-muted hover:text-foreground text-base py-2 font-mono"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  {link.label}
+                  ./{link.label}
                 </Link>
               ))}
               <div className="pt-3 border-t border-border">
@@ -120,9 +119,9 @@ export function Navbar() {
                   rel="noopener noreferrer"
                   className="block"
                 >
-                  <Button variant="primary" size="md" className="w-full gap-2" glow>
+                  <Button variant="primary" size="md" className="w-full gap-2 font-mono">
                     <MessageCircle className="w-4 h-4" />
-                    Agendar Demo
+                    ./agendar-demo
                   </Button>
                 </a>
               </div>

@@ -68,7 +68,7 @@ export function TechStack() {
               </span>
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
                 Construido para{' '}
-                <span className="text-neon-green text-glow-sm">escalar</span>
+                <span className="text-brand text-glow-sm">escalar</span>
               </h2>
               <p className="text-lg text-gray-600 mb-8">
                 Stack moderno, serverless, y completamente open source. Sin vendor lock-in,
@@ -82,7 +82,7 @@ export function TechStack() {
                 <FadeIn key={tech.name} delay={index * 0.1}>
                   <motion.div
                     whileHover={{ scale: 1.05 }}
-                    className={`bg-gradient-to-br ${tech.gradient} border border-gray-200 rounded-xl p-4 hover:border-neon-green/30 hover:shadow-glow-sm transition-all`}
+                    className={`bg-gradient-to-br ${tech.gradient} border border-gray-200 rounded-xl p-4 hover:border-brand/30 hover:shadow-md transition-all`}
                   >
                     <h3 className="font-semibold text-gray-900">{tech.name}</h3>
                     <p className="text-sm text-gray-500">{tech.description}</p>
@@ -96,12 +96,12 @@ export function TechStack() {
           <FadeIn delay={0.3} direction="left">
             <div className="relative">
               {/* Glow behind code */}
-              <div className="absolute -inset-4 bg-neon-green/10 rounded-3xl blur-2xl" />
+              <div className="absolute -inset-4 bg-brand/10 rounded-3xl blur-2xl" />
 
               <div className="relative">
                 <div className="flex items-center gap-2 mb-3">
                   <motion.div
-                    className="w-2 h-2 rounded-full bg-neon-green"
+                    className="w-2 h-2 rounded-full bg-brand"
                     animate={{ opacity: [1, 0.5, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   />

@@ -23,8 +23,7 @@ export function Comparison() {
     <section id="comparison" className="py-28 sm:py-40 px-4 sm:px-6 lg:px-8 bg-background relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-500/5 blur-[150px] rounded-full" />
-        <div className="absolute top-1/2 right-1/4 translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-neon-green/5 blur-[150px] rounded-full" />
+        <div className="absolute top-1/2 right-1/4 translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-brand/3 blur-3xl rounded-full" />
       </div>
 
       <div className="relative max-w-5xl mx-auto">
@@ -65,14 +64,14 @@ export function Comparison() {
                   </div>
                 </div>
               </div>
-              <div className="p-6 sm:p-8 bg-neon-green/5">
+              <div className="p-6 sm:p-8 bg-brand/5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-neon-green/20 flex items-center justify-center">
-                    <Brain className="w-5 h-5 text-neon-green" />
+                  <div className="w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center">
+                    <Brain className="w-5 h-5 text-brand" />
                   </div>
                   <div>
                     <h3 className="font-bold text-foreground text-lg">Agente IA</h3>
-                    <p className="text-sm text-neon-green">Loomi</p>
+                    <p className="text-sm text-brand">Loomi</p>
                   </div>
                 </div>
               </div>
@@ -95,8 +94,8 @@ export function Comparison() {
                   <X className="w-5 h-5 text-red-400 flex-shrink-0" />
                   <span className="text-foreground/70">{row.chatbot}</span>
                 </div>
-                <div className="p-5 sm:p-6 flex items-center gap-3 bg-neon-green/5">
-                  <Check className="w-5 h-5 text-neon-green flex-shrink-0" />
+                <div className="p-5 sm:p-6 flex items-center gap-3 bg-brand/5">
+                  <Check className="w-5 h-5 text-brand flex-shrink-0" />
                   <span className="text-foreground font-medium">{row.agent}</span>
                 </div>
               </motion.div>
@@ -116,7 +115,7 @@ export function Comparison() {
               Un vendedor humano cuesta <span className="text-foreground font-semibold">$800-1,500 USD/mes</span> en LATAM
             </p>
             <p className="text-2xl sm:text-3xl font-bold text-foreground">
-              Tu agente trabaja 24/7 y atiende <span className="text-neon-green">100+ chats</span> simultáneos
+              Tu agente trabaja 24/7 y atiende <span className="text-brand">100+ chats</span> simultáneos
             </p>
             <p className="text-muted mt-4">
               Con 2-3 cierres al mes, el cliente ya recuperó su inversión.

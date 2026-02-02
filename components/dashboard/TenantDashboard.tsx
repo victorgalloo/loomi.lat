@@ -1,8 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTheme } from './ThemeProvider';
 import { ArrowUpRight } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 interface TenantDashboardProps {
   tenant: {
@@ -23,14 +25,77 @@ interface TenantDashboardProps {
     messagesThisMonth: number;
     appointmentsBooked: number;
   };
+  tenantId: string;
 }
 
 export default function TenantDashboard({
   tenant,
   whatsappAccount,
-  stats
+  stats: initialStats,
+  tenantId
 }: TenantDashboardProps) {
   const { isDark } = useTheme();
+  const [stats, setStats] = useState(initialStats);
+
+  // Realtime subscription for stats
+  useEffect(() => {
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel('dashboard-stats')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'leads',
+          filter: `tenant_id=eq.${tenantId}`
+        },
+        () => {
+          setStats(prev => ({ ...prev, totalLeads: prev.totalLeads + 1 }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'conversations',
+          filter: `tenant_id=eq.${tenantId}`
+        },
+        () => {
+          setStats(prev => ({ ...prev, totalConversations: prev.totalConversations + 1 }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `tenant_id=eq.${tenantId}`
+        },
+        () => {
+          setStats(prev => ({ ...prev, messagesThisMonth: prev.messagesThisMonth + 1 }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'appointments',
+        },
+        () => {
+          setStats(prev => ({ ...prev, appointmentsBooked: prev.appointmentsBooked + 1 }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [tenantId]);
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">

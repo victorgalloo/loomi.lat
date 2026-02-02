@@ -1,8 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
-import ConversationList from "@/components/dashboard/ConversationList";
-import Link from "next/link";
+import ConversationsView from "./ConversationsView";
 
 export default async function ConversationsPage() {
   const supabase = await createClient();
@@ -60,51 +59,12 @@ export default async function ConversationsPage() {
         leadName: lead.name || "Usuario",
         leadPhone: lead.phone,
         lastMessage: lastMessage?.content || "Sin mensajes",
-        lastMessageTime: new Date(lastMessage?.created_at || conv.started_at),
+        lastMessageTime: lastMessage?.created_at || conv.started_at,
         messageCount: count || 0,
         stage: lead.stage || "initial",
       };
     })
   );
 
-  return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <Link
-          href="/loomi/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-4"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Volver al dashboard
-        </Link>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Conversaciones</h1>
-            <p className="text-gray-600 mt-1">
-              {conversations.length} conversaciones
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-2">
-        <button className="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-          Todas
-        </button>
-        <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900">
-          Activas
-        </button>
-        <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900">
-          Archivadas
-        </button>
-      </div>
-
-      {/* Conversation List */}
-      <ConversationList conversations={conversations} />
-    </div>
-  );
+  return <ConversationsView conversations={conversations} tenantId={tenantId} />;
 }

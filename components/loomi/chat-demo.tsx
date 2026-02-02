@@ -2,87 +2,127 @@
 
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import { CheckCheck } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { CheckCheck, Send, Loader2 } from 'lucide-react';
 
 interface Message {
-  id: number;
-  type: 'user' | 'bot' | 'typing';
-  text?: string;
-  time?: string;
+  id: string;
+  type: 'user' | 'bot';
+  text: string;
+  time: string;
 }
 
-const CHAT_SEQUENCE: Omit<Message, 'id'>[] = [
-  { type: 'user', text: 'Hola! Tengo una tienda de ropa online', time: '10:23' },
-  { type: 'typing' },
-  { type: 'bot', text: 'Hola. Detecté que tienes e-commerce de moda. ¿Cuántos mensajes recibes al día aproximadamente?', time: '10:23' },
-  { type: 'user', text: 'Como 50-80, y no doy abasto', time: '10:24' },
-  { type: 'typing' },
-  { type: 'bot', text: 'Con ese volumen, probablemente estás perdiendo 20-30% de ventas por respuestas tardías. Es lo más común.', time: '10:24' },
-  { type: 'user', text: 'Sí, eso me preocupa', time: '10:25' },
-  { type: 'typing' },
-  { type: 'bot', text: '¿Te gustaría ver cómo automatizar esto sin perder el toque personal? Tengo disponible mañana a las 10am.', time: '10:25' },
-  { type: 'user', text: 'Perfecto, agéndame', time: '10:26' },
-  { type: 'typing' },
-  { type: 'bot', text: 'Listo. Te envié la invitación al correo. Mañana 10am.', time: '10:26' },
+// Suggestion chips for quick start
+const SUGGESTIONS = [
+  'Hola, quiero info',
+  '¿Cuánto cuesta?',
+  '¿Cómo funciona?'
 ];
 
-const MESSAGE_DELAYS = [0, 1200, 2500, 4000, 5200, 7000, 9500, 10700, 13000, 14200, 16500, 18000];
-const LOOP_DELAY = 22000;
-
 export function ChatDemo() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    if (currentIndex >= CHAT_SEQUENCE.length) {
-      const timeout = setTimeout(() => {
-        setMessages([]);
-        setCurrentIndex(0);
-      }, LOOP_DELAY - MESSAGE_DELAYS[MESSAGE_DELAYS.length - 1]);
-      return () => clearTimeout(timeout);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: 'welcome',
+      type: 'bot',
+      text: 'Hola, gracias por escribir. ¿Buscas automatizar tus ventas por WhatsApp?',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
+  ]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [sessionId] = useState(() => crypto.randomUUID());
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-    const delay = currentIndex === 0 ? 600 : MESSAGE_DELAYS[currentIndex] - MESSAGE_DELAYS[currentIndex - 1];
+  // Auto-scroll to bottom
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
 
-    const timeout = setTimeout(() => {
-      const newMessage = CHAT_SEQUENCE[currentIndex];
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || isLoading) return;
 
-      if (newMessage.type === 'typing') {
-        setMessages((prev) => [...prev, { ...newMessage, id: Date.now() }]);
-        setTimeout(() => {
-          setMessages((prev) => prev.filter((m) => m.type !== 'typing'));
-          setCurrentIndex((i) => i + 1);
-        }, 800);
-      } else {
-        setMessages((prev) => [
-          ...prev.filter((m) => m.type !== 'typing'),
-          { ...newMessage, id: Date.now() },
-        ]);
-        setCurrentIndex((i) => i + 1);
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      type: 'user',
+      text: text.trim(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const res = await fetch('/api/sandbox/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text.trim(),
+          sessionId,
+          tenantId: 'demo',
+          history: [...messages, userMessage].map(m => ({
+            role: m.type === 'user' ? 'user' : 'assistant',
+            content: m.text,
+            timestamp: new Date().toISOString()
+          }))
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.response) {
+        const botMessage: Message = {
+          id: `bot-${Date.now()}`,
+          type: 'bot',
+          text: data.response,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages(prev => [...prev, botMessage]);
       }
-    }, delay);
+    } catch (err) {
+      console.error('Chat error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoading, messages, sessionId]);
 
-    return () => clearTimeout(timeout);
-  }, [currentIndex]);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage(input);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  };
 
   return (
     <div className="w-full max-w-md mx-auto">
-      {/* Simple chat container */}
-      <div className="bg-surface rounded-xl border border-border overflow-hidden">
-        {/* Minimal header */}
-        <div className="px-4 py-3 border-b border-border flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-neon-green/10 flex items-center justify-center">
-            <div className="w-2 h-2 rounded-full bg-neon-green" />
+      {/* Terminal-style chat container */}
+      <div className="bg-surface rounded-xl border border-border overflow-hidden shadow-elevated">
+        {/* Terminal header */}
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-surface-2">
+          <div className="flex gap-2">
+            <div className="w-3 h-3 rounded-full bg-terminal-red" />
+            <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
+            <div className="w-3 h-3 rounded-full bg-terminal-green" />
           </div>
-          <div>
-            <p className="text-foreground text-sm font-medium">Loomi</p>
-            <p className="text-muted text-xs">Responde en &lt;1s</p>
+          <span className="text-xs text-muted font-mono ml-2">loomi — interactive</span>
+          <div className="ml-auto flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-terminal-green" />
+            <span className="text-xs text-muted font-mono">online</span>
           </div>
         </div>
 
         {/* Chat area */}
-        <div className="h-[360px] p-4 overflow-hidden bg-background">
+        <div
+          ref={scrollRef}
+          className="h-[350px] p-4 overflow-y-auto bg-background"
+        >
           <div className="space-y-3">
             <AnimatePresence mode="popLayout">
               {messages.map((message) => (
@@ -97,56 +137,99 @@ export function ChatDemo() {
                     message.type === 'user' ? 'justify-end' : 'justify-start'
                   )}
                 >
-                  {message.type === 'typing' ? (
-                    <div className="bg-surface rounded-xl px-4 py-3 border border-border">
-                      <div className="flex gap-1">
-                        {[0, 1, 2].map((i) => (
-                          <motion.span
-                            key={i}
-                            className="w-1.5 h-1.5 bg-muted rounded-full"
-                            animate={{ opacity: [0.4, 1, 0.4] }}
-                            transition={{
-                              duration: 1,
-                              repeat: Infinity,
-                              delay: i * 0.2,
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className={cn(
-                        'rounded-xl px-4 py-2.5 max-w-[85%]',
-                        message.type === 'user'
-                          ? 'bg-neon-green text-gray-900'
-                          : 'bg-surface border border-border text-foreground'
-                      )}
-                    >
-                      <p className="text-sm leading-relaxed">
-                        {message.text}
-                      </p>
-                      <div className={cn(
-                        'flex items-center gap-1 mt-1',
-                        message.type === 'user' ? 'justify-end' : 'justify-start'
+                  <div
+                    className={cn(
+                      'rounded-lg px-4 py-3 max-w-[85%] font-mono text-sm',
+                      message.type === 'user'
+                        ? 'bg-foreground text-background'
+                        : 'bg-surface-2 border border-border text-foreground'
+                    )}
+                  >
+                    <p className="leading-relaxed">{message.text}</p>
+                    <div className={cn(
+                      'flex items-center gap-1 mt-1.5',
+                      message.type === 'user' ? 'justify-end' : 'justify-start'
+                    )}>
+                      <span className={cn(
+                        'text-[10px]',
+                        message.type === 'user' ? 'opacity-50' : 'text-muted'
                       )}>
-                        <span className={cn(
-                          'text-[10px]',
-                          message.type === 'user' ? 'text-gray-800/60' : 'text-muted'
-                        )}>
-                          {message.time}
-                        </span>
-                        {message.type === 'user' && (
-                          <CheckCheck className="w-3 h-3 text-gray-800/60" />
-                        )}
-                      </div>
+                        {message.time}
+                      </span>
+                      {message.type === 'user' && (
+                        <CheckCheck className="w-3 h-3 opacity-50" />
+                      )}
                     </div>
-                  )}
+                  </div>
                 </motion.div>
               ))}
+
+              {/* Typing indicator */}
+              {isLoading && (
+                <motion.div
+                  key="typing"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-surface-2 rounded-lg px-4 py-3 border border-border">
+                    <div className="flex gap-1.5 items-center">
+                      <Loader2 className="w-3.5 h-3.5 text-terminal-green animate-spin" />
+                      <span className="text-xs text-muted font-mono">thinking...</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </AnimatePresence>
+
+            {/* Suggestions (only when few messages) */}
+            {messages.length <= 1 && !isLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="flex flex-wrap gap-2 pt-2"
+              >
+                {SUGGESTIONS.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => sendMessage(suggestion)}
+                    className="px-3 py-1.5 text-xs font-mono text-muted border border-border rounded-md hover:border-muted hover:text-foreground transition-colors bg-surface"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </motion.div>
+            )}
           </div>
         </div>
+
+        {/* Input area */}
+        <form onSubmit={handleSubmit} className="p-4 border-t border-border bg-surface-2">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="$ escribe un mensaje..."
+              disabled={isLoading}
+              className="flex-1 bg-background border border-border rounded-lg px-4 py-3 text-foreground text-sm placeholder-muted focus:outline-none focus:border-muted transition-colors font-mono"
+            />
+            <button
+              type="submit"
+              disabled={isLoading || !input.trim()}
+              className="w-12 h-12 rounded-lg bg-foreground flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 text-background animate-spin" />
+              ) : (
+                <Send className="w-5 h-5 text-background" />
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

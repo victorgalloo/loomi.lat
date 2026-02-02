@@ -1,22 +1,26 @@
 # Meta Conversions API - Contexto de Integración
 
-## Resumen
+## Estado: ✅ FUNCIONANDO
 
-Integración con Meta Conversions API para enviar eventos de conversión cuando un lead progresa en el pipeline. Esto permite a Meta optimizar el targeting de anuncios para traer leads de mayor calidad.
-
-## Estado Actual: EN CONFIGURACIÓN
-
-Los eventos se envían correctamente (API devuelve `events_received: 1`) pero no aparecen en Meta Events Manager. Pendiente: configurar API de conversiones en el dataset.
+Integración completada y verificada. Los eventos se envían correctamente y aparecen en Meta Events Manager.
 
 ## Credenciales Configuradas
 
 | Variable | Valor | Ubicación |
 |----------|-------|-----------|
 | `META_PIXEL_ID` | `912267854789790` | `.env.local` + Vercel |
-| `META_ACCESS_TOKEN` | `EAALmkL5nVZAgBQm3fqX...` (nuevo token) | `.env.local` + Vercel |
-| `META_TEST_EVENT_CODE` | `TEST32143` | `.env.local` + Vercel |
+| `META_ACCESS_TOKEN` | `EAALmkL5nVZAgBQm3fqX...` | `.env.local` + Vercel |
+| `META_TEST_EVENT_CODE` | `TEST32143` | `.env.local` + Vercel (remover en prod) |
 
 **Dataset:** Loomi (ID: 912267854789790)
+
+## Eventos Configurados en Meta
+
+| Evento | Estado | Descripción |
+|--------|--------|-------------|
+| **Comprar** (Purchase) | ✅ Activo | Lead movido a "Ganado" o pago Stripe |
+| **Cliente potencial** (Lead) | ✅ Activo | Lead calificado via WhatsApp Flow |
+| **Completar registro** (CompleteRegistration) | ✅ Configurado | Demo agendada |
 
 ## Pipeline CRM (8 etapas)
 
@@ -31,45 +35,32 @@ Los eventos se envían correctamente (API devuelve `events_received: 1`) pero no
 | 7 | **Ganado** | `Purchase` | Mover a "Ganado" en CRM o pago Stripe |
 | 8 | Perdido | - | Manual |
 
-## Eventos Implementados
-
-| Evento Meta | Disparador | Archivo |
-|-------------|-----------|---------|
-| `Lead` | Lead calificado (completa WhatsApp Flow) → stage `Calificado` | `lib/memory/supabase.ts:saveLeadQualification()` |
-| `CompleteRegistration` | Demo agendada → stage `Demo Agendada` | `app/api/webhook/whatsapp/route.ts` |
-| `Purchase` | Pago Stripe **o** mover a `Ganado` en CRM | `app/api/stripe/webhook/route.ts` + `app/api/leads/[id]/route.ts` |
-
 ## Archivos del Sistema
 
 ### `/lib/integrations/meta-conversions.ts`
-Servicio principal con:
+Servicio principal:
 - `sendConversionEvent()` - Envía evento a Meta API con retry
 - `trackLeadQualified()` - Evento Lead
 - `trackDemoScheduled()` - Evento CompleteRegistration
 - `trackCustomerWon()` - Evento Purchase (siempre incluye value y currency)
 - `processEventQueue()` - Procesa cola de eventos fallidos
-- Funciones de hash SHA256 y normalización de datos
 
 ### `/app/api/leads/[id]/route.ts`
-Endpoint para actualizar leads:
-- `PATCH /api/leads/:id` - Actualiza propiedades del lead
-- Cuando `stage` cambia a `Ganado`, dispara `trackCustomerWon()` con `await`
+- `PATCH /api/leads/:id` - Actualiza lead
+- Dispara `await trackCustomerWon()` cuando stage cambia a "Ganado"
 
-### `/app/api/cron/meta-conversions/route.ts`
-Cron job para procesar eventos fallidos de la cola.
+### `/app/api/webhook/whatsapp/route.ts`
+- Dispara `trackDemoScheduled()` cuando se agenda demo
+- Actualiza stage a "Demo Agendada"
 
-### `/supabase/migrations/20260201100000_add_conversion_events_queue.sql`
-Tabla para cola de reintentos.
+### `/lib/memory/supabase.ts`
+- `saveLeadQualification()` dispara `trackLeadQualified()`
+- Actualiza stage a "Calificado"
 
 ## Realtime Habilitado
 
 Tablas con Supabase Realtime:
-- leads
-- conversations
-- messages
-- appointments
-- clients
-- pipeline_stages
+- leads, conversations, messages, appointments, clients, pipeline_stages
 
 Páginas con actualizaciones en tiempo real:
 - Dashboard principal
@@ -85,7 +76,7 @@ Páginas con actualizaciones en tiempo real:
   saveLeadQualification()
          │
          ├──► stage = 'Calificado'
-         └──► trackLeadQualified() ──► Meta API (Lead)
+         └──► trackLeadQualified() ──► Meta API (Lead) ✅
 
 [Lead agenda demo por WhatsApp]
          │
@@ -93,45 +84,31 @@ Páginas con actualizaciones en tiempo real:
   WhatsApp webhook (appointmentBooked)
          │
          ├──► stage = 'Demo Agendada'
-         └──► trackDemoScheduled() ──► Meta API (CompleteRegistration)
+         └──► trackDemoScheduled() ──► Meta API (CompleteRegistration) ✅
 
 [Lead movido a "Ganado" en CRM]
          │
          ▼
   PATCH /api/leads/:id { stage: 'Ganado' }
          │
-         └──► await trackCustomerWon() ──► Meta API (Purchase)
-
-[Lead paga en Stripe]
-         │
-         ▼
-  handleCheckoutCompleted()
-         │
-         └──► trackCustomerWon() ──► Meta API (Purchase)
+         └──► await trackCustomerWon() ──► Meta API (Purchase) ✅
 ```
 
-## Troubleshooting Realizado
+## Configuración Completada
 
-### Problema: Eventos no aparecen en Meta Events Manager
-- API devuelve `events_received: 1` pero eventos no visibles
-- Token verificado: tiene acceso al dataset (puede leer nombre/id)
-- test_event_code correcto: TEST32143
-
-### Fixes aplicados:
-1. ✅ Corregido: `await trackCustomerWon()` para evitar terminación prematura
-2. ✅ Corregido: Siempre incluir `value` y `currency` en Purchase (Meta lo requiere)
-3. ✅ Corregido: Stages sincronizados (`Calificado`, `Demo Agendada` en español)
-4. ✅ Corregido: Leads con stage `initial` actualizados a `Nuevo`
-5. ✅ Corregido: Dataset asignado al System User
-6. ✅ Token regenerado después de asignar dataset
-
-### Pendiente:
-- Configurar API de conversiones en el dataset de Meta
-- Verificar que eventos aparezcan después de configuración
+### Pasos realizados:
+1. ✅ Crear dataset "Loomi" en Meta Events Manager
+2. ✅ Crear System User en Business Settings
+3. ✅ Asignar dataset al System User con permiso "Manage"
+4. ✅ Generar Access Token con permisos ads_management, ads_read
+5. ✅ Configurar variables en `.env.local` y Vercel
+6. ✅ Configurar API de conversiones manualmente en Meta
+7. ✅ Seleccionar eventos: Comprar, Cliente potencial, Completar registro
+8. ✅ Verificar recepción de eventos en Meta Events Manager
 
 ## Verificación
 
-### Para probar manualmente:
+### Probar manualmente:
 ```bash
 source .env.local && curl -s -X POST "https://graph.facebook.com/v24.0/${META_PIXEL_ID}/events" \
   -H "Content-Type: application/json" \
@@ -153,8 +130,18 @@ source .env.local && curl -s -X POST "https://graph.facebook.com/v24.0/${META_PI
   }"
 ```
 
+### Ver eventos en Meta:
+[Events Manager - Loomi](https://business.facebook.com/events_manager2/list/dataset/912267854789790/overview)
+
+## Producción
+
+Para ir a producción:
+1. Remover o vaciar `META_TEST_EVENT_CODE` en Vercel
+2. Verificar en Events Manager > Diagnóstico que no hay errores
+3. Monitorear "Calidad de coincidencias de eventos" (objetivo: >6/10)
+
 ## Links Útiles
 
-- [Events Manager](https://business.facebook.com/events_manager2/list/dataset/912267854789790)
-- [Business Settings - System Users](https://business.facebook.com/settings/system-users)
+- [Events Manager - Loomi](https://business.facebook.com/events_manager2/list/dataset/912267854789790)
+- [Business Settings](https://business.facebook.com/settings)
 - [API de Conversiones Docs](https://developers.facebook.com/docs/marketing-api/conversions-api)

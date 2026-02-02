@@ -75,6 +75,7 @@ export default async function DashboardPage() {
           messagesThisMonth: messagesResult.count || 0,
           appointmentsBooked: appointmentsResult.count || 0
         }}
+        tenantId={tenantId}
       />
     );
   }

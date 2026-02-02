@@ -12,15 +12,28 @@ Integración con Meta Conversions API para enviar eventos de conversión cuando 
 | `META_ACCESS_TOKEN` | `EAAVS2ZCFjRec...` | `.env.local` + Vercel |
 | `META_TEST_EVENT_CODE` | `TEST89740` | `.env.local` + Vercel (remover en prod) |
 
+## Pipeline CRM (8 etapas)
+
+| # | Etapa | Evento Meta | Disparador |
+|---|-------|-------------|------------|
+| 1 | Nuevo | - | Lead creado |
+| 2 | Contactado | - | Manual |
+| 3 | **Calificado** | `Lead` | WhatsApp Flow completado |
+| 4 | **Demo Agendada** | `CompleteRegistration` | Demo agendada por WhatsApp |
+| 5 | Propuesta | - | Manual |
+| 6 | Negociacion | - | Manual |
+| 7 | **Ganado** | `Purchase` | Mover a "Ganado" en CRM o pago Stripe |
+| 8 | Perdido | - | Manual |
+
 ## Eventos Implementados
 
 | Evento Meta | Disparador | Archivo |
 |-------------|-----------|---------|
-| `Lead` | Lead calificado (completa WhatsApp Flow) | `lib/memory/supabase.ts:saveLeadQualification()` |
-| `CompleteRegistration` | Demo agendada | `app/api/webhook/whatsapp/route.ts` (línea ~590) |
-| `Purchase` | Pago completado en Stripe | `app/api/stripe/webhook/route.ts:handleCheckoutCompleted()` |
+| `Lead` | Lead calificado (completa WhatsApp Flow) → stage `Calificado` | `lib/memory/supabase.ts:saveLeadQualification()` |
+| `CompleteRegistration` | Demo agendada → stage `Demo Agendada` | `app/api/webhook/whatsapp/route.ts` |
+| `Purchase` | Pago Stripe **o** mover a `Ganado` en CRM | `app/api/stripe/webhook/route.ts` + `app/api/leads/[id]/route.ts` |
 
-## Archivos Creados
+## Archivos del Sistema
 
 ### `/lib/integrations/meta-conversions.ts`
 Servicio principal con:
@@ -30,6 +43,11 @@ Servicio principal con:
 - `trackCustomerWon()` - Evento Purchase
 - `processEventQueue()` - Procesa cola de eventos fallidos
 - Funciones de hash SHA256 y normalización de datos
+
+### `/app/api/leads/[id]/route.ts`
+Endpoint para actualizar leads:
+- `PATCH /api/leads/:id` - Actualiza propiedades del lead
+- Cuando `stage` cambia a `Ganado`, dispara `trackCustomerWon()` automáticamente
 
 ### `/app/api/cron/meta-conversions/route.ts`
 Cron job para procesar eventos fallidos de la cola.
@@ -52,14 +70,23 @@ conversion_events_queue (
          ▼
   saveLeadQualification()
          │
+         ├──► stage = 'Calificado'
          └──► trackLeadQualified() ──► Meta API (Lead)
 
-[Lead agenda demo]
+[Lead agenda demo por WhatsApp]
          │
          ▼
   WhatsApp webhook (appointmentBooked)
          │
+         ├──► stage = 'Demo Agendada'
          └──► trackDemoScheduled() ──► Meta API (CompleteRegistration)
+
+[Lead movido a "Ganado" en CRM]
+         │
+         ▼
+  PATCH /api/leads/:id { stage: 'Ganado' }
+         │
+         └──► trackCustomerWon() ──► Meta API (Purchase)
 
 [Lead paga en Stripe]
          │
@@ -103,7 +130,11 @@ conversion_events_queue (
 
 ### En Desarrollo (Test Events)
 1. Asegurarse que `META_TEST_EVENT_CODE` esté configurado
-2. Disparar evento (calificar lead, agendar demo, o pagar)
+2. Disparar evento:
+   - Calificar lead via WhatsApp Flow
+   - Agendar demo via WhatsApp
+   - Mover lead a "Ganado" en el Kanban
+   - Completar pago en Stripe
 3. Ver en Events Manager > Test Events
 
 ### En Producción
@@ -145,6 +176,12 @@ Agregar a `vercel.json`:
 ### Event Match Quality bajo
 - Enviar más parámetros (email además de teléfono)
 - Asegurar formato correcto de teléfono (E.164 sin +)
+
+### Stage no coincide con CRM
+Los stages deben coincidir exactamente (case-sensitive):
+- `Calificado` (no `qualified`)
+- `Demo Agendada` (no `demo_scheduled`)
+- `Ganado` (no `won`)
 
 ## Links Útiles
 

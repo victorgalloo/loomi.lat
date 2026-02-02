@@ -44,10 +44,11 @@ export default async function CRMPage() {
         { id: '1', name: 'Nuevo', color: 'cyan', position: 0, isWon: false, isLost: false },
         { id: '2', name: 'Contactado', color: 'amber', position: 1, isWon: false, isLost: false },
         { id: '3', name: 'Calificado', color: 'purple', position: 2, isWon: false, isLost: false },
-        { id: '4', name: 'Propuesta', color: 'blue', position: 3, isWon: false, isLost: false },
-        { id: '5', name: 'Negociacion', color: 'orange', position: 4, isWon: false, isLost: false },
-        { id: '6', name: 'Ganado', color: 'emerald', position: 5, isWon: true, isLost: false },
-        { id: '7', name: 'Perdido', color: 'red', position: 6, isWon: false, isLost: true },
+        { id: '4', name: 'Demo Agendada', color: 'indigo', position: 3, isWon: false, isLost: false },
+        { id: '5', name: 'Propuesta', color: 'blue', position: 4, isWon: false, isLost: false },
+        { id: '6', name: 'Negociacion', color: 'orange', position: 5, isWon: false, isLost: false },
+        { id: '7', name: 'Ganado', color: 'emerald', position: 6, isWon: true, isLost: false },
+        { id: '8', name: 'Perdido', color: 'red', position: 7, isWon: false, isLost: true },
       ];
 
   // Fetch leads

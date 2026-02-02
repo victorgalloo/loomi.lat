@@ -190,7 +190,7 @@ export async function saveLeadQualification(
       message_volume: qualification.messageVolume,
       industry: qualification.industry,
       is_qualified: true,
-      stage: 'qualified',
+      stage: 'Calificado',
       last_interaction: new Date().toISOString(),
     })
     .eq('phone', phone);

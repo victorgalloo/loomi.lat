@@ -88,6 +88,26 @@ export default function CRMView({ stages, leads: initialLeads }: CRMViewProps) {
     }
   };
 
+  const handleLeadMove = async (leadId: string, newStage: string) => {
+    try {
+      const response = await fetch(`/api/leads/${leadId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: newStage })
+      });
+
+      if (response.ok) {
+        setLeads(prevLeads =>
+          prevLeads.map(lead =>
+            lead.id === leadId ? { ...lead, stage: newStage } : lead
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error moving lead:', error);
+    }
+  };
+
   return (
     <div className="px-6 py-6">
       {/* Header */}
@@ -184,6 +204,7 @@ export default function CRMView({ stages, leads: initialLeads }: CRMViewProps) {
             initialLeads={filteredLeads}
             isDarkMode={isDarkMode}
             onAddLead={() => setShowModal(true)}
+            onLeadMove={handleLeadMove}
           />
         ) : (
           <div className="text-center py-12">

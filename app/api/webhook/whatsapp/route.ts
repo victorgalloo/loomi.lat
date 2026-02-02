@@ -578,7 +578,7 @@ export async function POST(request: NextRequest) {
           waitUntil((async () => {
             try {
               const appointment = await createAppointment(context.lead.id, scheduledAt, eventId);
-              await updateLeadStage(context.lead.phone, 'demo_scheduled');
+              await updateLeadStage(context.lead.phone, 'Demo Agendada');
 
               await scheduleDemoReminders(context.lead.id, appointment.id, scheduledAt, context.lead);
 
@@ -586,7 +586,7 @@ export async function POST(request: NextRequest) {
                 phone: context.lead.phone,
                 name: context.lead.name,
                 email,
-                stage: 'demo_scheduled',
+                stage: 'Demo Agendada',
                 messages: [...context.recentMessages, { role: 'user', content: message.text }],
                 appointmentBooked: { date, time, meetingUrl }
               });

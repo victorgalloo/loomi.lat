@@ -7,8 +7,11 @@ import Link from "next/link";
 import { Sun, Moon, ArrowRight, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
+  const [mode, setMode] = useState<'login' | 'access'>('login');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -28,7 +31,7 @@ export default function LoginPage() {
     localStorage.setItem('loomi-theme', next);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
@@ -62,6 +65,24 @@ export default function LoginPage() {
       setError("Error inesperado");
       setIsLoading(false);
     }
+  };
+
+  const handleAccessRequest = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    // Store demo user info in sessionStorage for sandbox
+    sessionStorage.setItem('sandbox_user', JSON.stringify({
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+    }));
+
+    // Small delay for UX
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    router.push("/demo/sandbox");
   };
 
   return (
@@ -103,81 +124,162 @@ export default function LoginPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-semibold text-foreground font-mono">
-              login_
+              {mode === 'login' ? 'login_' : 'demo_'}
             </h1>
             <p className="mt-2 text-sm text-muted">
-              Accede a tu dashboard
+              {mode === 'login' ? 'Accede a tu dashboard' : 'Prueba el agente en vivo'}
             </p>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email */}
-            <div>
-              <label className="block text-xs font-medium mb-2 text-muted font-mono">
-                email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-                placeholder="tu@email.com"
-                className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
-              />
-            </div>
-
-            {/* Password */}
-            <div>
-              <label className="block text-xs font-medium mb-2 text-muted font-mono">
-                password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={isLoading}
-                placeholder="••••••••"
-                className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className="p-3 rounded-lg text-sm bg-terminal-red/10 text-terminal-red border border-terminal-red/20 font-mono">
-                {error}
+          {mode === 'login' ? (
+            /* Login Form */
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium mb-2 text-muted font-mono">
+                  email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  placeholder="tu@email.com"
+                  className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                />
               </div>
-            )}
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90 font-mono"
-            >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  ./continuar
-                  <ArrowRight className="w-4 h-4" />
-                </>
+              <div>
+                <label className="block text-xs font-medium mb-2 text-muted font-mono">
+                  password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  placeholder="••••••••"
+                  className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              {error && (
+                <div className="p-3 rounded-lg text-sm bg-terminal-red/10 text-terminal-red border border-terminal-red/20 font-mono">
+                  {error}
+                </div>
               )}
-            </button>
-          </form>
 
-          {/* Footer */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90 font-mono"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    ./continuar
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+          ) : (
+            /* Access Request Form */
+            <form onSubmit={handleAccessRequest} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium mb-2 text-muted font-mono">
+                  nombre
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  placeholder="Tu nombre"
+                  className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium mb-2 text-muted font-mono">
+                  email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  placeholder="tu@email.com"
+                  className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium mb-2 text-muted font-mono">
+                  teléfono
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  placeholder="+52 55 1234 5678"
+                  className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                />
+              </div>
+
+              {error && (
+                <div className="p-3 rounded-lg text-sm bg-terminal-red/10 text-terminal-red border border-terminal-red/20 font-mono">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-terminal-green text-background hover:bg-terminal-green/90 font-mono"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    ./probar-demo
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* Toggle Mode */}
           <div className="mt-8 text-center">
             <p className="text-xs text-muted font-mono">
-              ¿No tienes cuenta?{' '}
-              <Link
-                href="/"
-                className="text-foreground hover:underline"
-              >
-                solicita acceso
-              </Link>
+              {mode === 'login' ? (
+                <>
+                  ¿No tienes cuenta?{' '}
+                  <button
+                    onClick={() => setMode('access')}
+                    className="text-foreground hover:underline"
+                  >
+                    solicita acceso
+                  </button>
+                </>
+              ) : (
+                <>
+                  ¿Ya tienes cuenta?{' '}
+                  <button
+                    onClick={() => setMode('login')}
+                    className="text-foreground hover:underline"
+                  >
+                    iniciar sesión
+                  </button>
+                </>
+              )}
             </p>
           </div>
 

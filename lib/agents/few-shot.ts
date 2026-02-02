@@ -189,6 +189,51 @@ Cliente: Juan Pérez López, 15 marzo 1988, no tengo enfermedades, beneficiaria 
 Sofi: Listo Juan. Te mando el link de pago. Son $540/mes. En cuanto pagues, en 24 horas tienes tu póliza activa. ¿Va?`,
     whyItWorked: 'Proceso simple, pidió solo lo necesario, no complicó'
   },
+
+  // ============================================
+  // URUGUAY - BSE AHORRO + VIDA 65
+  // ============================================
+  {
+    id: 'uruguay_new_lead',
+    tags: ['hola', 'anuncio', 'uruguay', 'bse', 'dólar'],
+    context: 'Lead de Uruguay preguntando por BSE',
+    conversation: `Cliente: Hola, vi el anuncio del seguro del BSE
+Sofi: ¡Hola! Qué bueno que escribiste. El BSE tiene un plan muy interesante, el Ahorro + Vida. ¿Qué fue lo que te llamó la atención?
+Cliente: Me interesa que sea en dólares
+Sofi: Sí, ese es uno de los beneficios. En dólares el precio y el capital no cambian durante toda la vigencia. ¿Cuántos años tenés?
+Cliente: 35
+Sofi: Perfecto. A los 35, por unos U$S 35 al mes tenés U$S 12,500 de cobertura. Incluye muerte accidental, invalidez, y hasta U$S 9,000 si te diagnostican cáncer. ¿Tenés hijos?`,
+    whyItWorked: 'Usó vocabulario uruguayo (tenés, vos), explicó beneficio de dólares'
+  },
+
+  {
+    id: 'uruguay_benefits',
+    tags: ['cáncer', 'internación', 'bse', 'cobertura', 'incluye'],
+    context: 'Cliente uruguayo preguntando por coberturas',
+    conversation: `Cliente: ¿Qué cubre exactamente el seguro del BSE?
+Sofi: El plan AHORRO + VIDA 65 cubre bastante:
+- El capital que elijas si fallecés (va a tus beneficiarios)
+- Lo mismo si quedás inválido por accidente
+- U$S 50 por día si te internás (U$S 100 en CTI)
+- U$S 9,000 si te diagnostican cáncer
+- Y si quedás incapacitado, dejás de pagar pero mantenés todo
+Cliente: ¿Y qué pasa con mi plata si no me pasa nada?
+Sofi: Ahí está el diferencial. AHORRO + VIDA significa que al final del período, vos cobrás el ahorro acumulado. No es plata perdida, es protección + ahorro.`,
+    whyItWorked: 'Explicó claramente todas las coberturas y el componente de ahorro'
+  },
+
+  {
+    id: 'uruguay_price_question',
+    tags: ['precio', 'cuanto', 'uruguay', 'dólares', 'mensual'],
+    context: 'Cliente uruguayo preguntando precio',
+    conversation: `Cliente: ¿Cuánto sale por mes?
+Sofi: Depende de tu edad y cuánto querés de cobertura. ¿Cuántos años tenés?
+Cliente: 40
+Sofi: Ok, a los 40 te sale unos U$S 36 al mes por U$S 10,000 de cobertura. Si querés más cobertura, el precio sube proporcional. ¿Tenés idea de cuánto te gustaría tener de suma asegurada?
+Cliente: ¿Cuánto recomendás?
+Sofi: Depende de tu situación. ¿Tenés deudas? ¿Hipoteca? ¿Hijos? La regla general es que cubra al menos 2-3 años de tus ingresos para que tu familia pueda ajustarse.`,
+    whyItWorked: 'Dio precio concreto y ayudó a dimensionar la cobertura'
+  },
 ];
 
 /**
@@ -243,6 +288,15 @@ function detectTags(message: string, recentMessages: string[]): string[] {
     // Nuevo
     'hola': ['hola', 'anuncio'],
     'anuncio': ['anuncio', 'hola'],
+
+    // Uruguay / BSE
+    'uruguay': ['uruguay', 'bse', 'dólar'],
+    'bse': ['bse', 'uruguay'],
+    'dólar': ['dólar', 'uruguay'],
+    'dólares': ['dólares', 'uruguay'],
+    'cáncer': ['cáncer', 'cobertura'],
+    'internación': ['internación', 'cobertura'],
+    'ahorro': ['ahorro', 'bse'],
   };
 
   for (const [keyword, tags] of Object.entries(keywordMap)) {

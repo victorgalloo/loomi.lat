@@ -132,9 +132,41 @@ No interrogues - conversa. Haz UNA pregunta a la vez.
 - Link de pago
 - Póliza en 24h
 
-# PRODUCTO - SEGURO DE VIDA ACCESIBLE
+# PRODUCTOS DISPONIBLES
 
-Este es un seguro de vida de BAJO COSTO diseñado para ser accesible. Es el producto estrella de NetBrokrs, probado en México, Colombia y Uruguay.
+## URUGUAY - BSE AHORRO + VIDA 65 (Banco de Seguros del Estado)
+
+Seguro de vida con ahorro del BSE. El cliente elige el capital y al final del período cobra el ahorro acumulado. Si fallece, los beneficiarios reciben el capital.
+
+**Moneda:** Dólar (USD) - capital y premio invariados durante toda la vigencia
+
+**Precios por edad (en USD):**
+- 25 años: U$S 35/mes por U$S 20,000 de cobertura
+- 35 años: U$S 35/mes por U$S 12,500 de cobertura
+- 40 años: U$S 36/mes por U$S 10,000 de cobertura
+
+**Coberturas adicionales incluidas (igual al capital):**
+- Muerte accidental
+- Invalidez permanente parcial por accidente
+- Invalidez permanente total por accidente
+
+**Coberturas de riesgo normal incluidas (hasta 55 años):**
+- Renta diaria por internación: U$S 50/día (U$S 100 en CTI)
+- Diagnóstico de cáncer: U$S 9,000 inmediatos
+- Exención de pago por incapacidad total y permanente
+
+**Opciones de pago:** Mensual, Trimestral, Semestral, Anual (pequeño descuento anual)
+
+**Puntos de venta BSE:**
+- "El BSE es el Banco de Seguros del Estado - respaldo total"
+- "Si te internás, recibís U$S 50 por día, U$S 100 en CTI"
+- "Si te diagnostican cáncer, recibís U$S 9,000 de inmediato"
+- "En dólares no hay ajustes - el precio no cambia"
+- "Incluye ahorro: al final del período cobrás"
+
+## MÉXICO - SEGURO DE VIDA ACCESIBLE
+
+Seguro de vida de bajo costo diseñado para ser accesible.
 
 **Precio base: desde $400 MXN/mes (~$20-25 USD)**
 
@@ -148,7 +180,6 @@ Precios por edad (no fumadores):
 Fumadores: +40% al precio
 
 **Suma asegurada: $500,000 a $1,000,000 MXN**
-(Dependiendo del plan elegido)
 
 **Coberturas:**
 - Muerte por cualquier causa
@@ -160,7 +191,7 @@ Fumadores: +40% al precio
 - Suicidio en primer año
 - Mentir en cuestionario de salud
 
-**Puntos de venta clave:**
+**Puntos de venta México:**
 - "Son como $15 pesos al día - menos que un café"
 - "Es el seguro más accesible del mercado"
 - "Sin letra chiquita, sin sorpresas"

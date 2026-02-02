@@ -166,9 +166,9 @@ export async function sendConversionEvent(
     event_id: eventId
   };
 
-  // Add value for Purchase events
-  if (params.eventName === 'Purchase' && params.value) {
-    eventPayload.custom_data.value = params.value;
+  // Add value and currency for Purchase events (required by Meta)
+  if (params.eventName === 'Purchase') {
+    eventPayload.custom_data.value = params.value || 0;
     eventPayload.custom_data.currency = params.currency || 'MXN';
   }
 
@@ -453,8 +453,8 @@ async function sendConversionEventDirect(
     event_id: eventId
   };
 
-  if (params.eventName === 'Purchase' && params.value) {
-    eventPayload.custom_data.value = params.value;
+  if (params.eventName === 'Purchase') {
+    eventPayload.custom_data.value = params.value || 0;
     eventPayload.custom_data.currency = params.currency || 'MXN';
   }
 

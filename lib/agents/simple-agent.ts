@@ -318,6 +318,16 @@ interface FewShotExample {
   whyItWorked: string;
 }
 
+// Custom tool definition for sandbox
+interface CustomToolDef {
+  name: string;
+  displayName: string;
+  description: string;
+  parameters: Record<string, unknown>;
+  executionType: 'webhook' | 'mock' | 'code';
+  mockResponse?: unknown;
+}
+
 // Optional agent configuration for multi-tenant customization
 interface AgentConfigOptions {
   businessName?: string | null;
@@ -331,6 +341,9 @@ interface AgentConfigOptions {
   systemPrompt?: string | null;
   fewShotExamples?: FewShotExample[];
   productsCatalog?: Record<string, unknown>;
+  // Sandbox features
+  knowledgeContext?: string | null;
+  customTools?: CustomToolDef[];
 }
 
 export async function simpleAgent(
@@ -439,6 +452,11 @@ export async function simpleAgent(
 
   if (contextParts.length > 0) {
     systemWithContext += `\n\n# CONTEXTO\n${contextParts.join('\n')}`;
+  }
+
+  // Add knowledge context from tenant documents (sandbox feature)
+  if (agentConfig?.knowledgeContext) {
+    systemWithContext += `\n\n${agentConfig.knowledgeContext}`;
   }
 
   // Add few-shot examples (ejemplos relevantes para el contexto)
@@ -556,6 +574,23 @@ Sé cálida, haz UNA pregunta a la vez, mensajes cortos.`
       }
     })
   };
+
+  // Add custom tools from tenant config (sandbox feature)
+  if (agentConfig?.customTools && agentConfig.customTools.length > 0) {
+    for (const customTool of agentConfig.customTools) {
+      // Create a dynamic tool that returns mock response
+      (tools as Record<string, unknown>)[customTool.name] = tool({
+        description: customTool.description,
+        inputSchema: zodSchema(z.object({})), // Simple schema for mock tools
+        execute: async () => {
+          console.log(`[Tool] Custom tool called: ${customTool.name}`);
+          // For mock execution, return the configured mock response
+          return customTool.mockResponse || { success: true, message: `${customTool.displayName} executed` };
+        }
+      });
+    }
+    console.log(`[Agent] Added ${agentConfig.customTools.length} custom tools: ${agentConfig.customTools.map(t => t.name).join(', ')}`);
+  }
 
   // Track tool results
   let escalatedToHuman: SimpleAgentResult['escalatedToHuman'] = undefined;

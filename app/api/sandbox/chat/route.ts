@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { simpleAgent } from '@/lib/agents/simple-agent';
 import { getAgentConfig } from '@/lib/tenant/context';
+import { getSupabase } from '@/lib/memory/supabase';
 import { ConversationContext, Message } from '@/types';
 
 // In-memory rate limiting (per IP)
@@ -46,7 +47,7 @@ export interface SandboxChatRequest {
   tenantId?: string;
   sessionId: string;
   leadName?: string;
-  useCustomPrompt?: boolean; // If true, uses tenant's custom prompt instead of default
+  useCustomPrompt?: boolean;
   history?: Array<{ role: 'user' | 'assistant'; content: string; timestamp: string }>;
 }
 
@@ -58,6 +59,62 @@ export interface SandboxChatResponse {
     reason: string;
     summary: string;
   };
+  toolCalled?: {
+    name: string;
+    result: unknown;
+  };
+}
+
+// Fetch tenant documents for context
+async function getTenantDocuments(tenantId: string): Promise<string | null> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('tenant_documents')
+      .select('name, content')
+      .eq('tenant_id', tenantId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(5); // Limit to prevent context overflow
+
+    if (error || !data || data.length === 0) return null;
+
+    // Format documents as context
+    const docsContext = data.map(d =>
+      `### ${d.name}\n${d.content}`
+    ).join('\n\n');
+
+    return `# KNOWLEDGE BASE\nUsa esta información para responder preguntas:\n\n${docsContext}`;
+  } catch (err) {
+    console.error('[Sandbox] Error fetching documents:', err);
+    return null;
+  }
+}
+
+// Fetch tenant tools definitions
+async function getTenantTools(tenantId: string) {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('tenant_tools')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .eq('is_active', true);
+
+    if (error || !data) return [];
+
+    return data.map(t => ({
+      name: t.name,
+      displayName: t.display_name,
+      description: t.description,
+      parameters: t.parameters,
+      executionType: t.execution_type,
+      mockResponse: t.mock_response
+    }));
+  } catch (err) {
+    console.error('[Sandbox] Error fetching tools:', err);
+    return [];
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -101,8 +158,18 @@ export async function POST(request: NextRequest) {
 
     // Load agent config for tenant (or use default)
     let agentConfig = null;
+    let knowledgeContext: string | null = null;
+    let tenantTools: Awaited<ReturnType<typeof getTenantTools>> = [];
+
     if (tenantId && tenantId !== 'demo') {
+      // Fetch agent config
       agentConfig = await getAgentConfig(tenantId);
+
+      // Fetch knowledge documents
+      knowledgeContext = await getTenantDocuments(tenantId);
+
+      // Fetch custom tools
+      tenantTools = await getTenantTools(tenantId);
 
       // If not using custom prompt, clear it so simpleAgent uses default
       if (agentConfig && !useCustomPrompt) {
@@ -111,6 +178,24 @@ export async function POST(request: NextRequest) {
           systemPrompt: null,
           fewShotExamples: [],
           productsCatalog: {}
+        };
+      }
+
+      // Add knowledge context to agent config
+      if (agentConfig && knowledgeContext) {
+        agentConfig = {
+          ...agentConfig,
+          knowledgeContext
+        };
+      } else if (knowledgeContext) {
+        agentConfig = { knowledgeContext };
+      }
+
+      // Add custom tools to agent config
+      if (tenantTools.length > 0) {
+        agentConfig = {
+          ...agentConfig,
+          customTools: tenantTools
         };
       }
     }
@@ -127,7 +212,7 @@ export async function POST(request: NextRequest) {
     const context: ConversationContext = {
       lead: {
         id: `sandbox-${sessionId}`,
-        phone: '+1234567890', // Fake phone for sandbox
+        phone: '+1234567890',
         name: leadName || 'Usuario Demo',
         stage: 'demo',
         createdAt: new Date(),
@@ -144,7 +229,7 @@ export async function POST(request: NextRequest) {
       totalConversations: 1
     };
 
-    console.log(`[Sandbox] Processing message for session ${sessionId}, tenant: ${tenantId || 'demo'}, customPrompt: ${useCustomPrompt}`);
+    console.log(`[Sandbox] Processing message for session ${sessionId}, tenant: ${tenantId || 'demo'}, customPrompt: ${useCustomPrompt}, tools: ${tenantTools.length}, hasKnowledge: ${!!knowledgeContext}`);
 
     // Call the real agent
     const result = await simpleAgent(

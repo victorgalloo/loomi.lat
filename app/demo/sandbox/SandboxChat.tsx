@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { SendHorizontal, RotateCcw, User, Bot, Loader2, ChevronDown, Sparkles, FileText } from 'lucide-react';
+import { SendHorizontal, RotateCcw, User, Bot, Loader2, ChevronDown, Sparkles, FileText, Settings2 } from 'lucide-react';
+import { SandboxToolsPanel } from './SandboxToolsPanel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -50,6 +51,8 @@ export function SandboxChat() {
   const [sessionId, setSessionId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [useCustomPrompt, setUseCustomPrompt] = useState(false);
+  const [isToolsPanelOpen, setIsToolsPanelOpen] = useState(false);
+  const [toolsVersion, setToolsVersion] = useState(0); // Increment to refresh
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Generate session ID on mount
@@ -238,16 +241,27 @@ export function SandboxChat() {
           <span className="text-sm font-mono text-muted">sandbox</span>
         </div>
 
-        {/* Right: Reset */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={resetConversation}
-          className="text-muted hover:text-foreground hover:bg-surface-2 h-8 px-3"
-        >
-          <RotateCcw className="mr-2 h-3.5 w-3.5" />
-          <span className="text-xs">reset</span>
-        </Button>
+        {/* Right: Tools + Reset */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsToolsPanelOpen(true)}
+            className="text-muted hover:text-foreground hover:bg-surface-2 h-8 px-3"
+          >
+            <Settings2 className="mr-2 h-3.5 w-3.5" />
+            <span className="text-xs">tools</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={resetConversation}
+            className="text-muted hover:text-foreground hover:bg-surface-2 h-8 px-3"
+          >
+            <RotateCcw className="mr-2 h-3.5 w-3.5" />
+            <span className="text-xs">reset</span>
+          </Button>
+        </div>
       </div>
 
       {/* Controls Bar */}
@@ -469,6 +483,14 @@ export function SandboxChat() {
           rate limit: 10 msg/min • sandbox mode
         </p>
       </form>
+
+      {/* Tools Panel */}
+      <SandboxToolsPanel
+        isOpen={isToolsPanelOpen}
+        onClose={() => setIsToolsPanelOpen(false)}
+        tenantId={selectedTenant?.id}
+        onUpdate={() => setToolsVersion(v => v + 1)}
+      />
     </div>
   );
 }

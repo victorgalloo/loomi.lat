@@ -35,6 +35,14 @@ export interface TenantCredentials {
   tenantId: string;
 }
 
+export interface FewShotExample {
+  id: string;
+  tags: string[];
+  context: string;
+  conversation: string;
+  whyItWorked: string;
+}
+
 export interface AgentConfig {
   id: string;
   tenantId: string;
@@ -47,6 +55,10 @@ export interface AgentConfig {
   autoReplyEnabled: boolean;
   greetingMessage: string | null;
   fallbackMessage: string | null;
+  // Custom prompt fields for multi-tenant personalization
+  systemPrompt: string | null;
+  fewShotExamples: FewShotExample[];
+  productsCatalog: Record<string, unknown>;
 }
 
 // Cache for tenant lookups (phone_number_id -> tenant_id)
@@ -159,7 +171,10 @@ export async function getAgentConfig(tenantId: string): Promise<AgentConfig | nu
       businessHours: {},
       autoReplyEnabled: true,
       greetingMessage: null,
-      fallbackMessage: null
+      fallbackMessage: null,
+      systemPrompt: null,
+      fewShotExamples: [],
+      productsCatalog: {}
     };
   }
 
@@ -174,7 +189,10 @@ export async function getAgentConfig(tenantId: string): Promise<AgentConfig | nu
     businessHours: data.business_hours,
     autoReplyEnabled: data.auto_reply_enabled,
     greetingMessage: data.greeting_message,
-    fallbackMessage: data.fallback_message
+    fallbackMessage: data.fallback_message,
+    systemPrompt: data.system_prompt || null,
+    fewShotExamples: data.few_shot_examples || [],
+    productsCatalog: data.products_catalog || {}
   };
 }
 
@@ -325,6 +343,9 @@ export async function updateAgentConfig(
   if (config.autoReplyEnabled !== undefined) updateData.auto_reply_enabled = config.autoReplyEnabled;
   if (config.greetingMessage !== undefined) updateData.greeting_message = config.greetingMessage;
   if (config.fallbackMessage !== undefined) updateData.fallback_message = config.fallbackMessage;
+  if (config.systemPrompt !== undefined) updateData.system_prompt = config.systemPrompt;
+  if (config.fewShotExamples !== undefined) updateData.few_shot_examples = config.fewShotExamples;
+  if (config.productsCatalog !== undefined) updateData.products_catalog = config.productsCatalog;
 
   // Upsert: create if not exists, update if exists
   const { data, error } = await supabase
@@ -354,7 +375,10 @@ export async function updateAgentConfig(
     businessHours: data.business_hours,
     autoReplyEnabled: data.auto_reply_enabled,
     greetingMessage: data.greeting_message,
-    fallbackMessage: data.fallback_message
+    fallbackMessage: data.fallback_message,
+    systemPrompt: data.system_prompt || null,
+    fewShotExamples: data.few_shot_examples || [],
+    productsCatalog: data.products_catalog || {}
   };
 }
 

@@ -381,3 +381,51 @@ export function getExamplesByCategory(category: string): ConversationExample[] {
   const tags = categoryTags[category] || [];
   return selectExamples(tags, 3);
 }
+
+/**
+ * Selects best examples from tenant-provided examples based on detected tags
+ */
+function selectExamplesFromTenant(
+  tags: string[],
+  tenantExamples: ConversationExample[],
+  maxExamples: number = 2
+): ConversationExample[] {
+  if (tags.length === 0 || tenantExamples.length === 0) return [];
+
+  const scored = tenantExamples.map(example => {
+    const matchCount = example.tags.filter(tag => tags.includes(tag)).length;
+    return { example, score: matchCount };
+  });
+
+  return scored
+    .filter(s => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, maxExamples)
+    .map(s => s.example);
+}
+
+/**
+ * Generates few-shot context from tenant-provided examples
+ */
+export function getFewShotContextFromTenant(
+  currentMessage: string,
+  recentMessages: Array<{ role: string; content: string }>,
+  tenantExamples: ConversationExample[]
+): string {
+  if (!tenantExamples || tenantExamples.length === 0) return '';
+
+  const userMessages = recentMessages
+    .filter(m => m.role === 'user')
+    .map(m => m.content)
+    .slice(-5);
+
+  const tags = detectTags(currentMessage, userMessages);
+  if (tags.length === 0) return '';
+
+  const examples = selectExamplesFromTenant(tags, tenantExamples, 2);
+  if (examples.length === 0) return '';
+
+  console.log(`[Few-Shot Tenant] Tags: ${tags.join(', ')}, Examples: ${examples.map(e => e.id).join(', ')}`);
+
+  return formatExamples(examples);
+}

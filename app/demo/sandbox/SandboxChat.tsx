@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { SendHorizontal, RotateCcw, User, Bot, Loader2, ChevronDown } from 'lucide-react';
+import { SendHorizontal, RotateCcw, User, Bot, Loader2, ChevronDown, Sparkles, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -29,6 +29,7 @@ interface StoredState {
   sessionId: string;
   tenantId: string;
   leadName: string;
+  useCustomPrompt: boolean;
 }
 
 // Suggestion chips for quick start
@@ -48,6 +49,7 @@ export function SandboxChat() {
   const [leadName, setLeadName] = useState('');
   const [sessionId, setSessionId] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [useCustomPrompt, setUseCustomPrompt] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Generate session ID on mount
@@ -58,6 +60,7 @@ export function SandboxChat() {
         const state: StoredState = JSON.parse(stored);
         setSessionId(state.sessionId);
         setLeadName(state.leadName);
+        setUseCustomPrompt(state.useCustomPrompt ?? false);
         setMessages(state.messages.map((m, i) => ({
           id: `restored-${i}`,
           role: m.role,
@@ -99,7 +102,9 @@ export function SandboxChat() {
           name: 'Sofi (Seguros)',
           companyName: 'NetBrokrs',
           businessName: 'NetBrokrs Seguros',
-          tone: 'friendly'
+          tone: 'friendly',
+          hasCustomPrompt: false,
+          customPromptPreview: null
         };
         setTenants([defaultTenant]);
         setSelectedTenant(defaultTenant);
@@ -119,10 +124,11 @@ export function SandboxChat() {
       })),
       sessionId,
       tenantId: selectedTenant?.id || 'demo',
-      leadName
+      leadName,
+      useCustomPrompt
     };
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [messages, sessionId, selectedTenant, leadName]);
+  }, [messages, sessionId, selectedTenant, leadName, useCustomPrompt]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -155,6 +161,7 @@ export function SandboxChat() {
         tenantId: selectedTenant?.id,
         sessionId,
         leadName: leadName || undefined,
+        useCustomPrompt: useCustomPrompt && selectedTenant?.hasCustomPrompt,
         history: [...messages, userMessage].map(m => ({
           role: m.role,
           content: m.content,
@@ -200,7 +207,7 @@ export function SandboxChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, selectedTenant, sessionId, leadName]);
+  }, [isLoading, messages, selectedTenant, sessionId, leadName, useCustomPrompt]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -219,6 +226,7 @@ export function SandboxChat() {
     setSessionId(crypto.randomUUID());
     sessionStorage.removeItem(STORAGE_KEY);
     setError(null);
+    // Keep useCustomPrompt setting when resetting conversation
   };
 
   return (
@@ -245,13 +253,21 @@ export function SandboxChat() {
                   key={tenant.id}
                   onClick={() => {
                     setSelectedTenant(tenant);
+                    setUseCustomPrompt(false); // Reset to default when changing tenant
                     resetConversation();
                   }}
                   className="flex flex-col items-start gap-1"
                 >
-                  <span className="font-medium">
-                    {tenant.businessName || tenant.name}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">
+                      {tenant.businessName || tenant.name}
+                    </span>
+                    {tenant.hasCustomPrompt && (
+                      <span className="px-1.5 py-0.5 text-[10px] font-medium bg-emerald-500/20 text-emerald-400 rounded">
+                        Custom
+                      </span>
+                    )}
+                  </div>
                   {tenant.companyName && (
                     <span className="text-xs text-muted-foreground">
                       {tenant.companyName}
@@ -261,6 +277,36 @@ export function SandboxChat() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Prompt Selector */}
+          {selectedTenant?.hasCustomPrompt && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setUseCustomPrompt(false)}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                  !useCustomPrompt
+                    ? 'bg-white text-black'
+                    : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                )}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Default
+              </button>
+              <button
+                onClick={() => setUseCustomPrompt(true)}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                  useCustomPrompt
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                )}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Custom
+              </button>
+            </div>
+          )}
 
           {/* Lead Name Input */}
           <div className="flex items-center gap-2">
@@ -301,6 +347,15 @@ export function SandboxChat() {
                   Prueba el agente de {selectedTenant?.businessName || 'seguros'} en tiempo real.
                   Los mensajes no se guardan permanentemente.
                 </p>
+                {selectedTenant?.hasCustomPrompt && (
+                  <p className="text-xs text-white/50">
+                    Prompt: {useCustomPrompt ? (
+                      <span className="text-emerald-400">Custom</span>
+                    ) : (
+                      <span className="text-white/70">Default (Seguros)</span>
+                    )}
+                  </p>
+                )}
               </div>
 
               {/* Suggestion Chips */}

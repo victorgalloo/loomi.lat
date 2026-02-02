@@ -46,6 +46,7 @@ export interface SandboxChatRequest {
   tenantId?: string;
   sessionId: string;
   leadName?: string;
+  useCustomPrompt?: boolean; // If true, uses tenant's custom prompt instead of default
   history?: Array<{ role: 'user' | 'assistant'; content: string; timestamp: string }>;
 }
 
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json() as SandboxChatRequest;
-    const { message, tenantId, sessionId, leadName, history } = body;
+    const { message, tenantId, sessionId, leadName, useCustomPrompt = false, history } = body;
 
     // Validate request
     if (!message || typeof message !== 'string') {
@@ -102,6 +103,16 @@ export async function POST(request: NextRequest) {
     let agentConfig = null;
     if (tenantId && tenantId !== 'demo') {
       agentConfig = await getAgentConfig(tenantId);
+
+      // If not using custom prompt, clear it so simpleAgent uses default
+      if (agentConfig && !useCustomPrompt) {
+        agentConfig = {
+          ...agentConfig,
+          systemPrompt: null,
+          fewShotExamples: [],
+          productsCatalog: {}
+        };
+      }
     }
 
     // Convert history to Message format
@@ -133,7 +144,7 @@ export async function POST(request: NextRequest) {
       totalConversations: 1
     };
 
-    console.log(`[Sandbox] Processing message for session ${sessionId}, tenant: ${tenantId || 'demo'}`);
+    console.log(`[Sandbox] Processing message for session ${sessionId}, tenant: ${tenantId || 'demo'}, customPrompt: ${useCustomPrompt}`);
 
     // Call the real agent
     const result = await simpleAgent(

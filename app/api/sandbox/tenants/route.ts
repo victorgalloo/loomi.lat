@@ -13,6 +13,8 @@ export interface SandboxTenant {
   companyName: string | null;
   businessName: string | null;
   tone: string;
+  hasCustomPrompt: boolean;
+  customPromptPreview: string | null;
 }
 
 export async function GET() {
@@ -44,7 +46,7 @@ export async function GET() {
 
     const { data: configs, error: configsError } = await supabase
       .from('agent_configs')
-      .select('tenant_id, business_name, tone')
+      .select('tenant_id, business_name, tone, system_prompt')
       .in('tenant_id', tenantIds);
 
     if (configsError) {
@@ -57,13 +59,19 @@ export async function GET() {
     );
 
     // Build response
-    const result: SandboxTenant[] = (tenants || []).map(t => ({
-      id: t.id,
-      name: t.name,
-      companyName: t.company_name,
-      businessName: configMap.get(t.id)?.business_name || null,
-      tone: configMap.get(t.id)?.tone || 'professional'
-    }));
+    const result: SandboxTenant[] = (tenants || []).map(t => {
+      const config = configMap.get(t.id);
+      const systemPrompt = config?.system_prompt as string | null;
+      return {
+        id: t.id,
+        name: t.name,
+        companyName: t.company_name,
+        businessName: config?.business_name || null,
+        tone: config?.tone || 'professional',
+        hasCustomPrompt: !!systemPrompt,
+        customPromptPreview: systemPrompt ? systemPrompt.substring(0, 100) + '...' : null
+      };
+    });
 
     // Add a default "Demo" option for when no tenants exist
     if (result.length === 0) {
@@ -72,7 +80,9 @@ export async function GET() {
         name: 'Sofi (Seguros)',
         companyName: 'NetBrokrs',
         businessName: 'NetBrokrs Seguros',
-        tone: 'friendly'
+        tone: 'friendly',
+        hasCustomPrompt: false,
+        customPromptPreview: null
       });
     }
 

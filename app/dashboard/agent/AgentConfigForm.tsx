@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useTheme } from '@/components/dashboard/ThemeProvider';
 
 interface AgentConfig {
@@ -180,20 +181,34 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
             <span className={`text-sm ${saved ? (isDark ? 'text-emerald-400' : 'text-emerald-600') : 'text-transparent'}`}>
               Guardado
             </span>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className={`
-                px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                disabled:opacity-50
-                ${isDark
-                  ? 'bg-white text-black hover:bg-zinc-200'
-                  : 'bg-zinc-900 text-white hover:bg-zinc-800'
-                }
-              `}
-            >
-              {isSaving ? 'Guardando...' : 'Guardar'}
-            </button>
+            <div className="flex gap-3">
+              <Link
+                href="/dashboard/agent/prompt"
+                className={`
+                  px-4 py-2 text-sm font-medium rounded-lg transition-colors
+                  ${isDark
+                    ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                  }
+                `}
+              >
+                Prompt Avanzado
+              </Link>
+              <button
+                type="submit"
+                disabled={isSaving}
+                className={`
+                  px-4 py-2 text-sm font-medium rounded-lg transition-colors
+                  disabled:opacity-50
+                  ${isDark
+                    ? 'bg-white text-black hover:bg-zinc-200'
+                    : 'bg-zinc-900 text-white hover:bg-zinc-800'
+                  }
+                `}
+              >
+                {isSaving ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
           </div>
         </div>
       </form>

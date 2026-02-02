@@ -18,7 +18,7 @@ import { createCheckoutSession } from '@/lib/stripe/checkout';
 import { generateReasoningFast, formatReasoningForPrompt } from './reasoning';
 import { getSentimentInstruction } from './sentiment';
 import { getIndustryPromptSection } from './industry';
-import { getFewShotContext } from './few-shot';
+import { getFewShotContext, getFewShotContextFromTenant } from './few-shot';
 import { getSellerStrategy } from './multi-agent';
 
 // Keyword sets for state detection
@@ -309,6 +309,15 @@ export interface SimpleAgentResult {
   saidLater?: boolean;  // User said "later" - trigger follow-up
 }
 
+// Few-shot example structure for tenant-specific examples
+interface FewShotExample {
+  id: string;
+  tags: string[];
+  context: string;
+  conversation: string;
+  whyItWorked: string;
+}
+
 // Optional agent configuration for multi-tenant customization
 interface AgentConfigOptions {
   businessName?: string | null;
@@ -318,6 +327,10 @@ interface AgentConfigOptions {
   customInstructions?: string | null;
   greetingMessage?: string | null;
   fallbackMessage?: string | null;
+  // Custom prompt fields
+  systemPrompt?: string | null;
+  fewShotExamples?: FewShotExample[];
+  productsCatalog?: Record<string, unknown>;
 }
 
 export async function simpleAgent(
@@ -340,7 +353,10 @@ export async function simpleAgent(
   // ============================================
   // STEP 0: Get Few-Shot Context (ejemplos relevantes)
   // ============================================
-  const fewShotContext = getFewShotContext(message, history);
+  // Use tenant's custom few-shot examples if available, otherwise use default
+  const fewShotContext = agentConfig?.fewShotExamples?.length
+    ? getFewShotContextFromTenant(message, history, agentConfig.fewShotExamples)
+    : getFewShotContext(message, history);
   if (fewShotContext) {
     console.log('=== FEW-SHOT CONTEXT ADDED ===');
   }
@@ -412,10 +428,12 @@ export async function simpleAgent(
     contextParts.push(`Info previa: ${context.memory}`);
   }
 
-  let systemWithContext = SYSTEM_PROMPT;
+  // Use tenant's custom system prompt if available, otherwise fall back to default insurance prompt
+  const basePrompt = agentConfig?.systemPrompt || SYSTEM_PROMPT;
+  let systemWithContext = basePrompt;
 
-  // Add industry-specific context
-  if (industrySection) {
+  // Add industry-specific context (only if using default prompt)
+  if (!agentConfig?.systemPrompt && industrySection) {
     systemWithContext += `\n\n${industrySection}`;
   }
 

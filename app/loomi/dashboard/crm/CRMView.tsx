@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, Plus, Search, Users } from 'lucide-react';
+import { Plus, Search, Users, X } from 'lucide-react';
 import { KanbanBoard } from '@/components/dashboard/crm';
 import { Lead } from '@/components/dashboard/crm/LeadCard';
 import { PipelineStage } from '@/components/dashboard/crm/KanbanColumn';
@@ -13,9 +12,19 @@ interface CRMViewProps {
   leads: Lead[];
 }
 
-export default function CRMView({ stages, leads }: CRMViewProps) {
+export default function CRMView({ stages, leads: initialLeads }: CRMViewProps) {
   const { isDark: isDarkMode } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
+  const [leads, setLeads] = useState(initialLeads);
+  const [showModal, setShowModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newLead, setNewLead] = useState({
+    name: '',
+    phone: '',
+    companyName: '',
+    contactEmail: '',
+    dealValue: ''
+  });
 
   const filteredLeads = searchQuery
     ? leads.filter(lead =>
@@ -35,6 +44,48 @@ export default function CRMView({ stages, leads }: CRMViewProps) {
     if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
     if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
     return `$${value.toLocaleString()}`;
+  };
+
+  const handleCreateLead = async () => {
+    if (!newLead.name || !newLead.phone) return;
+
+    setIsCreating(true);
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newLead.name,
+          phone: newLead.phone,
+          company_name: newLead.companyName || null,
+          contact_email: newLead.contactEmail || null,
+          deal_value: newLead.dealValue ? parseFloat(newLead.dealValue) : null,
+          stage: 'Nuevo'
+        })
+      });
+
+      if (response.ok) {
+        const created = await response.json();
+        setLeads([{
+          id: created.id,
+          name: created.name,
+          phone: created.phone,
+          companyName: created.company_name,
+          contactEmail: created.contact_email,
+          dealValue: created.deal_value,
+          stage: created.stage || 'Nuevo',
+          priority: 'medium',
+          lastActivityAt: created.created_at,
+          conversationCount: 0
+        }, ...leads]);
+        setShowModal(false);
+        setNewLead({ name: '', phone: '', companyName: '', contactEmail: '', dealValue: '' });
+      }
+    } catch (error) {
+      console.error('Error creating lead:', error);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -75,6 +126,7 @@ export default function CRMView({ stages, leads }: CRMViewProps) {
 
           {/* Add Lead */}
           <button
+            onClick={() => setShowModal(true)}
             className={`
               flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium
               transition-colors duration-150
@@ -157,6 +209,7 @@ export default function CRMView({ stages, leads }: CRMViewProps) {
             Los leads aparecerán cuando recibas mensajes por WhatsApp
           </p>
           <button
+            onClick={() => setShowModal(true)}
             className={`
               mt-4 px-4 py-2 rounded-lg text-sm font-medium
               transition-colors duration-150
@@ -168,6 +221,161 @@ export default function CRMView({ stages, leads }: CRMViewProps) {
           >
             Agregar primer lead
           </button>
+        </div>
+      )}
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowModal(false)}
+          />
+          <div className={`
+            relative w-full max-w-md mx-4 rounded-xl shadow-2xl
+            ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}
+          `}>
+            {/* Modal Header */}
+            <div className={`flex items-center justify-between px-5 py-4 border-b ${isDarkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
+              <h2 className={`text-base font-semibold ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                Nuevo Lead
+              </h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className={`p-1 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-100 text-zinc-500'}`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-5 py-4 space-y-4">
+              <div>
+                <label className={`block text-xs font-medium mb-1.5 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                  Nombre *
+                </label>
+                <input
+                  type="text"
+                  value={newLead.name}
+                  onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
+                  placeholder="Juan Pérez"
+                  className={`
+                    w-full px-3 py-2 rounded-lg text-sm outline-none
+                    ${isDarkMode
+                      ? 'bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:border-zinc-600'
+                      : 'bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400'
+                    }
+                  `}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-xs font-medium mb-1.5 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                  Teléfono *
+                </label>
+                <input
+                  type="tel"
+                  value={newLead.phone}
+                  onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
+                  placeholder="+52 55 1234 5678"
+                  className={`
+                    w-full px-3 py-2 rounded-lg text-sm outline-none
+                    ${isDarkMode
+                      ? 'bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:border-zinc-600'
+                      : 'bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400'
+                    }
+                  `}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-xs font-medium mb-1.5 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                  Empresa
+                </label>
+                <input
+                  type="text"
+                  value={newLead.companyName}
+                  onChange={(e) => setNewLead({ ...newLead, companyName: e.target.value })}
+                  placeholder="Acme Inc."
+                  className={`
+                    w-full px-3 py-2 rounded-lg text-sm outline-none
+                    ${isDarkMode
+                      ? 'bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:border-zinc-600'
+                      : 'bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400'
+                    }
+                  `}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-xs font-medium mb-1.5 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={newLead.contactEmail}
+                  onChange={(e) => setNewLead({ ...newLead, contactEmail: e.target.value })}
+                  placeholder="juan@empresa.com"
+                  className={`
+                    w-full px-3 py-2 rounded-lg text-sm outline-none
+                    ${isDarkMode
+                      ? 'bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:border-zinc-600'
+                      : 'bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400'
+                    }
+                  `}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-xs font-medium mb-1.5 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                  Valor del deal
+                </label>
+                <input
+                  type="number"
+                  value={newLead.dealValue}
+                  onChange={(e) => setNewLead({ ...newLead, dealValue: e.target.value })}
+                  placeholder="50000"
+                  className={`
+                    w-full px-3 py-2 rounded-lg text-sm outline-none
+                    ${isDarkMode
+                      ? 'bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:border-zinc-600'
+                      : 'bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400'
+                    }
+                  `}
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className={`flex justify-end gap-2 px-5 py-4 border-t ${isDarkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
+              <button
+                onClick={() => setShowModal(false)}
+                className={`
+                  px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                  ${isDarkMode
+                    ? 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                    : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'
+                  }
+                `}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreateLead}
+                disabled={!newLead.name || !newLead.phone || isCreating}
+                className={`
+                  px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  ${isDarkMode
+                    ? 'bg-white text-black hover:bg-zinc-200'
+                    : 'bg-zinc-900 text-white hover:bg-zinc-800'
+                  }
+                `}
+              >
+                {isCreating ? 'Creando...' : 'Crear Lead'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

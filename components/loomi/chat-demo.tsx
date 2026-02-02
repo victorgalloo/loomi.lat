@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { CheckCheck, Send, Loader2 } from 'lucide-react';
 
 interface Message {
@@ -12,12 +12,18 @@ interface Message {
   time: string;
 }
 
-// Suggestion chips for quick start
-const SUGGESTIONS = [
-  'Hola, quiero info',
-  '¿Cuánto cuesta?',
-  '¿Cómo funciona?'
-];
+// Scripted responses for suggestion buttons (instant, no API call)
+const SCRIPTED_RESPONSES: Record<string, string> = {
+  'Hola, quiero info': '¡Hola! Qué bueno que escribes. Loomi automatiza tus ventas por WhatsApp con IA. ¿Cuántos mensajes recibes al día aproximadamente?',
+  '¿Cuánto cuesta?': 'El plan Growth es $349 USD/mes e incluye hasta 300 conversaciones diarias. ¿Te gustaría ver una demo personalizada?',
+  '¿Cómo funciona?': 'Conectas tu WhatsApp Business, configuras tu agente con tu info de productos, y Loomi responde 24/7 calificando leads y agendando citas. ¿Quieres probarlo?',
+};
+
+const SUGGESTIONS = Object.keys(SCRIPTED_RESPONSES);
+
+function getTime() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 
 export function ChatDemo() {
   const [messages, setMessages] = useState<Message[]>([
@@ -25,32 +31,65 @@ export function ChatDemo() {
       id: 'welcome',
       type: 'bot',
       text: 'Hola, gracias por escribir. ¿Buscas automatizar tus ventas por WhatsApp?',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      time: getTime()
     }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId] = useState(() => crypto.randomUUID());
+  const [sessionId] = useState(() => typeof window !== 'undefined' ? crypto.randomUUID() : 'ssr');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
 
-  const sendMessage = useCallback(async (text: string) => {
+  // Handle scripted suggestion (instant response)
+  const handleSuggestion = (suggestion: string) => {
+    if (isLoading) return;
+
+    const userMsg: Message = {
+      id: `user-${Date.now()}`,
+      type: 'user',
+      text: suggestion,
+      time: getTime()
+    };
+
+    setMessages(prev => [...prev, userMsg]);
+    setIsLoading(true);
+
+    setTimeout(() => {
+      const botMsg: Message = {
+        id: `bot-${Date.now()}`,
+        type: 'bot',
+        text: SCRIPTED_RESPONSES[suggestion],
+        time: getTime()
+      };
+      setMessages(prev => [...prev, botMsg]);
+      setIsLoading(false);
+    }, 600 + Math.random() * 400);
+  };
+
+  // Handle real message (API call)
+  const handleRealMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
 
-    const userMessage: Message = {
+    const userMsg: Message = {
       id: `user-${Date.now()}`,
       type: 'user',
       text: text.trim(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      time: getTime()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    // Build history before adding new message
+    const history = [...messages, userMsg].map(m => ({
+      role: m.type === 'user' ? 'user' as const : 'assistant' as const,
+      content: m.text,
+      timestamp: new Date().toISOString()
+    }));
+
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsLoading(true);
 
@@ -62,47 +101,52 @@ export function ChatDemo() {
           message: text.trim(),
           sessionId,
           tenantId: 'demo',
-          history: [...messages, userMessage].map(m => ({
-            role: m.type === 'user' ? 'user' : 'assistant',
-            content: m.text,
-            timestamp: new Date().toISOString()
-          }))
+          history
         })
       });
 
       const data = await res.json();
+      console.log('[ChatDemo] API response:', data);
 
       if (res.ok && data.response) {
-        const botMessage: Message = {
+        const botMsg: Message = {
           id: `bot-${Date.now()}`,
           type: 'bot',
           text: data.response,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          time: getTime()
         };
-        setMessages(prev => [...prev, botMessage]);
+        setMessages(prev => [...prev, botMsg]);
+      } else {
+        console.error('[ChatDemo] API error:', data);
       }
     } catch (err) {
-      console.error('Chat error:', err);
+      console.error('[ChatDemo] Fetch error:', err);
+      const errorMsg: Message = {
+        id: `bot-${Date.now()}`,
+        type: 'bot',
+        text: 'Perdón, tuve un problema. ¿Me repites?',
+        time: getTime()
+      };
+      setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, sessionId]);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    sendMessage(input);
-  };
+    const text = input.trim();
+    if (!text) return;
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage(input);
+    if (SCRIPTED_RESPONSES[text]) {
+      handleSuggestion(text);
+    } else {
+      handleRealMessage(text);
     }
   };
 
   return (
     <div className="w-full max-w-md mx-auto">
-      {/* Terminal-style chat container */}
       <div className="bg-surface rounded-xl border border-border overflow-hidden shadow-elevated">
         {/* Terminal header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-surface-2">
@@ -119,10 +163,7 @@ export function ChatDemo() {
         </div>
 
         {/* Chat area */}
-        <div
-          ref={scrollRef}
-          className="h-[350px] p-4 overflow-y-auto bg-background"
-        >
+        <div ref={scrollRef} className="h-[350px] p-4 overflow-y-auto bg-background">
           <div className="space-y-3">
             <AnimatePresence mode="popLayout">
               {messages.map((message) => (
@@ -132,10 +173,7 @@ export function ChatDemo() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className={cn(
-                    'flex',
-                    message.type === 'user' ? 'justify-end' : 'justify-start'
-                  )}
+                  className={cn('flex', message.type === 'user' ? 'justify-end' : 'justify-start')}
                 >
                   <div
                     className={cn(
@@ -150,21 +188,15 @@ export function ChatDemo() {
                       'flex items-center gap-1 mt-1.5',
                       message.type === 'user' ? 'justify-end' : 'justify-start'
                     )}>
-                      <span className={cn(
-                        'text-[10px]',
-                        message.type === 'user' ? 'opacity-50' : 'text-muted'
-                      )}>
+                      <span className={cn('text-[10px]', message.type === 'user' ? 'opacity-50' : 'text-muted')}>
                         {message.time}
                       </span>
-                      {message.type === 'user' && (
-                        <CheckCheck className="w-3 h-3 opacity-50" />
-                      )}
+                      {message.type === 'user' && <CheckCheck className="w-3 h-3 opacity-50" />}
                     </div>
                   </div>
                 </motion.div>
               ))}
 
-              {/* Typing indicator */}
               {isLoading && (
                 <motion.div
                   key="typing"
@@ -183,7 +215,6 @@ export function ChatDemo() {
               )}
             </AnimatePresence>
 
-            {/* Suggestions (only when few messages) */}
             {messages.length <= 1 && !isLoading && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -194,7 +225,7 @@ export function ChatDemo() {
                 {SUGGESTIONS.map((suggestion) => (
                   <button
                     key={suggestion}
-                    onClick={() => sendMessage(suggestion)}
+                    onClick={() => handleSuggestion(suggestion)}
                     className="px-3 py-1.5 text-xs font-mono text-muted border border-border rounded-md hover:border-muted hover:text-foreground transition-colors bg-surface"
                   >
                     {suggestion}
@@ -205,14 +236,14 @@ export function ChatDemo() {
           </div>
         </div>
 
-        {/* Input area */}
+        {/* Input */}
         <form onSubmit={handleSubmit} className="p-4 border-t border-border bg-surface-2">
           <div className="flex gap-3">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmit(e)}
               placeholder="$ escribe un mensaje..."
               disabled={isLoading}
               className="flex-1 bg-background border border-border rounded-lg px-4 py-3 text-foreground text-sm placeholder-muted focus:outline-none focus:border-muted transition-colors font-mono"
@@ -220,7 +251,7 @@ export function ChatDemo() {
             <button
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="w-12 h-12 rounded-lg bg-foreground flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+              className="w-12 h-12 rounded-lg bg-foreground flex items-center justify-center disabled:opacity-50 hover:opacity-90 transition-opacity"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 text-background animate-spin" />

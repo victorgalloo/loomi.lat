@@ -67,6 +67,11 @@ export function Navbar() {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
+            <Link href="/login">
+              <Button variant="secondary" size="sm" className="font-mono">
+                login
+              </Button>
+            </Link>
             <a
               href={WHATSAPP_LINK}
               target="_blank"
@@ -112,7 +117,12 @@ export function Navbar() {
                   ./{link.label}
                 </Link>
               ))}
-              <div className="pt-3 border-t border-border">
+              <div className="pt-3 border-t border-border space-y-2">
+                <Link href="/dashboard" className="block" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="secondary" size="md" className="w-full font-mono">
+                    login
+                  </Button>
+                </Link>
                 <a
                   href={WHATSAPP_LINK}
                   target="_blank"

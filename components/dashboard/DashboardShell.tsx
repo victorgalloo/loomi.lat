@@ -4,7 +4,6 @@ import { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { useTheme } from './ThemeProvider';
 import { LogOut, Sun, Moon } from 'lucide-react';
 
 interface DashboardShellProps {
@@ -14,18 +13,24 @@ interface DashboardShellProps {
 }
 
 const navItems = [
-  { href: '/dashboard', label: 'Overview' },
-  { href: '/dashboard/crm', label: 'Pipeline' },
-  { href: '/dashboard/conversations', label: 'Inbox' },
-  { href: '/dashboard/agent', label: 'Agente' },
-  { href: '/dashboard/settings', label: 'Settings' },
+  { href: '/dashboard', label: 'overview' },
+  { href: '/dashboard/crm', label: 'pipeline' },
+  { href: '/dashboard/conversations', label: 'inbox' },
+  { href: '/dashboard/agent', label: 'agente' },
+  { href: '/dashboard/settings', label: 'settings' },
 ];
 
-export default function DashboardShell({ children, userName, isConnected }: DashboardShellProps) {
+export default function DashboardShell({ children, isConnected }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
-  const { isDark, toggleTheme } = useTheme();
+
+  const toggleTheme = () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('loomi-theme', next);
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -34,19 +39,21 @@ export default function DashboardShell({ children, userName, isConnected }: Dash
   };
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-black' : 'bg-white'}`}>
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className={`
-        fixed top-0 left-0 right-0 z-50 h-12 border-b
-        ${isDark ? 'bg-black border-zinc-900' : 'bg-white border-zinc-100'}
-      `}>
+      <header className="fixed top-0 left-0 right-0 z-50 h-12 border-b bg-background border-border">
         <div className="h-full max-w-6xl mx-auto px-4 flex items-center justify-between">
           {/* Logo */}
           <Link
             href="/dashboard"
-            className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}
+            className="flex items-center gap-2"
           >
-            loomi
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-terminal-red" />
+              <div className="w-2 h-2 rounded-full bg-terminal-yellow" />
+              <div className="w-2 h-2 rounded-full bg-terminal-green" />
+            </div>
+            <span className="text-sm font-semibold text-foreground font-mono">loomi_</span>
           </Link>
 
           {/* Nav */}
@@ -59,15 +66,13 @@ export default function DashboardShell({ children, userName, isConnected }: Dash
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`
-                    text-sm transition-colors
-                    ${isActive
-                      ? isDark ? 'text-white' : 'text-zinc-900'
-                      : isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'
-                    }
-                  `}
+                  className={`text-sm transition-colors font-mono ${
+                    isActive
+                      ? 'text-foreground'
+                      : 'text-muted hover:text-foreground'
+                  }`}
                 >
-                  {item.label}
+                  ./{item.label}
                 </Link>
               );
             })}
@@ -76,22 +81,23 @@ export default function DashboardShell({ children, userName, isConnected }: Dash
           {/* Right */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-              <span className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                {isConnected ? 'Live' : 'Offline'}
+              <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-terminal-green' : 'bg-terminal-yellow'}`} />
+              <span className="text-xs text-muted font-mono">
+                {isConnected ? 'live' : 'offline'}
               </span>
             </div>
 
             <button
               onClick={toggleTheme}
-              className={`p-1.5 rounded transition-colors ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'}`}
+              className="p-1.5 rounded transition-colors text-muted hover:text-foreground"
             >
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              <Sun className="w-4 h-4 hidden dark:block" />
+              <Moon className="w-4 h-4 block dark:hidden" />
             </button>
 
             <button
               onClick={handleLogout}
-              className={`p-1.5 rounded transition-colors ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'}`}
+              className="p-1.5 rounded transition-colors text-muted hover:text-foreground"
               title="Salir"
             >
               <LogOut className="w-4 h-4" />
@@ -101,10 +107,7 @@ export default function DashboardShell({ children, userName, isConnected }: Dash
       </header>
 
       {/* Mobile Nav */}
-      <nav className={`
-        md:hidden fixed bottom-0 left-0 right-0 z-50 border-t
-        ${isDark ? 'bg-black border-zinc-900' : 'bg-white border-zinc-100'}
-      `}>
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-background border-border">
         <div className="flex items-center justify-around py-3">
           {navItems.slice(0, 4).map((item) => {
             const isActive = pathname === item.href ||
@@ -114,13 +117,11 @@ export default function DashboardShell({ children, userName, isConnected }: Dash
               <Link
                 key={item.href}
                 href={item.href}
-                className={`
-                  text-xs font-medium
-                  ${isActive
-                    ? isDark ? 'text-white' : 'text-zinc-900'
-                    : isDark ? 'text-zinc-600' : 'text-zinc-400'
-                  }
-                `}
+                className={`text-xs font-medium font-mono ${
+                  isActive
+                    ? 'text-foreground'
+                    : 'text-muted'
+                }`}
               >
                 {item.label}
               </Link>

@@ -7,6 +7,83 @@ import Image from 'next/image';
 
 const WHATSAPP_LINK = 'https://api.whatsapp.com/send?phone=529849800629&text=Hola%20Loomi%20quiero%20una%20demo';
 
+// WhatsApp chat demo component
+export function HeroDemo() {
+  const messages = [
+    { role: 'user', text: 'Hola, vi su anuncio. ¿Cuánto cuesta el seguro de vida?' },
+    { role: 'agent', text: '¡Hola! 👋 Me da gusto que escribas. Para cotizarte, ¿me podrías decir tu edad?' },
+    { role: 'user', text: '34 años' },
+    { role: 'agent', text: 'Perfecto. Un plan básico desde $199/mes. ¿Te gustaría agendar una llamada de 15 min para ver opciones?' },
+  ];
+
+  return (
+    <div className="max-w-lg mx-auto">
+      <div className="rounded-2xl border border-border bg-surface overflow-hidden">
+        {/* Terminal header */}
+        <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-terminal-red" />
+            <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
+            <div className="w-3 h-3 rounded-full bg-terminal-green" />
+          </div>
+          <span className="text-xs text-muted font-mono ml-2">whatsapp_demo</span>
+        </div>
+
+        {/* Messages */}
+        <div className="p-4 space-y-3">
+          {messages.map((msg, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.3 }}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-[80%] px-4 py-2 rounded-xl text-sm ${
+                  msg.role === 'user'
+                    ? 'bg-foreground text-background'
+                    : 'bg-surface-2 text-foreground border border-border'
+                }`}
+              >
+                {msg.text}
+              </div>
+            </motion.div>
+          ))}
+
+          {/* Typing indicator */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 1.2 }}
+            className="flex justify-start"
+          >
+            <div className="bg-surface-2 border border-border px-4 py-2 rounded-xl flex items-center gap-1">
+              <motion.span
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1, repeat: Infinity }}
+                className="w-2 h-2 rounded-full bg-terminal-green"
+              />
+              <motion.span
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+                className="w-2 h-2 rounded-full bg-terminal-green"
+              />
+              <motion.span
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+                className="w-2 h-2 rounded-full bg-terminal-green"
+              />
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Hero() {
   return (
     <section className="relative min-h-screen flex flex-col justify-center items-center overflow-hidden bg-background">

@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useTheme } from '@/components/dashboard/ThemeProvider';
 
 interface SettingsViewProps {
   tenant: {
@@ -20,8 +19,6 @@ interface SettingsViewProps {
 }
 
 export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
-  const { isDark } = useTheme();
-
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('es-MX', {
       year: 'numeric',
@@ -31,10 +28,10 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
   };
 
   const Row = ({ label, value, action }: { label: string; value: string; action?: React.ReactNode }) => (
-    <div className={`flex items-center justify-between py-3 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-100'}`}>
-      <span className={`text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{label}</span>
+    <div className="flex items-center justify-between py-3 border-b border-border">
+      <span className="text-sm text-muted font-mono">{label}</span>
       <div className="flex items-center gap-3">
-        <span className={`text-sm ${isDark ? 'text-zinc-200' : 'text-zinc-900'}`}>{value}</span>
+        <span className="text-sm text-foreground">{value}</span>
         {action}
       </div>
     </div>
@@ -43,39 +40,39 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
   return (
     <div className="max-w-xl mx-auto px-6 py-12">
       <div className="mb-10">
-        <h1 className={`text-xl font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-          Settings
+        <h1 className="text-xl font-medium text-foreground font-mono">
+          ./settings_
         </h1>
-        <p className={`text-sm mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+        <p className="text-sm mt-1 text-muted">
           Administra tu cuenta
         </p>
       </div>
 
       {/* Account */}
       <section className="mb-10">
-        <h2 className={`text-xs font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-          Cuenta
+        <h2 className="text-xs font-medium uppercase tracking-wider mb-4 text-muted font-mono">
+          cuenta
         </h2>
         <div>
-          <Row label="Nombre" value={tenant.name} />
-          <Row label="Email" value={tenant.email} />
-          {tenant.companyName && <Row label="Empresa" value={tenant.companyName} />}
-          <Row label="Miembro desde" value={formatDate(tenant.createdAt)} />
+          <Row label="nombre" value={tenant.name} />
+          <Row label="email" value={tenant.email} />
+          {tenant.companyName && <Row label="empresa" value={tenant.companyName} />}
+          <Row label="miembro desde" value={formatDate(tenant.createdAt)} />
         </div>
       </section>
 
       {/* Plan */}
       <section className="mb-10">
-        <h2 className={`text-xs font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-          Plan
+        <h2 className="text-xs font-medium uppercase tracking-wider mb-4 text-muted font-mono">
+          plan
         </h2>
         <div>
           <Row
-            label="Plan actual"
+            label="plan actual"
             value={tenant.subscriptionTier.charAt(0).toUpperCase() + tenant.subscriptionTier.slice(1)}
           />
           <Row
-            label="Estado"
+            label="estado"
             value={tenant.subscriptionStatus === 'active' ? 'Activo' : tenant.subscriptionStatus}
           />
         </div>
@@ -83,51 +80,45 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
 
       {/* WhatsApp */}
       <section className="mb-10">
-        <h2 className={`text-xs font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-          WhatsApp
+        <h2 className="text-xs font-medium uppercase tracking-wider mb-4 text-muted font-mono">
+          whatsapp
         </h2>
         <div>
           <Row
-            label="Estado"
+            label="estado"
             value={whatsapp.connected ? 'Conectado' : 'Desconectado'}
             action={
               <Link
                 href="/dashboard/connect"
-                className={`text-xs ${isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900'}`}
+                className="text-xs text-muted hover:text-foreground transition-colors"
               >
                 {whatsapp.connected ? 'Gestionar' : 'Conectar'}
               </Link>
             }
           />
           {whatsapp.connected && whatsapp.phoneNumber && (
-            <Row label="Número" value={whatsapp.phoneNumber} />
+            <Row label="número" value={whatsapp.phoneNumber} />
           )}
           {whatsapp.connected && whatsapp.businessName && (
-            <Row label="Negocio" value={whatsapp.businessName} />
+            <Row label="negocio" value={whatsapp.businessName} />
           )}
         </div>
       </section>
 
       {/* Danger */}
       <section>
-        <h2 className={`text-xs font-medium uppercase tracking-wider mb-4 text-red-500`}>
-          Zona de peligro
+        <h2 className="text-xs font-medium uppercase tracking-wider mb-4 text-terminal-red font-mono">
+          zona de peligro
         </h2>
-        <div className={`flex items-center justify-between py-3`}>
+        <div className="flex items-center justify-between py-3">
           <div>
-            <p className={`text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>Eliminar cuenta</p>
-            <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>Esta acción es irreversible</p>
+            <p className="text-sm text-foreground">Eliminar cuenta</p>
+            <p className="text-xs text-muted">Esta acción es irreversible</p>
           </div>
           <button
-            className={`
-              px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
-              ${isDark
-                ? 'text-red-400 bg-red-500/10 hover:bg-red-500/20'
-                : 'text-red-600 bg-red-50 hover:bg-red-100'
-              }
-            `}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors text-terminal-red bg-terminal-red/10 hover:bg-terminal-red/20 font-mono"
           >
-            Eliminar
+            eliminar
           </button>
         </div>
       </section>

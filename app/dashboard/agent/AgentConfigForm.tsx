@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useTheme } from '@/components/dashboard/ThemeProvider';
 
 interface AgentConfig {
   businessName: string | null;
@@ -19,7 +18,6 @@ interface AgentConfigFormProps {
 }
 
 export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFormProps) {
-  const { isDark } = useTheme();
   const [config, setConfig] = useState<AgentConfig>(initialConfig);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -44,22 +42,13 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
-  const labelClass = `block text-xs font-medium mb-2 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`;
-  const inputClass = `
-    w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors
-    ${isDark
-      ? 'bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-700'
-      : 'bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-300'
-    }
-  `;
-
   return (
     <div className="max-w-xl mx-auto px-6 py-12">
       <div className="mb-10">
-        <h1 className={`text-xl font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-          Agente
+        <h1 className="text-xl font-medium text-foreground font-mono">
+          ./agente_
         </h1>
-        <p className={`text-sm mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+        <p className="text-sm mt-1 text-muted">
           Configura cómo responde tu agente AI
         </p>
       </div>
@@ -68,145 +57,123 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
         {/* Business Info */}
         <div className="space-y-4">
           <div>
-            <label className={labelClass}>Nombre del negocio</label>
+            <label className="block text-xs font-medium mb-2 text-muted font-mono">nombre del negocio</label>
             <input
               type="text"
               value={config.businessName || ''}
               onChange={(e) => handleChange('businessName', e.target.value)}
               placeholder="Ej: Clínica Dental Sonrisa"
-              className={inputClass}
+              className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
             />
           </div>
 
           <div>
-            <label className={labelClass}>Descripción</label>
+            <label className="block text-xs font-medium mb-2 text-muted font-mono">descripción</label>
             <textarea
               value={config.businessDescription || ''}
               onChange={(e) => handleChange('businessDescription', e.target.value)}
               rows={3}
               placeholder="Qué hace tu negocio..."
-              className={inputClass}
+              className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
             />
           </div>
 
           <div>
-            <label className={labelClass}>Productos o servicios</label>
+            <label className="block text-xs font-medium mb-2 text-muted font-mono">productos o servicios</label>
             <textarea
               value={config.productsServices || ''}
               onChange={(e) => handleChange('productsServices', e.target.value)}
               rows={3}
               placeholder="Lista tus productos o servicios principales..."
-              className={inputClass}
+              className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
             />
           </div>
         </div>
 
         {/* Tone */}
-        <div className={`pt-6 border-t ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
-          <label className={labelClass}>Tono</label>
+        <div className="pt-6 border-t border-border">
+          <label className="block text-xs font-medium mb-2 text-muted font-mono">tono</label>
           <div className="flex flex-wrap gap-2 mt-2">
             {(['professional', 'friendly', 'casual', 'formal'] as const).map((tone) => (
               <button
                 key={tone}
                 type="button"
                 onClick={() => handleChange('tone', tone)}
-                className={`
-                  px-3 py-1.5 text-sm rounded-lg transition-colors
-                  ${config.tone === tone
-                    ? isDark
-                      ? 'bg-white text-black'
-                      : 'bg-zinc-900 text-white'
-                    : isDark
-                      ? 'bg-zinc-900 text-zinc-400 hover:text-zinc-200'
-                      : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900'
-                  }
-                `}
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors font-mono ${
+                  config.tone === tone
+                    ? 'bg-foreground text-background'
+                    : 'bg-surface text-muted hover:text-foreground border border-border'
+                }`}
               >
-                {tone === 'professional' && 'Profesional'}
-                {tone === 'friendly' && 'Amigable'}
-                {tone === 'casual' && 'Casual'}
-                {tone === 'formal' && 'Formal'}
+                {tone === 'professional' && 'profesional'}
+                {tone === 'friendly' && 'amigable'}
+                {tone === 'casual' && 'casual'}
+                {tone === 'formal' && 'formal'}
               </button>
             ))}
           </div>
         </div>
 
         {/* Instructions */}
-        <div className={`pt-6 border-t ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
-          <label className={labelClass}>Instrucciones adicionales</label>
+        <div className="pt-6 border-t border-border">
+          <label className="block text-xs font-medium mb-2 text-muted font-mono">instrucciones adicionales</label>
           <textarea
             value={config.customInstructions || ''}
             onChange={(e) => handleChange('customInstructions', e.target.value)}
             rows={4}
             placeholder="Instrucciones específicas para el agente..."
-            className={inputClass}
+            className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
           />
         </div>
 
         {/* Auto Reply */}
-        <div className={`pt-6 border-t ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
+        <div className="pt-6 border-t border-border">
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+              <p className="text-sm text-foreground">
                 Respuestas automáticas
               </p>
-              <p className={`text-xs mt-0.5 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+              <p className="text-xs mt-0.5 text-muted">
                 El agente responde automáticamente
               </p>
             </div>
             <button
               type="button"
               onClick={() => handleChange('autoReplyEnabled', !config.autoReplyEnabled)}
-              className={`
-                w-10 h-6 rounded-full transition-colors relative
-                ${config.autoReplyEnabled
-                  ? 'bg-emerald-500'
-                  : isDark ? 'bg-zinc-700' : 'bg-zinc-300'
-                }
-              `}
+              className={`w-10 h-6 rounded-full transition-colors relative ${
+                config.autoReplyEnabled
+                  ? 'bg-terminal-green'
+                  : 'bg-border'
+              }`}
             >
               <span
-                className={`
-                  absolute top-1 w-4 h-4 bg-white rounded-full transition-transform
-                  ${config.autoReplyEnabled ? 'left-5' : 'left-1'}
-                `}
+                className={`absolute top-1 w-4 h-4 bg-background rounded-full transition-transform ${
+                  config.autoReplyEnabled ? 'left-5' : 'left-1'
+                }`}
               />
             </button>
           </div>
         </div>
 
         {/* Submit */}
-        <div className={`pt-6 border-t ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
+        <div className="pt-6 border-t border-border">
           <div className="flex items-center justify-between">
-            <span className={`text-sm ${saved ? (isDark ? 'text-emerald-400' : 'text-emerald-600') : 'text-transparent'}`}>
-              Guardado
+            <span className={`text-sm text-terminal-green font-mono ${saved ? 'opacity-100' : 'opacity-0'}`}>
+              guardado
             </span>
             <div className="flex gap-3">
               <Link
                 href="/dashboard/agent/prompt"
-                className={`
-                  px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                  ${isDark
-                    ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
-                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-                  }
-                `}
+                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-surface text-muted hover:text-foreground border border-border font-mono"
               >
-                Prompt Avanzado
+                prompt avanzado
               </Link>
               <button
                 type="submit"
                 disabled={isSaving}
-                className={`
-                  px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                  disabled:opacity-50
-                  ${isDark
-                    ? 'bg-white text-black hover:bg-zinc-200'
-                    : 'bg-zinc-900 text-white hover:bg-zinc-800'
-                  }
-                `}
+                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90 font-mono"
               >
-                {isSaving ? 'Guardando...' : 'Guardar'}
+                {isSaving ? 'guardando...' : './guardar'}
               </button>
             </div>
           </div>

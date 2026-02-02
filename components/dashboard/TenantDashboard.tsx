@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useTheme } from './ThemeProvider';
 import { ArrowUpRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -34,7 +33,6 @@ export default function TenantDashboard({
   stats: initialStats,
   tenantId
 }: TenantDashboardProps) {
-  const { isDark } = useTheme();
   const [stats, setStats] = useState(initialStats);
 
   // Realtime subscription for stats
@@ -101,28 +99,28 @@ export default function TenantDashboard({
     <div className="max-w-3xl mx-auto px-6 py-12">
       {/* Header */}
       <div className="mb-12">
-        <h1 className={`text-xl font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-          {tenant.name.split(' ')[0]}
+        <h1 className="text-xl font-medium text-foreground font-mono">
+          {tenant.name.split(' ')[0]}_
         </h1>
-        <p className={`text-sm mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+        <p className="text-sm mt-1 text-muted">
           {tenant.companyName || tenant.email}
         </p>
       </div>
 
       {/* Status */}
-      <div className={`flex items-center gap-6 text-sm mb-12 pb-8 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
+      <div className="flex items-center gap-6 text-sm mb-12 pb-8 border-b border-border">
         <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${whatsappAccount.connected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-          <span className={isDark ? 'text-zinc-400' : 'text-zinc-600'}>
-            {whatsappAccount.connected ? 'Conectado' : 'Desconectado'}
+          <span className={`w-2 h-2 rounded-full ${whatsappAccount.connected ? 'bg-terminal-green' : 'bg-terminal-yellow'}`} />
+          <span className="text-muted">
+            {whatsappAccount.connected ? 'conectado' : 'desconectado'}
           </span>
         </div>
-        <span className={isDark ? 'text-zinc-600' : 'text-zinc-300'}>·</span>
-        <span className={isDark ? 'text-zinc-400' : 'text-zinc-600'}>
+        <span className="text-border">·</span>
+        <span className="text-muted font-mono">
           {tenant.subscriptionTier}
         </span>
-        <span className={isDark ? 'text-zinc-600' : 'text-zinc-300'}>·</span>
-        <span className={`${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
+        <span className="text-border">·</span>
+        <span className="text-muted font-mono">
           {stats.totalLeads} leads
         </span>
       </div>
@@ -130,83 +128,71 @@ export default function TenantDashboard({
       {/* Stats Row */}
       <div className="grid grid-cols-4 gap-8 mb-12">
         <div>
-          <p className={`text-2xl font-mono ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+          <p className="text-3xl font-mono text-foreground">
             {stats.totalLeads}
           </p>
-          <p className={`text-xs mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-            Leads
+          <p className="text-xs mt-1 text-muted font-mono">
+            leads
           </p>
         </div>
         <div>
-          <p className={`text-2xl font-mono ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+          <p className="text-3xl font-mono text-foreground">
             {stats.totalConversations}
           </p>
-          <p className={`text-xs mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-            Conversaciones
+          <p className="text-xs mt-1 text-muted font-mono">
+            conversaciones
           </p>
         </div>
         <div>
-          <p className={`text-2xl font-mono ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+          <p className="text-3xl font-mono text-foreground">
             {stats.messagesThisMonth}
           </p>
-          <p className={`text-xs mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-            Mensajes
+          <p className="text-xs mt-1 text-muted font-mono">
+            mensajes
           </p>
         </div>
         <div>
-          <p className={`text-2xl font-mono ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+          <p className="text-3xl font-mono text-foreground">
             {stats.appointmentsBooked}
           </p>
-          <p className={`text-xs mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-            Citas
+          <p className="text-xs mt-1 text-muted font-mono">
+            citas
           </p>
         </div>
       </div>
 
       {/* Links */}
-      <nav className={`space-y-1 border-t pt-8 ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
+      <nav className="space-y-1 border-t pt-8 border-border">
         <Link
           href="/dashboard/crm"
-          className={`
-            flex items-center justify-between py-3 group
-            ${isDark ? 'text-zinc-300 hover:text-white' : 'text-zinc-700 hover:text-zinc-900'}
-          `}
+          className="flex items-center justify-between py-3 group text-muted hover:text-foreground transition-colors"
         >
-          <span>Pipeline</span>
-          <ArrowUpRight className={`w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`} />
+          <span className="font-mono">./pipeline</span>
+          <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
         </Link>
 
         <Link
           href="/dashboard/conversations"
-          className={`
-            flex items-center justify-between py-3 group
-            ${isDark ? 'text-zinc-300 hover:text-white' : 'text-zinc-700 hover:text-zinc-900'}
-          `}
+          className="flex items-center justify-between py-3 group text-muted hover:text-foreground transition-colors"
         >
-          <span>Conversaciones</span>
-          <ArrowUpRight className={`w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`} />
+          <span className="font-mono">./conversaciones</span>
+          <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
         </Link>
 
         <Link
           href="/dashboard/agent"
-          className={`
-            flex items-center justify-between py-3 group
-            ${isDark ? 'text-zinc-300 hover:text-white' : 'text-zinc-700 hover:text-zinc-900'}
-          `}
+          className="flex items-center justify-between py-3 group text-muted hover:text-foreground transition-colors"
         >
-          <span>Configurar agente</span>
-          <ArrowUpRight className={`w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`} />
+          <span className="font-mono">./configurar-agente</span>
+          <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
         </Link>
 
         {!whatsappAccount.connected && (
           <Link
             href="/dashboard/connect"
-            className={`
-              flex items-center justify-between py-3 group
-              ${isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-700'}
-            `}
+            className="flex items-center justify-between py-3 group text-terminal-yellow hover:text-terminal-yellow/80 transition-colors"
           >
-            <span>Conectar WhatsApp</span>
+            <span className="font-mono">./conectar-whatsapp</span>
             <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
           </Link>
         )}

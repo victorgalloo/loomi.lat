@@ -1,7 +1,6 @@
 'use client';
 
-import { useTheme } from '@/components/dashboard/ThemeProvider';
-import { MessageCircle, CheckCircle, AlertCircle, Phone, Building, Calendar, Shield, HelpCircle } from 'lucide-react';
+import { MessageCircle, CheckCircle, Phone, Building, Calendar, Shield, HelpCircle } from 'lucide-react';
 
 interface ConnectViewProps {
   isConnected: boolean;
@@ -14,8 +13,6 @@ interface ConnectViewProps {
 }
 
 export default function ConnectView({ isConnected, whatsappAccount }: ConnectViewProps) {
-  const { isDark } = useTheme();
-
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('es-MX', {
       year: 'numeric',
@@ -29,41 +26,39 @@ export default function ConnectView({ isConnected, whatsappAccount }: ConnectVie
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <h1 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-            WhatsApp
+          <h1 className="text-xl font-semibold text-foreground font-mono">
+            ./whatsapp_
           </h1>
-          <span className={`
-            flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full font-medium
-            ${isConnected
-              ? isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-700'
-              : isDark ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-50 text-amber-700'
-            }
-          `}>
-            <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-            {isConnected ? 'Conectado' : 'Desconectado'}
+          <span className={`flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full font-medium font-mono ${
+            isConnected
+              ? 'bg-terminal-green/10 text-terminal-green'
+              : 'bg-terminal-yellow/10 text-terminal-yellow'
+          }`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-terminal-green' : 'bg-terminal-yellow'}`} />
+            {isConnected ? 'conectado' : 'desconectado'}
           </span>
         </div>
       </div>
 
       {/* Stats Bar */}
-      <div className={`flex items-center gap-8 pb-6 mb-6 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
+      <div className="flex items-center gap-8 pb-6 mb-6 border-b border-border">
         <div>
-          <p className={`text-xs uppercase tracking-wider ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-            Estado
+          <p className="text-xs uppercase tracking-wider text-muted font-mono">
+            estado
           </p>
-          <p className={`text-xl font-semibold mt-1 ${isConnected ? (isDark ? 'text-emerald-400' : 'text-emerald-600') : (isDark ? 'text-amber-400' : 'text-amber-600')}`}>
-            {isConnected ? 'Activo' : 'Pendiente'}
+          <p className={`text-xl font-semibold mt-1 font-mono ${isConnected ? 'text-terminal-green' : 'text-terminal-yellow'}`}>
+            {isConnected ? 'activo' : 'pendiente'}
           </p>
         </div>
 
         {isConnected && whatsappAccount?.displayPhoneNumber && (
           <>
-            <div className={`w-px h-8 ${isDark ? 'bg-zinc-800' : 'bg-zinc-200'}`} />
+            <div className="w-px h-8 bg-border" />
             <div>
-              <p className={`text-xs uppercase tracking-wider ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                Numero
+              <p className="text-xs uppercase tracking-wider text-muted font-mono">
+                número
               </p>
-              <p className={`text-sm font-mono mt-1 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+              <p className="text-sm font-mono mt-1 text-foreground">
                 {whatsappAccount.displayPhoneNumber}
               </p>
             </div>
@@ -75,49 +70,49 @@ export default function ConnectView({ isConnected, whatsappAccount }: ConnectVie
         /* Connected State */
         <div className="space-y-4">
           {/* Connection Details */}
-          <div className={`rounded-xl p-5 ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-zinc-200'}`}>
-            <h2 className={`text-sm font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-              <CheckCircle className={`w-4 h-4 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
-              Detalles de conexion
+          <div className="rounded-xl p-5 bg-surface border border-border">
+            <h2 className="text-sm font-medium mb-4 flex items-center gap-2 text-foreground font-mono">
+              <CheckCircle className="w-4 h-4 text-terminal-green" />
+              detalles de conexión
             </h2>
 
             <dl className="space-y-0">
-              <div className={`flex items-center justify-between py-3 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-100'}`}>
-                <dt className={`text-sm flex items-center gap-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+              <div className="flex items-center justify-between py-3 border-b border-border">
+                <dt className="text-sm flex items-center gap-2 text-muted">
                   <Phone className="w-4 h-4" />
-                  Numero de telefono
+                  número de teléfono
                 </dt>
-                <dd className={`text-sm font-mono ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                <dd className="text-sm font-mono text-foreground">
                   {whatsappAccount?.displayPhoneNumber || 'No disponible'}
                 </dd>
               </div>
 
-              <div className={`flex items-center justify-between py-3 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-100'}`}>
-                <dt className={`text-sm flex items-center gap-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+              <div className="flex items-center justify-between py-3 border-b border-border">
+                <dt className="text-sm flex items-center gap-2 text-muted">
                   <Building className="w-4 h-4" />
-                  Nombre del negocio
+                  nombre del negocio
                 </dt>
-                <dd className={`text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                <dd className="text-sm text-foreground">
                   {whatsappAccount?.businessName || 'No disponible'}
                 </dd>
               </div>
 
-              <div className={`flex items-center justify-between py-3 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-100'}`}>
-                <dt className={`text-sm flex items-center gap-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+              <div className="flex items-center justify-between py-3 border-b border-border">
+                <dt className="text-sm flex items-center gap-2 text-muted">
                   <Shield className="w-4 h-4" />
                   ID de cuenta
                 </dt>
-                <dd className={`text-xs font-mono ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                <dd className="text-xs font-mono text-muted">
                   {whatsappAccount?.wabaId || 'No disponible'}
                 </dd>
               </div>
 
-              <div className={`flex items-center justify-between py-3 ${isDark ? '' : ''}`}>
-                <dt className={`text-sm flex items-center gap-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+              <div className="flex items-center justify-between py-3">
+                <dt className="text-sm flex items-center gap-2 text-muted">
                   <Calendar className="w-4 h-4" />
-                  Conectado desde
+                  conectado desde
                 </dt>
-                <dd className={`text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                <dd className="text-sm text-foreground">
                   {whatsappAccount?.connectedAt ? formatDate(whatsappAccount.connectedAt) : 'No disponible'}
                 </dd>
               </div>
@@ -125,36 +120,24 @@ export default function ConnectView({ isConnected, whatsappAccount }: ConnectVie
           </div>
 
           {/* Actions */}
-          <div className={`rounded-xl p-5 ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-zinc-200'}`}>
-            <h3 className={`text-sm font-medium mb-4 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-              Acciones
+          <div className="rounded-xl p-5 bg-surface border border-border">
+            <h3 className="text-sm font-medium mb-4 text-foreground font-mono">
+              acciones
             </h3>
             <div className="flex gap-3">
               <button
                 type="button"
-                className={`
-                  px-3 py-1.5 text-sm font-medium rounded-lg transition-colors
-                  ${isDark
-                    ? 'text-zinc-400 bg-zinc-800 hover:bg-zinc-700 hover:text-white'
-                    : 'text-zinc-600 bg-zinc-100 hover:bg-zinc-200 hover:text-zinc-900'
-                  }
-                `}
+                className="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors text-muted bg-surface-2 hover:bg-border hover:text-foreground border border-border font-mono"
               >
-                Reconectar
+                reconectar
               </button>
               <form action="/api/whatsapp/connect" method="POST">
                 <input type="hidden" name="action" value="disconnect" />
                 <button
                   type="submit"
-                  className={`
-                    px-3 py-1.5 text-sm font-medium rounded-lg transition-colors
-                    ${isDark
-                      ? 'text-red-400 bg-red-500/10 hover:bg-red-500/20'
-                      : 'text-red-600 bg-red-50 hover:bg-red-100'
-                    }
-                  `}
+                  className="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors text-terminal-red bg-terminal-red/10 hover:bg-terminal-red/20 font-mono"
                 >
-                  Desconectar
+                  desconectar
                 </button>
               </form>
             </div>
@@ -163,48 +146,39 @@ export default function ConnectView({ isConnected, whatsappAccount }: ConnectVie
       ) : (
         /* Disconnected State - Connect Flow */
         <div className="space-y-4">
-          <div className={`rounded-xl p-6 text-center ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-zinc-200'}`}>
-            <div className={`
-              w-14 h-14 rounded-xl mx-auto mb-4 flex items-center justify-center
-              ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-100'}
-            `}>
-              <MessageCircle className={`w-6 h-6 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
+          <div className="rounded-xl p-6 text-center bg-surface border border-border">
+            <div className="w-14 h-14 rounded-xl mx-auto mb-4 flex items-center justify-center bg-terminal-green/10">
+              <MessageCircle className="w-6 h-6 text-terminal-green" />
             </div>
-            <h3 className={`text-base font-medium mb-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+            <h3 className="text-base font-medium mb-2 text-foreground font-mono">
               Conecta tu WhatsApp Business
             </h3>
-            <p className={`text-sm mb-6 max-w-sm mx-auto ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-              Conecta tu cuenta de WhatsApp Business para empezar a recibir y responder mensajes automaticamente
+            <p className="text-sm mb-6 max-w-sm mx-auto text-muted">
+              Conecta tu cuenta de WhatsApp Business para empezar a recibir y responder mensajes automáticamente
             </p>
             <a
               href="/api/whatsapp/connect"
-              className={`
-                inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                ${isDark
-                  ? 'bg-white text-black hover:bg-zinc-200'
-                  : 'bg-zinc-900 text-white hover:bg-zinc-800'
-                }
-              `}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-foreground text-background hover:bg-foreground/90 font-mono"
             >
               <MessageCircle className="w-4 h-4" />
-              Conectar WhatsApp
+              ./conectar-whatsapp
             </a>
           </div>
 
           {/* Requirements */}
-          <div className={`rounded-xl p-5 ${isDark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-zinc-200'}`}>
-            <h3 className={`text-sm font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-              <HelpCircle className={`w-4 h-4 ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`} />
-              Requisitos
+          <div className="rounded-xl p-5 bg-surface border border-border">
+            <h3 className="text-sm font-medium mb-4 flex items-center gap-2 text-foreground font-mono">
+              <HelpCircle className="w-4 h-4 text-muted" />
+              requisitos
             </h3>
             <ul className="space-y-3">
               {[
                 'Cuenta de Facebook Business Manager',
-                'Numero de telefono que pueda recibir SMS o llamadas',
+                'Número de teléfono que pueda recibir SMS o llamadas',
                 'El proceso toma aproximadamente 5 minutos'
               ].map((item, i) => (
-                <li key={i} className={`flex items-start gap-3 text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
-                  <CheckCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
+                <li key={i} className="flex items-start gap-3 text-sm text-muted">
+                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-terminal-green" />
                   {item}
                 </li>
               ))}

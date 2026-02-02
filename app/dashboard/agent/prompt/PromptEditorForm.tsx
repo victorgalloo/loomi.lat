@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useTheme } from '@/components/dashboard/ThemeProvider';
 
 interface FewShotExample {
   id: string;
@@ -24,7 +23,6 @@ interface PromptEditorFormProps {
 }
 
 export default function PromptEditorForm({ initialConfig, onSave }: PromptEditorFormProps) {
-  const { isDark } = useTheme();
   const [config, setConfig] = useState<PromptConfig>(initialConfig);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -100,44 +98,24 @@ export default function PromptEditorForm({ initialConfig, onSave }: PromptEditor
     }));
   };
 
-  const labelClass = `block text-xs font-medium mb-2 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`;
-  const inputClass = `
-    w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors
-    ${isDark
-      ? 'bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-700'
-      : 'bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-300'
-    }
-  `;
-  const tabClass = (isActive: boolean) => `
-    px-4 py-2 text-sm font-medium rounded-lg transition-colors
-    ${isActive
-      ? isDark
-        ? 'bg-white text-black'
-        : 'bg-zinc-900 text-white'
-      : isDark
-        ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-        : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'
-    }
-  `;
-
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
       {/* Header with navigation */}
       <div className="mb-10">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4 font-mono">
           <Link
             href="/dashboard/agent"
-            className={`text-sm ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-500 hover:text-zinc-700'}`}
+            className="text-sm text-muted hover:text-foreground"
           >
-            Agente
+            ./agente
           </Link>
-          <span className={`text-sm ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>/</span>
-          <span className={`text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>Prompt Personalizado</span>
+          <span className="text-sm text-border">/</span>
+          <span className="text-sm text-foreground">prompt</span>
         </div>
-        <h1 className={`text-xl font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-          Prompt Personalizado
+        <h1 className="text-xl font-medium text-foreground font-mono">
+          ./prompt-personalizado_
         </h1>
-        <p className={`text-sm mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+        <p className="text-sm mt-1 text-muted">
           Personaliza el comportamiento del agente con un prompt custom
         </p>
       </div>
@@ -147,23 +125,35 @@ export default function PromptEditorForm({ initialConfig, onSave }: PromptEditor
         <button
           type="button"
           onClick={() => setActiveTab('prompt')}
-          className={tabClass(activeTab === 'prompt')}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-mono ${
+            activeTab === 'prompt'
+              ? 'bg-foreground text-background'
+              : 'text-muted hover:text-foreground hover:bg-surface'
+          }`}
         >
-          System Prompt
+          system prompt
         </button>
         <button
           type="button"
           onClick={() => setActiveTab('examples')}
-          className={tabClass(activeTab === 'examples')}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-mono ${
+            activeTab === 'examples'
+              ? 'bg-foreground text-background'
+              : 'text-muted hover:text-foreground hover:bg-surface'
+          }`}
         >
-          Ejemplos ({config.fewShotExamples.length})
+          ejemplos ({config.fewShotExamples.length})
         </button>
         <button
           type="button"
           onClick={() => setActiveTab('products')}
-          className={tabClass(activeTab === 'products')}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-mono ${
+            activeTab === 'products'
+              ? 'bg-foreground text-background'
+              : 'text-muted hover:text-foreground hover:bg-surface'
+          }`}
         >
-          Productos
+          productos
         </button>
       </div>
 
@@ -172,10 +162,10 @@ export default function PromptEditorForm({ initialConfig, onSave }: PromptEditor
         {activeTab === 'prompt' && (
           <div className="space-y-4">
             <div>
-              <label className={labelClass}>
-                System Prompt
-                <span className={`ml-2 text-xs ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                  (Deja vacio para usar el prompt por defecto de seguros)
+              <label className="block text-xs font-medium mb-2 text-muted font-mono">
+                system prompt
+                <span className="ml-2 text-xs text-muted/50">
+                  (deja vacío para usar el prompt por defecto)
                 </span>
               </label>
               <textarea
@@ -196,11 +186,11 @@ Define el tono y estilo de respuestas...
 # HERRAMIENTAS DISPONIBLES
 - escalate_to_human: Transferir a humano
 - send_payment_link: Enviar link de pago`}
-                className={`${inputClass} font-mono text-xs leading-relaxed`}
+                className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono text-xs leading-relaxed"
               />
-              <p className={`mt-2 text-xs ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
+              <p className="mt-2 text-xs text-muted">
                 El prompt define completamente como se comporta tu agente. Si no defines uno,
-                se usara el prompt por defecto optimizado para venta de seguros.
+                se usará el prompt por defecto optimizado para venta de seguros.
               </p>
             </div>
           </div>
@@ -212,40 +202,40 @@ Define el tono y estilo de respuestas...
             {/* Existing Examples */}
             {config.fewShotExamples.length > 0 && (
               <div className="space-y-4">
-                <label className={labelClass}>Ejemplos Guardados</label>
+                <label className="block text-xs font-medium mb-2 text-muted font-mono">ejemplos guardados</label>
                 {config.fewShotExamples.map((example) => (
                   <div
                     key={example.id}
-                    className={`p-4 rounded-lg border ${isDark ? 'border-zinc-800 bg-zinc-900/50' : 'border-zinc-200 bg-zinc-50'}`}
+                    className="p-4 rounded-lg border border-border bg-surface"
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <span className={`text-sm font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>
+                        <span className="text-sm font-medium text-foreground font-mono">
                           {example.id}
                         </span>
-                        <span className={`ml-2 text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                        <span className="ml-2 text-xs text-muted">
                           {example.context}
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => removeExample(example.id)}
-                        className={`text-xs ${isDark ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-700'}`}
+                        className="text-xs text-terminal-red hover:text-terminal-red/80 font-mono"
                       >
-                        Eliminar
+                        eliminar
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-1 mb-2">
                       {example.tags.map(tag => (
                         <span
                           key={tag}
-                          className={`px-2 py-0.5 text-xs rounded ${isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-600'}`}
+                          className="px-2 py-0.5 text-xs rounded bg-surface-2 text-muted font-mono"
                         >
                           {tag}
                         </span>
                       ))}
                     </div>
-                    <pre className={`text-xs whitespace-pre-wrap ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                    <pre className="text-xs whitespace-pre-wrap text-muted">
                       {example.conversation.substring(0, 200)}...
                     </pre>
                   </div>
@@ -254,60 +244,53 @@ Define el tono y estilo de respuestas...
             )}
 
             {/* Add New Example */}
-            <div className={`p-4 rounded-lg border ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
-              <label className={labelClass}>Agregar Nuevo Ejemplo</label>
+            <div className="p-4 rounded-lg border border-border">
+              <label className="block text-xs font-medium mb-2 text-muted font-mono">agregar nuevo ejemplo</label>
               <div className="space-y-3">
                 <input
                   type="text"
                   value={newExample.id || ''}
                   onChange={(e) => setNewExample(prev => ({ ...prev, id: e.target.value }))}
                   placeholder="ID del ejemplo (ej: new_lead_crypto)"
-                  className={inputClass}
+                  className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
                 />
                 <input
                   type="text"
                   value={tagsInput}
                   onChange={(e) => setTagsInput(e.target.value)}
                   placeholder="Tags separados por coma (ej: hola, bitcoin, precio)"
-                  className={inputClass}
+                  className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
                 />
                 <input
                   type="text"
                   value={newExample.context || ''}
                   onChange={(e) => setNewExample(prev => ({ ...prev, context: e.target.value }))}
                   placeholder="Contexto (ej: Lead nuevo preguntando por Bitcoin)"
-                  className={inputClass}
+                  className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
                 />
                 <textarea
                   value={newExample.conversation || ''}
                   onChange={(e) => setNewExample(prev => ({ ...prev, conversation: e.target.value }))}
                   rows={6}
-                  placeholder={`Conversacion de ejemplo:
+                  placeholder={`Conversación de ejemplo:
 Cliente: Hola, vi su contenido sobre Bitcoin
-Agente: Hola! Que bueno que escribiste. Que te interesa saber sobre Bitcoin?`}
-                  className={inputClass}
+Agente: Hola! Qué bueno que escribiste. ¿Qué te interesa saber sobre Bitcoin?`}
+                  className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
                 />
                 <input
                   type="text"
                   value={newExample.whyItWorked || ''}
                   onChange={(e) => setNewExample(prev => ({ ...prev, whyItWorked: e.target.value }))}
-                  placeholder="Por que funciono (ej: Fue calido y pregunto que le interesa)"
-                  className={inputClass}
+                  placeholder="Por qué funcionó (ej: Fue cálido y preguntó qué le interesa)"
+                  className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
                 />
                 <button
                   type="button"
                   onClick={addExample}
                   disabled={!newExample.id || !newExample.context || !newExample.conversation}
-                  className={`
-                    px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    ${isDark
-                      ? 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700'
-                      : 'bg-zinc-200 text-zinc-800 hover:bg-zinc-300'
-                    }
-                  `}
+                  className="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-surface text-muted hover:text-foreground border border-border font-mono"
                 >
-                  Agregar Ejemplo
+                  agregar ejemplo
                 </button>
               </div>
             </div>
@@ -318,8 +301,8 @@ Agente: Hola! Que bueno que escribiste. Que te interesa saber sobre Bitcoin?`}
         {activeTab === 'products' && (
           <div className="space-y-4">
             <div>
-              <label className={labelClass}>
-                Catalogo de Productos (JSON)
+              <label className="block text-xs font-medium mb-2 text-muted font-mono">
+                catálogo de productos (JSON)
               </label>
               <textarea
                 value={JSON.stringify(config.productsCatalog, null, 2)}
@@ -328,7 +311,7 @@ Agente: Hola! Que bueno que escribiste. Que te interesa saber sobre Bitcoin?`}
                 placeholder={`{
   "cursos": [
     {
-      "nombre": "Bitcoin Basico",
+      "nombre": "Bitcoin Básico",
       "precio": 99,
       "descripcion": "Aprende los fundamentos de Bitcoin"
     }
@@ -341,48 +324,35 @@ Agente: Hola! Que bueno que escribiste. Que te interesa saber sobre Bitcoin?`}
     }
   ]
 }`}
-                className={`${inputClass} font-mono text-xs`}
+                className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono text-xs"
               />
-              <p className={`mt-2 text-xs ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                Define tu catalogo de productos/servicios en formato JSON.
-                El agente usara esta informacion para responder preguntas sobre precios y disponibilidad.
+              <p className="mt-2 text-xs text-muted">
+                Define tu catálogo de productos/servicios en formato JSON.
+                El agente usará esta información para responder preguntas sobre precios y disponibilidad.
               </p>
             </div>
           </div>
         )}
 
         {/* Submit */}
-        <div className={`pt-6 border-t ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
+        <div className="pt-6 border-t border-border">
           <div className="flex items-center justify-between">
-            <span className={`text-sm ${saved ? (isDark ? 'text-emerald-400' : 'text-emerald-600') : 'text-transparent'}`}>
-              Guardado
+            <span className={`text-sm text-terminal-green font-mono ${saved ? 'opacity-100' : 'opacity-0'}`}>
+              guardado
             </span>
             <div className="flex gap-3">
               <Link
                 href="/dashboard/agent"
-                className={`
-                  px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                  ${isDark
-                    ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
-                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-                  }
-                `}
+                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-surface text-muted hover:text-foreground border border-border font-mono"
               >
-                Configuracion Basica
+                config básica
               </Link>
               <button
                 type="submit"
                 disabled={isSaving}
-                className={`
-                  px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                  disabled:opacity-50
-                  ${isDark
-                    ? 'bg-white text-black hover:bg-zinc-200'
-                    : 'bg-zinc-900 text-white hover:bg-zinc-800'
-                  }
-                `}
+                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90 font-mono"
               >
-                {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                {isSaving ? 'guardando...' : './guardar'}
               </button>
             </div>
           </div>

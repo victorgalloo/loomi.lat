@@ -234,9 +234,9 @@ export function SandboxChat() {
         {/* Left: Terminal dots + Title */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-[#FF5F56]" />
-            <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
-            <div className="w-3 h-3 rounded-full bg-[#27C93F]" />
+            <div className="w-3 h-3 rounded-full bg-terminal-red" />
+            <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
+            <div className="w-3 h-3 rounded-full bg-terminal-green" />
           </div>
           <span className="text-sm font-mono text-muted">sandbox</span>
         </div>
@@ -292,7 +292,7 @@ export function SandboxChat() {
                     {tenant.businessName || tenant.name}
                   </span>
                   {tenant.hasCustomPrompt && (
-                    <span className="px-1.5 py-0.5 text-[10px] font-mono bg-[#27C93F]/10 text-[#27C93F] rounded">
+                    <span className="px-1.5 py-0.5 text-[10px] font-mono bg-terminal-green/10 text-terminal-green rounded">
                       custom
                     </span>
                   )}
@@ -327,7 +327,7 @@ export function SandboxChat() {
               className={cn(
                 'flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all',
                 useCustomPrompt
-                  ? 'bg-[#27C93F] text-black'
+                  ? 'bg-terminal-green text-background'
                   : 'text-muted hover:text-foreground'
               )}
             >
@@ -366,7 +366,7 @@ export function SandboxChat() {
                 {selectedTenant?.hasCustomPrompt && (
                   <p className="text-xs font-mono text-muted">
                     prompt: {useCustomPrompt ? (
-                      <span className="text-[#27C93F]">custom</span>
+                      <span className="text-terminal-green">custom</span>
                     ) : (
                       <span className="text-foreground">default</span>
                     )}
@@ -434,7 +434,7 @@ export function SandboxChat() {
                 <Bot className="h-4 w-4 text-muted" />
               </div>
               <div className="flex items-center gap-2 rounded-xl bg-surface border border-border px-4 py-3 text-sm text-muted">
-                <Loader2 className="h-4 w-4 animate-spin text-[#27C93F]" />
+                <Loader2 className="h-4 w-4 animate-spin text-terminal-green" />
                 <span className="font-mono text-xs">thinking...</span>
               </div>
             </div>
@@ -443,7 +443,7 @@ export function SandboxChat() {
           {/* Error Message */}
           {error && (
             <div className="flex justify-center">
-              <div className="rounded-lg bg-[#FF5F56]/10 border border-[#FF5F56]/20 px-4 py-2 text-sm text-[#FF5F56] font-mono">
+              <div className="rounded-lg bg-terminal-red/10 border border-terminal-red/20 px-4 py-2 text-sm text-terminal-red font-mono">
                 {error}
               </div>
             </div>
@@ -457,7 +457,7 @@ export function SandboxChat() {
         className="border-t border-border bg-surface p-4"
       >
         <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-2">
-          <span className="text-[#27C93F] font-mono text-sm">$</span>
+          <span className="text-terminal-green font-mono text-sm">$</span>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}

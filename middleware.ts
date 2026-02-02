@@ -6,16 +6,8 @@ export async function middleware(request: NextRequest) {
   // Public routes that don't need authentication
   const publicRoutes = [
     '/',           // Landing page
-    '/syntra',     // Syntra landing and subpages
-    '/db-anthana', // Databricks landing page
-    '/loomi',      // Loomi AI agent landing page
     '/login',      // Login page
     '/api',        // API routes handle their own auth
-    '/privacy-policy',
-    '/eliminacion',
-    '/investors',
-    '/selected-work',
-    '/pay',
   ];
 
   // Check if the current path is a public route

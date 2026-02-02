@@ -103,7 +103,7 @@ export const projects: Project[] = [
     imageSrc: "/assets/loomi/chat-completo.png",
     images: ["/assets/loomi/chat-completo.png"],
     hasLandingPage: true,
-    landingUrl: "/loomi",
+    landingUrl: "/",
     useHeroAnimation: true,
     customBackground: {
       logoSrc: "",

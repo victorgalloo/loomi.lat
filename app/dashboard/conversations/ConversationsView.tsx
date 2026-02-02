@@ -262,7 +262,7 @@ export default function ConversationsView({ conversations: initialConversations,
               return (
                 <li key={conversation.id}>
                   <Link
-                    href={`/loomi/dashboard/conversations/${conversation.id}`}
+                    href={`/dashboard/conversations/${conversation.id}`}
                     className={`
                       block transition-colors
                       ${isDarkMode ? 'hover:bg-zinc-800/50' : 'hover:bg-zinc-50'}

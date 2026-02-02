@@ -14,11 +14,11 @@ interface DashboardShellProps {
 }
 
 const navItems = [
-  { href: '/loomi/dashboard', label: 'Overview' },
-  { href: '/loomi/dashboard/crm', label: 'Pipeline' },
-  { href: '/loomi/dashboard/conversations', label: 'Inbox' },
-  { href: '/loomi/dashboard/agent', label: 'Agente' },
-  { href: '/loomi/dashboard/settings', label: 'Settings' },
+  { href: '/dashboard', label: 'Overview' },
+  { href: '/dashboard/crm', label: 'Pipeline' },
+  { href: '/dashboard/conversations', label: 'Inbox' },
+  { href: '/dashboard/agent', label: 'Agente' },
+  { href: '/dashboard/settings', label: 'Settings' },
 ];
 
 export default function DashboardShell({ children, userName, isConnected }: DashboardShellProps) {
@@ -43,7 +43,7 @@ export default function DashboardShell({ children, userName, isConnected }: Dash
         <div className="h-full max-w-6xl mx-auto px-4 flex items-center justify-between">
           {/* Logo */}
           <Link
-            href="/loomi/dashboard"
+            href="/dashboard"
             className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}
           >
             loomi
@@ -53,7 +53,7 @@ export default function DashboardShell({ children, userName, isConnected }: Dash
           <nav className="hidden md:flex items-center gap-6">
             {navItems.map((item) => {
               const isActive = pathname === item.href ||
-                (item.href !== '/loomi/dashboard' && pathname.startsWith(item.href));
+                (item.href !== '/dashboard' && pathname.startsWith(item.href));
 
               return (
                 <Link
@@ -108,7 +108,7 @@ export default function DashboardShell({ children, userName, isConnected }: Dash
         <div className="flex items-center justify-around py-3">
           {navItems.slice(0, 4).map((item) => {
             const isActive = pathname === item.href ||
-              (item.href !== '/loomi/dashboard' && pathname.startsWith(item.href));
+              (item.href !== '/dashboard' && pathname.startsWith(item.href));
 
             return (
               <Link

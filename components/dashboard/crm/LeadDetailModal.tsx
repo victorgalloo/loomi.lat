@@ -178,7 +178,7 @@ function LeadDetailModal({ lead, stages, onClose, onSave, isDarkMode = false }: 
             {/* Conversation Link */}
             {lead.conversationCount && lead.conversationCount > 0 && (
               <a
-                href={`/loomi/dashboard/conversations?lead=${lead.id}`}
+                href={`/dashboard/conversations?lead=${lead.id}`}
                 className={`
                   flex items-center justify-between p-3 rounded-lg border
                   transition-colors duration-150 group

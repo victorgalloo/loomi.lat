@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
+import { ThemeProvider } from '@/components/theme-provider';
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -10,15 +11,14 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "anthana.agency | Data & AI Automation Studio",
-  description: "Helping companies turn their data into decisions. Specialized in Databricks, Azure & AI agents.",
-  keywords: ["Databricks", "AI", "Data Engineering", "Azure", "AI Agents", "Web Development", "Mobile Development"],
-  authors: [{ name: "Anthana" }],
+  title: 'Loomi | El agente de ventas que nunca duerme',
+  description: 'Arquitectura serverless con razonamiento chain-of-thought, análisis de sentimiento en tiempo real, y memoria contextual persistente. Convierte conversaciones de WhatsApp en demos agendadas.',
+  keywords: ['WhatsApp bot', 'sales agent', 'AI', 'automation', 'Claude', 'lead qualification'],
+  authors: [{ name: 'Loomi' }],
   openGraph: {
-    title: "anthana.agency | Data & AI Automation Studio",
-    description: "Helping companies turn their data into decisions. Specialized in Databricks, Azure & AI agents.",
-    type: "website",
-    locale: "en_US",
+    title: 'Loomi | El agente de ventas que nunca duerme',
+    description: 'Arquitectura serverless con razonamiento chain-of-thought y memoria contextual.',
+    type: 'website',
   },
 };
 
@@ -28,8 +28,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="dark">
-      <body className={`${dmSans.variable} font-sans`}>{children}</body>
+    <html lang="es" data-theme="dark" suppressHydrationWarning>
+      <body className={`${dmSans.variable} font-sans`}>
+        <ThemeProvider defaultTheme="dark">
+          <div className="antialiased bg-background text-foreground transition-colors duration-300">
+            {children}
+          </div>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

@@ -1,36 +1,33 @@
-// Main landing page for anthana.agency
-// Last updated: January 2025
-"use client";
+import { Navbar } from '@/components/loomi/Navbar';
+import { Hero } from '@/components/loomi/Hero';
+import { Stats } from '@/components/loomi/stats';
+import { InteractiveDemo } from '@/components/loomi/interactive-demo';
+import { HowItWorks } from '@/components/loomi/how-it-works';
+import { MetaLoop } from '@/components/loomi/meta-loop';
+import { TechProvider } from '@/components/loomi/tech-provider';
+import { Pricing } from '@/components/loomi/Pricing';
+import { Testimonials } from '@/components/loomi/Testimonials';
+import { CTA } from '@/components/loomi/cta';
+import { Footer } from '@/components/loomi/Footer';
+import { LoadingScreen } from '@/components/ui/loading-screen';
 
-import { useState } from "react";
-import type { Language } from "@/types/landing";
-import {
-  Header,
-  Hero,
-  Services,
-  Projects,
-  Skills,
-  Team,
-  Contact,
-  Footer,
-} from "@/components/landing";
-
-/**
- * Landing page with all sections
- */
-export default function Home() {
-  const [language, setLanguage] = useState<Language>("EN");
-
+export default function HomePage() {
   return (
-    <main className="min-h-screen bg-white text-gray-900">
-      <Header language={language} onLanguageChange={setLanguage} />
-      <Hero language={language} />
-      <Services language={language} />
-      <Projects language={language} />
-      <Skills language={language} />
-      <Team language={language} />
-      <Contact language={language} />
-      <Footer language={language} />
-    </main>
+    <>
+      <LoadingScreen />
+      <main className="min-h-screen bg-background">
+        <Navbar />
+        <Hero />
+        <Stats />
+        <HowItWorks />
+        <InteractiveDemo />
+        <MetaLoop />
+        <TechProvider />
+        <Pricing />
+        <Testimonials />
+        <CTA />
+        <Footer />
+      </main>
+    </>
   );
 }

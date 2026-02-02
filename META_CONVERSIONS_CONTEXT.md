@@ -22,18 +22,13 @@ Integración completada y verificada. Los eventos se envían correctamente y apa
 | **Cliente potencial** (Lead) | ✅ Activo | Lead calificado via WhatsApp Flow |
 | **Completar registro** (CompleteRegistration) | ✅ Configurado | Demo agendada |
 
-## Pipeline CRM (8 etapas)
+## Pipeline CRM (3 etapas)
 
 | # | Etapa | Evento Meta | Disparador |
 |---|-------|-------------|------------|
-| 1 | Nuevo | - | Lead creado |
-| 2 | Contactado | - | Manual |
-| 3 | **Calificado** | `Lead` | WhatsApp Flow completado |
-| 4 | **Demo Agendada** | `CompleteRegistration` | Demo agendada por WhatsApp |
-| 5 | Propuesta | - | Manual |
-| 6 | Negociacion | - | Manual |
-| 7 | **Ganado** | `Purchase` | Mover a "Ganado" en CRM o pago Stripe |
-| 8 | Perdido | - | Manual |
+| 1 | **Lead** | `Lead` | Lead creado / WhatsApp Flow completado |
+| 2 | **Demo Agendada** | `CompleteRegistration` | Demo agendada por WhatsApp |
+| 3 | **Ganado** | `Purchase` | Mover a "Ganado" en CRM o pago Stripe |
 
 ## Archivos del Sistema
 
@@ -70,12 +65,12 @@ Páginas con actualizaciones en tiempo real:
 ## Flujo de Datos
 
 ```
-[Lead completa WhatsApp Flow]
+[Lead entra / completa WhatsApp Flow]
          │
          ▼
   saveLeadQualification()
          │
-         ├──► stage = 'Calificado'
+         ├──► stage = 'Lead'
          └──► trackLeadQualified() ──► Meta API (Lead) ✅
 
 [Lead agenda demo por WhatsApp]

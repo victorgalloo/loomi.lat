@@ -2,8 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserRole, getClientIdForUser, getTenantIdForUser } from "@/lib/supabase/user-role";
 import PortalLayout from "@/components/portal/PortalLayout";
-import Sidebar from "@/components/dashboard/Sidebar";
 import { getWhatsAppAccount } from "@/lib/tenant/context";
+import DashboardLayoutClient from "./DashboardLayoutClient";
 
 export default async function DashboardLayout({
   children,
@@ -20,10 +20,9 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Determine user role
   const userRole = await getUserRole(user.email);
 
-  // Tenant users get the new multi-tenant dashboard
+  // Tenant users get the new tech dashboard
   if (userRole === "tenant") {
     const tenantId = await getTenantIdForUser(user.email);
     let isConnected = false;
@@ -34,19 +33,16 @@ export default async function DashboardLayout({
     }
 
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar
-          userName={user.email}
-          isConnected={isConnected}
-        />
-        <main className="flex-1 p-8">
-          {children}
-        </main>
-      </div>
+      <DashboardLayoutClient
+        userName={user.email}
+        isConnected={isConnected}
+      >
+        {children}
+      </DashboardLayoutClient>
     );
   }
 
-  // Get client name if user is a client (old portal system)
+  // Admin and client users get the old portal layout
   let clientName: string | undefined;
   if (userRole === "client") {
     const clientId = await getClientIdForUser(user.email);
@@ -60,7 +56,6 @@ export default async function DashboardLayout({
     }
   }
 
-  // Admin and client users get the old portal layout
   return (
     <PortalLayout
       userRole={userRole}
@@ -71,5 +66,3 @@ export default async function DashboardLayout({
     </PortalLayout>
   );
 }
-
-

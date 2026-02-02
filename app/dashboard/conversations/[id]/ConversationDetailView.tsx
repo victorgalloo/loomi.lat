@@ -84,7 +84,7 @@ export default function ConversationDetailView({ conversation, lead, messages }:
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <Link
-            href="/loomi/dashboard/conversations"
+            href="/dashboard/conversations"
             className={`
               p-2 rounded-lg transition-colors
               ${isDarkMode ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900'}
@@ -283,7 +283,7 @@ export default function ConversationDetailView({ conversation, lead, messages }:
             </h3>
             <div className="space-y-2">
               <Link
-                href={`/loomi/dashboard/crm`}
+                href={`/dashboard/crm`}
                 className={`
                   flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors w-full
                   ${isDarkMode

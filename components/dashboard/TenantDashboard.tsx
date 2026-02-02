@@ -166,7 +166,7 @@ export default function TenantDashboard({
       {/* Links */}
       <nav className={`space-y-1 border-t pt-8 ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
         <Link
-          href="/loomi/dashboard/crm"
+          href="/dashboard/crm"
           className={`
             flex items-center justify-between py-3 group
             ${isDark ? 'text-zinc-300 hover:text-white' : 'text-zinc-700 hover:text-zinc-900'}
@@ -177,7 +177,7 @@ export default function TenantDashboard({
         </Link>
 
         <Link
-          href="/loomi/dashboard/conversations"
+          href="/dashboard/conversations"
           className={`
             flex items-center justify-between py-3 group
             ${isDark ? 'text-zinc-300 hover:text-white' : 'text-zinc-700 hover:text-zinc-900'}
@@ -188,7 +188,7 @@ export default function TenantDashboard({
         </Link>
 
         <Link
-          href="/loomi/dashboard/agent"
+          href="/dashboard/agent"
           className={`
             flex items-center justify-between py-3 group
             ${isDark ? 'text-zinc-300 hover:text-white' : 'text-zinc-700 hover:text-zinc-900'}
@@ -200,7 +200,7 @@ export default function TenantDashboard({
 
         {!whatsappAccount.connected && (
           <Link
-            href="/loomi/dashboard/connect"
+            href="/dashboard/connect"
             className={`
               flex items-center justify-between py-3 group
               ${isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-700'}

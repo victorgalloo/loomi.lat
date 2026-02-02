@@ -16,7 +16,7 @@ export default async function CRMPage() {
 
   const userRole = await getUserRole(user.email);
   if (userRole !== "tenant") {
-    redirect("/loomi/dashboard");
+    redirect("/dashboard");
   }
 
   const tenantId = await getTenantIdForUser(user.email);
@@ -41,14 +41,9 @@ export default async function CRMPage() {
         isLost: s.is_lost,
       }))
     : [
-        { id: '1', name: 'Nuevo', color: 'cyan', position: 0, isWon: false, isLost: false },
-        { id: '2', name: 'Contactado', color: 'amber', position: 1, isWon: false, isLost: false },
-        { id: '3', name: 'Calificado', color: 'purple', position: 2, isWon: false, isLost: false },
-        { id: '4', name: 'Demo Agendada', color: 'indigo', position: 3, isWon: false, isLost: false },
-        { id: '5', name: 'Propuesta', color: 'blue', position: 4, isWon: false, isLost: false },
-        { id: '6', name: 'Negociacion', color: 'orange', position: 5, isWon: false, isLost: false },
-        { id: '7', name: 'Ganado', color: 'emerald', position: 6, isWon: true, isLost: false },
-        { id: '8', name: 'Perdido', color: 'red', position: 7, isWon: false, isLost: true },
+        { id: '1', name: 'Lead', color: 'cyan', position: 0, isWon: false, isLost: false },
+        { id: '2', name: 'Demo Agendada', color: 'indigo', position: 1, isWon: false, isLost: false },
+        { id: '3', name: 'Ganado', color: 'emerald', position: 2, isWon: true, isLost: false },
       ];
 
   // Fetch leads
@@ -76,7 +71,7 @@ export default async function CRMPage() {
     companyName: lead.company_name,
     contactEmail: lead.contact_email,
     dealValue: lead.deal_value,
-    stage: lead.stage || 'Nuevo',
+    stage: lead.stage || 'Lead',
     priority: (lead.priority || 'medium') as 'low' | 'medium' | 'high',
     lastActivityAt: lead.last_activity_at,
     conversationCount: lead.conversations?.[0]?.count || 0,

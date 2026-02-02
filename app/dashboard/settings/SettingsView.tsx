@@ -92,7 +92,7 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
             value={whatsapp.connected ? 'Conectado' : 'Desconectado'}
             action={
               <Link
-                href="/loomi/dashboard/connect"
+                href="/dashboard/connect"
                 className={`text-xs ${isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900'}`}
               >
                 {whatsapp.connected ? 'Gestionar' : 'Conectar'}

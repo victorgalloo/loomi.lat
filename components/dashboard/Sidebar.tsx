@@ -12,7 +12,7 @@ interface SidebarProps {
 
 const navItems = [
   {
-    href: '/loomi/dashboard',
+    href: '/dashboard',
     label: 'Overview',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -21,7 +21,7 @@ const navItems = [
     )
   },
   {
-    href: '/loomi/dashboard/connect',
+    href: '/dashboard/connect',
     label: 'Conexion WhatsApp',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,7 +30,7 @@ const navItems = [
     )
   },
   {
-    href: '/loomi/dashboard/agent',
+    href: '/dashboard/agent',
     label: 'Configurar Agente',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +39,7 @@ const navItems = [
     )
   },
   {
-    href: '/loomi/dashboard/crm',
+    href: '/dashboard/crm',
     label: 'CRM',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,7 +48,7 @@ const navItems = [
     )
   },
   {
-    href: '/loomi/dashboard/conversations',
+    href: '/dashboard/conversations',
     label: 'Conversaciones',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,7 +57,7 @@ const navItems = [
     )
   },
   {
-    href: '/loomi/dashboard/analytics',
+    href: '/dashboard/analytics',
     label: 'Analiticas',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,7 +66,7 @@ const navItems = [
     )
   },
   {
-    href: '/loomi/dashboard/settings',
+    href: '/dashboard/settings',
     label: 'Configuracion',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

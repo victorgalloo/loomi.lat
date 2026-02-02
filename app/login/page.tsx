@@ -54,7 +54,7 @@ export default function LoginPage() {
 
       if (data.user) {
         await new Promise(resolve => setTimeout(resolve, 100));
-        router.push("/loomi/dashboard");
+        router.push("/dashboard");
         router.refresh();
       }
     } catch {
@@ -79,7 +79,7 @@ export default function LoginPage() {
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-50">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/loomi" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isDark ? 'bg-white' : 'bg-black'}`}>
               <Zap className={`w-4 h-4 ${isDark ? 'text-black' : 'text-white'}`} />
             </div>
@@ -198,7 +198,7 @@ export default function LoginPage() {
             <p className={`text-xs ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
               ¿No tienes cuenta?{' '}
               <Link
-                href="/loomi"
+                href="/"
                 className={`font-medium transition-colors ${isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-600 hover:text-zinc-900'}`}
               >
                 Solicita acceso

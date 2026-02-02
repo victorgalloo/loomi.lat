@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { SandboxChat } from './SandboxChat';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Sandbox Demo | Loomi AI',
@@ -8,14 +9,14 @@ export const metadata: Metadata = {
 
 export default function SandboxPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <main className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-white/10 bg-black/20 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+      <header className="border-b border-border bg-surface">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-foreground">
               <svg
-                className="h-6 w-6 text-white"
+                className="h-5 w-5 text-background"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -29,22 +30,22 @@ export default function SandboxPage() {
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-white">Sandbox Demo</h1>
-              <p className="text-xs text-white/60">Prueba el agente en tiempo real</p>
+              <h1 className="text-sm font-medium text-foreground">Loomi Sandbox</h1>
+              <p className="text-xs text-muted font-mono">agent testing environment</p>
             </div>
           </div>
-          <a
+          <Link
             href="/"
-            className="text-sm text-white/60 hover:text-white transition-colors"
+            className="text-xs text-muted hover:text-foreground transition-colors font-mono"
           >
-            ← Volver al inicio
-          </a>
+            ← back
+          </Link>
         </div>
       </header>
 
       {/* Chat Container */}
       <div className="mx-auto max-w-3xl px-4 py-6">
-        <div className="overflow-hidden rounded-3xl border border-white/10 bg-black/30 shadow-2xl backdrop-blur-xl">
+        <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-card">
           <SandboxChat />
         </div>
       </div>

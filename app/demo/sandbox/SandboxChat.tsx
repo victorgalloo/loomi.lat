@@ -67,7 +67,6 @@ export function SandboxChat() {
           content: m.content,
           timestamp: new Date(m.timestamp)
         })));
-        // Tenant will be set after tenants are loaded
       } catch {
         setSessionId(crypto.randomUUID());
       }
@@ -84,7 +83,6 @@ export function SandboxChat() {
         const data = await res.json();
         if (data.tenants && data.tenants.length > 0) {
           setTenants(data.tenants);
-          // Restore tenant from storage or use first
           const stored = sessionStorage.getItem(STORAGE_KEY);
           if (stored) {
             const state: StoredState = JSON.parse(stored);
@@ -96,7 +94,6 @@ export function SandboxChat() {
         }
       } catch (err) {
         console.error('Failed to fetch tenants:', err);
-        // Set default demo tenant
         const defaultTenant: SandboxTenant = {
           id: 'demo',
           name: 'Sofi (Seguros)',
@@ -190,7 +187,6 @@ export function SandboxChat() {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Show escalation notice if triggered
       if (data.escalatedToHuman) {
         setTimeout(() => {
           setMessages(prev => [...prev, {
@@ -226,146 +222,152 @@ export function SandboxChat() {
     setSessionId(crypto.randomUUID());
     sessionStorage.removeItem(STORAGE_KEY);
     setError(null);
-    // Keep useCustomPrompt setting when resetting conversation
   };
 
   return (
-    <div className="flex h-[calc(100vh-120px)] flex-col">
-      {/* Header with controls */}
-      <div className="flex flex-col gap-4 border-b border-white/20 bg-white/5 p-4 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-          {/* Tenant Selector */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="justify-between gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <span className="truncate max-w-[200px]">
-                  {selectedTenant?.businessName || selectedTenant?.name || 'Seleccionar agente'}
-                </span>
-                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[280px]">
-              {tenants.map((tenant) => (
-                <DropdownMenuItem
-                  key={tenant.id}
-                  onClick={() => {
-                    setSelectedTenant(tenant);
-                    setUseCustomPrompt(false); // Reset to default when changing tenant
-                    resetConversation();
-                  }}
-                  className="flex flex-col items-start gap-1"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">
-                      {tenant.businessName || tenant.name}
-                    </span>
-                    {tenant.hasCustomPrompt && (
-                      <span className="px-1.5 py-0.5 text-[10px] font-medium bg-emerald-500/20 text-emerald-400 rounded">
-                        Custom
-                      </span>
-                    )}
-                  </div>
-                  {tenant.companyName && (
-                    <span className="text-xs text-muted-foreground">
-                      {tenant.companyName}
-                    </span>
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Prompt Selector */}
-          {selectedTenant?.hasCustomPrompt && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setUseCustomPrompt(false)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-                  !useCustomPrompt
-                    ? 'bg-white text-black'
-                    : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
-                )}
-              >
-                <FileText className="h-3.5 w-3.5" />
-                Default
-              </button>
-              <button
-                onClick={() => setUseCustomPrompt(true)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-                  useCustomPrompt
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
-                )}
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                Custom
-              </button>
-            </div>
-          )}
-
-          {/* Lead Name Input */}
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder="Tu nombre (opcional)"
-              value={leadName}
-              onChange={(e) => setLeadName(e.target.value)}
-              className="h-9 w-40 bg-white/10 border-white/20 text-white placeholder:text-white/50"
-            />
+    <div className="flex h-[calc(100vh-120px)] flex-col bg-background">
+      {/* Terminal Header */}
+      <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
+        {/* Left: Terminal dots + Title */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-[#FF5F56]" />
+            <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
+            <div className="w-3 h-3 rounded-full bg-[#27C93F]" />
           </div>
+          <span className="text-sm font-mono text-muted">sandbox</span>
         </div>
 
-        {/* Reset Button */}
+        {/* Right: Reset */}
         <Button
           variant="ghost"
           size="sm"
           onClick={resetConversation}
-          className="text-white/70 hover:text-white hover:bg-white/10"
+          className="text-muted hover:text-foreground hover:bg-surface-2 h-8 px-3"
         >
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Nueva conversación
+          <RotateCcw className="mr-2 h-3.5 w-3.5" />
+          <span className="text-xs">reset</span>
         </Button>
       </div>
 
+      {/* Controls Bar */}
+      <div className="flex flex-wrap items-center gap-3 border-b border-border bg-surface-2 px-4 py-2.5">
+        {/* Tenant Selector */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-surface border border-border text-sm text-foreground hover:border-muted transition-colors">
+              <span className="truncate max-w-[180px] font-medium">
+                {selectedTenant?.businessName || selectedTenant?.name || 'Seleccionar agente'}
+              </span>
+              <ChevronDown className="h-3.5 w-3.5 text-muted" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[260px] bg-surface border-border">
+            {tenants.map((tenant) => (
+              <DropdownMenuItem
+                key={tenant.id}
+                onClick={() => {
+                  setSelectedTenant(tenant);
+                  setUseCustomPrompt(false);
+                  resetConversation();
+                }}
+                className="flex flex-col items-start gap-0.5 hover:bg-surface-2"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground">
+                    {tenant.businessName || tenant.name}
+                  </span>
+                  {tenant.hasCustomPrompt && (
+                    <span className="px-1.5 py-0.5 text-[10px] font-mono bg-[#27C93F]/10 text-[#27C93F] rounded">
+                      custom
+                    </span>
+                  )}
+                </div>
+                {tenant.companyName && (
+                  <span className="text-xs text-muted">
+                    {tenant.companyName}
+                  </span>
+                )}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Prompt Selector */}
+        {selectedTenant?.hasCustomPrompt && (
+          <div className="flex items-center gap-1 p-0.5 rounded-md bg-surface border border-border">
+            <button
+              onClick={() => setUseCustomPrompt(false)}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all',
+                !useCustomPrompt
+                  ? 'bg-foreground text-background'
+                  : 'text-muted hover:text-foreground'
+              )}
+            >
+              <FileText className="h-3 w-3" />
+              default
+            </button>
+            <button
+              onClick={() => setUseCustomPrompt(true)}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all',
+                useCustomPrompt
+                  ? 'bg-[#27C93F] text-black'
+                  : 'text-muted hover:text-foreground'
+              )}
+            >
+              <Sparkles className="h-3 w-3" />
+              custom
+            </button>
+          </div>
+        )}
+
+        {/* Lead Name Input */}
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="nombre (opcional)"
+            value={leadName}
+            onChange={(e) => setLeadName(e.target.value)}
+            className="h-8 w-36 bg-surface border-border text-foreground text-sm placeholder:text-muted font-mono"
+          />
+        </div>
+      </div>
+
       {/* Messages Area */}
-      <ScrollArea className="flex-1" viewportRef={scrollRef}>
+      <ScrollArea className="flex-1 bg-background" viewportRef={scrollRef}>
         <div className="flex flex-col gap-4 p-4 md:p-6">
           {messages.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-6 py-12 text-center">
-              <div className="rounded-full bg-primary/10 p-4">
-                <Bot className="h-8 w-8 text-primary" />
+            <div className="flex flex-1 flex-col items-center justify-center gap-6 py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-surface-2 border border-border flex items-center justify-center">
+                <Bot className="h-7 w-7 text-muted" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-white">
-                  Sandbox de Demo
+                <h3 className="text-base font-medium text-foreground">
+                  Sandbox Demo
                 </h3>
-                <p className="max-w-md text-sm text-white/70">
+                <p className="max-w-sm text-sm text-muted">
                   Prueba el agente de {selectedTenant?.businessName || 'seguros'} en tiempo real.
-                  Los mensajes no se guardan permanentemente.
                 </p>
                 {selectedTenant?.hasCustomPrompt && (
-                  <p className="text-xs text-white/50">
-                    Prompt: {useCustomPrompt ? (
-                      <span className="text-emerald-400">Custom</span>
+                  <p className="text-xs font-mono text-muted">
+                    prompt: {useCustomPrompt ? (
+                      <span className="text-[#27C93F]">custom</span>
                     ) : (
-                      <span className="text-white/70">Default (Seguros)</span>
+                      <span className="text-foreground">default</span>
                     )}
                   </p>
                 )}
               </div>
 
               {/* Suggestion Chips */}
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="flex flex-wrap justify-center gap-2 max-w-md">
                 {SUGGESTIONS.map((suggestion, i) => (
                   <button
                     key={i}
                     onClick={() => sendMessage(suggestion)}
                     disabled={isLoading}
-                    className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
+                    className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-muted transition-colors hover:border-muted hover:text-foreground disabled:opacity-50 font-mono"
                   >
                     {suggestion}
                   </button>
@@ -382,26 +384,29 @@ export function SandboxChat() {
                 )}
               >
                 {message.role === 'assistant' && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20">
-                    <Bot className="h-4 w-4 text-primary" />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-2 border border-border">
+                    <Bot className="h-4 w-4 text-muted" />
                   </div>
                 )}
                 <div
                   className={cn(
-                    'max-w-[80%] rounded-2xl px-4 py-3 text-sm',
+                    'max-w-[75%] rounded-xl px-4 py-3 text-sm',
                     message.role === 'user'
-                      ? 'bg-primary text-white'
-                      : 'bg-white/10 text-white border border-white/10'
+                      ? 'bg-foreground text-background'
+                      : 'bg-surface border border-border text-foreground'
                   )}
                 >
                   <p className="whitespace-pre-wrap">{message.content}</p>
-                  <span className="mt-1 block text-[10px] opacity-50">
+                  <span className={cn(
+                    "mt-1.5 block text-[10px] font-mono",
+                    message.role === 'user' ? 'text-background/50' : 'text-muted'
+                  )}>
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
                 {message.role === 'user' && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20">
-                    <User className="h-4 w-4 text-white" />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-2 border border-border">
+                    <User className="h-4 w-4 text-muted" />
                   </div>
                 )}
               </div>
@@ -411,12 +416,12 @@ export function SandboxChat() {
           {/* Thinking Indicator */}
           {isLoading && (
             <div className="flex gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20">
-                <Bot className="h-4 w-4 text-primary" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-2 border border-border">
+                <Bot className="h-4 w-4 text-muted" />
               </div>
-              <div className="flex items-center gap-2 rounded-2xl bg-white/10 px-4 py-3 text-sm text-white/70 border border-white/10">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Escribiendo...</span>
+              <div className="flex items-center gap-2 rounded-xl bg-surface border border-border px-4 py-3 text-sm text-muted">
+                <Loader2 className="h-4 w-4 animate-spin text-[#27C93F]" />
+                <span className="font-mono text-xs">thinking...</span>
               </div>
             </div>
           )}
@@ -424,7 +429,7 @@ export function SandboxChat() {
           {/* Error Message */}
           {error && (
             <div className="flex justify-center">
-              <div className="rounded-lg bg-red-500/20 px-4 py-2 text-sm text-red-200 border border-red-500/30">
+              <div className="rounded-lg bg-[#FF5F56]/10 border border-[#FF5F56]/20 px-4 py-2 text-sm text-[#FF5F56] font-mono">
                 {error}
               </div>
             </div>
@@ -435,32 +440,33 @@ export function SandboxChat() {
       {/* Input Area */}
       <form
         onSubmit={handleSubmit}
-        className="border-t border-white/20 bg-white/5 p-4 backdrop-blur-sm"
+        className="border-t border-border bg-surface p-4"
       >
-        <div className="flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-4 py-2">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-2">
+          <span className="text-[#27C93F] font-mono text-sm">$</span>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Escribe un mensaje..."
+            placeholder="escribe un mensaje..."
             disabled={isLoading}
-            className="flex-1 border-0 bg-transparent text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="flex-1 border-0 bg-transparent text-foreground text-sm placeholder:text-muted focus-visible:ring-0 focus-visible:ring-offset-0 font-mono"
           />
           <Button
             type="submit"
             size="icon"
             disabled={isLoading || !input.trim()}
-            className="h-10 w-10 shrink-0 rounded-full bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
+            className="h-8 w-8 shrink-0 rounded-md bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
           >
             {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <SendHorizontal className="h-5 w-5" />
+              <SendHorizontal className="h-4 w-4" />
             )}
           </Button>
         </div>
-        <p className="mt-2 text-center text-xs text-white/40">
-          Máximo 10 mensajes por minuto • Sandbox de demostración
+        <p className="mt-2 text-center text-[10px] text-muted font-mono">
+          rate limit: 10 msg/min • sandbox mode
         </p>
       </form>
     </div>

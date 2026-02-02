@@ -8,8 +8,6 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const WHATSAPP_LINK = 'https://api.whatsapp.com/send?phone=529849800629&text=Hola%20Loomi%20quiero%20una%20demo';
-
 const NAV_LINKS = [
   { href: '#features', label: 'features' },
   { href: '#how-it-works', label: 'proceso' },
@@ -72,16 +70,12 @@ export function Navbar() {
                 login
               </Button>
             </Link>
-            <a
-              href={WHATSAPP_LINK}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <Link href="/login?mode=access">
               <Button variant="primary" size="sm" className="gap-2 font-mono">
                 <MessageCircle className="w-4 h-4" />
                 ./demo
               </Button>
-            </a>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -123,17 +117,12 @@ export function Navbar() {
                     login
                   </Button>
                 </Link>
-                <a
-                  href={WHATSAPP_LINK}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
-                >
+                <Link href="/login?mode=access" className="block" onClick={() => setIsMenuOpen(false)}>
                   <Button variant="primary" size="md" className="w-full gap-2 font-mono">
                     <MessageCircle className="w-4 h-4" />
-                    ./agendar-demo
+                    ./demo
                   </Button>
-                </a>
+                </Link>
               </div>
             </div>
           </motion.div>

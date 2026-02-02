@@ -63,16 +63,18 @@ export async function PATCH(
 
     // Track Meta conversion when moved to "Ganado"
     if (body.stage === 'Ganado' && currentLead.stage !== 'Ganado') {
-      trackCustomerWon({
-        phone: currentLead.phone,
-        leadId: currentLead.id,
-        email: currentLead.contact_email,
-        name: currentLead.name,
-        value: currentLead.deal_value || 0,
-        currency: 'MXN'
-      }).catch(err => {
+      try {
+        await trackCustomerWon({
+          phone: currentLead.phone,
+          leadId: currentLead.id,
+          email: currentLead.contact_email,
+          name: currentLead.name,
+          value: currentLead.deal_value || 0,
+          currency: 'MXN'
+        });
+      } catch (err) {
         console.error('[Meta] Failed to track customer won:', err);
-      });
+      }
     }
 
     return NextResponse.json(data);

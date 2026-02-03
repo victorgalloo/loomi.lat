@@ -13,7 +13,8 @@ import { tool, zodSchema } from '@ai-sdk/provider-utils';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { ConversationContext } from '@/types';
-import { escalateToHuman, sendPaymentLink } from '@/lib/whatsapp/send';
+import { sendPaymentLink } from '@/lib/whatsapp/send';
+import { executeHandoff, HandoffContext } from '@/lib/handoff';
 import { createCheckoutSession } from '@/lib/stripe/checkout';
 import { generateReasoningFast, formatReasoningForPrompt } from './reasoning';
 import { getSentimentInstruction } from './sentiment';
@@ -520,23 +521,41 @@ Sé directa, inteligente, mensajes cortos.`
         const { reason, summary } = params as { reason: string; summary: string };
         console.log(`[Tool] Escalating to human: ${reason}`);
 
-        const recentMsgs = history.slice(-5).map(m =>
-          `${m.role === 'user' ? 'Cliente' : 'Lu'}: ${m.content}`
-        );
+        // Determine priority based on reason
+        let handoffReason: HandoffContext['reason'] = 'custom';
+        let priority: HandoffContext['priority'] = 'normal';
 
-        const escalated = await escalateToHuman({
-          clientPhone,
-          clientName,
-          reason,
-          conversationSummary: summary,
+        if (reason.toLowerCase().includes('frustrad')) {
+          handoffReason = 'user_frustrated';
+          priority = 'critical';
+        } else if (reason.toLowerCase().includes('enterprise') || reason.toLowerCase().includes('alto valor')) {
+          handoffReason = 'enterprise_lead';
+          priority = 'urgent';
+        } else if (reason.toLowerCase().includes('pide') || reason.toLowerCase().includes('solicit')) {
+          handoffReason = 'user_requested';
+          priority = 'urgent';
+        } else if (reason.toLowerCase().includes('técnic') || reason.toLowerCase().includes('complej')) {
+          handoffReason = 'complex_question';
+          priority = 'normal';
+        }
+
+        const recentMsgs = history.slice(-5).map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content
+        }));
+
+        const result = await executeHandoff({
+          phone: clientPhone,
+          name: clientName,
           recentMessages: recentMsgs,
-          isUrgent: reason.includes('enterprise') || reason.includes('frustrado'),
-          isVIP: reason.includes('enterprise')
+          reason: handoffReason,
+          priority,
+          customReason: summary
         });
 
         return {
-          success: escalated,
-          message: escalated
+          success: result.notifiedOperator,
+          message: result.notifiedOperator
             ? 'Escalado exitosamente. El cliente será contactado por un humano pronto.'
             : 'No se pudo escalar. Intenta resolver la situación.'
         };
@@ -626,32 +645,31 @@ Sé directa, inteligente, mensajes cortos.`
   if (state === 'handoff_human_request' || state === 'handoff_frustrated') {
     console.log(`[Agent] Automatic handoff triggered: ${state}`);
 
-    const recentMsgs = history.slice(-5).map(m =>
-      `${m.role === 'user' ? 'Cliente' : 'Lu'}: ${m.content}`
-    );
+    const recentMsgs = history.slice(-5).map(m => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content
+    }));
 
-    const isUrgent = state === 'handoff_frustrated';
-    const reason = state === 'handoff_frustrated'
-      ? 'Cliente frustrado - atención urgente'
-      : 'Cliente pidió hablar con un humano';
+    const handoffReason = state === 'handoff_frustrated' ? 'user_frustrated' : 'user_requested';
+    const priority = state === 'handoff_frustrated' ? 'critical' : 'urgent';
 
-    const escalated = await escalateToHuman({
-      clientPhone,
-      clientName,
-      reason,
-      conversationSummary: `El cliente dijo: "${message}"`,
+    const result = await executeHandoff({
+      phone: clientPhone,
+      name: clientName,
       recentMessages: recentMsgs,
-      isUrgent
+      reason: handoffReason,
+      priority
     });
 
-    if (escalated) {
-      escalatedToHuman = { reason, summary: message };
-      const response = state === 'handoff_frustrated'
-        ? 'Perdón si no me expliqué bien. Te paso con alguien del equipo que te ayuda mejor. Te escriben en los próximos minutos.'
-        : 'Claro, te comunico con alguien del equipo. Te escriben en los próximos minutos.';
+    if (result.notifiedOperator) {
+      escalatedToHuman = {
+        reason: handoffReason,
+        summary: message
+      };
 
+      // Response is already sent by executeHandoff, but return it for logging
       return {
-        response,
+        response: '', // Client already notified by handoff system
         escalatedToHuman,
         saidLater
       };
@@ -760,33 +778,34 @@ Sé directa, inteligente, mensajes cortos.`
   } catch (error) {
     console.error('Agent error:', error);
 
-    // Automatic handoff on error
-    const recentMsgs = history.slice(-5).map(m =>
-      `${m.role === 'user' ? 'Cliente' : 'Lu'}: ${m.content}`
-    );
+    // Automatic handoff on error using new system
+    const recentMsgs = history.slice(-5).map(m => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content
+    }));
 
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
 
-    const escalated = await escalateToHuman({
-      clientPhone,
-      clientName,
-      reason: `Error en el agente: ${errorMessage}`,
-      conversationSummary: `El cliente dijo: "${message}" - El agente falló al procesar`,
+    const result = await executeHandoff({
+      phone: clientPhone,
+      name: clientName,
       recentMessages: recentMsgs,
-      isUrgent: true
+      reason: 'agent_error',
+      priority: 'critical',
+      errorMessage
     });
 
-    if (escalated) {
+    if (result.notifiedOperator) {
       console.log('[Agent] Auto-escalated due to error');
       return {
-        response: 'Tuve un problema técnico. Te paso con alguien del equipo que te ayuda. Te escriben en un momento.',
-        escalatedToHuman: { reason: 'Error técnico', summary: errorMessage }
+        response: '', // Client already notified by handoff system
+        escalatedToHuman: { reason: 'agent_error', summary: errorMessage }
       };
     }
 
     // Fallback if escalation also fails
     return {
-      response: 'Perdón, tuve un problema. ¿Me repites?'
+      response: 'Perdón, tuve un problema técnico. ¿Me repites?'
     };
   }
 }

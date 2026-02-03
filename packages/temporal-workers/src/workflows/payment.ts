@@ -16,7 +16,6 @@ import type * as activities from '../activities';
 
 const {
   createCheckoutSession,
-  getPlanDisplayName,
   sendMessage,
   sendPaymentLink,
   getLeadById,
@@ -30,6 +29,16 @@ const {
     maximumAttempts: 3,
   },
 });
+
+// Helper function (deterministic, runs in workflow)
+function getPlanDisplayName(plan: StripePlan): string {
+  const names: Record<StripePlan, string> = {
+    starter: 'Starter ($199/mes)',
+    growth: 'Growth ($349/mes)',
+    business: 'Business ($599/mes)',
+  };
+  return names[plan];
+}
 
 // Signals
 export const paymentCompletedSignal = defineSignal<[{ sessionId: string; subscriptionId: string }]>(

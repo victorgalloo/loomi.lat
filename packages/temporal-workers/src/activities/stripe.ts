@@ -190,7 +190,7 @@ export async function createBillingPortalSession(
   }
 }
 
-// Activity exports for Temporal
+// Activity exports for Temporal (only async functions)
 export const stripeActivities = {
   createOrGetCustomer,
   createCheckoutSession,
@@ -198,5 +198,5 @@ export const stripeActivities = {
   getSubscription,
   cancelSubscription,
   createBillingPortalSession,
-  getPlanDisplayName,
 };
+// Note: getPlanDisplayName is exported directly (line 33) as a utility, not as an activity

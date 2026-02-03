@@ -55,19 +55,58 @@ import {
 } from '@/lib/followups/scheduler';
 import { getTenantFromPhoneNumberId, getAgentConfig, AgentConfig } from '@/lib/tenant/context';
 import { trackDemoScheduled } from '@/lib/integrations/meta-conversions';
-// Temporal imports
-import {
-  isTemporalEnabled,
-  startDemoBookingWorkflow,
-  startFollowUpWorkflow,
-  startDemoRemindersWorkflow,
-  startIntegrationSyncWorkflow,
-  startPaymentWorkflow,
-  cancelFollowUps as cancelTemporalFollowUps,
-  buildTenantContext,
-  type Lead as TemporalLead,
-  type TenantContext
-} from '@/lib/temporal/client';
+
+// Temporal feature flags (no gRPC connection required)
+function isTemporalEnabled(feature: 'followups' | 'booking' | 'payments' | 'integrations'): boolean {
+  const flags: Record<string, string | undefined> = {
+    followups: process.env.USE_TEMPORAL_FOLLOWUPS,
+    booking: process.env.USE_TEMPORAL_BOOKING,
+    payments: process.env.USE_TEMPORAL_PAYMENTS,
+    integrations: process.env.USE_TEMPORAL_INTEGRATIONS,
+  };
+  return flags[feature] === 'true';
+}
+
+// Dynamic Temporal imports - only loads @temporalio/client when actually needed
+async function getTemporalModule() {
+  return import('@/lib/temporal/client');
+}
+
+// Temporal types (inline to avoid import)
+interface TemporalLead {
+  id: string;
+  phone: string;
+  name: string | null;
+  email: string | null;
+  company: string | null;
+  industry: string | null;
+  stage: string;
+  challenge?: string | null;
+}
+
+interface TenantContext {
+  tenantId: string;
+  tier: 'free' | 'starter' | 'growth' | 'business' | 'enterprise';
+  limits: {
+    maxConcurrentWorkflows: number;
+    maxMessagesPerDay: number;
+    maxFollowUpsPerLead: number;
+    workflowTimeoutMinutes: number;
+  };
+}
+
+// Tier limits (inline to avoid Temporal import)
+const TIER_LIMITS = {
+  free: { maxConcurrentWorkflows: 5, maxMessagesPerDay: 50, maxFollowUpsPerLead: 2, workflowTimeoutMinutes: 60 },
+  starter: { maxConcurrentWorkflows: 20, maxMessagesPerDay: 500, maxFollowUpsPerLead: 5, workflowTimeoutMinutes: 1440 },
+  growth: { maxConcurrentWorkflows: 100, maxMessagesPerDay: 2000, maxFollowUpsPerLead: 10, workflowTimeoutMinutes: 10080 },
+  business: { maxConcurrentWorkflows: 500, maxMessagesPerDay: 10000, maxFollowUpsPerLead: 20, workflowTimeoutMinutes: 43200 },
+  enterprise: { maxConcurrentWorkflows: -1, maxMessagesPerDay: -1, maxFollowUpsPerLead: -1, workflowTimeoutMinutes: 129600 },
+};
+
+function buildTenantContext(tenantId: string, tier: TenantContext['tier'] = 'starter'): TenantContext {
+  return { tenantId, tier, limits: TIER_LIMITS[tier] };
+}
 
 // Hoisted RegExp for email extraction (js-hoist-regexp)
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
@@ -518,7 +557,7 @@ export async function POST(request: NextRequest) {
 
       // Save message and cancel re-engagement in parallel (async-parallel)
       const cancelFollowUpsPromise = isTemporalEnabled('followups') && tenantContext
-        ? cancelTemporalFollowUps(tenantContext.tenantId, context.lead.id)
+        ? getTemporalModule().then(t => t.cancelFollowUps(tenantContext.tenantId, context.lead.id))
         : cancelFollowUps(context.lead.id, ['cold_lead_reengagement', 'reengagement_2', 'reengagement_3']);
 
       await Promise.all([
@@ -615,7 +654,8 @@ export async function POST(request: NextRequest) {
                   stage: 'demo_scheduled',
                   challenge: context.lead.challenge ?? null
                 };
-                await startDemoRemindersWorkflow({
+                const temporal = await getTemporalModule();
+                await temporal.startDemoRemindersWorkflow({
                   tenant: tenantContext,
                   leadId: context.lead.id,
                   lead: temporalLead,
@@ -638,7 +678,8 @@ export async function POST(request: NextRequest) {
                   industry: context.lead.industry ?? null,
                   stage: 'demo_scheduled'
                 };
-                await startIntegrationSyncWorkflow({
+                const temporal = await getTemporalModule();
+                await temporal.startIntegrationSyncWorkflow({
                   tenant: tenantContext,
                   leadId: context.lead.id,
                   lead: temporalLead,
@@ -771,7 +812,8 @@ export async function POST(request: NextRequest) {
                 stage: context.lead.stage,
                 challenge: context.lead.challenge ?? null
               };
-              await startFollowUpWorkflow({
+              const temporal = await getTemporalModule();
+              await temporal.startFollowUpWorkflow({
                 tenant: tenantContext,
                 leadId: context.lead.id,
                 lead: temporalLead,
@@ -794,7 +836,8 @@ export async function POST(request: NextRequest) {
               industry: context.lead.industry ?? null,
               stage: context.lead.stage
             };
-            await startIntegrationSyncWorkflow({
+            const temporal = await getTemporalModule();
+            await temporal.startIntegrationSyncWorkflow({
               tenant: tenantContext,
               leadId: context.lead.id,
               lead: temporalLead,

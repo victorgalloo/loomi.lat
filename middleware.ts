@@ -28,7 +28,7 @@ export async function middleware(request: NextRequest) {
   );
 
   // If no auth cookie and trying to access protected route, redirect to login
-  if (!authCookie && pathname.startsWith('/dashboard')) {
+  if (!authCookie && (pathname.startsWith('/dashboard') || pathname.startsWith('/partners'))) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('redirectedFrom', pathname)

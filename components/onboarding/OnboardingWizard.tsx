@@ -2,12 +2,34 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Send, Check, Loader2, RotateCcw, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Send,
+  Check,
+  Loader2,
+  RotateCcw,
+  Brain,
+  Sparkles,
+  Heart,
+  Zap,
+  MessageSquare,
+  TrendingUp,
+  Shield,
+  CreditCard,
+  UserCheck
+} from 'lucide-react';
 
 interface Message {
   role: 'assistant' | 'user';
   content: string;
+  agentInfo?: AgentInfo;
+}
+
+interface AgentInfo {
+  escalatedToHuman?: { reason: string; summary: string } | null;
+  paymentLinkSent?: { plan: string; email: string } | null;
+  detectedIndustry?: string | null;
+  saidLater?: boolean;
 }
 
 interface ExtractedConfig {
@@ -24,9 +46,17 @@ interface OnboardingWizardProps {
   existingConfig?: Partial<ExtractedConfig>;
 }
 
-const INITIAL_MESSAGE = `¡Hola! 👋 Voy a ayudarte a configurar tu agente de WhatsApp en menos de 2 minutos.
+const INITIAL_MESSAGE = `¡Hola! Voy a ayudarte a configurar tu agente de WhatsApp en menos de 2 minutos.
 
 Empecemos: **¿Cómo se llama tu negocio?**`;
+
+// Analysis steps shown during processing
+const ANALYSIS_STEPS = [
+  { icon: Brain, text: 'Analizando contexto...', color: 'text-blue-400' },
+  { icon: Heart, text: 'Detectando sentimiento...', color: 'text-pink-400' },
+  { icon: TrendingUp, text: 'Evaluando intención...', color: 'text-green-400' },
+  { icon: Sparkles, text: 'Generando respuesta...', color: 'text-yellow-400' },
+];
 
 export function OnboardingWizard({
   tenantId,
@@ -48,10 +78,22 @@ export function OnboardingWizard({
   const [testMessages, setTestMessages] = useState<Message[]>([]);
   const [testInput, setTestInput] = useState('');
   const [isTestLoading, setIsTestLoading] = useState(false);
+  const [analysisStep, setAnalysisStep] = useState(0);
+  const [showCapabilities, setShowCapabilities] = useState(true);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, testMessages]);
+
+  // Animate through analysis steps
+  useEffect(() => {
+    if (isTestLoading) {
+      const interval = setInterval(() => {
+        setAnalysisStep(prev => (prev + 1) % ANALYSIS_STEPS.length);
+      }, 800);
+      return () => clearInterval(interval);
+    }
+  }, [isTestLoading]);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -77,7 +119,6 @@ export function OnboardingWizard({
         setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
       }
 
-      // Check if onboarding chat is complete
       if (data.isComplete && data.extractedConfig) {
         setExtractedConfig(data.extractedConfig);
         setGeneratedPrompt(data.generatedPrompt || '');
@@ -94,13 +135,15 @@ export function OnboardingWizard({
     }
   };
 
-  const sendTestMessage = async () => {
-    if (!testInput.trim() || isTestLoading) return;
+  const sendTestMessage = async (customMessage?: string) => {
+    const msg = customMessage || testInput.trim();
+    if (!msg || isTestLoading) return;
 
-    const msg = testInput.trim();
     setTestInput('');
     setTestMessages(prev => [...prev, { role: 'user', content: msg }]);
     setIsTestLoading(true);
+    setShowCapabilities(false);
+    setAnalysisStep(0);
 
     try {
       const res = await fetch('/api/onboarding/test-agent', {
@@ -116,7 +159,11 @@ export function OnboardingWizard({
 
       const data = await res.json();
       if (data.response) {
-        setTestMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+        setTestMessages(prev => [...prev, {
+          role: 'assistant',
+          content: data.response,
+          agentInfo: data.agentInfo
+        }]);
       }
     } catch (err) {
       console.error(err);
@@ -152,18 +199,27 @@ export function OnboardingWizard({
     setExtractedConfig(null);
     setGeneratedPrompt('');
     setTestMessages([]);
+    setShowCapabilities(true);
     setStep('chat');
   };
+
+  // Quick prompts that showcase agent capabilities
+  const quickPrompts = [
+    { text: 'Hola, ¿qué ofrecen?', icon: MessageSquare, label: 'Saludo' },
+    { text: '¿Cuánto cuesta? Es muy caro para mí', icon: TrendingUp, label: 'Objeción' },
+    { text: 'Quiero hablar con una persona real', icon: UserCheck, label: 'Escalación' },
+    { text: 'Ok, me interesa. ¿Cómo pago?', icon: CreditCard, label: 'Cierre' },
+  ];
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-lg"
+        className="w-full max-w-xl"
       >
         {/* Terminal window */}
-        <div className="rounded-xl border border-border bg-surface overflow-hidden">
+        <div className="rounded-xl border border-border bg-surface overflow-hidden shadow-2xl">
           {/* Header */}
           <div className="px-4 py-3 border-b border-border flex items-center gap-2">
             <div className="flex items-center gap-1.5">
@@ -172,16 +228,22 @@ export function OnboardingWizard({
               <div className="w-3 h-3 rounded-full bg-terminal-green" />
             </div>
             <span className="text-xs text-muted font-mono ml-2">
-              {step === 'chat' ? './setup' : step === 'test' ? './test-agent' : './saving'}
+              {step === 'chat' ? './setup' : step === 'test' ? './loomi-agent --live' : './deploy'}
             </span>
-            {step !== 'chat' && (
-              <button
-                onClick={resetOnboarding}
-                className="ml-auto text-muted hover:text-foreground"
-                title="Empezar de nuevo"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
+            {step === 'test' && (
+              <div className="ml-auto flex items-center gap-2">
+                <span className="flex items-center gap-1 px-2 py-0.5 bg-terminal-green/10 border border-terminal-green/20 rounded text-[10px] font-mono text-terminal-green">
+                  <Zap className="w-3 h-3" />
+                  GPT-5.2 + o3
+                </span>
+                <button
+                  onClick={resetOnboarding}
+                  className="text-muted hover:text-foreground"
+                  title="Empezar de nuevo"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )}
           </div>
 
@@ -243,67 +305,189 @@ export function OnboardingWizard({
             </div>
           )}
 
-          {/* Test phase */}
+          {/* Test phase - Enhanced */}
           {step === 'test' && extractedConfig && (
-            <div className="flex flex-col h-[450px]">
-              {/* Config summary */}
-              <div className="px-4 py-2 border-b border-border bg-terminal-green/5">
-                <div className="flex items-center gap-2 text-xs font-mono">
-                  <Check className="w-3.5 h-3.5 text-terminal-green" />
-                  <span className="text-terminal-green">{extractedConfig.businessName}</span>
-                  <span className="text-muted">·</span>
-                  <span className="text-muted">{extractedConfig.tone}</span>
+            <div className="flex flex-col h-[520px]">
+              {/* Config summary with features */}
+              <div className="px-4 py-3 border-b border-border bg-gradient-to-r from-terminal-green/5 to-blue-500/5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-mono">
+                    <Check className="w-3.5 h-3.5 text-terminal-green" />
+                    <span className="text-terminal-green font-medium">{extractedConfig.businessName}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-1.5 py-0.5 bg-surface-2 border border-border rounded text-[10px] text-muted">
+                      {extractedConfig.industry}
+                    </span>
+                    <span className="px-1.5 py-0.5 bg-surface-2 border border-border rounded text-[10px] text-muted">
+                      {extractedConfig.tone}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Test chat */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {testMessages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center">
-                    <p className="text-sm text-muted mb-3">Prueba tu agente</p>
-                    <div className="flex flex-wrap gap-1.5 justify-center">
-                      {['¿Qué ofrecen?', '¿Cuánto cuesta?', 'Quiero agendar'].map((q) => (
-                        <button
-                          key={q}
-                          onClick={() => {
-                            setTestInput(q);
-                            setTimeout(() => sendTestMessage(), 100);
-                          }}
-                          className="px-2.5 py-1 text-xs font-mono bg-background border border-border rounded hover:border-foreground/30"
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  testMessages.map((msg, i) => (
-                    <div
-                      key={i}
-                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                <AnimatePresence mode="wait">
+                  {showCapabilities && testMessages.length === 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="h-full flex flex-col items-center justify-center text-center px-4"
                     >
-                      <div
-                        className={`max-w-[85%] px-3 py-2 rounded-lg text-sm ${
-                          msg.role === 'user'
-                            ? 'bg-foreground text-background'
-                            : 'bg-surface-2 border border-border'
-                        }`}
-                      >
-                        {msg.content}
+                      {/* Capabilities showcase */}
+                      <div className="mb-6">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full mb-3">
+                          <Sparkles className="w-4 h-4 text-blue-400" />
+                          <span className="text-xs font-medium text-blue-400">Multi-Agent AI</span>
+                        </div>
+                        <p className="text-sm text-muted">
+                          Tu agente usa análisis multi-modelo para respuestas inteligentes
+                        </p>
+                      </div>
+
+                      {/* Feature grid */}
+                      <div className="grid grid-cols-2 gap-2 mb-6 w-full max-w-sm">
+                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-lg">
+                          <Brain className="w-4 h-4 text-blue-400" />
+                          <span className="text-xs text-muted">Razonamiento o3</span>
+                        </div>
+                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-lg">
+                          <Heart className="w-4 h-4 text-pink-400" />
+                          <span className="text-xs text-muted">Detección emocional</span>
+                        </div>
+                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-lg">
+                          <Shield className="w-4 h-4 text-green-400" />
+                          <span className="text-xs text-muted">Escalación inteligente</span>
+                        </div>
+                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-lg">
+                          <CreditCard className="w-4 h-4 text-yellow-400" />
+                          <span className="text-xs text-muted">Links de pago</span>
+                        </div>
+                      </div>
+
+                      {/* Quick prompts */}
+                      <p className="text-xs text-muted mb-3">Prueba estos escenarios:</p>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {quickPrompts.map((prompt) => (
+                          <button
+                            key={prompt.label}
+                            onClick={() => sendTestMessage(prompt.text)}
+                            className="group flex items-center gap-1.5 px-3 py-1.5 bg-background border border-border rounded-lg hover:border-foreground/30 transition-all"
+                          >
+                            <prompt.icon className="w-3.5 h-3.5 text-muted group-hover:text-foreground transition-colors" />
+                            <span className="text-xs font-mono">{prompt.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="space-y-3"
+                    >
+                      {testMessages.map((msg, i) => (
+                        <div key={i}>
+                          <div
+                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div
+                              className={`max-w-[85%] px-3 py-2 rounded-lg text-sm ${
+                                msg.role === 'user'
+                                  ? 'bg-foreground text-background'
+                                  : 'bg-surface-2 border border-border'
+                              }`}
+                            >
+                              {msg.content}
+                            </div>
+                          </div>
+                          {/* Show agent capabilities used */}
+                          {msg.role === 'assistant' && msg.agentInfo && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="flex gap-1.5 mt-1.5 ml-1"
+                            >
+                              {msg.agentInfo.detectedIndustry && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded text-[10px] text-blue-400">
+                                  <TrendingUp className="w-2.5 h-2.5" />
+                                  {msg.agentInfo.detectedIndustry}
+                                </span>
+                              )}
+                              {msg.agentInfo.escalatedToHuman && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded text-[10px] text-yellow-400">
+                                  <UserCheck className="w-2.5 h-2.5" />
+                                  Escalado
+                                </span>
+                              )}
+                              {msg.agentInfo.paymentLinkSent && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-500/10 border border-green-500/20 rounded text-[10px] text-green-400">
+                                  <CreditCard className="w-2.5 h-2.5" />
+                                  Pago enviado
+                                </span>
+                              )}
+                              {msg.agentInfo.saidLater && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded text-[10px] text-purple-400">
+                                  <Zap className="w-2.5 h-2.5" />
+                                  Follow-up
+                                </span>
+                              )}
+                            </motion.div>
+                          )}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Enhanced loading state with analysis steps */}
+                {isTestLoading && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex justify-start"
+                  >
+                    <div className="bg-surface-2 border border-border px-4 py-3 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div className="w-8 h-8 border-2 border-terminal-green/30 rounded-full" />
+                          <div className="absolute inset-0 w-8 h-8 border-2 border-terminal-green border-t-transparent rounded-full animate-spin" />
+                        </div>
+                        <div className="space-y-1">
+                          <AnimatePresence mode="wait">
+                            <motion.div
+                              key={analysisStep}
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -5 }}
+                              transition={{ duration: 0.2 }}
+                              className={`flex items-center gap-2 ${ANALYSIS_STEPS[analysisStep].color}`}
+                            >
+                              {(() => {
+                                const StepIcon = ANALYSIS_STEPS[analysisStep].icon;
+                                return <StepIcon className="w-3.5 h-3.5" />;
+                              })()}
+                              <span className="text-xs font-mono">
+                                {ANALYSIS_STEPS[analysisStep].text}
+                              </span>
+                            </motion.div>
+                          </AnimatePresence>
+                          <div className="flex gap-0.5">
+                            {ANALYSIS_STEPS.map((_, i) => (
+                              <div
+                                key={i}
+                                className={`w-1 h-1 rounded-full transition-colors ${
+                                  i <= analysisStep ? 'bg-terminal-green' : 'bg-border'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  ))
-                )}
-                {isTestLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-surface-2 border border-border px-3 py-2 rounded-lg">
-                      <span className="flex gap-1">
-                        <span className="w-1.5 h-1.5 bg-terminal-green rounded-full animate-pulse" />
-                        <span className="w-1.5 h-1.5 bg-terminal-green rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
-                        <span className="w-1.5 h-1.5 bg-terminal-green rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
-                      </span>
-                    </div>
-                  </div>
+                  </motion.div>
                 )}
                 <div ref={messagesEndRef} />
               </div>
@@ -316,12 +500,12 @@ export function OnboardingWizard({
                     value={testInput}
                     onChange={(e) => setTestInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && sendTestMessage()}
-                    placeholder="Prueba un mensaje..."
+                    placeholder="Escribe como cliente..."
                     className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-sm font-mono focus:outline-none focus:border-foreground/30"
                     disabled={isTestLoading}
                   />
                   <button
-                    onClick={sendTestMessage}
+                    onClick={() => sendTestMessage()}
                     disabled={!testInput.trim() || isTestLoading}
                     className="px-3 py-2 bg-surface border border-border text-foreground rounded-lg disabled:opacity-30"
                   >
@@ -330,10 +514,10 @@ export function OnboardingWizard({
                 </div>
                 <button
                   onClick={saveAndFinish}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terminal-green text-background rounded-lg font-mono text-sm hover:opacity-90"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terminal-green text-background rounded-lg font-mono text-sm hover:opacity-90 transition-opacity"
                 >
                   <Check className="w-4 h-4" />
-                  Guardar y continuar
+                  Activar agente
                 </button>
               </div>
             </div>
@@ -343,7 +527,7 @@ export function OnboardingWizard({
           {step === 'saving' && (
             <div className="h-[200px] flex flex-col items-center justify-center">
               <Loader2 className="w-8 h-8 text-terminal-green animate-spin mb-4" />
-              <p className="text-sm text-muted font-mono">Guardando configuración...</p>
+              <p className="text-sm text-muted font-mono">Activando tu agente...</p>
             </div>
           )}
         </div>

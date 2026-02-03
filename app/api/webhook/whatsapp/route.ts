@@ -21,11 +21,19 @@ import { parseWhatsAppWebhook, ParsedWhatsAppMessage } from '@/lib/whatsapp/pars
 import {
   sendWhatsAppMessage,
   sendScheduleList,
-  notifyFallback,
   markAsRead,
+  notifyFallback,
   TimeSlot,
   TenantCredentials
 } from '@/lib/whatsapp/send';
+import {
+  executeHandoff,
+  handoffOnAgentError,
+  handoffOnServiceError,
+  detectHandoffTrigger,
+  detectRepeatedFailures,
+  HandoffContext
+} from '@/lib/handoff';
 import { getConversationContext } from '@/lib/memory/context';
 import { simpleAgent } from '@/lib/agents/simple-agent';
 import {
@@ -794,21 +802,70 @@ export async function POST(request: NextRequest) {
       // LLM FLOW
       // ============================================
 
+      // Check for handoff triggers before calling agent
+      const handoffTrigger = detectHandoffTrigger(message.text);
+      const hasRepeatedFailures = detectRepeatedFailures(
+        context.recentMessages.map(m => ({ role: m.role, content: m.content }))
+      );
+
+      // Immediate handoff for explicit triggers or repeated failures
+      if (handoffTrigger || hasRepeatedFailures) {
+        const reason = hasRepeatedFailures ? 'repeated_failures' : handoffTrigger!.reason;
+        const priority = hasRepeatedFailures ? 'critical' : handoffTrigger!.priority;
+
+        console.log(`[Webhook] Handoff triggered: ${reason} (priority: ${priority})`);
+
+        const handoffResult = await executeHandoff({
+          phone: message.phone,
+          name: context.lead.name || 'Cliente',
+          email: context.lead.email || undefined,
+          company: context.lead.company || undefined,
+          industry: context.lead.industry || undefined,
+          leadId: context.lead.id,
+          conversationId: context.conversation.id,
+          recentMessages: context.recentMessages.slice(-5).map(m => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content
+          })),
+          reason,
+          priority,
+          currentStage: context.lead.stage,
+          credentials
+        });
+
+        if (handoffResult.notifiedClient) {
+          await saveMessage(context.conversation.id, 'assistant', '[Handoff a humano]', context.lead.id);
+        }
+
+        return NextResponse.json({
+          status: 'handoff',
+          handoffId: handoffResult.handoffId,
+          reason
+        });
+      }
+
       let result;
       try {
         // Pass agent config for tenant-specific behavior
         result = await simpleAgent(message.text, context, agentConfig);
       } catch (agentError) {
         console.error('Agent error:', agentError);
-        notifyFallback({
-          type: 'agent_error',
-          clientPhone: message.phone,
-          clientName: context.lead.name,
-          error: String(agentError),
+
+        // Use new handoff system for agent errors
+        const recentMsgs = context.recentMessages.slice(-5).map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content
+        }));
+
+        await handoffOnAgentError(
+          message.phone,
+          context.lead.name || 'Cliente',
+          String(agentError),
+          recentMsgs,
           credentials
-        }).catch(console.error);
-        await sendWhatsAppMessage(message.phone, 'Perdón, tuve un problema técnico. Te contacto en un momento.', credentials);
-        return NextResponse.json({ status: 'agent_error' });
+        );
+
+        return NextResponse.json({ status: 'agent_error_handoff' });
       }
 
       console.log(`Response: ${result.response.substring(0, 50)}...`);
@@ -949,12 +1006,14 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('Webhook error:', error);
-    notifyFallback({
-      type: 'general_error',
-      error: String(error),
-      details: 'Error en webhook principal'
-      // Note: credentials not available in outer catch, uses env fallback
-    }).catch(console.error);
+
+    // Try to extract phone from body for handoff notification
+    // Note: In outer catch we may not have parsed message, so this is best-effort
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // Log for monitoring but don't fail silently
+    console.error(`[Webhook] Critical error: ${errorMessage}`);
+
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

@@ -55,6 +55,19 @@ import {
 } from '@/lib/followups/scheduler';
 import { getTenantFromPhoneNumberId, getAgentConfig, AgentConfig } from '@/lib/tenant/context';
 import { trackDemoScheduled } from '@/lib/integrations/meta-conversions';
+// Temporal imports
+import {
+  isTemporalEnabled,
+  startDemoBookingWorkflow,
+  startFollowUpWorkflow,
+  startDemoRemindersWorkflow,
+  startIntegrationSyncWorkflow,
+  startPaymentWorkflow,
+  cancelFollowUps as cancelTemporalFollowUps,
+  buildTenantContext,
+  type Lead as TemporalLead,
+  type TenantContext
+} from '@/lib/temporal/client';
 
 // Hoisted RegExp for email extraction (js-hoist-regexp)
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
@@ -497,10 +510,20 @@ export async function POST(request: NextRequest) {
       // Get conversation context (with tenant_id if available)
       const context = await getConversationContext(message, tenantId);
 
+      // Build TenantContext for Temporal workflows
+      // Default to 'starter' tier if not specified (can be loaded from DB in production)
+      const tenantContext: TenantContext | null = tenantId
+        ? buildTenantContext(tenantId, 'starter')
+        : null;
+
       // Save message and cancel re-engagement in parallel (async-parallel)
+      const cancelFollowUpsPromise = isTemporalEnabled('followups') && tenantContext
+        ? cancelTemporalFollowUps(tenantContext.tenantId, context.lead.id)
+        : cancelFollowUps(context.lead.id, ['cold_lead_reengagement', 'reengagement_2', 'reengagement_3']);
+
       await Promise.all([
         saveMessage(context.conversation.id, 'user', message.text, context.lead.id),
-        cancelFollowUps(context.lead.id, ['cold_lead_reengagement', 'reengagement_2', 'reengagement_3'])
+        cancelFollowUpsPromise
       ]);
 
       // ============================================
@@ -580,24 +603,67 @@ export async function POST(request: NextRequest) {
               const appointment = await createAppointment(context.lead.id, scheduledAt, eventId);
               await updateLeadStage(context.lead.phone, 'Demo Agendada');
 
-              await scheduleDemoReminders(context.lead.id, appointment.id, scheduledAt, context.lead);
+              // Use Temporal for follow-ups if enabled, otherwise use legacy scheduler
+              if (isTemporalEnabled('followups') && tenantContext) {
+                const temporalLead: TemporalLead = {
+                  id: context.lead.id,
+                  phone: context.lead.phone,
+                  name: context.lead.name,
+                  email: context.lead.email || email || null,
+                  company: context.lead.company ?? null,
+                  industry: context.lead.industry ?? null,
+                  stage: 'demo_scheduled',
+                  challenge: context.lead.challenge ?? null
+                };
+                await startDemoRemindersWorkflow({
+                  tenant: tenantContext,
+                  leadId: context.lead.id,
+                  lead: temporalLead,
+                  appointmentId: appointment.id,
+                  scheduledAt: scheduledAt.toISOString()
+                });
+                console.log('[Webhook] Started Temporal demo reminders workflow');
+              } else {
+                await scheduleDemoReminders(context.lead.id, appointment.id, scheduledAt, context.lead);
+              }
 
-              await syncLeadToHubSpot({
-                phone: context.lead.phone,
-                name: context.lead.name,
-                email,
-                stage: 'Demo Agendada',
-                messages: [...context.recentMessages, { role: 'user', content: message.text }],
-                appointmentBooked: { date, time, meetingUrl }
-              });
+              // Use Temporal for integrations if enabled
+              if (isTemporalEnabled('integrations') && tenantContext) {
+                const temporalLead: TemporalLead = {
+                  id: context.lead.id,
+                  phone: context.lead.phone,
+                  name: context.lead.name,
+                  email: context.lead.email || email || null,
+                  company: context.lead.company ?? null,
+                  industry: context.lead.industry ?? null,
+                  stage: 'demo_scheduled'
+                };
+                await startIntegrationSyncWorkflow({
+                  tenant: tenantContext,
+                  leadId: context.lead.id,
+                  lead: temporalLead,
+                  conversationId: context.conversation.id,
+                  eventType: 'demo_scheduled'
+                });
+                console.log('[Webhook] Started Temporal integration sync workflow');
+              } else {
+                await syncLeadToHubSpot({
+                  phone: context.lead.phone,
+                  name: context.lead.name,
+                  email,
+                  stage: 'Demo Agendada',
+                  messages: [...context.recentMessages, { role: 'user', content: message.text }],
+                  appointmentBooked: { date, time, meetingUrl }
+                });
 
-              // Track conversion event for Meta
-              await trackDemoScheduled({
-                phone: context.lead.phone,
-                leadId: context.lead.id,
-                name: context.lead.name,
-                email
-              });
+                // Track conversion event for Meta
+                await trackDemoScheduled({
+                  phone: context.lead.phone,
+                  leadId: context.lead.id,
+                  name: context.lead.name,
+                  email
+                });
+              }
             } catch (err) {
               console.error('[Webhook] After error:', err);
             }
@@ -658,6 +724,28 @@ export async function POST(request: NextRequest) {
 
       console.log(`Response: ${result.response.substring(0, 50)}...`);
 
+      // Check if agent triggered schedule list
+      if (result.showScheduleList) {
+        console.log('[Webhook] Agent triggered schedule list');
+        const slots = await getAvailableTimeSlots();
+        if (slots.length > 0) {
+          // Send agent's response first, then the schedule list
+          if (result.response) {
+            await sendWhatsAppMessage(message.phone, result.response, credentials);
+            await saveMessage(context.conversation.id, 'assistant', result.response, context.lead.id);
+          }
+          await sendScheduleList(message.phone, slots, 'Horarios disponibles', 'Elige el que te funcione:', credentials);
+          await saveMessage(context.conversation.id, 'assistant', '[Lista de horarios enviada]', context.lead.id);
+          return NextResponse.json({ status: 'ok', flow: 'schedule_list_from_agent' });
+        } else {
+          // No slots available, send message with Cal.com link as fallback
+          const fallbackMsg = 'No tengo horarios disponibles en estos días. Puedes agendar directo aquí: https://cal.com/loomi/demo';
+          await sendWhatsAppMessage(message.phone, fallbackMsg, credentials);
+          await saveMessage(context.conversation.id, 'assistant', fallbackMsg, context.lead.id);
+          return NextResponse.json({ status: 'ok', flow: 'schedule_fallback' });
+        }
+      }
+
       // Send response
       await sendWhatsAppMessage(message.phone, result.response, credentials);
       await saveMessage(context.conversation.id, 'assistant', result.response, context.lead.id);
@@ -672,29 +760,68 @@ export async function POST(request: NextRequest) {
 
           // Schedule "said later" follow-up
           if (result.saidLater) {
-            await scheduleSaidLaterFollowUp(context.lead.id, context.lead);
+            if (isTemporalEnabled('followups') && tenantContext) {
+              const temporalLead: TemporalLead = {
+                id: context.lead.id,
+                phone: context.lead.phone,
+                name: context.lead.name,
+                email: context.lead.email ?? null,
+                company: context.lead.company ?? null,
+                industry: context.lead.industry ?? null,
+                stage: context.lead.stage,
+                challenge: context.lead.challenge ?? null
+              };
+              await startFollowUpWorkflow({
+                tenant: tenantContext,
+                leadId: context.lead.id,
+                lead: temporalLead,
+                type: 'said_later'
+              });
+              console.log('[Webhook] Started Temporal said_later workflow');
+            } else {
+              await scheduleSaidLaterFollowUp(context.lead.id, context.lead);
+            }
           }
 
-          // Sync to HubSpot
-          await syncLeadToHubSpot({
-            phone: context.lead.phone,
-            name: context.lead.name,
-            company: context.lead.company,
-            stage: context.lead.stage,
-            messages: [
-              ...context.recentMessages,
-              { role: 'user', content: message.text },
-              { role: 'assistant', content: result.response }
-            ]
-          });
+          // Sync to HubSpot (use Temporal if integrations enabled)
+          if (isTemporalEnabled('integrations') && tenantContext) {
+            const temporalLead: TemporalLead = {
+              id: context.lead.id,
+              phone: context.lead.phone,
+              name: context.lead.name,
+              email: context.lead.email ?? null,
+              company: context.lead.company ?? null,
+              industry: context.lead.industry ?? null,
+              stage: context.lead.stage
+            };
+            await startIntegrationSyncWorkflow({
+              tenant: tenantContext,
+              leadId: context.lead.id,
+              lead: temporalLead,
+              conversationId: context.conversation.id,
+              eventType: 'conversation_ended'
+            });
+          } else {
+            await syncLeadToHubSpot({
+              phone: context.lead.phone,
+              name: context.lead.name,
+              company: context.lead.company,
+              stage: context.lead.stage,
+              messages: [
+                ...context.recentMessages,
+                { role: 'user', content: message.text },
+                { role: 'assistant', content: result.response }
+              ]
+            });
 
-          // Generate memory if needed
-          if (await shouldGenerateMemory(context.conversation.startedAt, context.recentMessages.length + 2)) {
-            await generateMemory(context.lead.id, [
-              ...context.recentMessages,
-              { id: '', role: 'user', content: message.text, timestamp: new Date() },
-              { id: '', role: 'assistant', content: result.response, timestamp: new Date() },
-            ]);
+            // Generate memory if needed
+            if (await shouldGenerateMemory(context.conversation.startedAt, context.recentMessages.length + 2)) {
+              await generateMemory(context.lead.id, [
+                ...context.recentMessages,
+                { id: '', role: 'user', content: message.text, timestamp: new Date() },
+                { id: '', role: 'assistant', content: result.response, timestamp: new Date() },
+              ]);
+            }
           }
         } catch (err) {
           console.error('[Webhook] After error:', err);

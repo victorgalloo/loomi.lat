@@ -294,6 +294,7 @@ export interface SimpleAgentResult {
   };
   detectedIndustry?: string;
   saidLater?: boolean;  // User said "later" - trigger follow-up
+  showScheduleList?: boolean;  // Trigger interactive schedule list in WhatsApp
 }
 
 // Few-shot example structure for tenant-specific examples
@@ -441,7 +442,7 @@ export async function simpleAgent(
     contextParts.push(`Info previa: ${context.memory}`);
   }
 
-  // Use tenant's custom system prompt if available, otherwise fall back to default insurance prompt
+  // Use tenant's custom system prompt if available, otherwise fall back to default Loomi prompt
   const basePrompt = agentConfig?.systemPrompt || SYSTEM_PROMPT;
   let systemWithContext = basePrompt;
 
@@ -543,24 +544,21 @@ Sé directa, inteligente, mensajes cortos.`
     }),
 
     schedule_demo: tool({
-      description: 'Agenda una demo de Loomi en Cal.com. Usa cuando el cliente quiere ver el producto, dice "muéstrame", "quiero ver", "agendemos", o muestra interés claro en una demostración.',
+      description: 'Muestra horarios disponibles para agendar una demo de Loomi. Usa cuando el cliente quiere ver el producto, dice "muéstrame", "quiero ver", "agendemos", o muestra interés claro. NO necesitas el email todavía - se pedirá después de que elija horario.',
       inputSchema: zodSchema(z.object({
-        clientEmail: z.string().describe('Email del cliente para la invitación'),
-        clientName: z.string().describe('Nombre del cliente'),
-        notes: z.string().optional().describe('Notas sobre el negocio del cliente o contexto relevante')
+        reason: z.string().optional().describe('Breve nota del contexto o interés del cliente')
       })),
       execute: async (params) => {
-        const { clientEmail, clientName: name, notes } = params as { clientEmail: string; clientName: string; notes?: string };
-        console.log(`[Tool] Scheduling demo for ${name} (${clientEmail})`);
+        const { reason } = params as { reason?: string };
+        console.log(`[Tool] Triggering schedule list. Reason: ${reason || 'Cliente interesado en demo'}`);
 
-        // For now, return a booking link - in production this would integrate with Cal.com API
-        const calLink = `https://cal.com/loomi/demo?email=${encodeURIComponent(clientEmail)}&name=${encodeURIComponent(name)}`;
-
+        // This triggers the interactive schedule list in WhatsApp
+        // The actual slot selection is handled by the webhook
         return {
           success: true,
-          bookingLink: calLink,
-          message: `Demo link generado. El cliente puede agendar en: ${calLink}`,
-          notes: notes || 'Lead interesado en Loomi'
+          triggerScheduleList: true,
+          message: '¡Genial! Te muestro los horarios disponibles.',
+          reason: reason || 'Lead interesado en demo'
         };
       }
     }),
@@ -622,6 +620,7 @@ Sé directa, inteligente, mensajes cortos.`
   // Track tool results
   let escalatedToHuman: SimpleAgentResult['escalatedToHuman'] = undefined;
   let paymentLinkSent: SimpleAgentResult['paymentLinkSent'] = undefined;
+  let showScheduleList = false;
 
   try {
     const result = await generateText({
@@ -659,6 +658,15 @@ Sé directa, inteligente, mensajes cortos.`
                 console.log(`[Tool] Payment link sent: $${args.monthlyAmount}/mes to ${args.email}`);
               }
             }
+
+            // Track schedule_demo - trigger interactive schedule list
+            if (toolResult.toolName === 'schedule_demo') {
+              const scheduleOutput = toolResult.output as { triggerScheduleList?: boolean };
+              if (scheduleOutput?.triggerScheduleList) {
+                showScheduleList = true;
+                console.log('[Tool] Schedule demo triggered - will show interactive slot list');
+              }
+            }
           }
         }
       }
@@ -667,6 +675,36 @@ Sé directa, inteligente, mensajes cortos.`
     let response = result.text.trim();
     response = response.replace(/\*+/g, '');
     response = response.replace(/^(Víctor|Victor):\s*/i, '');
+
+    // If model called tools but didn't generate text, use tool result message
+    // Check both toolResults (old API) and steps (new API)
+    const toolResults = result.toolResults ||
+      (result.steps?.flatMap((s: { toolResults?: unknown[] }) => s.toolResults || [])) || [];
+
+    console.log('[Debug] response:', response);
+    console.log('[Debug] toolResults count:', toolResults.length);
+
+    if (!response && toolResults.length > 0) {
+      for (const toolResult of toolResults) {
+        const tr = toolResult as { toolName?: string; result?: { success?: boolean; message?: string; bookingLink?: string } };
+        console.log('[Debug] toolResult:', JSON.stringify(tr));
+        const output = tr.result;
+        if (output?.message) {
+          response = output.message;
+          break;
+        }
+        // Fallback for schedule_demo
+        if (tr.toolName === 'schedule_demo' && output?.bookingLink) {
+          response = `¡Listo! Agenda tu demo aquí: ${output.bookingLink}`;
+          break;
+        }
+      }
+    }
+
+    // Final fallback
+    if (!response) {
+      response = '¿En qué más te puedo ayudar?';
+    }
 
     console.log('=== RESPONSE ===');
     console.log(response);
@@ -677,7 +715,8 @@ Sé directa, inteligente, mensajes cortos.`
       escalatedToHuman,
       paymentLinkSent,
       detectedIndustry: industry !== 'generic' ? industry : undefined,
-      saidLater
+      saidLater,
+      showScheduleList
     };
 
   } catch (error) {

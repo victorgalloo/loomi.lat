@@ -44,9 +44,20 @@ export interface RateLimitResult {
  * Check rate limits for a phone number
  */
 export async function checkRateLimit(phone: string): Promise<RateLimitResult> {
+  // If Redis is not configured, allow all requests
+  if (!process.env.UPSTASH_REDIS_URL || !process.env.UPSTASH_REDIS_TOKEN) {
+    console.warn('[RateLimit] Redis not configured, allowing request');
+    return { allowed: true };
+  }
+
   try {
-    // Check minute limit
-    const minuteResult = await minuteRateLimiter.limit(phone);
+    // Check minute limit with timeout
+    const minuteResult = await Promise.race([
+      minuteRateLimiter.limit(phone),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Rate limit timeout')), 3000)
+      )
+    ]);
     if (!minuteResult.success) {
       return { allowed: false, reason: 'minute_limit', remaining: minuteResult.remaining };
     }
@@ -82,16 +93,29 @@ const PROCESSING_TTL = 30; // 30 seconds
  * Check if a message is already being processed
  */
 export async function isProcessing(messageId: string): Promise<boolean> {
+  // If Redis is not configured, skip processing check
+  if (!process.env.UPSTASH_REDIS_URL || !process.env.UPSTASH_REDIS_TOKEN) {
+    return false;
+  }
+
   try {
     const key = `processing:${messageId}`;
-    const existing = await redis.get(key);
+
+    // Add timeout to Redis operations
+    const existing = await Promise.race([
+      redis.get(key),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000))
+    ]);
 
     if (existing) {
       return true;
     }
 
-    // Set processing flag
-    await redis.set(key, '1', { ex: PROCESSING_TTL });
+    // Set processing flag with timeout
+    await Promise.race([
+      redis.set(key, '1', { ex: PROCESSING_TTL }),
+      new Promise<void>((resolve) => setTimeout(resolve, 2000))
+    ]);
     return false;
 
   } catch (error) {

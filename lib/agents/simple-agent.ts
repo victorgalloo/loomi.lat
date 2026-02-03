@@ -622,6 +622,44 @@ Sé directa, inteligente, mensajes cortos.`
   let paymentLinkSent: SimpleAgentResult['paymentLinkSent'] = undefined;
   let showScheduleList = false;
 
+  // AUTOMATIC HANDOFF: If user explicitly asks for human, do it immediately without relying on the model
+  if (state === 'handoff_human_request' || state === 'handoff_frustrated') {
+    console.log(`[Agent] Automatic handoff triggered: ${state}`);
+
+    const recentMsgs = history.slice(-5).map(m =>
+      `${m.role === 'user' ? 'Cliente' : 'Lu'}: ${m.content}`
+    );
+
+    const isUrgent = state === 'handoff_frustrated';
+    const reason = state === 'handoff_frustrated'
+      ? 'Cliente frustrado - atención urgente'
+      : 'Cliente pidió hablar con un humano';
+
+    const escalated = await escalateToHuman({
+      clientPhone,
+      clientName,
+      reason,
+      conversationSummary: `El cliente dijo: "${message}"`,
+      recentMessages: recentMsgs,
+      isUrgent
+    });
+
+    if (escalated) {
+      escalatedToHuman = { reason, summary: message };
+      const response = state === 'handoff_frustrated'
+        ? 'Perdón si no me expliqué bien. Te paso con alguien del equipo que te ayuda mejor. Te escriben en los próximos minutos.'
+        : 'Claro, te comunico con alguien del equipo. Te escriben en los próximos minutos.';
+
+      return {
+        response,
+        escalatedToHuman,
+        saidLater
+      };
+    }
+    // If escalation failed (no FALLBACK_PHONE), continue with normal flow
+    console.warn('[Agent] Escalation failed - FALLBACK_PHONE might not be configured');
+  }
+
   try {
     const result = await generateText({
       model: openai('gpt-4o'),  // Optimizado: gpt-4o es ~5x más rápido que gpt-5.2

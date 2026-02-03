@@ -40,12 +40,26 @@ const ANALYSIS_STEPS = [
   { icon: Sparkles, text: 'Generando respuesta...', color: 'text-yellow-400' },
 ];
 
-// Quick prompts that showcase capabilities
+// Scripted responses for instant replies
+const SCRIPTED_RESPONSES: Record<string, string> = {
+  '¿Cuánto cuesta?': 'Starter $199/mes, Growth $349/mes, Business $599/mes. ¿Cuántos mensajes recibes al día en WhatsApp?',
+  '¿Cómo funciona?': 'Conectas tu WhatsApp, configuras tu agente en 5 min, y Loomi responde 24/7: califica leads, agenda demos, y escala a tu equipo si es necesario. ¿Qué tipo de negocio tienes?',
+  'Ya uso Wati': 'Wati son flujos predefinidos—si el cliente pregunta algo fuera del menú, se rompe. Loomi entiende contexto con IA real. ¿Cuántos leads pierdes por respuestas que no matchean?',
+  'Es muy caro': 'Un vendedor humano cuesta $800-1,500/mes en LATAM. Loomi $199 y trabaja 24/7 sin descanso. Con 2 cierres extra al mes, ya se pagó. ¿Cuál es tu ticket promedio?',
+  'Quiero una demo': '¡Perfecto! Puedes agendar directo en loomi.lat/demo o si prefieres, déjame tu email y te envío el link.',
+  'No confío en bots': 'Válido, la mayoría de bots son malos. Loomi usa GPT-5.2 + análisis multi-agente—lee emociones, detecta objeciones, sabe cuándo pasar a humano. Esta conversación es la prueba.',
+  '¿Qué incluye?': 'Agente IA 24/7, integración WhatsApp, calendario (Cal.com), CRM básico, y reportes. Growth añade Meta CAPI para optimizar tus ads. ¿Qué plan te interesa?',
+  'Háblame de ti': 'Soy Lu, tu growth advisor en Loomi. Ayudo a negocios a escalar sus ventas por WhatsApp sin contratar más vendedores. ¿En qué industria estás?',
+};
+
+// Quick prompts with categories
 const QUICK_PROMPTS = [
-  { text: '¿Cómo funciona?', icon: MessageSquare, label: 'Info' },
-  { text: 'Es muy caro para mí', icon: TrendingUp, label: 'Objeción' },
-  { text: 'Quiero hablar con alguien real', icon: UserCheck, label: 'Escalación' },
-  { text: 'Quiero demo', icon: CreditCard, label: 'Cierre' },
+  { text: '¿Cuánto cuesta?', icon: CreditCard, label: 'Precio', iconColor: 'text-green-400', borderColor: 'border-green-500/30 hover:border-green-500/50' },
+  { text: '¿Cómo funciona?', icon: MessageSquare, label: 'Info', iconColor: 'text-blue-400', borderColor: 'border-blue-500/30 hover:border-blue-500/50' },
+  { text: 'Es muy caro', icon: TrendingUp, label: 'Objeción', iconColor: 'text-orange-400', borderColor: 'border-orange-500/30 hover:border-orange-500/50' },
+  { text: 'Ya uso Wati', icon: Shield, label: 'Competencia', iconColor: 'text-red-400', borderColor: 'border-red-500/30 hover:border-red-500/50' },
+  { text: 'No confío en bots', icon: Brain, label: 'Escéptico', iconColor: 'text-purple-400', borderColor: 'border-purple-500/30 hover:border-purple-500/50' },
+  { text: 'Quiero una demo', icon: Sparkles, label: 'Cierre', iconColor: 'text-yellow-400', borderColor: 'border-yellow-500/30 hover:border-yellow-500/50' },
 ];
 
 export function InteractiveDemo() {
@@ -131,17 +145,35 @@ export function InteractiveDemo() {
     }
   }, [voiceEnabled]);
 
-  // Real API call with full agent
+  // Handle message - check for scripted response first, then API
   const handleRealMessage = useCallback(async (text: string) => {
     const userMessage: Message = { id: Date.now(), type: 'user', text };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
 
+    // Check for scripted response (instant)
+    const scriptedResponse = SCRIPTED_RESPONSES[text];
+    if (scriptedResponse) {
+      // Small delay for realism
+      setIsTyping(true);
+      await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 200));
+      setIsTyping(false);
+
+      setMessages((prev) => [...prev, {
+        id: Date.now() + 1,
+        type: 'bot',
+        text: scriptedResponse,
+      }]);
+      playVoice(scriptedResponse);
+      return;
+    }
+
+    // API call for non-scripted messages
     const history = messages.map(m => ({
       role: m.type === 'user' ? 'user' as const : 'assistant' as const,
       content: m.text
     }));
 
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
     setIsTyping(true);
     setAnalysisStep(0);
 
@@ -162,8 +194,6 @@ export function InteractiveDemo() {
           text: data.response,
           agentInfo: data.agentInfo
         }]);
-
-        // Play voice automatically
         playVoice(data.response);
       } else {
         const fallback = '¿Te gustaría agendar una demo para ver más?';
@@ -409,18 +439,18 @@ export function InteractiveDemo() {
         </motion.div>
 
         {/* Quick prompts by scenario */}
-        <div className="mt-6">
-          <p className="text-xs text-muted text-center mb-3 font-mono">Prueba estos escenarios:</p>
-          <div className="flex flex-wrap justify-center gap-2">
+        <div className="mt-8">
+          <p className="text-sm text-muted text-center mb-4 font-mono">Prueba estos escenarios <span className="text-terminal-green">→</span> respuesta instantánea</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {QUICK_PROMPTS.map((prompt) => (
               <button
                 key={prompt.label}
                 onClick={() => handleQuickButton(prompt.text)}
                 disabled={isTyping}
-                className="group flex items-center gap-2 px-4 py-2 text-sm text-muted border border-border rounded-lg hover:text-foreground hover:border-foreground/30 transition-all font-mono disabled:opacity-50"
+                className={`group flex items-center gap-2.5 px-4 py-3 text-sm rounded-lg transition-all font-mono disabled:opacity-50 bg-surface hover:bg-surface-2 ${prompt.borderColor}`}
               >
-                <prompt.icon className="w-3.5 h-3.5 text-muted group-hover:text-foreground transition-colors" />
-                {prompt.label}
+                <prompt.icon className={`w-4 h-4 ${prompt.iconColor}`} />
+                <span className="text-foreground text-xs">{prompt.label}</span>
               </button>
             ))}
           </div>

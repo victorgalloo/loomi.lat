@@ -456,31 +456,6 @@ export function InteractiveDemo() {
           </div>
         </div>
 
-        {/* Capabilities showcase */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
-          className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3"
-        >
-          <div className="flex items-center gap-2 p-3 bg-surface border border-border rounded-lg">
-            <Brain className="w-4 h-4 text-blue-400" />
-            <span className="text-xs text-muted font-mono">Razonamiento o3</span>
-          </div>
-          <div className="flex items-center gap-2 p-3 bg-surface border border-border rounded-lg">
-            <Heart className="w-4 h-4 text-pink-400" />
-            <span className="text-xs text-muted font-mono">Sentimiento</span>
-          </div>
-          <div className="flex items-center gap-2 p-3 bg-surface border border-border rounded-lg">
-            <Volume2 className="w-4 h-4 text-purple-400" />
-            <span className="text-xs text-muted font-mono">Voz natural</span>
-          </div>
-          <div className="flex items-center gap-2 p-3 bg-surface border border-border rounded-lg">
-            <Shield className="w-4 h-4 text-green-400" />
-            <span className="text-xs text-muted font-mono">Escalación</span>
-          </div>
-        </motion.div>
 
         {/* CTA */}
         <motion.div

@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     const apiKey = process.env.ELEVENLABS_API_KEY;
-    const voiceId = process.env.ELEVENLABS_VOICE_ID || 'EXAVITQu4vr4xnSDxMaL'; // Default: Sarah (multilingual)
+    const voiceId = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM'; // Default: Rachel (femenina, amigable)
 
     if (!apiKey) {
       console.error('[Voice] ELEVENLABS_API_KEY not configured');

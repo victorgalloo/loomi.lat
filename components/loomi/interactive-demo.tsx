@@ -12,7 +12,9 @@ import {
   UserCheck,
   CreditCard,
   MessageSquare,
-  Shield
+  Shield,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -53,7 +55,10 @@ export function InteractiveDemo() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [analysisStep, setAnalysisStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
@@ -74,6 +79,56 @@ export function InteractiveDemo() {
       return () => clearInterval(interval);
     }
   }, [isTyping]);
+
+  // Generate and play voice for a message
+  const playVoice = useCallback(async (text: string) => {
+    if (!voiceEnabled) return;
+
+    try {
+      setIsPlaying(true);
+
+      const response = await fetch('/api/voice/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) {
+        console.error('[Voice] Failed to generate:', response.status);
+        setIsPlaying(false);
+        return;
+      }
+
+      // Create audio from blob
+      const blob = await response.blob();
+      const audioUrl = URL.createObjectURL(blob);
+
+      // Stop any existing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+
+      // Create and play new audio
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onended = () => {
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      audio.onerror = () => {
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      await audio.play();
+    } catch (error) {
+      console.error('[Voice] Error:', error);
+      setIsPlaying(false);
+    }
+  }, [voiceEnabled]);
 
   // Real API call with full agent
   const handleRealMessage = useCallback(async (text: string) => {
@@ -106,23 +161,29 @@ export function InteractiveDemo() {
           text: data.response,
           agentInfo: data.agentInfo
         }]);
+
+        // Play voice automatically
+        playVoice(data.response);
       } else {
+        const fallback = '¿Te gustaría agendar una demo para ver más?';
         setMessages((prev) => [...prev, {
           id: Date.now() + 1,
           type: 'bot',
-          text: '¿Te gustaría agendar una demo para ver más?'
+          text: fallback
         }]);
+        playVoice(fallback);
       }
     } catch (err) {
       console.error('Chat error:', err);
       setIsTyping(false);
+      const fallback = '¿Te gustaría agendar una demo para ver más?';
       setMessages((prev) => [...prev, {
         id: Date.now() + 1,
         type: 'bot',
-        text: '¿Te gustaría agendar una demo para ver más?'
+        text: fallback
       }]);
     }
-  }, [messages]);
+  }, [messages, playVoice]);
 
   const handleSend = () => {
     const text = input.trim();
@@ -142,6 +203,15 @@ export function InteractiveDemo() {
     handleRealMessage(text);
   };
 
+  const toggleVoice = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setIsPlaying(false);
+    setVoiceEnabled(!voiceEnabled);
+  };
+
   return (
     <section className="py-32 sm:py-48 px-4 sm:px-6 relative overflow-hidden bg-background">
       <div className="relative max-w-2xl mx-auto">
@@ -155,7 +225,7 @@ export function InteractiveDemo() {
             Pruébalo
           </h2>
           <p className="text-muted text-lg">
-            Este es el agente real. Con todas las capacidades.
+            Este es el agente real. Con voz incluida.
           </p>
         </motion.div>
 
@@ -174,6 +244,28 @@ export function InteractiveDemo() {
             </div>
             <span className="text-xs text-muted font-mono ml-2">loomi --live</span>
             <div className="ml-auto flex items-center gap-3">
+              {/* Voice toggle */}
+              <button
+                onClick={toggleVoice}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${
+                  voiceEnabled
+                    ? 'bg-purple-500/10 border border-purple-500/20 text-purple-400'
+                    : 'bg-surface border border-border text-muted'
+                }`}
+                title={voiceEnabled ? 'Desactivar voz' : 'Activar voz'}
+              >
+                {voiceEnabled ? (
+                  <>
+                    <Volume2 className={`w-3 h-3 ${isPlaying ? 'animate-pulse' : ''}`} />
+                    {isPlaying ? 'Hablando...' : 'Voz ON'}
+                  </>
+                ) : (
+                  <>
+                    <VolumeX className="w-3 h-3" />
+                    Voz OFF
+                  </>
+                )}
+              </button>
               <span className="flex items-center gap-1 px-2 py-0.5 bg-terminal-green/10 border border-terminal-green/20 rounded text-[10px] font-mono text-terminal-green">
                 <Zap className="w-3 h-3" />
                 GPT-5.2 + o3
@@ -350,12 +442,12 @@ export function InteractiveDemo() {
             <span className="text-xs text-muted font-mono">Sentimiento</span>
           </div>
           <div className="flex items-center gap-2 p-3 bg-surface border border-border rounded-lg">
-            <Shield className="w-4 h-4 text-green-400" />
-            <span className="text-xs text-muted font-mono">Escalación</span>
+            <Volume2 className="w-4 h-4 text-purple-400" />
+            <span className="text-xs text-muted font-mono">Voz natural</span>
           </div>
           <div className="flex items-center gap-2 p-3 bg-surface border border-border rounded-lg">
-            <CreditCard className="w-4 h-4 text-yellow-400" />
-            <span className="text-xs text-muted font-mono">Pagos</span>
+            <Shield className="w-4 h-4 text-green-400" />
+            <span className="text-xs text-muted font-mono">Escalación</span>
           </div>
         </motion.div>
 

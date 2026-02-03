@@ -69,10 +69,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Build context for the real agent
+    // Don't set a name so the agent won't use generic names like "Visitante"
     const demoLead: Lead = {
       id: `demo-${ip}`,
       phone: '+00000000000',
-      name: 'Visitante Demo',
+      name: '', // Empty so agent doesn't use awkward placeholder names
       stage: 'demo',
       createdAt: new Date(),
       lastInteraction: new Date(),

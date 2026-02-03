@@ -26,11 +26,19 @@ interface AgentInfo {
   saidLater?: boolean;
 }
 
+interface TimeSlot {
+  id: string;
+  date: string;
+  time: string;
+  label: string;
+}
+
 interface Message {
   id: number;
   type: 'user' | 'bot';
   text: string;
   agentInfo?: AgentInfo;
+  slots?: TimeSlot[];  // For schedule selection
 }
 
 // Analysis steps shown during processing
@@ -161,7 +169,8 @@ export function InteractiveDemo() {
           id: Date.now() + 1,
           type: 'bot',
           text: data.response,
-          agentInfo: data.agentInfo
+          agentInfo: data.agentInfo,
+          slots: data.showScheduleList ? data.slots : undefined
         }]);
         playVoice(data.response);
       } else {
@@ -267,7 +276,7 @@ export function InteractiveDemo() {
               </button>
               <span className="flex items-center gap-1 px-2 py-0.5 bg-terminal-green/10 border border-terminal-green/20 rounded text-[10px] font-mono text-terminal-green">
                 <Zap className="w-3 h-3" />
-                GPT-5.2 + o3
+                GPT-4o
               </span>
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-terminal-green animate-pulse" />
@@ -296,6 +305,26 @@ export function InteractiveDemo() {
                       {message.text}
                     </div>
                   </div>
+                  {/* Show schedule slots */}
+                  {message.type === 'bot' && message.slots && message.slots.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex flex-wrap gap-2 mb-3 ml-1"
+                    >
+                      {message.slots.map((slot) => (
+                        <button
+                          key={slot.id}
+                          onClick={() => handleRealMessage(`Quiero el ${slot.label}`)}
+                          disabled={isTyping}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-terminal-green/10 border border-terminal-green/30 hover:border-terminal-green/60 rounded-lg text-xs text-terminal-green font-mono transition-colors disabled:opacity-50"
+                        >
+                          <Calendar className="w-3 h-3" />
+                          {slot.label}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
                   {/* Show agent capabilities used */}
                   {message.type === 'bot' && message.agentInfo && (
                     <motion.div

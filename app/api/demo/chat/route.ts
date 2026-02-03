@@ -6,6 +6,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { simpleAgent } from '@/lib/agents/simple-agent';
 import { ConversationContext, Lead, Conversation, Message } from '@/types';
+import { checkAvailability } from '@/lib/tools/calendar';
+
+// Helper to get next business days
+function getNextBusinessDays(count: number): string[] {
+  const dates: string[] = [];
+  const today = new Date();
+  let currentDate = new Date(today);
+
+  while (dates.length < count) {
+    currentDate.setDate(currentDate.getDate() + 1);
+    const dayOfWeek = currentDate.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      dates.push(currentDate.toISOString().split('T')[0]);
+    }
+  }
+
+  return dates;
+}
+
+// Format time for display
+function formatTime12h(time: string): string {
+  const [hours, minutes] = time.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+  return `${displayHours}:${String(minutes).padStart(2, '0')} ${period}`;
+}
+
+// Day names in Spanish
+const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'] as const;
 
 // Rate limiting
 const rateLimiter = new Map<string, { count: number; resetAt: number }>();
@@ -75,6 +104,51 @@ export async function POST(request: NextRequest) {
 
     // Call the REAL agent
     const result = await simpleAgent(message, context);
+
+    // If agent triggered schedule list, fetch and return slots
+    if (result.showScheduleList) {
+      try {
+        const dates = getNextBusinessDays(2);
+        const allSlots = await checkAvailability(dates.join(','));
+
+        // Format slots for frontend
+        const formattedSlots = allSlots.slice(0, 6).map(slot => {
+          const date = new Date(slot.date + 'T12:00:00');
+          const dayName = DIAS[date.getDay()];
+          const dayNum = date.getDate();
+          return {
+            id: `${slot.date}_${slot.time}`,
+            date: slot.date,
+            time: slot.time,
+            label: `${dayName} ${dayNum} - ${formatTime12h(slot.time)}`
+          };
+        });
+
+        return NextResponse.json({
+          response: result.response,
+          showScheduleList: true,
+          slots: formattedSlots,
+          agentInfo: {
+            escalatedToHuman: result.escalatedToHuman,
+            paymentLinkSent: result.paymentLinkSent,
+            detectedIndustry: null,
+            saidLater: false,
+          }
+        });
+      } catch (error) {
+        console.error('[Demo Chat] Error fetching slots:', error);
+        // Fallback to Cal.com link
+        return NextResponse.json({
+          response: result.response + '\n\nAgenda directo aquí: https://cal.com/loomi/demo',
+          agentInfo: {
+            escalatedToHuman: result.escalatedToHuman,
+            paymentLinkSent: result.paymentLinkSent,
+            detectedIndustry: null,
+            saidLater: false,
+          }
+        });
+      }
+    }
 
     return NextResponse.json({
       response: result.response,

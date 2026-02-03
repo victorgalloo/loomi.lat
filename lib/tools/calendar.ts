@@ -51,13 +51,16 @@ export async function checkAvailability(dates: string): Promise<CalSlot[]> {
       }
 
       const data = await response.json();
+      console.log(`[Calendar] Raw response for ${date}:`, JSON.stringify(data));
 
       // Parse slots from response
       const slots = data.slots || {};
       for (const [dateKey, times] of Object.entries(slots)) {
-        const timeArray = times as string[];
-        for (const timeStr of timeArray) {
-          // Extract time from ISO string
+        const timeArray = times as Array<string | { time: string }>;
+        for (const slot of timeArray) {
+          // Handle both formats: string or {time: string}
+          const timeStr = typeof slot === 'string' ? slot : slot.time;
+          // Extract time from ISO string (e.g., "2026-02-04T09:00:00-06:00" -> "09:00")
           const time = timeStr.split('T')[1]?.substring(0, 5) || timeStr;
           allSlots.push({
             date: dateKey.split('T')[0] || date,

@@ -37,13 +37,54 @@ const LATER_KEYWORDS = new Set([
   'luego', 'después', 'despues', 'ahorita no', 'al rato', 'otro día'
 ]);
 
+// Fast path: mensajes simples que no necesitan análisis multi-agent
+const SIMPLE_GREETINGS = new Set([
+  'hola', 'hi', 'hey', 'buenos días', 'buenos dias', 'buenas tardes',
+  'buenas noches', 'buenas', 'qué tal', 'que tal', 'saludos'
+]);
+
+const SIMPLE_QUESTIONS = new Set([
+  'precio', 'precios', 'cuánto cuesta', 'cuanto cuesta', 'costo',
+  'costos', 'planes', 'qué planes tienen', 'que planes tienen'
+]);
+
+/**
+ * Check if message is simple enough to skip multi-agent analysis
+ */
+function isSimpleMessage(message: string, historyLength: number): boolean {
+  const lower = message.toLowerCase().trim();
+
+  // First message + greeting = skip analysis
+  if (historyLength <= 2) {
+    for (const greeting of SIMPLE_GREETINGS) {
+      if (lower === greeting || lower.startsWith(greeting + ' ') || lower.startsWith(greeting + ',')) {
+        return true;
+      }
+    }
+  }
+
+  // Simple price questions = skip analysis
+  for (const question of SIMPLE_QUESTIONS) {
+    if (lower.includes(question)) {
+      return true;
+    }
+  }
+
+  // Very short messages (1-3 words) in early conversation
+  if (historyLength <= 4 && lower.split(/\s+/).length <= 3) {
+    return true;
+  }
+
+  return false;
+}
+
 const SYSTEM_PROMPT = `Eres Lu, growth advisor de Loomi. Tienes experiencia en startups y marketing digital. Te apasiona ayudar a negocios a escalar sus ventas. Eres directa, inteligente y genuinamente curiosa.
 
 # SOBRE LOOMI
 
 Loomi es un agente de IA para WhatsApp que vende 24/7. No es un chatbot de flujos - es inteligencia artificial real que:
 
-- **Piensa antes de responder**: Análisis multi-agente con o3-mini + GPT-5.2
+- **Piensa antes de responder**: Análisis multi-agente con GPT-4o
 - **Lee emociones**: Detecta frustración, entusiasmo, escepticismo en tiempo real
 - **Agenda sin intervención**: Integración nativa con Cal.com
 - **Nunca pierde un lead**: Follow-ups automáticos y secuencias
@@ -130,7 +171,7 @@ Adapta según su dolor:
 → "Loomi atiende 100+ chats simultáneos, 24/7. Mientras duermes, está calificando leads."
 
 **Si les preocupa la calidad:**
-→ "No es un bot de flujos. Usa GPT-5.2 + o3 para pensar antes de responder. Lee el tono del cliente."
+→ "No es un bot de flujos. Usa IA avanzada que realmente entiende contexto. Lee el tono del cliente."
 
 **Si les preocupa el costo:**
 → "Un vendedor en LATAM cuesta $800-1,500/mes. Loomi desde $199, y nunca se enferma ni renuncia."
@@ -197,7 +238,7 @@ Si quieren comprar directo:
 | Característica | Loomi | Bots tradicionales |
 |----------------|-------|-------------------|
 | Conversación | Natural, contextual | Flujos rígidos |
-| Inteligencia | GPT-5.2 + o3 multi-agente | Reglas if/then |
+| Inteligencia | IA avanzada multi-agente | Reglas if/then |
 | Memoria | Recuerda todo el historial | Sin memoria |
 | Emociones | Detecta frustración/interés | Ignora tono |
 | Setup | 5 minutos | Horas de configuración |
@@ -321,29 +362,42 @@ export async function simpleAgent(
   }
 
   // ============================================
-  // STEP 1: Multi-Agent Analysis (Analista → Estrategia)
+  // STEP 1: Multi-Agent Analysis (skip for simple messages)
   // ============================================
-  const { analysis: sellerAnalysis, instructions: sellerInstructions } = await getSellerStrategy(
-    message,
-    history,
-    {
-      name: context.lead.name,
-      company: context.lead.company,
-      industry: context.lead.industry,
-      previousInteractions: context.recentMessages.length,
-    }
-  );
-  console.log('=== ANÁLISIS (o3-mini) ===');
-  console.log(`Fase: ${sellerAnalysis.fase_actual}`);
-  console.log(`Siguiente paso: ${sellerAnalysis.siguiente_paso}`);
-  if (sellerAnalysis.hay_objecion) {
-    console.log(`Objeción detectada: ${sellerAnalysis.tipo_objecion}`);
-  }
+  const useSimplePath = isSimpleMessage(message, history.length);
 
-  // ============================================
-  // STEP 2: Generate reasoning analysis
-  // ============================================
-  const reasoning = await generateReasoningFast(message, context);
+  let sellerAnalysis: Awaited<ReturnType<typeof getSellerStrategy>>['analysis'] | null = null;
+  let sellerInstructions: string = '';
+  let reasoning: Awaited<ReturnType<typeof generateReasoningFast>>;
+
+  if (useSimplePath) {
+    // Fast path: skip multi-agent, only do quick reasoning
+    console.log('=== FAST PATH (skipping multi-agent) ===');
+    reasoning = await generateReasoningFast(message, context);
+  } else {
+    // Full path: run multi-agent and reasoning in parallel
+    console.log('=== FULL ANALYSIS PATH ===');
+    const [strategyResult, reasoningResult] = await Promise.all([
+      getSellerStrategy(message, history, {
+        name: context.lead.name,
+        company: context.lead.company,
+        industry: context.lead.industry,
+        previousInteractions: context.recentMessages.length,
+      }),
+      generateReasoningFast(message, context)
+    ]);
+
+    sellerAnalysis = strategyResult.analysis;
+    sellerInstructions = strategyResult.instructions;
+    reasoning = reasoningResult;
+
+    console.log('=== ANÁLISIS (gpt-4o-mini) ===');
+    console.log(`Fase: ${sellerAnalysis.fase_actual}`);
+    console.log(`Siguiente paso: ${sellerAnalysis.siguiente_paso}`);
+    if (sellerAnalysis.hay_objecion) {
+      console.log(`Objeción detectada: ${sellerAnalysis.tipo_objecion}`);
+    }
+  }
   console.log('=== REASONING ===');
   console.log(reasoning.analysis);
 
@@ -410,8 +464,10 @@ export async function simpleAgent(
     systemWithContext += `\n\n${fewShotContext}`;
   }
 
-  // Add multi-agent seller strategy
-  systemWithContext += `\n\n${sellerInstructions}`;
+  // Add multi-agent seller strategy (only if not on fast path)
+  if (sellerInstructions) {
+    systemWithContext += `\n\n${sellerInstructions}`;
+  }
 
   // Add reasoning analysis
   systemWithContext += `\n\n# ANÁLISIS ADICIONAL\n${formatReasoningForPrompt(reasoning)}`;
@@ -569,11 +625,11 @@ Sé directa, inteligente, mensajes cortos.`
 
   try {
     const result = await generateText({
-      model: openai('gpt-5.2'),  // GPT 5.2 para respuestas naturales
+      model: openai('gpt-4o'),  // Optimizado: gpt-4o es ~5x más rápido que gpt-5.2
       system: systemWithContext,
       messages: history,
       tools,
-      // temperature not supported for gpt-5.2 reasoning model
+      temperature: 0.7,  // Tono conversacional
       maxOutputTokens: 250,
       onStepFinish: async (step) => {
         if (step.toolResults) {

@@ -1,5 +1,5 @@
 /**
- * Few-Shot Dinámico - Venta de Seguros a Clientes
+ * Few-Shot Dinámico - Venta de Loomi
  *
  * Selecciona ejemplos de conversaciones relevantes según el contexto actual.
  */
@@ -14,144 +14,118 @@ export interface ConversationExample {
 
 const EXAMPLES: ConversationExample[] = [
   // ============================================
-  // LEAD NUEVO / PRIMER CONTACTO (desde anuncio Meta)
+  // LEAD NUEVO / PRIMER CONTACTO
   // ============================================
   {
-    id: 'new_lead_warm',
-    tags: ['hola', 'anuncio', 'vi', 'información'],
+    id: 'new_lead_ad',
+    tags: ['hola', 'anuncio', 'vi', 'información', 'nuevo'],
     context: 'Lead nuevo que llega del anuncio de Meta',
     conversation: `Cliente: Hola, vi su anuncio
-Sofi: ¡Hola! Qué bueno que escribiste. Cuéntame, ¿qué fue lo que te llamó la atención?
-Cliente: Lo de proteger a mi familia por $500 al mes
-Sofi: Ah ok, sí es real ese precio. ¿Has pensado antes en un seguro de vida o es la primera vez que te interesa?
-Cliente: Es la primera vez, nunca he tenido
-Sofi: Entiendo. Y cuéntame, ¿tienes hijos o alguien que dependa de ti económicamente?
-Cliente: Sí, tengo dos niños
-Sofi: Ok, entonces sí tiene mucho sentido para ti. El seguro básicamente es esto: si te pasa algo, tu familia recibe una cantidad de dinero para salir adelante. ¿Te gustaría que te explique cómo funciona?`,
-    whyItWorked: 'Empezó cálida, preguntó qué le llamó la atención, entendió su situación antes de vender'
+Lu: ¡Hola! Qué bueno que escribes. ¿Qué fue lo que te llamó la atención de Loomi?
+Cliente: Lo de automatizar WhatsApp
+Lu: Ah genial. Cuéntame, ¿cómo manejan WhatsApp hoy? ¿Tienes vendedores o lo atiendes tú?
+Cliente: Lo atiendo yo pero ya no doy abasto
+Lu: Te entiendo perfecto. ¿Cuántos mensajes recibes al día más o menos?`,
+    whyItWorked: 'Saludó cálido, preguntó qué le interesó, y empezó a descubrir el dolor'
   },
 
   {
-    id: 'new_lead_price',
-    tags: ['precio', 'cuanto', 'cuesta', 'real'],
-    context: 'Lead preguntando si el precio es real',
-    conversation: `Cliente: Vi su anuncio, ¿es real lo de $500 al mes?
-Sofi: ¡Hola! Sí, es real. El precio exacto depende de tu edad, pero anda por ahí. ¿Qué fue lo que te hizo interesarte?
-Cliente: Pues tengo familia y quiero dejarles algo por si me pasa algo
-Sofi: Me parece muy bien que estés pensando en eso. ¿Cuántos años tienes?
-Cliente: 34
-Sofi: Ok, a esa edad el seguro te sale entre $480 y $550 al mes por un millón de pesos de cobertura. ¿Tienes hijos?`,
-    whyItWorked: 'Confirmó precio pero también preguntó la motivación para conectar'
+    id: 'new_lead_curious',
+    tags: ['hola', 'qué es', 'cómo funciona', 'nuevo'],
+    context: 'Lead curioso preguntando qué es Loomi',
+    conversation: `Cliente: Hola, ¿qué es exactamente Loomi?
+Lu: ¡Hola! Loomi es un agente de IA que atiende tu WhatsApp 24/7. No es un bot de flujos - realmente entiende lo que escriben y responde como un vendedor humano. ¿Usas WhatsApp para ventas?
+Cliente: Sí, vendemos cursos online
+Lu: Perfecto. ¿Cuántos mensajes reciben al día? ¿Dan abasto?`,
+    whyItWorked: 'Explicó el producto simple y rápido, luego preguntó para calificar'
   },
 
   // ============================================
-  // OBJECIÓN: NO CREO EN SEGUROS
+  // PREGUNTAS DE PRECIO
   // ============================================
   {
-    id: 'objection_no_trust',
-    tags: ['no creo', 'no confío', 'no pagan', 'fraude', 'estafa'],
-    context: 'Cliente escéptico de los seguros',
-    conversation: `Cliente: La neta no creo mucho en los seguros, siento que nunca pagan
-Sofi: ¿Por qué? ¿Mala experiencia o nomás no le ves el punto?
-Cliente: Es que siempre tienen pretextos para no pagar
-Sofi: Entiendo, hay muchas historias así. El tema de "no pagan" es real en seguros de gastos médicos donde hay letra chiquita. En vida es más simple: si te mueres, pagan. Punto. Solo hay 2 exclusiones: suicidio en el primer año y si mientes en el cuestionario de salud. ¿Tienes alguna enfermedad que no me hayas dicho?
-Cliente: No, estoy sano
-Sofi: Entonces no hay letra chiquita. ¿Tienes hijos?`,
-    whyItWorked: 'No peleó, validó la preocupación y explicó las exclusiones reales'
+    id: 'price_question',
+    tags: ['precio', 'cuánto', 'cuesta', 'planes', 'costo'],
+    context: 'Lead preguntando directamente por precio',
+    conversation: `Cliente: ¿Cuánto cuesta?
+Lu: Depende del volumen. El plan Starter es $199/mes para 100 mensajes/día. ¿Cuántos mensajes reciben ustedes?
+Cliente: Como 80 al día
+Lu: Ok, con Starter irías bien. Incluye el agente IA, integración con Cal.com para agendar, y atención 24/7. ¿Cómo los atienden hoy?
+Cliente: Tenemos una persona pero no da abasto
+Lu: Ah ok. Una persona cuesta fácil $800-1,500/mes y solo trabaja 8 horas. Loomi $199 y trabaja 24/7. ¿Te late que te muestre cómo funciona?`,
+    whyItWorked: 'Dio precio rápido, calificó volumen, y mostró el ROI vs vendedor humano'
+  },
+
+  {
+    id: 'price_expensive',
+    tags: ['caro', 'presupuesto', 'mucho', 'no tengo'],
+    context: 'Lead dice que está caro',
+    conversation: `Cliente: $199 está caro para nosotros
+Lu: Entiendo. ¿Cuánto pagas hoy por atender WhatsApp?
+Cliente: Nada, lo hago yo
+Lu: ¿Y cuántas horas al día le dedicas?
+Cliente: Como 3-4 horas
+Lu: Ok, si tu hora vale aunque sea $10 USD, son $30-40 al día. Al mes son $600-800. Loomi te ahorra ese tiempo por $199. ¿Tiene sentido?
+Cliente: Viéndolo así sí
+Lu: Y además atiende 24/7. Los mensajes de madrugada o fines de semana, ¿quién los contesta hoy?`,
+    whyItWorked: 'No defendió el precio, hizo que el cliente calculara su propio costo'
   },
 
   // ============================================
-  // OBJECIÓN: MUY CARO / NO TENGO
+  // COMPETENCIA (Wati, ManyChat, Leadsales)
   // ============================================
   {
-    id: 'objection_price',
-    tags: ['caro', 'no tengo', 'presupuesto', 'mucho', 'apretado'],
-    context: 'Cliente dice que está caro o no tiene dinero',
-    conversation: `Cliente: Me interesa pero ahorita ando muy apretado
-Sofi: Entiendo. ¿Cuánto es lo máximo que podrías pagar al mes sin que te duela?
-Cliente: Como $300 a lo mucho
-Sofi: Ok, con $300 te alcanza para una suma de $500,000. Es menos protección pero es mejor que nada. ¿Tienes deudas grandes? ¿Hipoteca, carro?
-Cliente: Debo como $80,000 del carro
-Sofi: Perfecto, entonces los $500,000 cubren la deuda del carro y le quedan $420,000 para gastos. ¿Le entramos con eso y cuando mejore tu situación lo subimos?`,
-    whyItWorked: 'Preguntó presupuesto real y ofreció opción ajustada'
+    id: 'has_wati',
+    tags: ['wati', 'manychat', 'leadsales', 'ya uso', 'ya tengo', 'bot'],
+    context: 'Lead que ya usa un competidor',
+    conversation: `Cliente: Ya usamos Wati
+Lu: Ah ok. ¿Cómo te va? ¿El bot responde bien cuando preguntan algo fuera del menú?
+Cliente: La verdad a veces se traba
+Lu: Sí, ese es el tema. Wati son flujos - si el cliente pregunta algo que no está en el árbol, se rompe. Loomi usa IA real, entiende el contexto. ¿Cuántos leads crees que pierdes cuando el bot no sabe qué responder?
+Cliente: Varios, la verdad
+Lu: ¿Te muestro la diferencia? En 15 min ves cómo Loomi maneja preguntas fuera de script.`,
+    whyItWorked: 'No tiró a la competencia, preguntó por su experiencia y mostró el diferenciador'
+  },
+
+  {
+    id: 'comparing_options',
+    tags: ['comparar', 'diferencia', 'mejor', 'vs', 'opciones'],
+    context: 'Lead comparando opciones',
+    conversation: `Cliente: ¿Qué diferencia hay con otros chatbots?
+Lu: La diferencia principal es que Loomi no es un chatbot de flujos. Los chatbots normales siguen un árbol: "Si dice A, responde B". Si el cliente pregunta algo fuera del menú, se traba. Loomi usa GPT-4, realmente ENTIENDE lo que escriben. Además detecta si alguien está frustrado y cambia el tono.
+Cliente: Suena interesante
+Lu: ¿Qué tipo de negocio tienes? Te cuento cómo funcionaría para ti.`,
+    whyItWorked: 'Explicó el diferenciador técnico de forma simple y ofreció personalizar'
   },
 
   // ============================================
-  // JOVEN SIN HIJOS
+  // ESCEPTICISMO / NO CONFÍA EN IA
   // ============================================
   {
-    id: 'young_no_kids',
-    tags: ['soltero', 'sin hijos', 'joven', '25', '27', '28'],
-    context: 'Persona joven sin dependientes',
-    conversation: `Cliente: Tengo 27 años, soltero, sin hijos. ¿Me conviene?
-Sofi: Honestamente a tu edad el seguro de vida no es urgente. ¿Por qué te interesó?
-Cliente: Mi papá falleció el año pasado y dejó un desmadre
-Sofi: Lamento lo de tu papá. ¿Él no tenía seguro?
-Cliente: No, nada
-Sofi: Entiendo. A los 27 sin hijos, el seguro tiene sentido si ayudas económicamente a alguien. ¿Le das dinero a tus papás o hermanos?
-Cliente: Sí, le doy $5,000 al mes a mi mamá
-Sofi: Ok, si te pasa algo, tu mamá pierde esos $5,000/mes. Con un seguro de $600,000, ella tendría para cubrir 10 años de esa ayuda. Te sale como $380/mes. ¿Tiene sentido para ti?`,
-    whyItWorked: 'No vendió por vender, validó si tenía sentido y encontró la motivación real'
+    id: 'skeptic_bots',
+    tags: ['no sirve', 'no confío', 'bots', 'mal', 'robótico'],
+    context: 'Lead escéptico de bots/IA',
+    conversation: `Cliente: La neta los bots no sirven, responden muy robótico
+Lu: Tienes razón, la mayoría son malísimos. ¿Has usado alguno?
+Cliente: Sí, y los clientes se desesperan
+Lu: Esos son bots de flujos, van siguiendo un script. Loomi es diferente - usa IA real que entiende contexto. Lee el tono del cliente, si está molesto cambia cómo responde. Y si de plano no puede resolver algo, escala a un humano automáticamente.
+Cliente: ¿Y cómo sé que no va a espantar a mis clientes?
+Lu: Te ofrezco 14 días de prueba gratis, sin tarjeta. Lo pruebas, ves cómo responde, y si no te convence lo cancelas sin costo. ¿Te late?`,
+    whyItWorked: 'Validó la preocupación, explicó la diferencia técnica, ofreció prueba sin riesgo'
   },
 
   // ============================================
-  // YA TENGO SEGURO DEL TRABAJO
+  // BAJO VOLUMEN / NO ES BUEN FIT
   // ============================================
   {
-    id: 'has_work_insurance',
-    tags: ['trabajo', 'empresa', 'ya tengo', 'prestación'],
-    context: 'Cliente que tiene seguro por su empleo',
-    conversation: `Cliente: Ya tengo seguro de vida por mi trabajo
-Sofi: Ah qué bien. ¿Sabes de cuánto es?
-Cliente: Creo que como 2 años de sueldo
-Sofi: Ok, ¿y qué pasa si cambias de trabajo o te corren?
-Cliente: Pues... se acaba supongo
-Sofi: Exacto. El seguro del trabajo es temporal. El día que salgas, quedas descubierto. ¿Cuántos años tienes?
-Cliente: 36
-Sofi: Si te corren a los 45 y ya tienes diabetes o algo, va a ser carísimo conseguir seguro. El chiste de tener uno propio es que te lo llevas a donde vayas. Además, 2 años de sueldo no es mucho si tienes hipoteca e hijos. ¿Tienes?`,
-    whyItWorked: 'No dijo que el seguro del trabajo no sirve, mostró el riesgo futuro'
-  },
-
-  // ============================================
-  // FOLLOW UP A FANTASMA
-  // ============================================
-  {
-    id: 'follow_up_ghost',
-    tags: ['no responde', 'fantasma', 'seguimiento'],
-    context: 'Lead que dejó de responder',
-    conversation: `[Día 1]
-Cliente: ¿Cuánto cuesta el seguro de vida?
-Sofi: Depende de tu edad. ¿Cuántos años tienes?
-Cliente: 41
-[No responde]
-
-[Día 3]
-Sofi: Oye, ¿sigues interesado o te caché en mal momento?
-[No responde]
-
-[Día 5]
-Sofi: Última vez que te molesto. Para alguien de 41 no fumador, el seguro sale en $590/mes por $1 millón. Si te interesa, aquí ando. Si no, no hay bronca.
-Cliente: Perdón, se me fue. Sí me interesa, ¿qué necesitas?
-Sofi: Tranqui. Necesito nombre completo, fecha de nacimiento, y si tienes alguna enfermedad crónica. Y me dices quién sería tu beneficiario.`,
-    whyItWorked: 'Follow-up espaciado, no acosó, dio precio concreto, ofreció salida'
-  },
-
-  // ============================================
-  // COMPARANDO CON COMPETENCIA
-  // ============================================
-  {
-    id: 'comparing_competitor',
-    tags: ['gnp', 'metlife', 'cotización', 'comparar', 'otra'],
-    context: 'Cliente comparando con otra aseguradora',
-    conversation: `Cliente: Ya me cotizaron en GNP $800/mes, ¿ustedes qué ofrecen?
-Sofi: ¿Por cuánto te cotizaron? ¿Suma asegurada?
-Cliente: $1.5 millones
-Sofi: Ok. ¿Qué edad tienes y fumas?
-Cliente: 38, no fumo
-Sofi: Para $1.5 millones te puedo conseguir entre $650 y $750 dependiendo la aseguradora. Te ahorras como $50-150 al mes. ¿Quieres que te cotice?
-Cliente: Sí, a ver
-Sofi: Dame 10 min y te paso opciones.`,
-    whyItWorked: 'No tiró a la competencia, comparó manzanas con manzanas'
+    id: 'low_volume',
+    tags: ['pocos', 'poco', 'mensajes', '10', '15', '20'],
+    context: 'Lead con bajo volumen de mensajes',
+    conversation: `Cliente: Recibimos como 15 mensajes al día
+Lu: La neta, con 15 mensajes al día Loomi puede no valer la pena todavía. El ROI empieza a hacer sentido arriba de 40-50 mensajes. ¿Crees que el volumen va a crecer?
+Cliente: Estamos empezando a invertir en Meta Ads
+Lu: Ah ok, si van a meter ads el volumen va a subir rápido. ¿Te parece si hablamos cuando estén recibiendo más mensajes? O si quieres te muestro una demo para que lo tengas en el radar.`,
+    whyItWorked: 'Fue honesta sobre el fit, no forzó la venta, dejó la puerta abierta'
   },
 
   // ============================================
@@ -160,79 +134,87 @@ Sofi: Dame 10 min y te paso opciones.`,
   {
     id: 'think_about_it',
     tags: ['pienso', 'pensar', 'después', 'luego', 'no sé'],
-    context: 'Cliente quiere postergar',
+    context: 'Lead quiere postergar',
     conversation: `Cliente: Déjame pensarlo
-Sofi: Va, sin presión. ¿Qué te hace dudar?
-Cliente: Es que no sé si realmente lo necesito
-Sofi: Honesto. ¿Tienes hijos?
-Cliente: Sí, dos
-Sofi: ¿Qué pasaría con ellos si mañana te atropellan? ¿Tu pareja puede mantener todo sola?
-Cliente: Pues estaría difícil
-Sofi: Ese es el único punto del seguro de vida. No es para ti, es para ellos. Pero tú decides. Si quieres lo dejamos aquí y si algún día te animas me escribes.`,
-    whyItWorked: 'No presionó pero hizo la pregunta incómoda que revela la necesidad'
+Lu: Va, sin presión. ¿Qué es lo que te hace dudar?
+Cliente: No sé si realmente lo necesito
+Lu: Entiendo. ¿Cuántos mensajes de WhatsApp pierdes o tardas en contestar hoy?
+Cliente: La verdad varios, sobre todo en la noche
+Lu: ¿Y esos mensajes nocturnos, qué porcentaje se convierten en venta?
+Cliente: Pocos porque cuando contesto ya compraron en otro lado
+Lu: Ese es exactamente el problema que resuelve Loomi. Pero tú decides, si quieres ver una demo sin compromiso para tener más info, aquí ando.`,
+    whyItWorked: 'No presionó, descubrió el dolor real, ofreció demo como paso intermedio'
   },
 
   // ============================================
-  // QUIERE CERRAR
+  // LISTO PARA DEMO
   // ============================================
   {
-    id: 'ready_to_close',
-    tags: ['va', 'sí', 'quiero', 'contratar', 'activar', 'dale'],
-    context: 'Cliente listo para comprar',
-    conversation: `Cliente: Ok va, sí me interesa. ¿Qué necesitas?
-Sofi: Perfecto. Necesito:
-- Tu nombre completo
-- Fecha de nacimiento
-- ¿Tienes diabetes, hipertensión o alguna enfermedad crónica?
-- ¿A quién pongo como beneficiario?
-Cliente: Juan Pérez López, 15 marzo 1988, no tengo enfermedades, beneficiaria mi esposa María
-Sofi: Listo Juan. Te mando el link de pago. Son $540/mes. En cuanto pagues, en 24 horas tienes tu póliza activa. ¿Va?`,
-    whyItWorked: 'Proceso simple, pidió solo lo necesario, no complicó'
+    id: 'wants_demo',
+    tags: ['demo', 'mostrar', 'ver', 'funciona', 'probar'],
+    context: 'Lead interesado en ver el producto',
+    conversation: `Cliente: Me interesa, ¿me puedes mostrar cómo funciona?
+Lu: ¡Claro! Te puedo hacer una demo de 15 minutos donde te muestro cómo se configura y cómo responde. ¿Te va mejor mañana o pasado?
+Cliente: Mañana en la tarde
+Lu: Perfecto. Te mando el link para que elijas el horario que te acomode.`,
+    whyItWorked: 'Respondió rápido al interés, ofreció opciones concretas, no complicó'
   },
 
   // ============================================
-  // URUGUAY - BSE AHORRO + VIDA 65
+  // LISTO PARA COMPRAR
   // ============================================
   {
-    id: 'uruguay_new_lead',
-    tags: ['hola', 'anuncio', 'uruguay', 'bse', 'dólar'],
-    context: 'Lead de Uruguay preguntando por BSE',
-    conversation: `Cliente: Hola, vi el anuncio del seguro del BSE
-Sofi: ¡Hola! Qué bueno que escribiste. El BSE tiene un plan muy interesante, el Ahorro + Vida. ¿Qué fue lo que te llamó la atención?
-Cliente: Me interesa que sea en dólares
-Sofi: Sí, ese es uno de los beneficios. En dólares el precio y el capital no cambian durante toda la vigencia. ¿Cuántos años tenés?
-Cliente: 35
-Sofi: Perfecto. A los 35, por unos U$S 35 al mes tenés U$S 12,500 de cobertura. Incluye muerte accidental, invalidez, y hasta U$S 9,000 si te diagnostican cáncer. ¿Tenés hijos?`,
-    whyItWorked: 'Usó vocabulario uruguayo (tenés, vos), explicó beneficio de dólares'
+    id: 'ready_to_buy',
+    tags: ['quiero', 'contratar', 'activar', 'empezar', 'comprar'],
+    context: 'Lead listo para comprar',
+    conversation: `Cliente: Ok me convence, ¿cómo le hago?
+Lu: Perfecto. ¿Con qué plan quieres empezar? Starter ($199/mes), Growth ($349/mes) o Business ($599/mes)?
+Cliente: El Starter para empezar
+Lu: Va. Te mando el link de pago. ¿A qué correo te lo envío?
+Cliente: juan@miempresa.com
+Lu: Listo, te lo envío ahora. En cuanto pagues, en menos de 24 horas está activo tu agente. ¿Alguna duda?`,
+    whyItWorked: 'No complicó, preguntó plan, pidió email, y cerró limpio'
+  },
+
+  // ============================================
+  // PREGUNTAS TÉCNICAS
+  // ============================================
+  {
+    id: 'technical_integration',
+    tags: ['integra', 'api', 'crm', 'conectar', 'técnico'],
+    context: 'Lead con preguntas técnicas',
+    conversation: `Cliente: ¿Se integra con mi CRM?
+Lu: Depende cuál uses. Loomi tiene CRM propio con pipeline Kanban incluido. Si usas HubSpot, tenemos integración nativa. ¿Cuál CRM usan?
+Cliente: Tenemos uno interno
+Lu: Ok, en ese caso el plan Business incluye acceso a API para que lo conecten. O pueden usar el CRM de Loomi directamente. ¿Qué es lo principal que necesitan del CRM?`,
+    whyItWorked: 'Respondió concreto, ofreció opciones, preguntó para entender la necesidad real'
+  },
+
+  // ============================================
+  // INDUSTRIAS ESPECÍFICAS
+  // ============================================
+  {
+    id: 'ecommerce',
+    tags: ['tienda', 'ecommerce', 'productos', 'vendo'],
+    context: 'Tienda online / ecommerce',
+    conversation: `Cliente: Tenemos una tienda de ropa online
+Lu: Genial. ¿La mayoría de tus ventas vienen por WhatsApp o por la web directa?
+Cliente: Mucho WhatsApp, la gente pregunta tallas, colores, envío...
+Lu: Perfecto, ese es el caso ideal para Loomi. Puede responder sobre productos, tallas, tiempos de envío, todo automático. ¿Cuántos mensajes reciben al día?`,
+    whyItWorked: 'Entendió el caso de uso específico y conectó con el valor de Loomi'
   },
 
   {
-    id: 'uruguay_benefits',
-    tags: ['cáncer', 'internación', 'bse', 'cobertura', 'incluye'],
-    context: 'Cliente uruguayo preguntando por coberturas',
-    conversation: `Cliente: ¿Qué cubre exactamente el seguro del BSE?
-Sofi: El plan AHORRO + VIDA 65 cubre bastante:
-- El capital que elijas si fallecés (va a tus beneficiarios)
-- Lo mismo si quedás inválido por accidente
-- U$S 50 por día si te internás (U$S 100 en CTI)
-- U$S 9,000 si te diagnostican cáncer
-- Y si quedás incapacitado, dejás de pagar pero mantenés todo
-Cliente: ¿Y qué pasa con mi plata si no me pasa nada?
-Sofi: Ahí está el diferencial. AHORRO + VIDA significa que al final del período, vos cobrás el ahorro acumulado. No es plata perdida, es protección + ahorro.`,
-    whyItWorked: 'Explicó claramente todas las coberturas y el componente de ahorro'
-  },
-
-  {
-    id: 'uruguay_price_question',
-    tags: ['precio', 'cuanto', 'uruguay', 'dólares', 'mensual'],
-    context: 'Cliente uruguayo preguntando precio',
-    conversation: `Cliente: ¿Cuánto sale por mes?
-Sofi: Depende de tu edad y cuánto querés de cobertura. ¿Cuántos años tenés?
-Cliente: 40
-Sofi: Ok, a los 40 te sale unos U$S 36 al mes por U$S 10,000 de cobertura. Si querés más cobertura, el precio sube proporcional. ¿Tenés idea de cuánto te gustaría tener de suma asegurada?
-Cliente: ¿Cuánto recomendás?
-Sofi: Depende de tu situación. ¿Tenés deudas? ¿Hipoteca? ¿Hijos? La regla general es que cubra al menos 2-3 años de tus ingresos para que tu familia pueda ajustarse.`,
-    whyItWorked: 'Dio precio concreto y ayudó a dimensionar la cobertura'
+    id: 'services',
+    tags: ['servicios', 'consultoría', 'agencia', 'citas'],
+    context: 'Negocio de servicios / citas',
+    conversation: `Cliente: Somos una clínica dental
+Lu: Ah perfecto. ¿La mayoría de sus citas las agendan por WhatsApp?
+Cliente: Sí, y es un relajo porque la recepcionista no da abasto
+Lu: Ese es el caso perfecto. Loomi puede calificar pacientes, responder dudas de precios, y agendar citas directo en tu calendario. Una clínica que usa Loomi bajó sus no-shows de 35% a 8% porque el agente manda recordatorios automáticos.
+Cliente: Eso me interesa mucho
+Lu: ¿Te muestro cómo funcionaría para tu clínica? Tengo espacio mañana para una demo.`,
+    whyItWorked: 'Conectó con caso de uso específico (citas), mencionó resultado de cliente similar'
   },
 ];
 
@@ -244,59 +226,77 @@ function detectTags(message: string, recentMessages: string[]): string[] {
   const detectedTags: Set<string> = new Set();
 
   const keywordMap: Record<string, string[]> = {
+    // Nuevo / Primer contacto
+    'hola': ['hola', 'nuevo'],
+    'anuncio': ['anuncio', 'nuevo'],
+    'vi su': ['anuncio', 'nuevo'],
+    'qué es': ['qué es', 'nuevo'],
+    'cómo funciona': ['cómo funciona', 'nuevo'],
+
     // Precio
-    'caro': ['caro', 'precio'],
-    'precio': ['precio', 'cuanto'],
-    'cuanto': ['cuanto', 'precio'],
+    'precio': ['precio', 'cuánto'],
+    'cuánto': ['cuánto', 'precio'],
+    'cuanto': ['cuánto', 'precio'],
     'cuesta': ['cuesta', 'precio'],
+    'costo': ['costo', 'precio'],
+    'planes': ['planes', 'precio'],
+    'caro': ['caro', 'presupuesto'],
     'presupuesto': ['presupuesto', 'caro'],
-    'apretado': ['apretado', 'caro'],
     'no tengo': ['no tengo', 'caro'],
 
+    // Competencia
+    'wati': ['wati', 'ya tengo'],
+    'manychat': ['manychat', 'ya tengo'],
+    'leadsales': ['leadsales', 'ya tengo'],
+    'ya uso': ['ya tengo', 'bot'],
+    'ya tengo': ['ya tengo', 'bot'],
+    'chatbot': ['bot', 'ya tengo'],
+
     // Escepticismo
-    'no creo': ['no creo', 'no confío'],
-    'no pagan': ['no pagan', 'no creo'],
-    'estafa': ['estafa', 'no creo'],
-    'fraude': ['fraude', 'no creo'],
+    'no sirve': ['no sirve', 'no confío'],
+    'no confío': ['no confío', 'bots'],
+    'robótico': ['robótico', 'bots'],
+    'no funciona': ['no sirve', 'bots'],
 
-    // Ya tiene algo
-    'ya tengo': ['ya tengo', 'trabajo'],
-    'trabajo': ['trabajo', 'empresa'],
-    'empresa': ['empresa', 'trabajo'],
-    'prestación': ['prestación', 'trabajo'],
-
-    // Joven
-    'soltero': ['soltero', 'joven'],
-    'sin hijos': ['sin hijos', 'joven'],
+    // Bajo volumen
+    'pocos mensajes': ['pocos', 'mensajes'],
+    '10 mensajes': ['pocos', 'mensajes'],
+    '15 mensajes': ['pocos', 'mensajes'],
+    '20 mensajes': ['pocos', 'mensajes'],
 
     // Postergar
     'pienso': ['pienso', 'pensar'],
     'pensar': ['pensar', 'pienso'],
     'después': ['después', 'luego'],
     'luego': ['luego', 'después'],
+    'no sé': ['no sé', 'pienso'],
 
-    // Comparar
-    'gnp': ['gnp', 'comparar'],
-    'metlife': ['metlife', 'comparar'],
-    'cotización': ['cotización', 'comparar'],
+    // Demo
+    'demo': ['demo', 'ver'],
+    'mostrar': ['mostrar', 'demo'],
+    'ver cómo': ['ver', 'demo'],
+    'probar': ['probar', 'demo'],
 
-    // Cerrar
+    // Comprar
     'quiero': ['quiero', 'contratar'],
-    'contratar': ['contratar', 'activar'],
-    'dale': ['dale', 'va'],
+    'contratar': ['contratar', 'comprar'],
+    'activar': ['activar', 'contratar'],
+    'empezar': ['empezar', 'contratar'],
 
-    // Nuevo
-    'hola': ['hola', 'anuncio'],
-    'anuncio': ['anuncio', 'hola'],
+    // Técnico
+    'integra': ['integra', 'api'],
+    'api': ['api', 'técnico'],
+    'crm': ['crm', 'integra'],
+    'conectar': ['conectar', 'integra'],
 
-    // Uruguay / BSE
-    'uruguay': ['uruguay', 'bse', 'dólar'],
-    'bse': ['bse', 'uruguay'],
-    'dólar': ['dólar', 'uruguay'],
-    'dólares': ['dólares', 'uruguay'],
-    'cáncer': ['cáncer', 'cobertura'],
-    'internación': ['internación', 'cobertura'],
-    'ahorro': ['ahorro', 'bse'],
+    // Industrias
+    'tienda': ['tienda', 'ecommerce'],
+    'ecommerce': ['ecommerce', 'tienda'],
+    'productos': ['productos', 'tienda'],
+    'clínica': ['servicios', 'citas'],
+    'consultorio': ['servicios', 'citas'],
+    'citas': ['citas', 'servicios'],
+    'agencia': ['agencia', 'servicios'],
   };
 
   for (const [keyword, tags] of Object.entries(keywordMap)) {
@@ -371,11 +371,11 @@ export function getFewShotContext(
 export function getExamplesByCategory(category: string): ConversationExample[] {
   const categoryTags: Record<string, string[]> = {
     'price': ['precio', 'caro'],
-    'skeptic': ['no creo', 'no pagan'],
-    'work_insurance': ['trabajo', 'ya tengo'],
-    'young': ['joven', 'soltero'],
+    'competition': ['wati', 'ya tengo'],
+    'skeptic': ['no confío', 'bots'],
     'postpone': ['pienso', 'después'],
-    'close': ['quiero', 'contratar'],
+    'demo': ['demo', 'ver'],
+    'buy': ['quiero', 'contratar'],
   };
 
   const tags = categoryTags[category] || [];

@@ -1,14 +1,13 @@
 /**
  * POST /api/demo/chat
- * FAST demo chat for landing page
- * Uses gpt-4o-mini for speed (~2-3s response time)
+ * Demo chat using the REAL Loomi agent with all tools
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { simpleAgent } from '@/lib/agents/simple-agent';
+import { ConversationContext, Lead, Conversation, Message } from '@/types';
 
-// Simple rate limiting
+// Rate limiting
 const rateLimiter = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 15;
 const RATE_WINDOW_MS = 60 * 1000;
@@ -27,36 +26,6 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-// Fast demo prompt - optimized for Loomi sales
-const DEMO_PROMPT = `Eres Lu, growth advisor de Loomi. Directa, inteligente, conversacional.
-
-LOOMI = Agente IA para WhatsApp que vende 24/7
-- Responde en <1 segundo
-- Califica leads automáticamente
-- Agenda demos (Cal.com integrado)
-- Detecta emociones y adapta el tono
-- Escala a humanos cuando necesario
-
-PLANES:
-- Starter $199/mes (100 msgs/día)
-- Growth $349/mes (300 msgs/día)
-- Business $599/mes (1000 msgs/día)
-
-ROI: Un vendedor humano cuesta $800-1,500/mes. Loomi $199 y trabaja 24/7.
-
-TU ESTILO:
-- Mensajes CORTOS (1-2 líneas máximo)
-- Una pregunta a la vez
-- Directa, sin rodeos
-- Si preguntan precio, dalo y pregunta qué volumen manejan
-- Si quieren demo, di que pueden agendar en loomi.lat
-
-REGLAS:
-- NO uses emojis
-- NO digas "Visitante" ni nombres genéricos
-- NO hagas párrafos largos
-- Responde como en WhatsApp: rápido y conciso`;
-
 export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
@@ -72,29 +41,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid message' }, { status: 400 });
     }
 
-    const messages = [
-      ...history.slice(-10).map((m: { role: string; content: string }) => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content
-      })),
-      { role: 'user' as const, content: message }
-    ];
+    // Create demo context
+    const demoLead: Lead = {
+      id: `demo-${ip}`,
+      phone: '+521234567890',
+      name: '', // Empty to avoid "Visitante"
+      stage: 'new',
+      createdAt: new Date(),
+      lastInteraction: new Date(),
+    };
 
-    const result = await generateText({
-      model: openai('gpt-4o-mini'),
-      system: DEMO_PROMPT,
-      messages,
-      maxTokens: 150,
-      temperature: 0.7,
-    });
+    const demoConversation: Conversation = {
+      id: `demo-conv-${Date.now()}`,
+      leadId: demoLead.id,
+      startedAt: new Date(),
+    };
+
+    // Convert history to Message format
+    const recentMessages: Message[] = history.slice(-10).map((m: { role: string; content: string }, i: number) => ({
+      id: `msg-${i}`,
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+      timestamp: new Date(),
+    }));
+
+    const context: ConversationContext = {
+      lead: demoLead,
+      conversation: demoConversation,
+      recentMessages,
+      hasActiveAppointment: false,
+      isFirstConversation: history.length === 0,
+    };
+
+    // Call the REAL agent
+    const result = await simpleAgent(message, context);
 
     return NextResponse.json({
-      response: result.text.trim(),
-      tokensUsed: result.usage?.totalTokens,
+      response: result.response,
       agentInfo: {
+        escalatedToHuman: result.escalatedToHuman,
+        paymentLinkSent: result.paymentLinkSent,
         detectedIndustry: null,
-        escalatedToHuman: null,
-        paymentLinkSent: null,
         saidLater: message.toLowerCase().includes('luego') || message.toLowerCase().includes('después'),
       }
     });

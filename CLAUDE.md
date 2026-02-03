@@ -32,8 +32,7 @@ app/
 │   ├── crm/              # Pipeline Kanban
 │   ├── conversations/    # Historial de chats
 │   └── settings/         # Configuración cuenta
-├── demo/
-│   └── sandbox/          # Demo pública completa
+├── demo/                 # Demo pública completa
 ├── login/                # Login + solicita acceso
 └── page.tsx              # Landing page (/)
 
@@ -100,15 +99,16 @@ components/
 - **Prompt**: Simplificado para ventas
 
 ### Full Agent (`/api/sandbox/chat`)
-- **Modelo**: gpt-5.2
+- **Modelo**: gpt-4o (optimizado para velocidad)
 - **Uso**: Sandbox y producción
 - **Características**:
-  - Multi-agent analysis (o3-mini)
+  - Multi-agent analysis (gpt-4o-mini) - con fast path para mensajes simples
   - Sentiment detection
   - Few-shot learning
   - Memory contextual
   - Custom tools
   - Knowledge documents
+- **Latencia**: ~2-4s (vs ~15-25s con modelos reasoning)
 
 ## Base de Datos (Supabase)
 
@@ -135,7 +135,7 @@ components/
 |------|-------------|
 | `/` | Landing page con demo interactiva |
 | `/login` | Login o solicitar acceso demo |
-| `/demo/sandbox` | Sandbox completo (tools, docs, prompts) |
+| `/demo` | Demo completa (tools, docs, prompts) |
 | `/dashboard` | Panel principal |
 | `/dashboard/agent` | Configurar agente |
 | `/dashboard/agent/prompt` | Prompt personalizado |
@@ -168,7 +168,7 @@ El chat en el landing (`InteractiveDemo`) funciona así:
 2. **Mensaje libre** → Llama a `/api/demo/chat` (gpt-4o-mini, rápido)
 3. **Aviso** → "Demo simplificada, solicita acceso completo"
 
-## Sandbox Completo (`/demo/sandbox`)
+## Demo Completa (`/demo`)
 
 Features:
 - Selector de tenant

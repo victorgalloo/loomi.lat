@@ -8,9 +8,9 @@
 // List of authorized partner emails
 // TODO: Move to database table or environment variable for production
 const PARTNER_EMAILS: string[] = [
-  // Add your partner emails here
-  // 'socio1@ejemplo.com',
-  // 'socio2@ejemplo.com',
+  'joscardona@icloud.com',
+  'victorgalloo@icloud.com',
+  'carloscardonam1@gmail.com',
 ];
 
 /**

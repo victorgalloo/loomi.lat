@@ -12,9 +12,13 @@
     "train:apply": "npm run train -- --apply",
     "train:full": "npm run train -- --full",
     "train:live": "npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/live-training.ts",
-    "migrate": "npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/run-migration.ts"
+    "migrate": "npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/run-migration.ts",
+    "worker": "DOTENV_CONFIG_PATH=.env.local node -r dotenv/config packages/temporal-workers/node_modules/.bin/ts-node packages/temporal-workers/src/worker.ts",
+    "worker:build": "npm run --prefix packages/temporal-workers build",
+    "worker:start": "DOTENV_CONFIG_PATH=.env.local node -r dotenv/config packages/temporal-workers/dist/worker.js"
   },
   "dependencies": {
+    "@temporalio/client": "^1.11.0",
     "@ai-sdk/openai": "^3.0.21",
     "@ai-sdk/provider-utils": "^4.0.10",
     "@dnd-kit/core": "^6.3.1",

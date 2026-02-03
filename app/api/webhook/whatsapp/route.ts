@@ -59,7 +59,8 @@ import { ConversationContext } from '@/types';
 import {
   scheduleDemoReminders,
   scheduleSaidLaterFollowUp,
-  cancelFollowUps
+  cancelFollowUps,
+  checkAndHandleOptOut
 } from '@/lib/followups/scheduler';
 import { getTenantFromPhoneNumberId, getAgentConfig, AgentConfig } from '@/lib/tenant/context';
 import { trackDemoScheduled } from '@/lib/integrations/meta-conversions';
@@ -594,7 +595,24 @@ export async function POST(request: NextRequest) {
         ? buildTenantContext(tenantId, 'starter')
         : null;
 
+      // Check for opt-out signals (e.g., "no me interesa", "deja de escribirme")
+      // This also handles multiple cold responses pattern
+      const recentMessagesForOptOut = context.recentMessages?.map(m => ({
+        role: m.role,
+        content: m.content
+      })) || [];
+      const isOptOut = await checkAndHandleOptOut(
+        context.lead.id,
+        message.text,
+        recentMessagesForOptOut
+      );
+
+      if (isOptOut) {
+        console.log(`[Webhook] Lead ${context.lead.id} opted out of follow-ups`);
+      }
+
       // Save message and cancel re-engagement in parallel (async-parallel)
+      // If opted out, we already marked them - just cancel remaining follow-ups
       const cancelFollowUpsPromise = isTemporalEnabled('followups') && tenantContext
         ? getTemporalModule().then(t => t?.cancelFollowUps(tenantContext.tenantId, context.lead.id))
         : cancelFollowUps(context.lead.id, ['cold_lead_reengagement', 'reengagement_2', 'reengagement_3']);

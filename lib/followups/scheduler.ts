@@ -8,9 +8,57 @@
  */
 
 import { getSupabase } from '@/lib/memory/supabase';
-import { FollowUp, FollowUpScheduleParams, FollowUpStatus, FollowUpType, FOLLOWUP_DELAYS } from './types';
+import { FollowUp, FollowUpScheduleParams, FollowUpStatus, FollowUpType, FOLLOWUP_DELAYS, MIN_FOLLOWUP_INTERVAL_MS } from './types';
 import { generateFollowUpMessage, shouldSendReengagement } from './messages';
+import { shouldStopFollowUps } from './opt-out';
 import { Lead } from '@/types';
+
+// Follow-up types that are exempt from the 24h rate limit (demo-related)
+const RATE_LIMIT_EXEMPT_TYPES = new Set<FollowUpType>([
+  'pre_demo_reminder',
+  'pre_demo_24h',
+  'post_demo',
+  'no_show_followup'
+]);
+
+/**
+ * Check if we can send a follow-up (respects 24h minimum interval)
+ * Returns true if enough time has passed since last follow-up
+ */
+export async function canSendFollowUp(leadId: string, type: FollowUpType): Promise<boolean> {
+  // Demo-related follow-ups are exempt from rate limiting
+  if (RATE_LIMIT_EXEMPT_TYPES.has(type)) {
+    return true;
+  }
+
+  const supabase = getSupabase();
+  const cutoffTime = new Date(Date.now() - MIN_FOLLOWUP_INTERVAL_MS);
+
+  try {
+    // Check if any follow-up was sent in the last 24 hours
+    const { data, error } = await supabase
+      .from('follow_ups')
+      .select('id, sent_at, type')
+      .eq('lead_id', leadId)
+      .eq('status', 'sent')
+      .gte('sent_at', cutoffTime.toISOString())
+      .limit(1);
+
+    if (error) {
+      console.error('[FollowUp] Error checking rate limit:', error);
+      return true; // Allow on error to not block
+    }
+
+    if (data && data.length > 0) {
+      console.log(`[FollowUp] Rate limited: lead ${leadId} received ${data[0].type} recently`);
+      return false;
+    }
+
+    return true;
+  } catch {
+    return true; // Allow on error
+  }
+}
 
 /**
  * Schedule a follow-up message
@@ -94,6 +142,94 @@ export async function cancelAppointmentFollowUps(appointmentId: string): Promise
     }
   } catch (error) {
     console.error('[FollowUp] Error:', error);
+  }
+}
+
+/**
+ * Mark all follow-ups as opted-out when user explicitly declines
+ * Also marks the lead as opted-out to prevent future follow-ups
+ */
+export async function markOptedOut(
+  leadId: string,
+  reason?: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = getSupabase();
+
+  try {
+    // 1. Mark all pending follow-ups as opted_out
+    const { error: followUpError } = await supabase
+      .from('follow_ups')
+      .update({
+        status: 'opted_out' as FollowUpStatus,
+        metadata: { opt_out_reason: reason }
+      })
+      .eq('lead_id', leadId)
+      .eq('status', 'pending');
+
+    if (followUpError) {
+      console.error('[FollowUp] Error marking as opted out:', followUpError);
+    }
+
+    // 2. Mark the lead as opted-out (prevents future follow-ups)
+    const { error: leadError } = await supabase
+      .from('leads')
+      .update({
+        opted_out: true,
+        opted_out_at: new Date().toISOString(),
+        opted_out_reason: reason
+      })
+      .eq('id', leadId);
+
+    if (leadError) {
+      // Log but don't fail - the column might not exist yet
+      console.warn('[FollowUp] Could not mark lead as opted out (column may not exist):', leadError.message);
+    }
+
+    console.log(`[FollowUp] Lead ${leadId} opted out: ${reason || 'no reason provided'}`);
+    return { success: true };
+
+  } catch (error) {
+    console.error('[FollowUp] Error in markOptedOut:', error);
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
+ * Check if a message indicates opt-out and handle accordingly
+ * Returns true if follow-ups should stop
+ */
+export async function checkAndHandleOptOut(
+  leadId: string,
+  message: string,
+  recentMessages?: Array<{ role: string; content: string }>
+): Promise<boolean> {
+  const result = shouldStopFollowUps(message, recentMessages);
+
+  if (result.stop) {
+    await markOptedOut(leadId, result.reason);
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Check if a lead has opted out of follow-ups
+ */
+export async function isOptedOut(leadId: string): Promise<boolean> {
+  const supabase = getSupabase();
+
+  try {
+    const { data, error } = await supabase
+      .from('leads')
+      .select('opted_out')
+      .eq('id', leadId)
+      .single();
+
+    if (error || !data) return false;
+    return data.opted_out === true;
+  } catch {
+    return false;
   }
 }
 
@@ -274,6 +410,12 @@ export async function scheduleSaidLaterFollowUp(
   leadId: string,
   lead: Lead
 ): Promise<void> {
+  // Check if lead has opted out of follow-ups
+  if (await isOptedOut(leadId)) {
+    console.log(`[FollowUp] Skipping said-later for lead ${leadId} - opted out`);
+    return;
+  }
+
   const scheduledFor = new Date(Date.now() + FOLLOWUP_DELAYS.said_later);
   const message = generateFollowUpMessage('said_later', { lead });
 
@@ -293,6 +435,12 @@ export async function scheduleReengagement(
   lead: Lead,
   memory?: string | null
 ): Promise<void> {
+  // Check if lead has opted out of follow-ups
+  if (await isOptedOut(leadId)) {
+    console.log(`[FollowUp] Skipping re-engagement for lead ${leadId} - opted out`);
+    return;
+  }
+
   // Check current attempt count
   const currentCount = await getFollowUpCount(leadId, 'cold_lead_reengagement');
   const nextAttempt = currentCount + 1;

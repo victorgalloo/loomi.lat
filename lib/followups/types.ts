@@ -13,7 +13,7 @@ export type FollowUpType =
   | 'reengagement_2'          // 5 days - second attempt
   | 'reengagement_3';         // 2 weeks - final attempt
 
-export type FollowUpStatus = 'pending' | 'sent' | 'cancelled' | 'failed';
+export type FollowUpStatus = 'pending' | 'sent' | 'cancelled' | 'failed' | 'opted_out';
 
 export interface FollowUp {
   id: string;
@@ -40,14 +40,18 @@ export interface FollowUpScheduleParams {
 }
 
 // Time delays for each follow-up type (in milliseconds)
+// IMPORTANT: Keep these spaced out to avoid being annoying
 export const FOLLOWUP_DELAYS: Record<FollowUpType, number> = {
-  'pre_demo_reminder': 15 * 60 * 1000,        // 15 minutes before
-  'pre_demo_24h': 12 * 60 * 60 * 1000,        // 12 hours before
-  'post_demo': 2 * 60 * 1000,                 // 2 minutes after
-  'cold_lead_reengagement': 24 * 60 * 60 * 1000,  // 24 hours
-  'no_show_followup': 7 * 60 * 1000,          // 7 minutes after missed demo
-  'proposal_reminder': 12 * 60 * 60 * 1000,   // 12 hours
-  'said_later': 12 * 60 * 60 * 1000,          // 12 hours
-  'reengagement_2': 2.5 * 24 * 60 * 60 * 1000,  // 2.5 days
-  'reengagement_3': 7 * 24 * 60 * 60 * 1000   // 1 week
+  'pre_demo_reminder': 30 * 60 * 1000,         // 30 minutes before demo
+  'pre_demo_24h': 24 * 60 * 60 * 1000,         // 24 hours before demo
+  'post_demo': 5 * 60 * 1000,                  // 5 minutes after demo
+  'cold_lead_reengagement': 48 * 60 * 60 * 1000,   // 48 hours (2 days) - first contact
+  'no_show_followup': 15 * 60 * 1000,          // 15 minutes after missed demo
+  'proposal_reminder': 24 * 60 * 60 * 1000,    // 24 hours after proposal
+  'said_later': 24 * 60 * 60 * 1000,           // 24 hours - they said "later"
+  'reengagement_2': 5 * 24 * 60 * 60 * 1000,   // 5 days after first attempt
+  'reengagement_3': 14 * 24 * 60 * 60 * 1000   // 14 days (2 weeks) - final attempt
 };
+
+// Minimum time between any follow-ups to same lead (24 hours)
+export const MIN_FOLLOWUP_INTERVAL_MS = 24 * 60 * 60 * 1000;

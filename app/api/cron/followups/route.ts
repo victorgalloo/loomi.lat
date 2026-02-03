@@ -11,7 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPendingFollowUps, markFollowUpSent, markFollowUpFailed, scheduleReengagement } from '@/lib/followups/scheduler';
+import { getPendingFollowUps, markFollowUpSent, markFollowUpFailed, scheduleReengagement, isOptedOut, markOptedOut, canSendFollowUp } from '@/lib/followups/scheduler';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/send';
 import { saveMessage, getLeadById } from '@/lib/memory/supabase';
 import { getActiveConversation } from '@/lib/memory/context';
@@ -58,6 +58,13 @@ async function processFollowUp(followUp: FollowUp): Promise<{ success: boolean; 
       return { success: false, error: 'Lead not found' };
     }
 
+    // Early exit: Lead has opted out of follow-ups
+    if (await isOptedOut(followUp.leadId)) {
+      console.log(`[Cron] Lead ${lead.phone} has opted out, skipping follow-up`);
+      await markOptedOut(followUp.leadId, 'Skipped by cron - already opted out');
+      return { success: true }; // Don't count as failure, just skip
+    }
+
     // Early exit: Skip re-engagement for certain stages
     if (followUp.type.includes('reengagement') || followUp.type === 'cold_lead_reengagement') {
       if (SKIP_REENGAGEMENT_STAGES.has(lead.stage)) {
@@ -65,6 +72,19 @@ async function processFollowUp(followUp: FollowUp): Promise<{ success: boolean; 
         await markFollowUpSent(followUp.id);
         return { success: true };
       }
+    }
+
+    // Early exit: Rate limit - max 1 follow-up per 24h (except demo reminders)
+    if (!await canSendFollowUp(followUp.leadId, followUp.type)) {
+      console.log(`[Cron] Rate limited: ${lead.phone} received follow-up in last 24h, rescheduling`);
+      // Reschedule for 24h later instead of failing
+      const supabase = await import('@/lib/memory/supabase').then(m => m.getSupabase());
+      const newTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      await supabase
+        .from('follow_ups')
+        .update({ scheduled_for: newTime.toISOString() })
+        .eq('id', followUp.id);
+      return { success: true }; // Don't count as failure
     }
 
     // Send the message

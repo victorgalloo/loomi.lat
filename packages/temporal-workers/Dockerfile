@@ -16,6 +16,9 @@ FROM node:20-slim
 
 WORKDIR /app
 
+# Install CA certificates for TLS connections
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+
 # Copy built files and production dependencies
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules

@@ -3,20 +3,21 @@
  *
  * POST - Test the configured agent prompt with a message
  *
- * Uses gpt-4o-mini for fast, cheap testing during onboarding.
+ * Uses the REAL production agent (simpleAgent) with all tools:
+ * - Multi-agent analysis (o3-mini reasoning)
+ * - Sentiment detection
+ * - Industry detection
+ * - Few-shot learning
+ * - Tools: send_payment_link, escalate_to_human
+ *
  * Validates tenant from session for security.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getTenantIdForUser } from '@/lib/supabase/user-role';
-import { openai } from '@ai-sdk/openai';
-import { generateText } from 'ai';
-import {
-  getTemplateById,
-  applyTemplateVariables,
-  type IndustryId,
-} from '@/lib/onboarding/templates';
+import { simpleAgent } from '@/lib/agents/simple-agent';
+import type { ConversationContext, Lead, Conversation, Message } from '@/types';
 import { updateOnboardingStatus, getOnboardingStatus } from '@/lib/onboarding/progress';
 
 // Rate limit: max 20 test messages per hour per tenant
@@ -84,55 +85,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build the system prompt
-    let systemPrompt: string;
+    // Build conversation context for the real agent
+    const testLead: Lead = {
+      id: `test-${tenantId}`,
+      phone: '+52000000000', // Test phone
+      name: 'Usuario de Prueba',
+      email: user.email || undefined,
+      company: businessName || undefined,
+      industry: industry || undefined,
+      stage: 'demo',
+      createdAt: new Date(),
+      lastInteraction: new Date(),
+    };
 
-    if (customSystemPrompt) {
-      // Use fully customized prompt
-      systemPrompt = customSystemPrompt;
-    } else if (industry) {
-      // Use industry template with variables applied
-      const template = getTemplateById(industry as IndustryId);
-      if (!template) {
-        return NextResponse.json({ error: 'Invalid industry template' }, { status: 400 });
-      }
+    const testConversation: Conversation = {
+      id: `test-conv-${Date.now()}`,
+      leadId: testLead.id,
+      startedAt: new Date(),
+    };
 
-      systemPrompt = applyTemplateVariables(template.systemPrompt, {
-        businessName: businessName || 'Mi Negocio',
-        businessDescription: businessDescription || '',
-        productsServices: productsServices || '',
-        customInstructions: customInstructions || '',
-      });
-    } else {
-      // Fallback to basic prompt
-      systemPrompt = `Eres el asistente virtual de ${businessName || 'una empresa'}.
-${businessDescription || ''}
-
-${customInstructions || ''}
-
-Responde de manera ${tone || 'profesional'} y ayuda al cliente con sus preguntas.`;
-    }
-
-    // Build messages array for AI SDK format
-    const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [
-      // Add conversation history
-      ...conversationHistory.map((msg: { role: string; content: string }) => ({
+    // Convert conversation history to Message format
+    const recentMessages: Message[] = conversationHistory.map(
+      (msg: { role: string; content: string }, index: number) => ({
+        id: `test-msg-${index}`,
         role: msg.role as 'user' | 'assistant',
         content: msg.content,
-      })),
-      // Add current message
-      { role: 'user' as const, content: message },
-    ];
+        timestamp: new Date(),
+      })
+    );
 
-    // Call OpenAI via AI SDK
-    const result = await generateText({
-      model: openai('gpt-4o-mini'),
-      system: systemPrompt,
-      messages,
-      maxOutputTokens: 500,
+    const context: ConversationContext = {
+      lead: testLead,
+      conversation: testConversation,
+      recentMessages,
+      memory: null,
+      hasActiveAppointment: false,
+      isFirstConversation: conversationHistory.length === 0,
+      totalConversations: 1,
+      firstInteractionDate: new Date(),
+    };
+
+    // Call the REAL agent with the custom prompt
+    const result = await simpleAgent(message, context, {
+      systemPrompt: customSystemPrompt || null,
+      businessName: businessName || null,
+      businessDescription: businessDescription || null,
+      productsServices: productsServices || null,
+      tone: (tone as 'professional' | 'friendly' | 'casual' | 'formal') || 'professional',
+      customInstructions: customInstructions || null,
     });
-
-    const response = result.text || 'No response';
 
     // Update test results in onboarding status
     const currentStatus = await getOnboardingStatus(tenantId);
@@ -145,13 +146,20 @@ Responde de manera ${tone || 'profesional'} y ayuda al cliente con sus preguntas
     }
 
     return NextResponse.json({
-      response,
-      tokensUsed: result.usage?.totalTokens || 0,
+      response: result.response,
+      tokensUsed: result.tokensUsed || 0,
       conversationHistory: [
         ...conversationHistory,
         { role: 'user', content: message },
-        { role: 'assistant', content: response },
+        { role: 'assistant', content: result.response },
       ],
+      // Include additional agent info for debugging/visibility
+      agentInfo: {
+        escalatedToHuman: result.escalatedToHuman,
+        paymentLinkSent: result.paymentLinkSent,
+        detectedIndustry: result.detectedIndustry,
+        saidLater: result.saidLater,
+      },
     });
   } catch (error) {
     console.error('Test agent error:', error);

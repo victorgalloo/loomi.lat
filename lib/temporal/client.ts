@@ -136,22 +136,29 @@ export async function getTemporalClient(): Promise<Client> {
   }
 
   const config = getConfig();
+  const connectTimeoutMs = parseInt(process.env.TEMPORAL_CONNECT_TIMEOUT_MS || '5000', 10);
 
-  if (config.clientCert && config.clientKey) {
-    connectionInstance = await Connection.connect({
-      address: config.address,
-      tls: {
-        clientCertPair: {
-          crt: config.clientCert,
-          key: config.clientKey,
+  // Create connection with timeout
+  const connectPromise = config.clientCert && config.clientKey
+    ? Connection.connect({
+        address: config.address,
+        tls: {
+          clientCertPair: {
+            crt: config.clientCert,
+            key: config.clientKey,
+          },
         },
-      },
-    });
-  } else {
-    connectionInstance = await Connection.connect({
-      address: config.address,
-    });
-  }
+      })
+    : Connection.connect({
+        address: config.address,
+      });
+
+  // Race against timeout
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error(`Temporal connection timeout after ${connectTimeoutMs}ms`)), connectTimeoutMs);
+  });
+
+  connectionInstance = await Promise.race([connectPromise, timeoutPromise]);
 
   clientInstance = new Client({
     connection: connectionInstance,

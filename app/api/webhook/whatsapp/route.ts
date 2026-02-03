@@ -68,8 +68,39 @@ function isTemporalEnabled(feature: 'followups' | 'booking' | 'payments' | 'inte
 }
 
 // Dynamic Temporal imports - only loads @temporalio/client when actually needed
-async function getTemporalModule() {
-  return import('@/lib/temporal/client');
+// Returns null on any error (import or connection) to allow fallback to legacy scheduler
+type TemporalModule = typeof import('@/lib/temporal/client');
+let temporalModuleCache: TemporalModule | null = null;
+let temporalFailed = false;
+let temporalLastAttempt = 0;
+const TEMPORAL_RETRY_INTERVAL_MS = 60000; // Retry connection every 60s after failure
+
+async function getTemporalModule(): Promise<TemporalModule | null> {
+  // Return cached result if available and not expired
+  if (temporalFailed) {
+    if (Date.now() - temporalLastAttempt < TEMPORAL_RETRY_INTERVAL_MS) {
+      return null; // Still in cooldown, use fallback
+    }
+    // Cooldown expired, retry
+    temporalFailed = false;
+  }
+
+  if (temporalModuleCache) {
+    return temporalModuleCache;
+  }
+
+  try {
+    temporalLastAttempt = Date.now();
+    const module = await import('@/lib/temporal/client');
+    // Test connection by getting client (will throw on timeout/connection error)
+    await module.getTemporalClient();
+    temporalModuleCache = module;
+    return module;
+  } catch (error) {
+    console.error('[Temporal] Failed to load/connect:', error instanceof Error ? error.message : error);
+    temporalFailed = true;
+    return null;
+  }
 }
 
 // Temporal types (inline to avoid import)
@@ -557,7 +588,7 @@ export async function POST(request: NextRequest) {
 
       // Save message and cancel re-engagement in parallel (async-parallel)
       const cancelFollowUpsPromise = isTemporalEnabled('followups') && tenantContext
-        ? getTemporalModule().then(t => t.cancelFollowUps(tenantContext.tenantId, context.lead.id))
+        ? getTemporalModule().then(t => t?.cancelFollowUps(tenantContext.tenantId, context.lead.id))
         : cancelFollowUps(context.lead.id, ['cold_lead_reengagement', 'reengagement_2', 'reengagement_3']);
 
       await Promise.all([
@@ -655,14 +686,19 @@ export async function POST(request: NextRequest) {
                   challenge: context.lead.challenge ?? null
                 };
                 const temporal = await getTemporalModule();
-                await temporal.startDemoRemindersWorkflow({
-                  tenant: tenantContext,
-                  leadId: context.lead.id,
-                  lead: temporalLead,
-                  appointmentId: appointment.id,
-                  scheduledAt: scheduledAt.toISOString()
-                });
-                console.log('[Webhook] Started Temporal demo reminders workflow');
+                if (temporal) {
+                  await temporal.startDemoRemindersWorkflow({
+                    tenant: tenantContext,
+                    leadId: context.lead.id,
+                    lead: temporalLead,
+                    appointmentId: appointment.id,
+                    scheduledAt: scheduledAt.toISOString()
+                  });
+                  console.log('[Webhook] Started Temporal demo reminders workflow');
+                } else {
+                  console.warn('[Webhook] Temporal module unavailable, falling back to legacy reminders');
+                  await scheduleDemoReminders(context.lead.id, appointment.id, scheduledAt, context.lead);
+                }
               } else {
                 await scheduleDemoReminders(context.lead.id, appointment.id, scheduledAt, context.lead);
               }
@@ -679,14 +715,26 @@ export async function POST(request: NextRequest) {
                   stage: 'demo_scheduled'
                 };
                 const temporal = await getTemporalModule();
-                await temporal.startIntegrationSyncWorkflow({
-                  tenant: tenantContext,
-                  leadId: context.lead.id,
-                  lead: temporalLead,
-                  conversationId: context.conversation.id,
-                  eventType: 'demo_scheduled'
-                });
-                console.log('[Webhook] Started Temporal integration sync workflow');
+                if (temporal) {
+                  await temporal.startIntegrationSyncWorkflow({
+                    tenant: tenantContext,
+                    leadId: context.lead.id,
+                    lead: temporalLead,
+                    conversationId: context.conversation.id,
+                    eventType: 'demo_scheduled'
+                  });
+                  console.log('[Webhook] Started Temporal integration sync workflow');
+                } else {
+                  console.warn('[Webhook] Temporal module unavailable, falling back to direct HubSpot sync');
+                  await syncLeadToHubSpot({
+                    phone: context.lead.phone,
+                    name: context.lead.name,
+                    email,
+                    stage: 'Demo Agendada',
+                    messages: [...context.recentMessages, { role: 'user', content: message.text }],
+                    appointmentBooked: { date, time, meetingUrl }
+                  });
+                }
               } else {
                 await syncLeadToHubSpot({
                   phone: context.lead.phone,
@@ -813,13 +861,18 @@ export async function POST(request: NextRequest) {
                 challenge: context.lead.challenge ?? null
               };
               const temporal = await getTemporalModule();
-              await temporal.startFollowUpWorkflow({
-                tenant: tenantContext,
-                leadId: context.lead.id,
-                lead: temporalLead,
-                type: 'said_later'
-              });
-              console.log('[Webhook] Started Temporal said_later workflow');
+              if (temporal) {
+                await temporal.startFollowUpWorkflow({
+                  tenant: tenantContext,
+                  leadId: context.lead.id,
+                  lead: temporalLead,
+                  type: 'said_later'
+                });
+                console.log('[Webhook] Started Temporal said_later workflow');
+              } else {
+                console.warn('[Webhook] Temporal module unavailable, falling back to legacy follow-up');
+                await scheduleSaidLaterFollowUp(context.lead.id, context.lead);
+              }
             } else {
               await scheduleSaidLaterFollowUp(context.lead.id, context.lead);
             }
@@ -837,13 +890,28 @@ export async function POST(request: NextRequest) {
               stage: context.lead.stage
             };
             const temporal = await getTemporalModule();
-            await temporal.startIntegrationSyncWorkflow({
-              tenant: tenantContext,
-              leadId: context.lead.id,
-              lead: temporalLead,
-              conversationId: context.conversation.id,
-              eventType: 'conversation_ended'
-            });
+            if (temporal) {
+              await temporal.startIntegrationSyncWorkflow({
+                tenant: tenantContext,
+                leadId: context.lead.id,
+                lead: temporalLead,
+                conversationId: context.conversation.id,
+                eventType: 'conversation_ended'
+              });
+            } else {
+              console.warn('[Webhook] Temporal module unavailable, falling back to direct HubSpot sync');
+              await syncLeadToHubSpot({
+                phone: context.lead.phone,
+                name: context.lead.name,
+                company: context.lead.company,
+                stage: context.lead.stage,
+                messages: [
+                  ...context.recentMessages,
+                  { role: 'user', content: message.text },
+                  { role: 'assistant', content: result.response }
+                ]
+              });
+            }
           } else {
             await syncLeadToHubSpot({
               phone: context.lead.phone,

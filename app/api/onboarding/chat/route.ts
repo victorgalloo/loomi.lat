@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     const messages = [
       ...conversationHistory.map((msg: { role: string; content: string }) => ({
         role: msg.role as 'user' | 'assistant',
-        content: msg.content.replace(/\[COMPLETE\].*\[\/COMPLETE\]/s, '').trim(),
+        content: msg.content.replace(/\[COMPLETE\][\s\S]*\[\/COMPLETE\]/, '').trim(),
       })),
       { role: 'user' as const, content: message },
     ];
@@ -103,14 +103,14 @@ export async function POST(request: NextRequest) {
     let generatedPrompt = '';
 
     // Check if onboarding is complete
-    const completeMatch = response.match(/\[COMPLETE\](.*?)\[\/COMPLETE\]/s);
+    const completeMatch = response.match(/\[COMPLETE\]([\s\S]*?)\[\/COMPLETE\]/);
     if (completeMatch) {
       try {
         extractedConfig = JSON.parse(completeMatch[1]);
         isComplete = true;
 
         // Clean the response (remove the JSON part)
-        response = response.replace(/\[COMPLETE\].*\[\/COMPLETE\]/s, '').trim();
+        response = response.replace(/\[COMPLETE\][\s\S]*\[\/COMPLETE\]/, '').trim();
 
         // Generate the actual system prompt
         const promptResult = await generateText({

@@ -1,16 +1,16 @@
 /**
  * POST /api/demo/chat
- * Full-featured demo chat for landing page
- * Uses the REAL production agent (simpleAgent) with all capabilities
+ * FAST demo chat for landing page
+ * Uses gpt-4o-mini for speed (~2-3s response time)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { simpleAgent } from '@/lib/agents/simple-agent';
-import type { ConversationContext, Lead, Conversation, Message } from '@/types';
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
 
 // Simple rate limiting
 const rateLimiter = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 15; // Slightly lower for public demo
+const RATE_LIMIT = 15;
 const RATE_WINDOW_MS = 60 * 1000;
 
 function checkRateLimit(ip: string): boolean {
@@ -27,24 +27,35 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-export interface DemoChatRequest {
-  message: string;
-  history?: Array<{ role: 'user' | 'assistant'; content: string }>;
-}
+// Fast demo prompt - optimized for Loomi sales
+const DEMO_PROMPT = `Eres Lu, growth advisor de Loomi. Directa, inteligente, conversacional.
 
-export interface DemoChatResponse {
-  response: string;
-  tokensUsed?: number;
-  agentInfo?: {
-    escalatedToHuman?: { reason: string; summary: string } | null;
-    paymentLinkSent?: { plan: string; email: string } | null;
-    detectedIndustry?: string | null;
-    saidLater?: boolean;
-  };
-}
+LOOMI = Agente IA para WhatsApp que vende 24/7
+- Responde en <1 segundo
+- Califica leads automáticamente
+- Agenda demos (Cal.com integrado)
+- Detecta emociones y adapta el tono
+- Escala a humanos cuando necesario
 
-// Demo uses the default SYSTEM_PROMPT from simple-agent (Loomi sales)
-// No custom prompt needed - it will use the full Loomi sales agent
+PLANES:
+- Starter $199/mes (100 msgs/día)
+- Growth $349/mes (300 msgs/día)
+- Business $599/mes (1000 msgs/día)
+
+ROI: Un vendedor humano cuesta $800-1,500/mes. Loomi $199 y trabaja 24/7.
+
+TU ESTILO:
+- Mensajes CORTOS (1-2 líneas máximo)
+- Una pregunta a la vez
+- Directa, sin rodeos
+- Si preguntan precio, dalo y pregunta qué volumen manejan
+- Si quieren demo, di que pueden agendar en loomi.lat
+
+REGLAS:
+- NO uses emojis
+- NO digas "Visitante" ni nombres genéricos
+- NO hagas párrafos largos
+- Responde como en WhatsApp: rápido y conciso`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,82 +63,44 @@ export async function POST(request: NextRequest) {
                request.headers.get('x-real-ip') || 'unknown';
 
     if (!checkRateLimit(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      );
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
     }
 
-    const body = await request.json() as DemoChatRequest;
-    const { message, history = [] } = body;
+    const { message, history = [] } = await request.json();
 
     if (!message || message.length > 500) {
-      return NextResponse.json(
-        { error: 'Invalid message' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid message' }, { status: 400 });
     }
 
-    // Build context for the real agent
-    // Don't set a name so the agent won't use generic names like "Visitante"
-    const demoLead: Lead = {
-      id: `demo-${ip}`,
-      phone: '+00000000000',
-      name: '', // Empty so agent doesn't use awkward placeholder names
-      stage: 'demo',
-      createdAt: new Date(),
-      lastInteraction: new Date(),
-    };
+    const messages = [
+      ...history.slice(-10).map((m: { role: string; content: string }) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content
+      })),
+      { role: 'user' as const, content: message }
+    ];
 
-    const demoConversation: Conversation = {
-      id: `demo-conv-${Date.now()}`,
-      leadId: demoLead.id,
-      startedAt: new Date(),
-    };
-
-    // Convert history to Message format
-    const recentMessages: Message[] = history.map((msg, index) => ({
-      id: `demo-msg-${index}`,
-      role: msg.role,
-      content: msg.content,
-      timestamp: new Date(),
-    }));
-
-    const context: ConversationContext = {
-      lead: demoLead,
-      conversation: demoConversation,
-      recentMessages,
-      memory: null,
-      hasActiveAppointment: false,
-      isFirstConversation: history.length === 0,
-      totalConversations: 1,
-      firstInteractionDate: new Date(),
-    };
-
-    // Call the REAL agent with default Loomi prompt (no custom systemPrompt)
-    const result = await simpleAgent(message, context, {
-      businessName: 'Loomi',
-      businessDescription: 'Agentes de IA para ventas por WhatsApp',
-      productsServices: 'Automatización de ventas, calificación de leads, agendamiento',
-      tone: 'friendly',
+    const result = await generateText({
+      model: openai('gpt-4o-mini'),
+      system: DEMO_PROMPT,
+      messages,
+      maxTokens: 150,
+      temperature: 0.7,
     });
 
     return NextResponse.json({
-      response: result.response,
-      tokensUsed: result.tokensUsed,
+      response: result.text.trim(),
+      tokensUsed: result.usage?.totalTokens,
       agentInfo: {
-        escalatedToHuman: result.escalatedToHuman || null,
-        paymentLinkSent: result.paymentLinkSent || null,
-        detectedIndustry: result.detectedIndustry || null,
-        saidLater: result.saidLater || false,
+        detectedIndustry: null,
+        escalatedToHuman: null,
+        paymentLinkSent: null,
+        saidLater: message.toLowerCase().includes('luego') || message.toLowerCase().includes('después'),
       }
-    } as DemoChatResponse);
+    });
 
   } catch (error) {
     console.error('[Demo Chat] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to process message' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to process message' }, { status: 500 });
   }
 }

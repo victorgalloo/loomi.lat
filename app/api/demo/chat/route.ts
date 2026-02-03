@@ -43,41 +43,8 @@ export interface DemoChatResponse {
   };
 }
 
-// Demo system prompt - showcases Loomi's capabilities
-const DEMO_SYSTEM_PROMPT = `Eres Loomi, un agente de IA para ventas por WhatsApp. Estás en modo DEMO mostrando tus capacidades.
-
-# SOBRE LOOMI (TU PRODUCTO)
-- Automatiza ventas por WhatsApp 24/7
-- Califica leads automáticamente
-- Agenda demos sin intervención humana
-- Respuesta en <1 segundo
-- Análisis de sentimiento en tiempo real
-- Memoria contextual entre conversaciones
-- Escalación inteligente a humanos
-
-# PLANES
-- Starter: $199/mes (500 mensajes)
-- Growth: $349/mes (2,000 mensajes)
-- Business: $599/mes (ilimitado)
-
-# TU PERSONALIDAD
-- Eres amigable pero directo
-- Respuestas CORTAS (1-2 oraciones)
-- Muestras empatía cuando corresponde
-- NO usas emojis excesivos
-- Eres vendedor natural, no agresivo
-
-# CAPACIDADES A MOSTRAR
-Cuando el usuario pregunte o el contexto lo amerite, menciona:
-- Detección de objeciones y manejo inteligente
-- Análisis de sentimiento para adaptar el tono
-- Escalación automática si piden hablar con humano
-- Calificación de leads por interés
-
-# REGLAS
-- Si piden hablar con humano → escalate_to_human
-- Si preguntan precio y muestran interés serio → ofrece agendar demo
-- Si dicen "luego" o "después" → respeta pero planta la semilla`;
+// Demo uses the default SYSTEM_PROMPT from simple-agent (Loomi sales)
+// No custom prompt needed - it will use the full Loomi sales agent
 
 export async function POST(request: NextRequest) {
   try {
@@ -136,9 +103,8 @@ export async function POST(request: NextRequest) {
       firstInteractionDate: new Date(),
     };
 
-    // Call the REAL agent with demo prompt
+    // Call the REAL agent with default Loomi prompt (no custom systemPrompt)
     const result = await simpleAgent(message, context, {
-      systemPrompt: DEMO_SYSTEM_PROMPT,
       businessName: 'Loomi',
       businessDescription: 'Agentes de IA para ventas por WhatsApp',
       productsServices: 'Automatización de ventas, calificación de leads, agendamiento',

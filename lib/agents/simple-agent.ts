@@ -759,6 +759,32 @@ Sé directa, inteligente, mensajes cortos.`
 
   } catch (error) {
     console.error('Agent error:', error);
+
+    // Automatic handoff on error
+    const recentMsgs = history.slice(-5).map(m =>
+      `${m.role === 'user' ? 'Cliente' : 'Lu'}: ${m.content}`
+    );
+
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+
+    const escalated = await escalateToHuman({
+      clientPhone,
+      clientName,
+      reason: `Error en el agente: ${errorMessage}`,
+      conversationSummary: `El cliente dijo: "${message}" - El agente falló al procesar`,
+      recentMessages: recentMsgs,
+      isUrgent: true
+    });
+
+    if (escalated) {
+      console.log('[Agent] Auto-escalated due to error');
+      return {
+        response: 'Tuve un problema técnico. Te paso con alguien del equipo que te ayuda. Te escriben en un momento.',
+        escalatedToHuman: { reason: 'Error técnico', summary: errorMessage }
+      };
+    }
+
+    // Fallback if escalation also fails
     return {
       response: 'Perdón, tuve un problema. ¿Me repites?'
     };

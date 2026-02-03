@@ -1,10 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { getUserRole, getClientIdForUser, getTenantIdForUser } from "@/lib/supabase/user-role";
-import AdminDashboard from "@/components/portal/AdminDashboard";
-import ClientDashboard from "@/components/portal/ClientDashboard";
+import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import TenantDashboard from "@/components/dashboard/TenantDashboard";
 import { getTenantById, getWhatsAppAccount } from "@/lib/tenant/context";
+import { isAuthorizedPartner } from "@/lib/partners/auth";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -15,6 +14,11 @@ export default async function DashboardPage() {
 
   if (!user || !user.email) {
     redirect("/login");
+  }
+
+  // Check if user is an authorized partner - redirect to partners page
+  if (isAuthorizedPartner(user.email)) {
+    redirect("/partners");
   }
 
   // Determine user role
@@ -80,40 +84,6 @@ export default async function DashboardPage() {
     );
   }
 
-  // Handle client user (old portal)
-  let clientData = null;
-  if (userRole === "client") {
-    const clientId = await getClientIdForUser(user.email);
-    if (clientId) {
-      const { data: client } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("id", clientId)
-        .single();
-
-      if (client) {
-        clientData = client;
-      }
-    }
-  }
-
-  // Handle admin user
-  let allClients: Array<{ id: string; name: string; created_at: string; process_status: string | null }> = [];
-  if (userRole === "admin") {
-    const { data: clients } = await supabase
-      .from("clients")
-      .select("id, name, created_at, process_status")
-      .order("created_at", { ascending: false });
-    allClients = clients || [];
-  }
-
-  return (
-    <>
-      {userRole === "admin" ? (
-        <AdminDashboard clients={allClients} />
-      ) : (
-        <ClientDashboard client={clientData} />
-      )}
-    </>
-  );
+  // Non-tenant users without partner access get redirected to login
+  redirect("/login");
 }

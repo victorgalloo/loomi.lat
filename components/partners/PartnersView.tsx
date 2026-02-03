@@ -12,7 +12,7 @@ interface PartnersViewProps {
 export default function PartnersView({ userEmail }: PartnersViewProps) {
   const router = useRouter();
   const supabase = createClient();
-  const [activeSection, setActiveSection] = useState<string>('overview');
+  const [activeSection, setActiveSection] = useState<string>('tech-stack');
 
   const toggleTheme = () => {
     const current = document.documentElement.getAttribute('data-theme');
@@ -28,10 +28,9 @@ export default function PartnersView({ userEmail }: PartnersViewProps) {
   };
 
   const sections = [
-    { id: 'overview', label: 'resumen', icon: FileText },
-    { id: 'architecture', label: 'arquitectura', icon: Layers },
     { id: 'tech-stack', label: 'stack', icon: Code },
-    { id: 'database', label: 'base de datos', icon: Database },
+    { id: 'architecture', label: 'arquitectura', icon: Layers },
+    { id: 'database', label: 'integraciones', icon: Database },
     { id: 'roadmap', label: 'roadmap', icon: Zap },
   ];
 
@@ -124,9 +123,8 @@ export default function PartnersView({ userEmail }: PartnersViewProps) {
             </div>
 
             {/* Dynamic Content Based on Section */}
-            {activeSection === 'overview' && <OverviewSection />}
-            {activeSection === 'architecture' && <ArchitectureSection />}
             {activeSection === 'tech-stack' && <TechStackSection />}
+            {activeSection === 'architecture' && <ArchitectureSection />}
             {activeSection === 'database' && <DatabaseSection />}
             {activeSection === 'roadmap' && <RoadmapSection />}
           </div>
@@ -144,86 +142,6 @@ export default function PartnersView({ userEmail }: PartnersViewProps) {
 }
 
 // Section Components
-function OverviewSection() {
-  return (
-    <div className="space-y-6 font-mono text-sm">
-      <p className="text-terminal-green">$ cat loomi.md</p>
-
-      {/* Qué es Loomi */}
-      <div className="space-y-3">
-        <h3 className="text-foreground text-lg font-medium">Que es Loomi</h3>
-        <p className="text-muted leading-relaxed">
-          Plataforma SaaS de agentes de IA conversacional para WhatsApp que automatiza ventas,
-          califica leads y agenda demos 24/7.
-        </p>
-      </div>
-
-      {/* Diferenciadores */}
-      <div className="space-y-3 pt-4 border-t border-border">
-        <h3 className="text-foreground font-medium">Diferenciadores vs Competencia</h3>
-        <p className="text-xs text-muted mb-3">(Wati, ManyChat, Leadsales)</p>
-        <div className="space-y-2">
-          <div className="flex items-start gap-3">
-            <span className="text-terminal-green">1.</span>
-            <div>
-              <span className="text-foreground">IA real, no flujos rigidos</span>
-              <span className="text-muted"> - Entiende contexto, detecta objeciones, personaliza respuestas</span>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="text-terminal-green">2.</span>
-            <div>
-              <span className="text-foreground">Cierre de loop completo</span>
-              <span className="text-muted"> - WhatsApp → Lead → Demo → Pago → Meta Ads optimization</span>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="text-terminal-green">3.</span>
-            <div>
-              <span className="text-foreground">Latencia optimizada</span>
-              <span className="text-muted"> - 1.5-4s vs 15-25s de competidores con modelos de reasoning</span>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="text-terminal-green">4.</span>
-            <div>
-              <span className="text-foreground">Personalizacion sin codigo</span>
-              <span className="text-muted"> - Prompts, tools, knowledge base por tenant</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Impacto Esperado */}
-      <div className="space-y-3 pt-4 border-t border-border">
-        <h3 className="text-foreground font-medium">Impacto Esperado para Clientes</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
-          <div className="bg-background/50 p-3 rounded-lg border border-border">
-            <p className="text-2xl text-terminal-green font-bold">100%</p>
-            <p className="text-xs text-muted">mensajes atendidos (24/7)</p>
-          </div>
-          <div className="bg-background/50 p-3 rounded-lg border border-border">
-            <p className="text-2xl text-terminal-green font-bold">3x</p>
-            <p className="text-xs text-muted">mas demos agendadas</p>
-          </div>
-          <div className="bg-background/50 p-3 rounded-lg border border-border">
-            <p className="text-2xl text-terminal-green font-bold">-78%</p>
-            <p className="text-xs text-muted">no-shows</p>
-          </div>
-          <div className="bg-background/50 p-3 rounded-lg border border-border">
-            <p className="text-2xl text-terminal-green font-bold">-32%</p>
-            <p className="text-xs text-muted">CPL (Meta CAPI)</p>
-          </div>
-          <div className="bg-background/50 p-3 rounded-lg border border-border">
-            <p className="text-2xl text-terminal-green font-bold">12%</p>
-            <p className="text-xs text-muted">conversion demo→cliente</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function ArchitectureSection() {
   return (
     <div className="space-y-6 font-mono text-sm">
@@ -299,14 +217,60 @@ function ArchitectureSection() {
 
 function TechStackSection() {
   const stack = [
-    { capa: 'Framework', tech: 'Next.js 14 (App Router)' },
-    { capa: 'Base de datos', tech: 'Supabase (PostgreSQL)' },
-    { capa: 'IA', tech: 'OpenAI GPT-4o + GPT-4o-mini (dual-layer)' },
-    { capa: 'Pagos', tech: 'Stripe' },
-    { capa: 'Mensajeria', tech: 'WhatsApp Cloud API' },
-    { capa: 'Orquestacion', tech: 'Temporal.io (opcional)' },
-    { capa: 'Cache', tech: 'Upstash Redis' },
-    { capa: 'Deploy', tech: 'Vercel Serverless' },
+    {
+      tech: 'Next.js 14',
+      category: 'Framework',
+      description: 'Framework React full-stack. App Router para routing, Server Components para SSR, API Routes para backend. Todo en un solo proyecto.',
+      files: 'app/, components/',
+    },
+    {
+      tech: 'TypeScript',
+      category: 'Lenguaje',
+      description: 'JavaScript con tipos estaticos. Previene errores en compile-time, autocompletado en IDE, documentacion inline.',
+      files: '*.ts, *.tsx',
+    },
+    {
+      tech: 'Supabase',
+      category: 'Base de datos',
+      description: 'PostgreSQL managed + Auth + Realtime. Maneja usuarios, sesiones, y sincroniza cambios en tiempo real al dashboard (Kanban, conversaciones).',
+      files: 'lib/supabase/',
+    },
+    {
+      tech: 'OpenAI API',
+      category: 'IA',
+      description: 'GPT-4o para conversaciones complejas, GPT-4o-mini para analisis rapido. Sistema dual-layer: fast path (1.5s) y full path (2-4s).',
+      files: 'lib/agents/',
+    },
+    {
+      tech: 'WhatsApp Cloud API',
+      category: 'Mensajeria',
+      description: 'API oficial de Meta. Recibe mensajes via webhook, envia respuestas, botones interactivos. Requiere Business Manager verificado.',
+      files: 'app/api/webhook/whatsapp/',
+    },
+    {
+      tech: 'Stripe',
+      category: 'Pagos',
+      description: 'Checkout sessions para suscripciones, webhooks para eventos de pago. Maneja planes starter/growth/business.',
+      files: 'app/api/stripe/',
+    },
+    {
+      tech: 'Upstash Redis',
+      category: 'Cache',
+      description: 'Rate limiting distribuido, cache de sesiones. Serverless-compatible, pago por request.',
+      files: 'lib/redis/',
+    },
+    {
+      tech: 'Vercel',
+      category: 'Deploy',
+      description: 'Hosting serverless. Deploy automatico en cada push a main. Edge functions, preview deployments por PR.',
+      files: 'vercel.json',
+    },
+    {
+      tech: 'Temporal.io',
+      category: 'Orquestacion',
+      description: 'Workflows duraderos para follow-ups y recordatorios. Reintentos automaticos, estado persistente. Opcional.',
+      files: 'lib/temporal/',
+    },
   ];
 
   const metrics = [
@@ -315,57 +279,42 @@ function TechStackSection() {
     { metric: 'API Routes', value: '25+' },
     { metric: 'Tablas BD', value: '10+' },
     { metric: 'Componentes UI', value: '50+' },
-    { metric: 'Industrias soportadas', value: '15' },
-    { metric: 'Integraciones', value: '5' },
   ];
 
   return (
     <div className="space-y-6 font-mono text-sm">
-      <p className="text-terminal-green">$ npm list --depth=0</p>
+      <p className="text-terminal-green">$ cat package.json | jq &apos;.dependencies&apos;</p>
 
-      {/* Stack Table */}
+      {/* Stack Cards */}
       <div className="space-y-3">
-        <h3 className="text-foreground text-lg font-medium">Stack Tecnico</h3>
-        <div className="bg-background/50 rounded-lg border border-border overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left p-3 text-muted text-xs">Capa</th>
-                <th className="text-left p-3 text-muted text-xs">Tecnologia</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stack.map((item, i) => (
-                <tr key={i} className="border-b border-border last:border-0">
-                  <td className="p-3 text-foreground">{item.capa}</td>
-                  <td className="p-3 text-terminal-green">{item.tech}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {stack.map((item, i) => (
+          <div key={i} className="bg-background/50 p-4 rounded-lg border border-border">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-foreground font-medium">{item.tech}</span>
+              <span className="text-xs text-terminal-green bg-terminal-green/10 px-2 py-0.5 rounded">
+                {item.category}
+              </span>
+            </div>
+            <p className="text-muted text-xs leading-relaxed mb-2">
+              {item.description}
+            </p>
+            <p className="text-xs text-muted/60">
+              <span className="text-terminal-yellow">ubicacion:</span> {item.files}
+            </p>
+          </div>
+        ))}
       </div>
 
-      {/* Metrics Table */}
+      {/* Metrics */}
       <div className="space-y-3 pt-4 border-t border-border">
-        <h3 className="text-foreground font-medium">Metricas del Codebase</h3>
-        <div className="bg-background/50 rounded-lg border border-border overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left p-3 text-muted text-xs">Metrica</th>
-                <th className="text-right p-3 text-muted text-xs">Valor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {metrics.map((item, i) => (
-                <tr key={i} className="border-b border-border last:border-0">
-                  <td className="p-3 text-muted">{item.metric}</td>
-                  <td className="p-3 text-foreground text-right">{item.value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <h3 className="text-foreground font-medium">Metricas</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {metrics.map((item, i) => (
+            <div key={i} className="bg-background/50 p-3 rounded-lg border border-border text-center">
+              <p className="text-lg text-foreground font-bold">{item.value}</p>
+              <p className="text-xs text-muted">{item.metric}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

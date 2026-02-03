@@ -174,7 +174,6 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
   const subscriptionId = subscription.id;
   const status = subscription.status;
-  // @ts-expect-error - current_period_end exists in Stripe API but types may lag
   const currentPeriodEnd = new Date((subscription.current_period_end || Date.now() / 1000) * 1000);
 
   // Obtener el plan del price

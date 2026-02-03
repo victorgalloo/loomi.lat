@@ -107,20 +107,45 @@ npm run dev
 ### 4. Deploy to Railway
 
 ```bash
-# Install Railway CLI
+# 1. Instalar Railway CLI
 npm install -g @railway/cli
 
-# Login and init
+# 2. Login
 railway login
+
+# 3. Ir al directorio del worker
+cd packages/temporal-workers
+
+# 4. Crear proyecto (primera vez)
 railway init
 
-# Add service from this directory
-cd packages/temporal-workers
-railway add
-
-# Set environment variables in Railway dashboard
-# Deploy
+# 5. Deploy
 railway up
+```
+
+**Variables de entorno en Railway Dashboard** (https://railway.app):
+
+| Variable | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `TEMPORAL_ADDRESS` | Dirección de Temporal Cloud | `loomi.tmprl.cloud:7233` |
+| `TEMPORAL_NAMESPACE` | Namespace | `loomi-production` |
+| `TEMPORAL_API_KEY` | API Key (recomendado) | `eyJ...` |
+| `SUPABASE_URL` | URL de Supabase | `https://xxx.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key | `eyJ...` |
+| `WHATSAPP_ACCESS_TOKEN` | Token de Meta | `EAA...` |
+| `WHATSAPP_PHONE_NUMBER_ID` | Phone ID | `123456789` |
+| `OPENAI_API_KEY` | Para memoria | `sk-...` |
+
+**Opcionales:**
+- `STRIPE_SECRET_KEY`, `STRIPE_PRICE_*` - Para pagos
+- `CAL_API_KEY`, `CAL_EVENT_TYPE_ID` - Para Cal.com
+- `HUBSPOT_API_KEY` - Para CRM sync
+- `META_PIXEL_ID`, `META_ACCESS_TOKEN` - Para conversions
+
+**Verificar deploy:**
+```bash
+railway logs -f
+# Deberías ver: "Workers are ready to process tasks"
 ```
 
 ### 5. Enable Feature Flags

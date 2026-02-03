@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, FileText, Wrench, Plus, Trash2, ChevronRight, Upload, Link2, Loader2 } from 'lucide-react';
+import { X, FileText, Wrench, Plus, Trash2, Upload, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { TenantDocument } from '@/app/api/sandbox/documents/route';
 import type { TenantTool } from '@/app/api/sandbox/tools/route';

@@ -238,7 +238,7 @@ export function SandboxChat() {
             <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
             <div className="w-3 h-3 rounded-full bg-terminal-green" />
           </div>
-          <span className="text-sm font-mono text-muted">sandbox</span>
+          <span className="text-sm font-mono text-muted">demo</span>
         </div>
 
         {/* Right: Tools + Reset */}
@@ -358,7 +358,7 @@ export function SandboxChat() {
               </div>
               <div className="space-y-2">
                 <h3 className="text-base font-medium text-foreground">
-                  Sandbox Demo
+                  Demo
                 </h3>
                 <p className="max-w-sm text-sm text-muted">
                   Prueba el agente de {selectedTenant?.businessName || 'seguros'} en tiempo real.
@@ -480,7 +480,7 @@ export function SandboxChat() {
           </Button>
         </div>
         <p className="mt-2 text-center text-[10px] text-muted font-mono">
-          rate limit: 10 msg/min • sandbox mode
+          rate limit: 10 msg/min • demo mode
         </p>
       </form>
 

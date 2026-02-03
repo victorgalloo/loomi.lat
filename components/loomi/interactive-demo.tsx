@@ -14,7 +14,8 @@ import {
   MessageSquare,
   Shield,
   Volume2,
-  VolumeX
+  VolumeX,
+  Calendar
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -40,26 +41,14 @@ const ANALYSIS_STEPS = [
   { icon: Sparkles, text: 'Generando respuesta...', color: 'text-yellow-400' },
 ];
 
-// Scripted responses for instant replies
-const SCRIPTED_RESPONSES: Record<string, string> = {
-  '¿Cuánto cuesta?': 'Starter $199/mes, Growth $349/mes, Business $599/mes. ¿Cuántos mensajes recibes al día en WhatsApp?',
-  '¿Cómo funciona?': 'Conectas tu WhatsApp, configuras tu agente en 5 min, y Loomi responde 24/7: califica leads, agenda demos, y escala a tu equipo si es necesario. ¿Qué tipo de negocio tienes?',
-  'Ya uso Wati': 'Wati son flujos predefinidos—si el cliente pregunta algo fuera del menú, se rompe. Loomi entiende contexto con IA real. ¿Cuántos leads pierdes por respuestas que no matchean?',
-  'Es muy caro': 'Un vendedor humano cuesta $800-1,500/mes en LATAM. Loomi $199 y trabaja 24/7 sin descanso. Con 2 cierres extra al mes, ya se pagó. ¿Cuál es tu ticket promedio?',
-  'Quiero una demo': '¡Perfecto! Puedes agendar directo en loomi.lat/demo o si prefieres, déjame tu email y te envío el link.',
-  'No confío en bots': 'Válido, la mayoría de bots son malos. Loomi usa GPT-5.2 + análisis multi-agente—lee emociones, detecta objeciones, sabe cuándo pasar a humano. Esta conversación es la prueba.',
-  '¿Qué incluye?': 'Agente IA 24/7, integración WhatsApp, calendario (Cal.com), CRM básico, y reportes. Growth añade Meta CAPI para optimizar tus ads. ¿Qué plan te interesa?',
-  'Háblame de ti': 'Soy Lu, tu growth advisor en Loomi. Ayudo a negocios a escalar sus ventas por WhatsApp sin contratar más vendedores. ¿En qué industria estás?',
-};
-
-// Quick prompts with categories
+// Quick prompts - all go through real agent
 const QUICK_PROMPTS = [
   { text: '¿Cuánto cuesta?', icon: CreditCard, label: 'Precio', iconColor: 'text-green-400', borderColor: 'border-green-500/30 hover:border-green-500/50' },
   { text: '¿Cómo funciona?', icon: MessageSquare, label: 'Info', iconColor: 'text-blue-400', borderColor: 'border-blue-500/30 hover:border-blue-500/50' },
   { text: 'Es muy caro', icon: TrendingUp, label: 'Objeción', iconColor: 'text-orange-400', borderColor: 'border-orange-500/30 hover:border-orange-500/50' },
   { text: 'Ya uso Wati', icon: Shield, label: 'Competencia', iconColor: 'text-red-400', borderColor: 'border-red-500/30 hover:border-red-500/50' },
   { text: 'No confío en bots', icon: Brain, label: 'Escéptico', iconColor: 'text-purple-400', borderColor: 'border-purple-500/30 hover:border-purple-500/50' },
-  { text: 'Quiero una demo', icon: Sparkles, label: 'Cierre', iconColor: 'text-yellow-400', borderColor: 'border-yellow-500/30 hover:border-yellow-500/50' },
+  { text: 'Quiero una demo', icon: Calendar, label: 'Agendar', iconColor: 'text-yellow-400', borderColor: 'border-yellow-500/30 hover:border-yellow-500/50' },
 ];
 
 export function InteractiveDemo() {
@@ -113,20 +102,17 @@ export function InteractiveDemo() {
         return;
       }
 
-      // Create audio from blob
       const blob = await response.blob();
       const audioUrl = URL.createObjectURL(blob);
 
-      // Stop any existing audio
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
 
-      // Create and play new audio
       const audio = new Audio(audioUrl);
       audioRef.current = audio;
-      audio.playbackRate = 1.25; // 25% faster for snappy conversational speed
+      audio.playbackRate = 1.25;
 
       audio.onended = () => {
         setIsPlaying(false);
@@ -145,30 +131,13 @@ export function InteractiveDemo() {
     }
   }, [voiceEnabled]);
 
-  // Handle message - check for scripted response first, then API
+  // Handle message - all messages go through real agent
   const handleRealMessage = useCallback(async (text: string) => {
     const userMessage: Message = { id: Date.now(), type: 'user', text };
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
 
-    // Check for scripted response (instant)
-    const scriptedResponse = SCRIPTED_RESPONSES[text];
-    if (scriptedResponse) {
-      // Small delay for realism
-      setIsTyping(true);
-      await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 200));
-      setIsTyping(false);
-
-      setMessages((prev) => [...prev, {
-        id: Date.now() + 1,
-        type: 'bot',
-        text: scriptedResponse,
-      }]);
-      playVoice(scriptedResponse);
-      return;
-    }
-
-    // API call for non-scripted messages
+    // Build history for context
     const history = messages.map(m => ({
       role: m.type === 'user' ? 'user' as const : 'assistant' as const,
       content: m.text
@@ -266,7 +235,7 @@ export function InteractiveDemo() {
           viewport={{ once: true }}
           className="bg-surface rounded-xl overflow-hidden border border-border shadow-2xl"
         >
-          {/* Header with capabilities badge */}
+          {/* Header */}
           <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-surface-2">
             <div className="flex gap-2">
               <div className="w-3 h-3 rounded-full bg-terminal-red" />
@@ -275,7 +244,6 @@ export function InteractiveDemo() {
             </div>
             <span className="text-xs text-muted font-mono ml-2">loomi --live</span>
             <div className="ml-auto flex items-center gap-3">
-              {/* Voice toggle */}
               <button
                 onClick={toggleVoice}
                 className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${
@@ -365,7 +333,7 @@ export function InteractiveDemo() {
               ))}
             </AnimatePresence>
 
-            {/* Enhanced loading with analysis steps */}
+            {/* Loading indicator */}
             {isTyping && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -438,9 +406,9 @@ export function InteractiveDemo() {
           </div>
         </motion.div>
 
-        {/* Quick prompts by scenario */}
+        {/* Quick prompts */}
         <div className="mt-8">
-          <p className="text-sm text-muted text-center mb-4 font-mono">Prueba estos escenarios <span className="text-terminal-green">→</span> respuesta instantánea</p>
+          <p className="text-sm text-muted text-center mb-4 font-mono">Prueba estos escenarios <span className="text-terminal-green">→</span></p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {QUICK_PROMPTS.map((prompt) => (
               <button
@@ -455,7 +423,6 @@ export function InteractiveDemo() {
             ))}
           </div>
         </div>
-
 
         {/* CTA */}
         <motion.div

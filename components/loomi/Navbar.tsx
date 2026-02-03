@@ -70,7 +70,7 @@ export function Navbar() {
                 login
               </Button>
             </Link>
-            <Link href="/login?mode=access">
+            <Link href="/demo">
               <Button variant="primary" size="sm" className="gap-2 font-mono">
                 <MessageCircle className="w-4 h-4" />
                 ./demo
@@ -112,12 +112,12 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="pt-3 border-t border-border space-y-2">
-                <Link href="/dashboard" className="block" onClick={() => setIsMenuOpen(false)}>
+                <Link href="/login" className="block" onClick={() => setIsMenuOpen(false)}>
                   <Button variant="secondary" size="md" className="w-full font-mono">
                     login
                   </Button>
                 </Link>
-                <Link href="/login?mode=access" className="block" onClick={() => setIsMenuOpen(false)}>
+                <Link href="/demo" className="block" onClick={() => setIsMenuOpen(false)}>
                   <Button variant="primary" size="md" className="w-full gap-2 font-mono">
                     <MessageCircle className="w-4 h-4" />
                     ./demo

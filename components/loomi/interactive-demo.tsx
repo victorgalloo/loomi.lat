@@ -2,21 +2,49 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Loader2, Zap } from 'lucide-react';
+import {
+  Send,
+  Zap,
+  Brain,
+  Heart,
+  TrendingUp,
+  Sparkles,
+  UserCheck,
+  CreditCard,
+  MessageSquare,
+  Shield
+} from 'lucide-react';
 import Link from 'next/link';
+
+interface AgentInfo {
+  escalatedToHuman?: { reason: string; summary: string } | null;
+  paymentLinkSent?: { plan: string; email: string } | null;
+  detectedIndustry?: string | null;
+  saidLater?: boolean;
+}
 
 interface Message {
   id: number;
   type: 'user' | 'bot';
   text: string;
+  agentInfo?: AgentInfo;
 }
 
-// Scripted responses for quick buttons (instant)
-const SCRIPTED_RESPONSES: { [key: string]: string } = {
-  '¿Precio?': 'Starter $199/mes, Growth $349/mes, Business $599/mes. ¿Cuántos mensajes recibes al día?',
-  '¿Cómo funciona?': 'Conectas tu WhatsApp, configuras tu agente, y respondo 24/7 calificando leads y agendando demos.',
-  'Quiero demo': 'Tengo disponible mañana 10am, 2pm o 4pm. ¿Cuál te funciona?',
-};
+// Analysis steps shown during processing
+const ANALYSIS_STEPS = [
+  { icon: Brain, text: 'Analizando contexto...', color: 'text-blue-400' },
+  { icon: Heart, text: 'Detectando sentimiento...', color: 'text-pink-400' },
+  { icon: TrendingUp, text: 'Evaluando intención...', color: 'text-green-400' },
+  { icon: Sparkles, text: 'Generando respuesta...', color: 'text-yellow-400' },
+];
+
+// Quick prompts that showcase capabilities
+const QUICK_PROMPTS = [
+  { text: '¿Cómo funciona?', icon: MessageSquare, label: 'Info' },
+  { text: 'Es muy caro para mí', icon: TrendingUp, label: 'Objeción' },
+  { text: 'Quiero hablar con alguien real', icon: UserCheck, label: 'Escalación' },
+  { text: 'Quiero demo', icon: CreditCard, label: 'Cierre' },
+];
 
 export function InteractiveDemo() {
   const [messages, setMessages] = useState<Message[]>([
@@ -24,6 +52,7 @@ export function InteractiveDemo() {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [analysisStep, setAnalysisStep] = useState(0);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -36,20 +65,17 @@ export function InteractiveDemo() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Scripted response (instant)
-  const handleScriptedResponse = useCallback((userText: string, botResponse: string) => {
-    const userMessage: Message = { id: Date.now(), type: 'user', text: userText };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
-    setIsTyping(true);
+  // Animate through analysis steps while loading
+  useEffect(() => {
+    if (isTyping) {
+      const interval = setInterval(() => {
+        setAnalysisStep(prev => (prev + 1) % ANALYSIS_STEPS.length);
+      }, 700);
+      return () => clearInterval(interval);
+    }
+  }, [isTyping]);
 
-    setTimeout(() => {
-      setIsTyping(false);
-      setMessages((prev) => [...prev, { id: Date.now() + 1, type: 'bot', text: botResponse }]);
-    }, 400 + Math.random() * 200);
-  }, []);
-
-  // Real API call (lite agent)
+  // Real API call with full agent
   const handleRealMessage = useCallback(async (text: string) => {
     const userMessage: Message = { id: Date.now(), type: 'user', text };
 
@@ -61,6 +87,7 @@ export function InteractiveDemo() {
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsTyping(true);
+    setAnalysisStep(0);
 
     try {
       const res = await fetch('/api/demo/chat', {
@@ -73,26 +100,34 @@ export function InteractiveDemo() {
 
       setIsTyping(false);
       if (res.ok && data.response) {
-        setMessages((prev) => [...prev, { id: Date.now() + 1, type: 'bot', text: data.response }]);
+        setMessages((prev) => [...prev, {
+          id: Date.now() + 1,
+          type: 'bot',
+          text: data.response,
+          agentInfo: data.agentInfo
+        }]);
       } else {
-        setMessages((prev) => [...prev, { id: Date.now() + 1, type: 'bot', text: '¿Te gustaría agendar una demo para ver más?' }]);
+        setMessages((prev) => [...prev, {
+          id: Date.now() + 1,
+          type: 'bot',
+          text: '¿Te gustaría agendar una demo para ver más?'
+        }]);
       }
     } catch (err) {
       console.error('Chat error:', err);
       setIsTyping(false);
-      setMessages((prev) => [...prev, { id: Date.now() + 1, type: 'bot', text: '¿Te gustaría agendar una demo para ver más?' }]);
+      setMessages((prev) => [...prev, {
+        id: Date.now() + 1,
+        type: 'bot',
+        text: '¿Te gustaría agendar una demo para ver más?'
+      }]);
     }
   }, [messages]);
 
   const handleSend = () => {
     const text = input.trim();
     if (!text || isTyping) return;
-
-    if (SCRIPTED_RESPONSES[text]) {
-      handleScriptedResponse(text, SCRIPTED_RESPONSES[text]);
-    } else {
-      handleRealMessage(text);
-    }
+    handleRealMessage(text);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -104,11 +139,7 @@ export function InteractiveDemo() {
 
   const handleQuickButton = (text: string) => {
     if (isTyping) return;
-    if (SCRIPTED_RESPONSES[text]) {
-      handleScriptedResponse(text, SCRIPTED_RESPONSES[text]);
-    } else {
-      setInput(text);
-    }
+    handleRealMessage(text);
   };
 
   return (
@@ -123,57 +154,137 @@ export function InteractiveDemo() {
           <h2 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-6 font-mono">
             Pruébalo
           </h2>
+          <p className="text-muted text-lg">
+            Este es el agente real. Con todas las capacidades.
+          </p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bg-surface rounded-xl overflow-hidden border border-border"
+          className="bg-surface rounded-xl overflow-hidden border border-border shadow-2xl"
         >
-          {/* Header */}
+          {/* Header with capabilities badge */}
           <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-surface-2">
             <div className="flex gap-2">
               <div className="w-3 h-3 rounded-full bg-terminal-red" />
               <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
               <div className="w-3 h-3 rounded-full bg-terminal-green" />
             </div>
-            <span className="text-xs text-muted font-mono ml-2">loomi — demo</span>
-            <div className="ml-auto flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-terminal-green animate-pulse" />
-              <span className="text-xs text-muted font-mono">live</span>
+            <span className="text-xs text-muted font-mono ml-2">loomi --live</span>
+            <div className="ml-auto flex items-center gap-3">
+              <span className="flex items-center gap-1 px-2 py-0.5 bg-terminal-green/10 border border-terminal-green/20 rounded text-[10px] font-mono text-terminal-green">
+                <Zap className="w-3 h-3" />
+                GPT-5.2 + o3
+              </span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-terminal-green animate-pulse" />
+                <span className="text-xs text-muted font-mono">live</span>
+              </div>
             </div>
           </div>
 
           {/* Messages */}
-          <div ref={messagesContainerRef} className="h-[300px] p-4 overflow-y-auto bg-background">
+          <div ref={messagesContainerRef} className="h-[320px] p-4 overflow-y-auto bg-background">
             <AnimatePresence mode="popLayout">
               {messages.map((message) => (
                 <motion.div
                   key={message.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`flex mb-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div
-                    className={`max-w-[80%] rounded-lg px-4 py-3 font-mono text-sm ${
-                      message.type === 'user'
-                        ? 'bg-foreground text-background'
-                        : 'bg-surface-2 border border-border text-foreground'
-                    }`}
-                  >
-                    {message.text}
+                  <div className={`flex mb-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className={`max-w-[80%] rounded-lg px-4 py-3 font-mono text-sm ${
+                        message.type === 'user'
+                          ? 'bg-foreground text-background'
+                          : 'bg-surface-2 border border-border text-foreground'
+                      }`}
+                    >
+                      {message.text}
+                    </div>
                   </div>
+                  {/* Show agent capabilities used */}
+                  {message.type === 'bot' && message.agentInfo && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex flex-wrap gap-1.5 mb-3 ml-1"
+                    >
+                      {message.agentInfo.detectedIndustry && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded text-[10px] text-blue-400 font-mono">
+                          <TrendingUp className="w-2.5 h-2.5" />
+                          {message.agentInfo.detectedIndustry}
+                        </span>
+                      )}
+                      {message.agentInfo.escalatedToHuman && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded text-[10px] text-yellow-400 font-mono">
+                          <UserCheck className="w-2.5 h-2.5" />
+                          Escalado a humano
+                        </span>
+                      )}
+                      {message.agentInfo.paymentLinkSent && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-500/10 border border-green-500/20 rounded text-[10px] text-green-400 font-mono">
+                          <CreditCard className="w-2.5 h-2.5" />
+                          Link de pago
+                        </span>
+                      )}
+                      {message.agentInfo.saidLater && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded text-[10px] text-purple-400 font-mono">
+                          <Zap className="w-2.5 h-2.5" />
+                          Follow-up programado
+                        </span>
+                      )}
+                    </motion.div>
+                  )}
                 </motion.div>
               ))}
             </AnimatePresence>
 
+            {/* Enhanced loading with analysis steps */}
             {isTyping && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex justify-start"
+              >
                 <div className="bg-surface-2 border border-border rounded-lg px-4 py-3">
-                  <div className="flex gap-2 items-center">
-                    <Loader2 className="w-4 h-4 text-terminal-green animate-spin" />
-                    <span className="text-xs text-muted font-mono">thinking...</span>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <div className="w-6 h-6 border-2 border-terminal-green/30 rounded-full" />
+                      <div className="absolute inset-0 w-6 h-6 border-2 border-terminal-green border-t-transparent rounded-full animate-spin" />
+                    </div>
+                    <div className="space-y-1">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={analysisStep}
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          transition={{ duration: 0.15 }}
+                          className={`flex items-center gap-2 ${ANALYSIS_STEPS[analysisStep].color}`}
+                        >
+                          {(() => {
+                            const StepIcon = ANALYSIS_STEPS[analysisStep].icon;
+                            return <StepIcon className="w-3 h-3" />;
+                          })()}
+                          <span className="text-xs font-mono">
+                            {ANALYSIS_STEPS[analysisStep].text}
+                          </span>
+                        </motion.div>
+                      </AnimatePresence>
+                      <div className="flex gap-0.5">
+                        {ANALYSIS_STEPS.map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-1 h-1 rounded-full transition-colors ${
+                              i <= analysisStep ? 'bg-terminal-green' : 'bg-border'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -188,7 +299,7 @@ export function InteractiveDemo() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Escribe algo..."
+                placeholder="Escribe como cliente..."
                 disabled={isTyping}
                 className="flex-1 bg-background border border-border rounded-lg px-4 py-3 text-foreground text-sm placeholder-muted focus:outline-none focus:border-muted transition-colors font-mono disabled:opacity-50"
               />
@@ -198,59 +309,71 @@ export function InteractiveDemo() {
                 disabled={!input.trim() || isTyping}
                 className="w-12 h-12 rounded-lg bg-foreground flex items-center justify-center disabled:opacity-50"
               >
-                {isTyping ? (
-                  <Loader2 className="w-5 h-5 text-background animate-spin" />
-                ) : (
-                  <Send className="w-5 h-5 text-background" />
-                )}
+                <Send className="w-5 h-5 text-background" />
               </motion.button>
             </div>
           </div>
         </motion.div>
 
-        {/* Quick suggestions */}
-        <div className="flex flex-wrap justify-center gap-2 mt-6">
-          {Object.keys(SCRIPTED_RESPONSES).map((s) => (
-            <button
-              key={s}
-              onClick={() => handleQuickButton(s)}
-              disabled={isTyping}
-              className="px-4 py-2 text-sm text-muted border border-border rounded-lg hover:text-foreground transition-colors font-mono disabled:opacity-50"
-            >
-              {s}
-            </button>
-          ))}
+        {/* Quick prompts by scenario */}
+        <div className="mt-6">
+          <p className="text-xs text-muted text-center mb-3 font-mono">Prueba estos escenarios:</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {QUICK_PROMPTS.map((prompt) => (
+              <button
+                key={prompt.label}
+                onClick={() => handleQuickButton(prompt.text)}
+                disabled={isTyping}
+                className="group flex items-center gap-2 px-4 py-2 text-sm text-muted border border-border rounded-lg hover:text-foreground hover:border-foreground/30 transition-all font-mono disabled:opacity-50"
+              >
+                <prompt.icon className="w-3.5 h-3.5 text-muted group-hover:text-foreground transition-colors" />
+                {prompt.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Demo notice */}
+        {/* Capabilities showcase */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.3 }}
+          className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3"
+        >
+          <div className="flex items-center gap-2 p-3 bg-surface border border-border rounded-lg">
+            <Brain className="w-4 h-4 text-blue-400" />
+            <span className="text-xs text-muted font-mono">Razonamiento o3</span>
+          </div>
+          <div className="flex items-center gap-2 p-3 bg-surface border border-border rounded-lg">
+            <Heart className="w-4 h-4 text-pink-400" />
+            <span className="text-xs text-muted font-mono">Sentimiento</span>
+          </div>
+          <div className="flex items-center gap-2 p-3 bg-surface border border-border rounded-lg">
+            <Shield className="w-4 h-4 text-green-400" />
+            <span className="text-xs text-muted font-mono">Escalación</span>
+          </div>
+          <div className="flex items-center gap-2 p-3 bg-surface border border-border rounded-lg">
+            <CreditCard className="w-4 h-4 text-yellow-400" />
+            <span className="text-xs text-muted font-mono">Pagos</span>
+          </div>
+        </motion.div>
+
+        {/* CTA */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.5 }}
-          className="mt-8 p-4 rounded-lg border border-border bg-surface"
+          className="mt-8 text-center"
         >
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-terminal-yellow/10 flex items-center justify-center shrink-0">
-              <Zap className="w-4 h-4 text-terminal-yellow" />
-            </div>
-            <div>
-              <p className="text-sm text-foreground font-medium font-mono mb-1">
-                Demo simplificada
-              </p>
-              <p className="text-xs text-muted leading-relaxed">
-                Esta es una versión ligera. El agente real incluye análisis de sentimiento,
-                memoria contextual, calificación de leads y más.
-              </p>
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium text-foreground hover:text-terminal-green transition-colors font-mono"
-              >
-                Solicitar acceso completo
-                <span className="text-terminal-green">→</span>
-              </Link>
-            </div>
-          </div>
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-lg font-mono text-sm hover:opacity-90 transition-opacity"
+          >
+            <Sparkles className="w-4 h-4" />
+            Configura tu propio agente
+          </Link>
         </motion.div>
       </div>
     </section>

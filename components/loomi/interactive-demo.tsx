@@ -112,7 +112,7 @@ export function InteractiveDemo() {
       // Create and play new audio
       const audio = new Audio(audioUrl);
       audioRef.current = audio;
-      audio.playbackRate = 1.15; // 15% faster for more natural conversational speed
+      audio.playbackRate = 1.25; // 25% faster for snappy conversational speed
 
       audio.onended = () => {
         setIsPlaying(false);

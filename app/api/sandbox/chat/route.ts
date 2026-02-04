@@ -59,6 +59,12 @@ export interface SandboxChatResponse {
     reason: string;
     summary: string;
   };
+  showScheduleList?: boolean;
+  paymentLinkSent?: {
+    plan: string;
+    email: string;
+    checkoutUrl: string;
+  };
   toolCalled?: {
     name: string;
     result: unknown;
@@ -244,7 +250,9 @@ export async function POST(request: NextRequest) {
       response: result.response,
       sessionId,
       tokensUsed: result.tokensUsed,
-      escalatedToHuman: result.escalatedToHuman
+      escalatedToHuman: result.escalatedToHuman,
+      showScheduleList: result.showScheduleList,
+      paymentLinkSent: result.paymentLinkSent
     };
 
     return NextResponse.json(response);

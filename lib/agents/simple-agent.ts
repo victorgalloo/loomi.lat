@@ -748,9 +748,14 @@ Sé directa, inteligente, mensajes cortos.`
 
     if (!response && toolResults.length > 0) {
       for (const toolResult of toolResults) {
-        const tr = toolResult as { toolName?: string; result?: { success?: boolean; message?: string; bookingLink?: string } };
+        const tr = toolResult as {
+          toolName?: string;
+          result?: { success?: boolean; message?: string; bookingLink?: string };
+          output?: { success?: boolean; message?: string; bookingLink?: string; checkoutUrl?: string };
+        };
         console.log('[Debug] toolResult:', JSON.stringify(tr));
-        const output = tr.result;
+        // Handle both 'result' and 'output' property names (API versions differ)
+        const output = tr.output || tr.result;
         if (output?.message) {
           response = output.message;
           break;

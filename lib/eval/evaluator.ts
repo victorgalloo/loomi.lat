@@ -51,7 +51,7 @@ Sé estricto. Si no cumple un criterio marcado como "SÍ", baja el score signifi
 
   try {
     const { object } = await generateObject({
-      model: openai('gpt-5.2-instant'),
+      model: openai('gpt-5-mini'),
       schema: evaluationSchema,
       prompt,
     });

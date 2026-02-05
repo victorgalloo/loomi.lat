@@ -215,7 +215,7 @@ Sé directo y conciso. No uses bullet points largos.`;
 
   try {
     const result = await generateText({
-      model: openai('gpt-5.2-instant'),
+      model: openai('gpt-5-mini'),
       system: systemPrompt,
       prompt: 'Analiza y responde directamente.'
     });

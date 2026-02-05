@@ -24,10 +24,7 @@ import {
 } from './supabase';
 
 // Números de prueba - se guardan con is_test=true para poder resetear
-const TEST_PHONE_NUMBERS = new Set([
-  '4779083304',
-  '524779083304',
-  '5214779083304',
+const TEST_PHONE_NUMBERS = new Set<string>([
 ]);
 
 /**

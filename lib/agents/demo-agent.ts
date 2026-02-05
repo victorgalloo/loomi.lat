@@ -2,7 +2,7 @@
  * Demo Agent - Lightweight agent for landing page demos
  *
  * Fast, single API call, no multi-agent analysis
- * Uses gpt-5.2-instant for speed
+ * Uses gpt-5-mini for speed
  */
 
 import { generateText } from 'ai';
@@ -48,7 +48,7 @@ export async function demoAgent(
     ];
 
     const result = await generateText({
-      model: openai('gpt-5.2-instant'),
+      model: openai('gpt-5-mini'),
       system: DEMO_PROMPT,
       messages,
       maxOutputTokens: 150,

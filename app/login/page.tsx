@@ -55,7 +55,7 @@ function LoginContent() {
 
       if (data.user) {
         await new Promise(resolve => setTimeout(resolve, 100));
-        router.push("/dashboard");
+        router.push("/broadcasts");
         router.refresh();
       }
     } catch {

@@ -38,6 +38,7 @@ export default async function ConversationDetailPage({ params }: PageProps) {
       started_at,
       ended_at,
       summary,
+      bot_paused,
       leads!inner(id, name, phone, email, company, stage, industry, tenant_id)
     `)
     .eq("id", id)
@@ -77,6 +78,7 @@ export default async function ConversationDetailPage({ params }: PageProps) {
         started_at: conversation.started_at,
         ended_at: conversation.ended_at,
         summary: conversation.summary,
+        bot_paused: conversation.bot_paused ?? false,
       }}
       lead={{
         id: lead.id,

@@ -339,6 +339,8 @@ interface AgentConfigOptions {
   // Sandbox features
   knowledgeContext?: string | null;
   customTools?: CustomToolDef[];
+  // Model override per tenant
+  model?: string | null;
 }
 
 export async function simpleAgent(
@@ -686,7 +688,7 @@ Sé directa, inteligente, mensajes cortos.`
 
   try {
     const result = await generateText({
-      model: openai('gpt-4o'),  // Optimizado: gpt-4o es ~5x más rápido que gpt-5.2
+      model: openai(agentConfig?.model || 'gpt-4o'),
       system: systemWithContext,
       messages: history,
       tools,

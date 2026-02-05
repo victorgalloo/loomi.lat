@@ -6,6 +6,8 @@
  */
 
 import { sendWhatsAppMessage } from '@/lib/whatsapp/send';
+import { pauseBot } from '@/lib/bot-pause';
+import { getSupabase } from '@/lib/memory/supabase';
 
 // ===========================================
 // TYPES
@@ -350,6 +352,26 @@ export async function executeHandoff(context: HandoffContext): Promise<HandoffRe
 
   console.log(`[Handoff] ${handoffId} | Priority: ${context.priority} | Reason: ${context.reason}`);
   console.log(`[Handoff] Operator notified: ${operatorResult} | Client notified: ${clientResult}`);
+
+  // Auto-pause bot when handoff occurs
+  if (context.conversationId) {
+    await pauseBot(context.conversationId, 'handoff');
+  }
+
+  // Track handoff in database
+  try {
+    const supabase = getSupabase();
+    await supabase.from('handoffs').insert({
+      tenant_id: context.tenantId || null,
+      conversation_id: context.conversationId || null,
+      lead_id: context.leadId || null,
+      reason: context.customReason || context.reason,
+      priority: context.priority,
+      status: 'pending',
+    });
+  } catch (dbError) {
+    console.error('[Handoff] Failed to save to DB:', dbError);
+  }
 
   return {
     success: operatorResult || backupResult,

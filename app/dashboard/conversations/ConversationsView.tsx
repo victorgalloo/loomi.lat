@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { MessageSquare, Search } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { MessageSquare, Search, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
@@ -55,10 +55,23 @@ function getStageLabel(stage: string): string {
   return stages[stage] || stage;
 }
 
+interface HandoffAlert {
+  id: string;
+  conversationId: string;
+  reason: string;
+  priority: string;
+  createdAt: string;
+}
+
 export default function ConversationsView({ conversations: initialConversations, tenantId }: ConversationsViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'archived'>('all');
   const [conversations, setConversations] = useState(initialConversations);
+  const [handoffAlerts, setHandoffAlerts] = useState<HandoffAlert[]>([]);
+
+  const dismissAlert = useCallback((id: string) => {
+    setHandoffAlerts(prev => prev.filter(a => a.id !== id));
+  }, []);
 
   // Realtime subscription for messages
   useEffect(() => {
@@ -120,8 +133,42 @@ export default function ConversationsView({ conversations: initialConversations,
       )
       .subscribe();
 
+    // Handoffs subscription
+    const handoffsChannel = supabase
+      .channel('handoffs-alerts')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'handoffs',
+        },
+        (payload) => {
+          const handoff = payload.new as {
+            id: string;
+            conversation_id: string;
+            reason: string;
+            priority: string;
+            created_at: string;
+            tenant_id: string;
+          };
+
+          if (handoff.tenant_id === tenantId) {
+            setHandoffAlerts(prev => [{
+              id: handoff.id,
+              conversationId: handoff.conversation_id,
+              reason: handoff.reason,
+              priority: handoff.priority,
+              createdAt: handoff.created_at,
+            }, ...prev]);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(handoffsChannel);
     };
   }, [tenantId]);
 
@@ -225,6 +272,54 @@ export default function ConversationsView({ conversations: initialConversations,
           </button>
         ))}
       </div>
+
+      {/* Handoff Alerts */}
+      {handoffAlerts.length > 0 && (
+        <div className="space-y-2 mb-4">
+          {handoffAlerts.map((alert) => (
+            <div
+              key={alert.id}
+              className={`
+                flex items-center justify-between px-4 py-3 rounded-lg border font-mono
+                ${alert.priority === 'critical'
+                  ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                  : alert.priority === 'urgent'
+                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                    : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                }
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">
+                    Handoff: {alert.reason}
+                  </p>
+                  <p className="text-xs opacity-70">
+                    Prioridad: {alert.priority}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {alert.conversationId && (
+                  <Link
+                    href={`/dashboard/conversations/${alert.conversationId}`}
+                    className="px-3 py-1 rounded text-xs font-medium bg-foreground text-background hover:opacity-90 transition-opacity"
+                  >
+                    Ver chat
+                  </Link>
+                )}
+                <button
+                  onClick={() => dismissAlert(alert.id)}
+                  className="px-2 py-1 rounded text-xs opacity-60 hover:opacity-100 transition-opacity"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Conversation List */}
       {filteredConversations.length > 0 ? (

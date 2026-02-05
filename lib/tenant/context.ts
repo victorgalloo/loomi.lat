@@ -59,6 +59,8 @@ export interface AgentConfig {
   systemPrompt: string | null;
   fewShotExamples: FewShotExample[];
   productsCatalog: Record<string, unknown>;
+  // Model override per tenant (e.g. 'gpt-4o', 'gpt-5.2')
+  model: string | null;
 }
 
 // Cache for tenant lookups (phone_number_id -> tenant_id)
@@ -174,7 +176,8 @@ export async function getAgentConfig(tenantId: string): Promise<AgentConfig | nu
       fallbackMessage: null,
       systemPrompt: null,
       fewShotExamples: [],
-      productsCatalog: {}
+      productsCatalog: {},
+      model: null
     };
   }
 
@@ -192,7 +195,8 @@ export async function getAgentConfig(tenantId: string): Promise<AgentConfig | nu
     fallbackMessage: data.fallback_message,
     systemPrompt: data.system_prompt || null,
     fewShotExamples: data.few_shot_examples || [],
-    productsCatalog: data.products_catalog || {}
+    productsCatalog: data.products_catalog || {},
+    model: data.model || null
   };
 }
 
@@ -346,6 +350,7 @@ export async function updateAgentConfig(
   if (config.systemPrompt !== undefined) updateData.system_prompt = config.systemPrompt;
   if (config.fewShotExamples !== undefined) updateData.few_shot_examples = config.fewShotExamples;
   if (config.productsCatalog !== undefined) updateData.products_catalog = config.productsCatalog;
+  if (config.model !== undefined) updateData.model = config.model;
 
   // Upsert: create if not exists, update if exists
   const { data, error } = await supabase
@@ -378,7 +383,8 @@ export async function updateAgentConfig(
     fallbackMessage: data.fallback_message,
     systemPrompt: data.system_prompt || null,
     fewShotExamples: data.few_shot_examples || [],
-    productsCatalog: data.products_catalog || {}
+    productsCatalog: data.products_catalog || {},
+    model: data.model || null
   };
 }
 

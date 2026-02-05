@@ -63,6 +63,8 @@ import {
   checkAndHandleOptOut
 } from '@/lib/followups/scheduler';
 import { getTenantFromPhoneNumberId, getAgentConfig, AgentConfig } from '@/lib/tenant/context';
+import { getTenantDocuments, getTenantTools } from '@/lib/tenant/knowledge';
+import { isBotPaused } from '@/lib/bot-pause';
 import { trackDemoScheduled } from '@/lib/integrations/meta-conversions';
 
 // Temporal feature flags (no gRPC connection required)
@@ -563,9 +565,22 @@ export async function POST(request: NextRequest) {
           accessToken: tenantData.accessToken,
           tenantId: tenantData.tenantId
         };
-        // Load agent config for this tenant
-        agentConfig = await getAgentConfig(tenantId) || undefined;
-        console.log(`[Webhook] Multi-tenant: Routing to tenant ${tenantId}`);
+        // Load agent config, knowledge docs and tools for this tenant
+        const [loadedConfig, tenantDocs, tenantTools] = await Promise.all([
+          getAgentConfig(tenantId),
+          getTenantDocuments(tenantId),
+          getTenantTools(tenantId)
+        ]);
+        agentConfig = loadedConfig || undefined;
+        // Enrich agent config with knowledge and tools
+        if (agentConfig && (tenantDocs || tenantTools.length > 0)) {
+          agentConfig = {
+            ...agentConfig,
+            ...(tenantDocs ? { knowledgeContext: tenantDocs } : {}),
+            ...(tenantTools.length > 0 ? { customTools: tenantTools } : {})
+          } as AgentConfig & { knowledgeContext?: string; customTools?: unknown[] };
+        }
+        console.log(`[Webhook] Multi-tenant: Routing to tenant ${tenantId}, docs: ${!!tenantDocs}, tools: ${tenantTools.length}`);
       } else {
         // Fallback to environment variables for backward compatibility
         console.log(`[Webhook] No tenant found for phone_number_id ${message.phoneNumberId}, using env vars`);
@@ -594,6 +609,13 @@ export async function POST(request: NextRequest) {
       const tenantContext: TenantContext | null = tenantId
         ? buildTenantContext(tenantId, 'starter')
         : null;
+
+      // Check if bot is paused (operator has taken control)
+      if (await isBotPaused(context.conversation.id)) {
+        console.log(`[Webhook] Bot paused for conversation ${context.conversation.id}, saving message only`);
+        await saveMessage(context.conversation.id, 'user', message.text, context.lead.id);
+        return NextResponse.json({ status: 'bot_paused' });
+      }
 
       // Check for opt-out signals (e.g., "no me interesa", "deja de escribirme")
       // This also handles multiple cold responses pattern

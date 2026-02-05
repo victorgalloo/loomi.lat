@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { simpleAgent } from '@/lib/agents/simple-agent';
 import { getAgentConfig } from '@/lib/tenant/context';
-import { getSupabase } from '@/lib/memory/supabase';
+import { getTenantDocuments, getTenantTools } from '@/lib/tenant/knowledge';
 import { ConversationContext, Message } from '@/types';
 
 // In-memory rate limiting (per IP)
@@ -69,58 +69,6 @@ export interface SandboxChatResponse {
     name: string;
     result: unknown;
   };
-}
-
-// Fetch tenant documents for context
-async function getTenantDocuments(tenantId: string): Promise<string | null> {
-  try {
-    const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from('tenant_documents')
-      .select('name, content')
-      .eq('tenant_id', tenantId)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(5); // Limit to prevent context overflow
-
-    if (error || !data || data.length === 0) return null;
-
-    // Format documents as context
-    const docsContext = data.map(d =>
-      `### ${d.name}\n${d.content}`
-    ).join('\n\n');
-
-    return `# KNOWLEDGE BASE\nUsa esta información para responder preguntas:\n\n${docsContext}`;
-  } catch (err) {
-    console.error('[Sandbox] Error fetching documents:', err);
-    return null;
-  }
-}
-
-// Fetch tenant tools definitions
-async function getTenantTools(tenantId: string) {
-  try {
-    const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from('tenant_tools')
-      .select('*')
-      .eq('tenant_id', tenantId)
-      .eq('is_active', true);
-
-    if (error || !data) return [];
-
-    return data.map(t => ({
-      name: t.name,
-      displayName: t.display_name,
-      description: t.description,
-      parameters: t.parameters,
-      executionType: t.execution_type,
-      mockResponse: t.mock_response
-    }));
-  } catch (err) {
-    console.error('[Sandbox] Error fetching tools:', err);
-    return [];
-  }
 }
 
 export async function POST(request: NextRequest) {

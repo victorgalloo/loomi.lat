@@ -372,9 +372,13 @@ export async function simpleAgent(
   }
 
   // ============================================
-  // STEP 1: Multi-Agent Analysis (skip for simple messages)
+  // STEP 1: Multi-Agent Analysis (skip for simple messages OR custom prompts)
   // ============================================
-  const useSimplePath = isSimpleMessage(message, history.length);
+  // Skip multi-agent if:
+  // 1. Message is simple (greetings, price questions)
+  // 2. Tenant has custom systemPrompt (multi-agent is Loomi-specific)
+  const hasCustomPrompt = !!agentConfig?.systemPrompt;
+  const useSimplePath = isSimpleMessage(message, history.length) || hasCustomPrompt;
 
   let sellerAnalysis: Awaited<ReturnType<typeof getSellerStrategy>>['analysis'] | null = null;
   let sellerInstructions: string = '';
@@ -382,7 +386,7 @@ export async function simpleAgent(
 
   if (useSimplePath) {
     // Fast path: skip multi-agent, only do quick reasoning
-    console.log('=== FAST PATH (skipping multi-agent) ===');
+    console.log(hasCustomPrompt ? '=== FAST PATH (custom prompt) ===' : '=== FAST PATH (skipping multi-agent) ===');
     reasoning = await generateReasoningFast(message, context);
   } else {
     // Full path: run multi-agent and reasoning in parallel
@@ -489,7 +493,7 @@ export async function simpleAgent(
 
   systemWithContext += `\n\n# ESTADO ACTUAL: ${state.toUpperCase()}`;
 
-  // Instrucciones específicas por estado - Venta de Loomi
+  // Instrucciones específicas por estado
   const stateInstructions: Record<string, string> = {
     'handoff_human_request': `
 ACCIÓN OBLIGATORIA: El usuario pidió hablar con un humano. USA escalate_to_human INMEDIATAMENTE.
@@ -501,8 +505,10 @@ ACCIÓN OBLIGATORIA: El usuario está frustrado. USA escalate_to_human con URGEN
 - Muestra empatía: "Perdón si no me expliqué bien."
 - Escala: "Deja te paso con alguien que te puede ayudar mejor."`,
 
-    'conversacion_activa': `
-Sigue el análisis multi-agente de arriba.
+    'conversacion_activa': hasCustomPrompt
+      ? `Sigue las instrucciones del system prompt personalizado arriba.
+Sé directo, conversacional, mensajes cortos (2-3 líneas max).`
+      : `Sigue el análisis multi-agente de arriba.
 Tu objetivo: Entender su dolor con WhatsApp → Mostrar cómo Loomi lo resuelve → Agendar demo o cerrar.
 Sé directa, inteligente, mensajes cortos.`
   };

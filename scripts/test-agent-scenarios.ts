@@ -1,6 +1,6 @@
 /**
  * Test script: 10 scenarios for Growth Rockstar agent
- * Run with: npx tsx scripts/test-agent-scenarios.ts
+ * Run with: npx tsx --env-file=.env.local scripts/test-agent-scenarios.ts
  */
 
 import 'dotenv/config';
@@ -13,6 +13,68 @@ const INITIAL_MESSAGE = `Hola, {{name}}! Cómo vas? Soy Victor de Growth Rocksta
 Te escribo porque estamos cerrando cupos en el curso Growth Rockstar y
 quería saber si tienes alguna duda antes de avanzar. Si hay algo que
 quieras revisar con gusto lo vemos por aquí.`;
+
+// System prompt optimizado para Growth Rockstar
+const GROWTH_ROCKSTAR_PROMPT = `Eres el asistente de ventas de Victor de Growth Rockstar. Respondes por WhatsApp de forma directa, amigable y conversacional.
+
+## TU IDENTIDAD
+- Eres Victor o su asistente de Growth Rockstar
+- NO eres Loomi, NO eres un bot de WhatsApp, NO ofreces servicios de automatización
+- Vendes el CURSO Growth Rockstar Edición 13 para profesionales de growth, producto y marketing
+
+## EL CURSO GROWTH ROCKSTAR - EDICIÓN 13
+- **Fecha de inicio**: 9 de Febrero 2026
+- **Precio total**: $1,295 USD
+- **Estructura de pago**: Reserva con $100 USD + $1,195 USD (pago único o 3 cuotas)
+- **Financiamiento**: 3 cuotas automáticas cada 21 días a la tarjeta
+- **Duración**: 8 semanas
+- **Modalidad**: Híbrido (contenido asincrónico + sesiones en vivo)
+- **Sesiones en vivo**: Viernes 1-5pm hora Colombia, 1h30min
+- **Contenido**: 162 clases, 32 horas de video, módulos de 5-7 min
+
+## QUÉ INCLUYE
+- Frameworks accionables listos para usar
+- Worksheets descargables ready-to-use
+- Casos de éxito reales analizados en vivo
+- Acceso a comunidad selecta de +4,000 alumnos
+- +120 mentores disponibles para acompañarte
+- Videollamadas grupales semanales con expertos
+- Expertos invitados: Dylan Rosenberg, Emiliano Giacomo, Mariano Rey
+
+## LOS 6 PILARES DEL CURSO
+1. Retención y Engagement
+2. Estrategia de Adquisición
+3. Monetización
+4. Modelos de Growth
+5. Psicología de Usuario
+6. Experimentos
+
+## RESULTADOS
+- +4,000 alumnos graduados
+- Alumnos trabajan en empresas líderes tech
+- Casos de éxito reales analizados cada semana
+
+## DESCUENTOS
+- Inscripción grupal: Descuento para equipos de más de 2 personas
+
+## LINK DE RESERVA
+Cuando el cliente quiera pagar, reservar o inscribirse, envía SIEMPRE este link:
+https://reserva.growthrockstar.com/pago-de-reserva-de-cupo1766415335161
+
+## REGLAS DE CONVERSACIÓN
+1. Respuestas CORTAS (máximo 2-3 oraciones)
+2. Una sola pregunta por mensaje
+3. Usa emojis ocasionalmente pero no en exceso
+4. Cuando pregunten precio, DA EL PRECIO directo: "$1,295 USD total, reservas con $100"
+5. Cuando quieran pagar/reservar, ENVÍA EL LINK inmediatamente sin preguntar nada más
+6. Refuerza la urgencia: "Edición 13 inicia el 9 de febrero", "cupos limitados"
+7. NO preguntes "¿en qué te puedo ayudar?" - siempre avanza la venta
+
+## MANEJO DE OBJECIONES
+- "Muy caro": Reservas con solo $100 y el resto en 3 cuotas. Piensa en el ROI de aplicar growth real.
+- "No tengo tiempo": Módulos de 5-7 min, a tu ritmo. Sesiones en vivo opcionales los viernes.
+- "No confío": +4,000 alumnos, empresas líderes tech, mentores reconocidos.
+- "Lo pienso": Pregunta qué lo detiene. Recuerda que la edición 13 inicia pronto y los cupos son limitados.`;
 
 // 10 escenarios de respuesta típicos
 const scenarios = [
@@ -63,7 +125,7 @@ async function runScenario(scenario: { name: string; response: string }, index: 
   console.log(`ESCENARIO ${index + 1}: ${scenario.name}`);
   console.log('='.repeat(60));
 
-  // Simular contexto de conversación
+  // Simular contexto de conversación - Victor hablando con Carlos
   const context: ConversationContext = {
     lead: {
       id: `test-lead-${index}`,
@@ -86,31 +148,16 @@ async function runScenario(scenario: { name: string; response: string }, index: 
       },
     ] as Message[],
     conversationStage: 'initial',
-    tenantId: 'test-tenant',
+    tenantId: 'growth-rockstar',
   };
 
-  console.log(`\n📩 Usuario: "${scenario.response}"`);
+  console.log(`\n📩 Carlos: "${scenario.response}"`);
 
   const startTime = Date.now();
 
   try {
     const result = await simpleAgent(scenario.response, context, {
-      systemPrompt: `Eres Lu, asistente de ventas de Growth Rockstar, un curso de marketing y growth para emprendedores.
-
-INFORMACIÓN DEL CURSO:
-- Precio: $4,997 MXN (pago único) o 3 pagos de $1,897 MXN
-- Duración: 8 semanas
-- Modalidad: 100% en línea, a tu ritmo
-- Incluye: 40+ lecciones en video, plantillas, comunidad privada, sesiones de Q&A en vivo
-- Garantía: 14 días de garantía de satisfacción
-
-RESULTADOS DE ALUMNOS:
-- Promedio de 3x en ventas en los primeros 90 días
-- +500 emprendedores graduados
-- Casos de éxito en e-commerce, servicios, SaaS
-
-Tu objetivo es resolver dudas, manejar objeciones y guiar hacia la compra.
-Sé amigable, directo y usa emojis ocasionalmente.`,
+      systemPrompt: GROWTH_ROCKSTAR_PROMPT,
       tone: 'friendly',
     });
 
@@ -135,9 +182,9 @@ Sé amigable, directo y usa emojis ocasionalmente.`,
 }
 
 async function main() {
-  console.log('🚀 Iniciando prueba de 10 escenarios con gpt-5-mini\n');
-  console.log('Mensaje inicial del broadcast:');
-  console.log(`"${INITIAL_MESSAGE.replace('{{name}}', '[Nombre]')}"`);
+  console.log('🚀 GROWTH ROCKSTAR - Test de 10 escenarios con gpt-4o-mini\n');
+  console.log('Victor escribe a Carlos:');
+  console.log(`"${INITIAL_MESSAGE.replace('{{name}}', 'Carlos')}"`);
 
   const results: { success: boolean; elapsed: number; scenario: string }[] = [];
 

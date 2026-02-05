@@ -46,7 +46,13 @@ export async function GET(
       return NextResponse.json({ conversations: [] });
     }
 
-    const phones = [...new Set(recipients.map(r => r.phone))];
+    // Normalize phones: strip everything except digits for matching
+    const normalize = (p: string) => p.replace(/\D/g, '');
+    const phonesDigitsOnly = [...new Set(recipients.map(r => normalize(r.phone)))];
+    // Also keep original formats for exact match (covers both +prefix and no-prefix)
+    const phonesAllFormats = [...new Set(
+      phonesDigitsOnly.flatMap(p => [p, `+${p}`])
+    )];
 
     // 3. Get conversations from leads matching those phones, started after campaign
     const { data: conversationsData } = await supabase
@@ -57,7 +63,7 @@ export async function GET(
         leads!inner(id, name, phone, stage)
       `)
       .eq('leads.tenant_id', tenantId)
-      .in('leads.phone', phones)
+      .in('leads.phone', phonesAllFormats)
       .gte('started_at', campaign.started_at)
       .order('started_at', { ascending: false });
 

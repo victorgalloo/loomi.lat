@@ -67,7 +67,7 @@ IMPORTANTE:
 
   try {
     const { text } = await generateText({
-      model: openai('gpt-5-mini'),
+      model: openai('gpt-4o-mini'),
       prompt,
     });
 
@@ -127,7 +127,7 @@ Responde SOLO con el nuevo prompt, sin explicaciones ni markdown.`;
 
   try {
     const { text } = await generateText({
-      model: openai('gpt-5-mini'),
+      model: openai('gpt-4o-mini'),
       prompt,
     });
 

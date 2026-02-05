@@ -65,7 +65,7 @@ Formato: Texto corrido, sin bullets. Incluye solo información confirmada.
 Si hay memoria previa, actualízala con la nueva información.`;
 
     const result = await generateText({
-      model: openai('gpt-5-mini'),
+      model: openai('gpt-4o-mini'),
       system: systemPrompt,
       prompt: 'Resume la conversación.'
     });

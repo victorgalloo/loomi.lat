@@ -401,7 +401,7 @@ export async function simpleAgent(
     sellerInstructions = strategyResult.instructions;
     reasoning = reasoningResult;
 
-    console.log('=== ANÁLISIS (gpt-5-mini) ===');
+    console.log('=== ANÁLISIS (gpt-4o-mini) ===');
     console.log(`Fase: ${sellerAnalysis.fase_actual}`);
     console.log(`Siguiente paso: ${sellerAnalysis.siguiente_paso}`);
     if (sellerAnalysis.hay_objecion) {
@@ -688,7 +688,7 @@ Sé directa, inteligente, mensajes cortos.`
 
   try {
     const result = await generateText({
-      model: openai(agentConfig?.model || 'gpt-5-mini'),
+      model: openai(agentConfig?.model || 'gpt-4o-mini'),
       system: systemWithContext,
       messages: history,
       tools,

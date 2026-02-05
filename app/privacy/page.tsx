@@ -219,7 +219,7 @@ export default function PrivacyPolicyPage() {
 
         <main>
           <div className="intro">
-            This Privacy Policy describes how <strong>Anthana</strong> (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), the developer and operator of <strong>Loomi</strong> (&quot;the App&quot;, &quot;the Service&quot;), collects, uses, stores, and shares your personal information when you use our AI-powered WhatsApp sales agent platform. Anthana is a software development company based in León, Guanajuato, Mexico.
+            This Privacy Policy describes how <strong>Anthana</strong> (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), the developer and operator of <strong>Loomi</strong> (&quot;the App&quot;, &quot;the Service&quot;), collects, uses, stores, and shares your personal information when you use our AI-powered WhatsApp sales agent platform. Anthana is a software development company based in León, Guanajuato, Mexico. The individual responsible for the processing and protection of your personal data is <strong>Victor Alejandro Jimenez Gallo</strong>.
           </div>
 
           <section>
@@ -376,6 +376,7 @@ export default function PrivacyPolicyPage() {
             <h2>12. Contact Us</h2>
             <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
             <ul>
+              <li><strong>Data Controller:</strong> Victor Alejandro Jimenez Gallo</li>
               <li><strong>Company:</strong> Anthana</li>
               <li><strong>Email:</strong> privacy@anthana.com</li>
               <li><strong>Location:</strong> León, Guanajuato, Mexico</li>

@@ -38,6 +38,7 @@ interface BroadcastsViewProps {
 }
 
 type ModalStep = 'config' | 'csv' | 'confirm';
+type Lang = 'en' | 'es';
 
 const statusColors: Record<string, string> = {
   draft: 'text-muted',
@@ -46,15 +47,95 @@ const statusColors: Record<string, string> = {
   failed: 'text-terminal-red',
 };
 
-const statusLabels: Record<string, string> = {
-  draft: 'borrador',
-  sending: 'enviando...',
-  completed: 'completado',
-  failed: 'fallido',
+const i18n: Record<Lang, Record<string, string>> = {
+  en: {
+    campaigns: 'campaigns',
+    sent: 'sent',
+    failed: 'failed',
+    newCampaign: 'new campaign',
+    search: 'search...',
+    noResults: 'No results',
+    noCampaigns: 'No campaigns yet',
+    createFirst: 'create first campaign',
+    draft: 'draft',
+    sending: 'sending...',
+    completed: 'completed',
+    failedStatus: 'failed',
+    campaignName: 'campaign name',
+    campaignNamePlaceholder: 'e.g. Launch Edition 13',
+    approvedTemplate: 'approved template',
+    loadingTemplates: 'loading templates from Meta...',
+    noTemplates: 'No approved templates found',
+    templatePreview: 'template preview',
+    dragCsv: 'Drag a CSV or click',
+    csvColumns: 'Columns: phone (required), name (optional)',
+    contactsDetected: 'contacts detected',
+    csvPreview: 'preview (first 5 rows)',
+    campaign: 'campaign',
+    template: 'template',
+    language: 'language',
+    recipients: 'recipients',
+    confirmWarning: 'Campaign will be created with {count} recipients. You can send from the detail view.',
+    cancel: 'cancel',
+    back: 'back',
+    next: 'next',
+    creating: 'creating...',
+    createCampaign: './create-campaign',
+    nameRequired: 'Campaign name is required',
+    selectTemplate: 'Select a template',
+    csvRequired: 'Upload a CSV with at least 1 valid contact',
+    networkError: 'Network error',
+    createError: 'Error creating campaign',
+    csvOnly: 'Only .csv or .txt files accepted',
+    templateLoadError: 'Could not load templates',
+  },
+  es: {
+    campaigns: 'campañas',
+    sent: 'enviados',
+    failed: 'fallidos',
+    newCampaign: 'nueva campaña',
+    search: 'buscar...',
+    noResults: 'Sin resultados',
+    noCampaigns: 'No hay campañas aún',
+    createFirst: 'crear primera campaña',
+    draft: 'borrador',
+    sending: 'enviando...',
+    completed: 'completado',
+    failedStatus: 'fallido',
+    campaignName: 'nombre de campaña',
+    campaignNamePlaceholder: 'Ej: Lanzamiento Edición 13',
+    approvedTemplate: 'template aprobado',
+    loadingTemplates: 'cargando templates de Meta...',
+    noTemplates: 'No se encontraron templates aprobados',
+    templatePreview: 'preview del template',
+    dragCsv: 'Arrastra un CSV o haz clic',
+    csvColumns: 'Columnas: phone (obligatorio), name (opcional)',
+    contactsDetected: 'contactos detectados',
+    csvPreview: 'preview (primeras 5 filas)',
+    campaign: 'campaña',
+    template: 'template',
+    language: 'idioma',
+    recipients: 'destinatarios',
+    confirmWarning: 'Se creará la campaña con {count} destinatarios. Podrás enviar desde la vista de detalle.',
+    cancel: 'cancelar',
+    back: 'atrás',
+    next: 'siguiente',
+    creating: 'creando...',
+    createCampaign: './crear-campaña',
+    nameRequired: 'Nombre de campaña es requerido',
+    selectTemplate: 'Selecciona un template',
+    csvRequired: 'Sube un CSV con al menos 1 contacto válido',
+    networkError: 'Error de red',
+    createError: 'Error al crear campaña',
+    csvOnly: 'Solo se aceptan archivos .csv o .txt',
+    templateLoadError: 'No se pudieron cargar los templates',
+  },
 };
 
 export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }: BroadcastsViewProps) {
   const router = useRouter();
+  const [lang, setLang] = useState<Lang>('en');
+  const t = i18n[lang];
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -69,7 +150,6 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
   const [formName, setFormName] = useState('');
   const [formTemplate, setFormTemplate] = useState('');
   const [formLanguage, setFormLanguage] = useState('');
-  const [formComponents, setFormComponents] = useState('');
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvPreview, setCsvPreview] = useState<string[][]>([]);
   const [csvTotal, setCsvTotal] = useState(0);
@@ -99,7 +179,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
         setTemplates(data);
         setTemplatesLoaded(true);
       })
-      .catch(() => setError('No se pudieron cargar los templates'))
+      .catch(() => setError(t.templateLoadError))
       .finally(() => setLoadingTemplates(false));
   }, [showModal, templatesLoaded]);
 
@@ -115,8 +195,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
     setModalStep('config');
     setFormName('');
     setFormTemplate('');
-    setFormLanguage('es');
-    setFormComponents('');
+    setFormLanguage('');
     setCsvFile(null);
     setCsvPreview([]);
     setCsvTotal(0);
@@ -145,7 +224,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
 
   const handleCSVFile = (file: File) => {
     if (!file.name.endsWith('.csv') && !file.name.endsWith('.txt')) {
-      setError('Solo se aceptan archivos .csv o .txt');
+      setError(t.csvOnly);
       return;
     }
     setCsvFile(file);
@@ -169,9 +248,6 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
       formData.append('name', formName);
       formData.append('templateName', formTemplate);
       formData.append('language', formLanguage);
-      if (formComponents.trim()) {
-        formData.append('components', formComponents);
-      }
       if (csvFile) {
         formData.append('csv', csvFile);
       }
@@ -183,7 +259,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || 'Error al crear campaña');
+        setError(data.error || t.createError);
         setCreating(false);
         return;
       }
@@ -194,7 +270,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
       // Navigate to campaign detail
       router.push(`/broadcasts/${newCampaign.id}`);
     } catch {
-      setError('Error de red');
+      setError(t.networkError);
     } finally {
       setCreating(false);
     }
@@ -214,19 +290,27 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
         </div>
 
         {/* Stats Bar */}
-        <div className="flex items-center gap-6 px-4 py-3 border-b border-border bg-background">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted font-mono">campañas:</span>
-            <span className="text-sm font-mono text-foreground">{totalCampaigns}</span>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted font-mono">{t.campaigns}:</span>
+              <span className="text-sm font-mono text-foreground">{totalCampaigns}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted font-mono">{t.sent}:</span>
+              <span className="text-sm font-mono text-terminal-green">{totalSent.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted font-mono">{t.failed}:</span>
+              <span className="text-sm font-mono text-terminal-red">{totalFailed.toLocaleString()}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted font-mono">enviados:</span>
-            <span className="text-sm font-mono text-terminal-green">{totalSent.toLocaleString()}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted font-mono">fallidos:</span>
-            <span className="text-sm font-mono text-terminal-red">{totalFailed.toLocaleString()}</span>
-          </div>
+          <button
+            onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
+            className="text-xs font-mono text-muted hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
+          >
+            {lang === 'en' ? 'ES' : 'EN'}
+          </button>
         </div>
 
         {/* Actions Bar */}
@@ -236,13 +320,13 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
           >
             <Plus className="w-4 h-4" />
-            nueva campaña
+            {t.newCampaign}
           </button>
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input
               type="text"
-              placeholder="buscar..."
+              placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 pr-3 py-1.5 rounded-lg bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
@@ -256,7 +340,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
             <div className="flex flex-col items-center justify-center py-16 px-4">
               <Send className="w-10 h-10 text-muted mb-4" />
               <p className="text-sm text-muted font-mono mb-4">
-                {searchQuery ? 'Sin resultados' : 'No hay campañas aún'}
+                {searchQuery ? t.noResults : t.noCampaigns}
               </p>
               {!searchQuery && (
                 <button
@@ -264,7 +348,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
                 >
                   <Plus className="w-4 h-4" />
-                  crear primera campaña
+                  {t.createFirst}
                 </button>
               )}
             </div>
@@ -281,7 +365,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                       {campaign.name}
                     </span>
                     <span className={`text-xs font-mono ${statusColors[campaign.status] || 'text-muted'}`}>
-                      {statusLabels[campaign.status] || campaign.status}
+                      {({draft: t.draft, sending: t.sending, completed: t.completed, failed: t.failedStatus})[campaign.status] || campaign.status}
                     </span>
                     {campaign.total_recipients > 0 && (
                       <span className="text-xs font-mono text-muted">
@@ -319,7 +403,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   <div className="w-2.5 h-2.5 rounded-full bg-terminal-green" />
                 </div>
                 <span className="text-sm font-mono text-foreground ml-2">
-                  ./nueva-campaña_{modalStep === 'config' ? '1' : modalStep === 'csv' ? '2' : '3'}/3
+                  ./new-campaign_{modalStep === 'config' ? '1' : modalStep === 'csv' ? '2' : '3'}/3
                 </span>
               </div>
               <button onClick={resetModal} className="text-muted hover:text-foreground transition-colors">
@@ -340,27 +424,27 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
               {modalStep === 'config' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs text-muted font-mono mb-1.5">nombre de campaña</label>
+                    <label className="block text-xs text-muted font-mono mb-1.5">{t.campaignName}</label>
                     <input
                       type="text"
                       value={formName}
                       onChange={e => setFormName(e.target.value)}
-                      placeholder="Ej: Lanzamiento Edición 13"
+                      placeholder={t.campaignNamePlaceholder}
                       className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
                     />
                   </div>
 
                   {/* Template Selector */}
                   <div>
-                    <label className="block text-xs text-muted font-mono mb-1.5">template aprobado</label>
+                    <label className="block text-xs text-muted font-mono mb-1.5">{t.approvedTemplate}</label>
                     {loadingTemplates ? (
                       <div className="flex items-center gap-2 px-3 py-3 rounded-lg bg-background border border-border">
                         <Loader2 className="w-4 h-4 animate-spin text-muted" />
-                        <span className="text-xs font-mono text-muted">cargando templates de Meta...</span>
+                        <span className="text-xs font-mono text-muted">{t.loadingTemplates}</span>
                       </div>
                     ) : templates.length === 0 ? (
                       <div className="px-3 py-3 rounded-lg bg-background border border-border">
-                        <span className="text-xs font-mono text-muted">No se encontraron templates aprobados</span>
+                        <span className="text-xs font-mono text-muted">{t.noTemplates}</span>
                       </div>
                     ) : (
                       <div className="space-y-2 max-h-52 overflow-y-auto rounded-lg border border-border">
@@ -403,7 +487,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   {/* Selected template preview */}
                   {selectedTemplate && (
                     <div className="rounded-lg border border-border bg-background p-3">
-                      <span className="text-[10px] font-mono text-muted block mb-1">preview del template</span>
+                      <span className="text-[10px] font-mono text-muted block mb-1">{t.templatePreview}</span>
                       <p className="text-xs font-mono text-foreground whitespace-pre-wrap">
                         {getTemplatePreview(selectedTemplate)}
                       </p>
@@ -445,17 +529,17 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                         <FileText className="w-8 h-8 text-terminal-green mb-2" />
                         <span className="text-sm font-mono text-foreground">{csvFile.name}</span>
                         <span className="text-xs font-mono text-terminal-green mt-1">
-                          {csvTotal.toLocaleString()} contactos detectados
+                          {csvTotal.toLocaleString()} {t.contactsDetected}
                         </span>
                       </>
                     ) : (
                       <>
                         <Upload className="w-8 h-8 text-muted mb-2" />
                         <span className="text-sm font-mono text-muted">
-                          Arrastra un CSV o haz clic
+                          {t.dragCsv}
                         </span>
                         <span className="text-xs font-mono text-muted mt-1">
-                          Columnas: phone (obligatorio), name (opcional)
+                          {t.csvColumns}
                         </span>
                       </>
                     )}
@@ -465,7 +549,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   {csvPreview.length > 0 && (
                     <div className="rounded-lg border border-border overflow-hidden">
                       <div className="px-3 py-2 border-b border-border bg-background">
-                        <span className="text-xs font-mono text-muted">preview (primeras 5 filas)</span>
+                        <span className="text-xs font-mono text-muted">{t.csvPreview}</span>
                       </div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-xs font-mono">
@@ -492,19 +576,19 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                 <div className="space-y-4">
                   <div className="rounded-lg border border-border bg-background p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-muted">campaña</span>
+                      <span className="text-xs font-mono text-muted">{t.campaign}</span>
                       <span className="text-sm font-mono text-foreground">{formName}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-muted">template</span>
+                      <span className="text-xs font-mono text-muted">{t.template}</span>
                       <span className="text-sm font-mono text-foreground">{formTemplate}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-muted">idioma</span>
+                      <span className="text-xs font-mono text-muted">{t.language}</span>
                       <span className="text-sm font-mono text-foreground">{formLanguage}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-muted">destinatarios</span>
+                      <span className="text-xs font-mono text-muted">{t.recipients}</span>
                       <span className="text-sm font-mono text-terminal-green">{csvTotal.toLocaleString()}</span>
                     </div>
                   </div>
@@ -512,7 +596,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-terminal-yellow/10 border border-terminal-yellow/20">
                     <AlertTriangle className="w-4 h-4 text-terminal-yellow flex-shrink-0" />
                     <span className="text-xs text-terminal-yellow font-mono">
-                      Se creará la campaña con {csvTotal.toLocaleString()} destinatarios. Podrás enviar desde la vista de detalle.
+                      {t.confirmWarning.replace('{count}', csvTotal.toLocaleString())}
                     </span>
                   </div>
                 </div>
@@ -529,32 +613,26 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                 }}
                 className="px-3 py-1.5 rounded-lg bg-surface border border-border text-sm font-mono text-muted hover:text-foreground transition-colors"
               >
-                {modalStep === 'config' ? 'cancelar' : 'atrás'}
+                {modalStep === 'config' ? t.cancel : t.back}
               </button>
 
               {modalStep === 'config' && (
                 <button
                   onClick={() => {
                     if (!formName.trim()) {
-                      setError('Nombre de campaña es requerido');
+                      setError(t.nameRequired);
                       return;
                     }
                     if (!formTemplate) {
-                      setError('Selecciona un template');
+                      setError(t.selectTemplate);
                       return;
-                    }
-                    if (formComponents.trim()) {
-                      try { JSON.parse(formComponents); } catch {
-                        setError('JSON de components inválido');
-                        return;
-                      }
                     }
                     setError('');
                     setModalStep('csv');
                   }}
                   className="px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
                 >
-                  siguiente
+                  {t.next}
                 </button>
               )}
 
@@ -562,7 +640,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                 <button
                   onClick={() => {
                     if (!csvFile || csvTotal === 0) {
-                      setError('Sube un CSV con al menos 1 contacto válido');
+                      setError(t.csvRequired);
                       return;
                     }
                     setError('');
@@ -570,7 +648,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   }}
                   className="px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
                 >
-                  siguiente
+                  {t.next}
                 </button>
               )}
 
@@ -581,7 +659,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
-                  {creating ? 'creando...' : './crear-campaña'}
+                  {creating ? t.creating : t.createCampaign}
                 </button>
               )}
             </div>

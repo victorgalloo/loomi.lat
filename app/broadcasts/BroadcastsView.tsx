@@ -70,6 +70,8 @@ const i18n: Record<Lang, Record<string, string>> = {
     templateVariables: 'template variables',
     variablePlaceholder: 'Value for',
     noVariables: 'This template has no variables',
+    useNameFromCsv: 'Use name from CSV',
+    fixedValue: 'Fixed value',
     dragCsv: 'Drag a CSV or click',
     csvColumns: 'Columns: phone (required), name (optional)',
     contactsDetected: 'contacts detected',
@@ -79,6 +81,7 @@ const i18n: Record<Lang, Record<string, string>> = {
     language: 'language',
     recipients: 'recipients',
     variables: 'variables',
+    fromCsv: '(from CSV)',
     confirmWarning: 'Campaign will be created with {count} recipients. You can send from the detail view.',
     cancel: 'cancel',
     back: 'back',
@@ -88,7 +91,7 @@ const i18n: Record<Lang, Record<string, string>> = {
     nameRequired: 'Campaign name is required',
     selectTemplate: 'Select a template',
     csvRequired: 'Upload a CSV with at least 1 valid contact',
-    variablesRequired: 'Fill all template variables',
+    variablesRequired: 'Fill all template variables (or select "Use name from CSV")',
     networkError: 'Network error',
     createError: 'Error creating campaign',
     csvOnly: 'Only .csv or .txt files accepted',
@@ -116,6 +119,8 @@ const i18n: Record<Lang, Record<string, string>> = {
     templateVariables: 'variables del template',
     variablePlaceholder: 'Valor para',
     noVariables: 'Este template no tiene variables',
+    useNameFromCsv: 'Usar nombre del CSV',
+    fixedValue: 'Valor fijo',
     dragCsv: 'Arrastra un CSV o haz clic',
     csvColumns: 'Columnas: phone (obligatorio), name (opcional)',
     contactsDetected: 'contactos detectados',
@@ -125,6 +130,7 @@ const i18n: Record<Lang, Record<string, string>> = {
     language: 'idioma',
     recipients: 'destinatarios',
     variables: 'variables',
+    fromCsv: '(del CSV)',
     confirmWarning: 'Se creará la campaña con {count} destinatarios. Podrás enviar desde la vista de detalle.',
     cancel: 'cancelar',
     back: 'atrás',
@@ -134,7 +140,7 @@ const i18n: Record<Lang, Record<string, string>> = {
     nameRequired: 'Nombre de campaña es requerido',
     selectTemplate: 'Selecciona un template',
     csvRequired: 'Sube un CSV con al menos 1 contacto válido',
-    variablesRequired: 'Completa todas las variables del template',
+    variablesRequired: 'Completa todas las variables (o selecciona "Usar nombre del CSV")',
     networkError: 'Error de red',
     createError: 'Error al crear campaña',
     csvOnly: 'Solo se aceptan archivos .csv o .txt',
@@ -161,6 +167,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
   const [formTemplate, setFormTemplate] = useState('');
   const [formLanguage, setFormLanguage] = useState('');
   const [formVariables, setFormVariables] = useState<Record<string, string>>({});
+  const [formVariableSource, setFormVariableSource] = useState<Record<string, 'fixed' | 'csv_name'>>({});
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvPreview, setCsvPreview] = useState<string[][]>([]);
   const [csvTotal, setCsvTotal] = useState(0);
@@ -231,6 +238,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
   const templateVariables = selectedTemplate ? extractVariables(selectedTemplate) : [];
 
   // Build template_components for API
+  // Variables with source 'csv_name' will have text: '{{csv_name}}' as placeholder
   const buildTemplateComponents = () => {
     if (!selectedTemplate || templateVariables.length === 0) return undefined;
 
@@ -246,20 +254,28 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
     if (headerVars.length > 0) {
       components.push({
         type: 'header',
-        parameters: headerVars.map(v => ({
-          type: 'text',
-          text: formVariables[`${v.type}_${v.index}`] || '',
-        })),
+        parameters: headerVars.map(v => {
+          const key = `${v.type}_${v.index}`;
+          const source = formVariableSource[key] || 'fixed';
+          return {
+            type: 'text',
+            text: source === 'csv_name' ? '{{csv_name}}' : (formVariables[key] || ''),
+          };
+        }),
       });
     }
 
     if (bodyVars.length > 0) {
       components.push({
         type: 'body',
-        parameters: bodyVars.map(v => ({
-          type: 'text',
-          text: formVariables[`${v.type}_${v.index}`] || '',
-        })),
+        parameters: bodyVars.map(v => {
+          const key = `${v.type}_${v.index}`;
+          const source = formVariableSource[key] || 'fixed';
+          return {
+            type: 'text',
+            text: source === 'csv_name' ? '{{csv_name}}' : (formVariables[key] || ''),
+          };
+        }),
       });
     }
 
@@ -273,6 +289,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
     setFormTemplate('');
     setFormLanguage('');
     setFormVariables({});
+    setFormVariableSource({});
     setCsvFile(null);
     setCsvPreview([]);
     setCsvTotal(0);
@@ -584,21 +601,54 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                           <span className="text-xs font-mono text-muted">{t.noVariables}</span>
                         </div>
                       ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           {templateVariables.map((v) => {
                             const key = `${v.type}_${v.index}`;
+                            const source = formVariableSource[key] || 'fixed';
                             return (
-                              <div key={key} className="flex items-center gap-2">
-                                <span className="text-xs font-mono text-muted w-28 flex-shrink-0">
-                                  {v.placeholder}
-                                </span>
-                                <input
-                                  type="text"
-                                  value={formVariables[key] || ''}
-                                  onChange={e => setFormVariables(prev => ({ ...prev, [key]: e.target.value }))}
-                                  placeholder={`${t.variablePlaceholder} ${v.placeholder}`}
-                                  className="flex-1 px-3 py-1.5 rounded-lg bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
-                                />
+                              <div key={key} className="rounded-lg border border-border bg-background p-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-mono text-foreground">
+                                    {v.placeholder}
+                                  </span>
+                                  <div className="flex gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => setFormVariableSource(prev => ({ ...prev, [key]: 'fixed' }))}
+                                      className={`text-[10px] font-mono px-2 py-1 rounded transition-colors ${
+                                        source === 'fixed'
+                                          ? 'bg-foreground text-background'
+                                          : 'bg-surface-2 text-muted hover:text-foreground'
+                                      }`}
+                                    >
+                                      {t.fixedValue}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setFormVariableSource(prev => ({ ...prev, [key]: 'csv_name' }))}
+                                      className={`text-[10px] font-mono px-2 py-1 rounded transition-colors ${
+                                        source === 'csv_name'
+                                          ? 'bg-terminal-green text-background'
+                                          : 'bg-surface-2 text-muted hover:text-foreground'
+                                      }`}
+                                    >
+                                      {t.useNameFromCsv}
+                                    </button>
+                                  </div>
+                                </div>
+                                {source === 'fixed' ? (
+                                  <input
+                                    type="text"
+                                    value={formVariables[key] || ''}
+                                    onChange={e => setFormVariables(prev => ({ ...prev, [key]: e.target.value }))}
+                                    placeholder={`${t.variablePlaceholder} ${v.placeholder}`}
+                                    className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
+                                  />
+                                ) : (
+                                  <div className="px-3 py-1.5 rounded-lg bg-terminal-green/10 border border-terminal-green/20 text-sm font-mono text-terminal-green">
+                                    → recipient.name
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
@@ -709,10 +759,15 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                         <span className="text-xs font-mono text-muted block mb-2">{t.variables}</span>
                         {templateVariables.map(v => {
                           const key = `${v.type}_${v.index}`;
+                          const source = formVariableSource[key] || 'fixed';
                           return (
                             <div key={key} className="flex items-center justify-between text-xs mb-1">
                               <span className="font-mono text-muted">{v.placeholder}</span>
-                              <span className="font-mono text-foreground">{formVariables[key]}</span>
+                              {source === 'csv_name' ? (
+                                <span className="font-mono text-terminal-green">recipient.name {t.fromCsv}</span>
+                              ) : (
+                                <span className="font-mono text-foreground">{formVariables[key]}</span>
+                              )}
                             </div>
                           );
                         })}
@@ -754,9 +809,13 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                       setError(t.selectTemplate);
                       return;
                     }
-                    // Check all variables are filled
+                    // Check all variables are filled (either fixed value or csv_name)
                     const missingVars = templateVariables.some(v => {
                       const key = `${v.type}_${v.index}`;
+                      const source = formVariableSource[key] || 'fixed';
+                      // If using csv_name, it's valid
+                      if (source === 'csv_name') return false;
+                      // If fixed, must have a value
                       return !formVariables[key]?.trim();
                     });
                     if (missingVars) {

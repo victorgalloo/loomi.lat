@@ -71,7 +71,22 @@ export async function POST(
       return NextResponse.json({ message: 'No pending recipients' });
     }
 
-    const components = campaign.template_components as TemplateComponent[] | null;
+    const baseComponents = campaign.template_components as TemplateComponent[] | null;
+
+    // Helper to replace {{csv_name}} with recipient's name
+    const buildRecipientComponents = (recipient: { name: string | null }): TemplateComponent[] | undefined => {
+      if (!baseComponents) return undefined;
+
+      return baseComponents.map(comp => ({
+        ...comp,
+        parameters: comp.parameters.map(param => ({
+          ...param,
+          text: param.text === '{{csv_name}}'
+            ? (recipient.name || 'Cliente')
+            : param.text,
+        })),
+      }));
+    };
 
     // Process in batches
     const BATCH_SIZE = 50;
@@ -83,11 +98,14 @@ export async function POST(
 
       const results = await Promise.all(
         batch.map(async (recipient) => {
+          // Build components with recipient-specific data
+          const recipientComponents = buildRecipientComponents(recipient);
+
           const result = await sendTemplateMessage(
             recipient.phone,
             campaign.template_name,
             campaign.template_language || 'es',
-            components || undefined,
+            recipientComponents,
             credentials
           );
 

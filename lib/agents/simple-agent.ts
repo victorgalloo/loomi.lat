@@ -688,7 +688,7 @@ Sé directa, inteligente, mensajes cortos.`
 
   try {
     const result = await generateText({
-      model: openai(agentConfig?.model || 'gpt-4o'),
+      model: openai(agentConfig?.model || 'gpt-5.2-instant'),
       system: systemWithContext,
       messages: history,
       tools,

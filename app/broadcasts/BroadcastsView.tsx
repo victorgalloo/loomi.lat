@@ -410,18 +410,6 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     </div>
                   )}
 
-                  <div>
-                    <label className="block text-xs text-muted font-mono mb-1.5">
-                      components (JSON, opcional)
-                    </label>
-                    <textarea
-                      value={formComponents}
-                      onChange={e => setFormComponents(e.target.value)}
-                      placeholder='[{"type":"header","parameters":[{"type":"image","image":{"link":"https://..."}}]}]'
-                      rows={3}
-                      className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30 resize-none"
-                    />
-                  </div>
                 </div>
               )}
 

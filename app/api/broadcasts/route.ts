@@ -33,18 +33,44 @@ export async function GET() {
 }
 
 function parseCSV(text: string): Array<{ phone: string; name?: string }> {
-  const lines = text.trim().split('\n');
+  // 1. Join lines that are part of multiline quoted fields.
+  //    e.g. "+573145888176\n"    Sara  →  "+573145888176"    Sara
+  const rawLines = text.split('\n');
+  const lines: string[] = [];
+  let pending = '';
+
+  for (const raw of rawLines) {
+    if (pending) {
+      pending += raw;
+      const quoteCount = (pending.match(/"/g) || []).length;
+      if (quoteCount % 2 === 0) {
+        // All quotes closed — line is complete
+        lines.push(pending);
+        pending = '';
+      }
+    } else {
+      const quoteCount = (raw.match(/"/g) || []).length;
+      if (quoteCount % 2 === 1) {
+        // Unclosed quote — start accumulating
+        pending = raw;
+      } else {
+        lines.push(raw);
+      }
+    }
+  }
+  if (pending) lines.push(pending);
+
   if (lines.length === 0) return [];
 
-  // Detect header
+  // 2. Detect header
   const firstLine = lines[0].toLowerCase();
   const hasHeader = firstLine.includes('phone') || firstLine.includes('nombre') || firstLine.includes('name') || firstLine.includes('telefono');
   const startIdx = hasHeader ? 1 : 0;
 
-  // Detect separator
-  const separator = lines[0].includes(';') ? ';' : ',';
+  // 3. Detect separator (tab, semicolon, or comma)
+  const separator = lines[0].includes('\t') ? '\t' : lines[0].includes(';') ? ';' : ',';
 
-  // Find column indices from header
+  // 4. Find column indices from header
   let phoneIdx = 0;
   let nameIdx = -1;
 
@@ -67,7 +93,7 @@ function parseCSV(text: string): Array<{ phone: string; name?: string }> {
     const phone = rawPhone.replace(/[^\d+]/g, '');
     if (!phone || phone.replace(/\D/g, '').length < 8) continue;
 
-    const name = nameIdx >= 0 ? cols[nameIdx] || undefined : undefined;
+    const name = nameIdx >= 0 ? (cols[nameIdx]?.trim() || undefined) : undefined;
     recipients.push({ phone, name });
   }
 

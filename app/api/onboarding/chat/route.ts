@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     // Generate response
     const result = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-5.2-instant'),
       system: ONBOARDING_SYSTEM_PROMPT,
       messages,
       maxOutputTokens: 500,
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
 
         // Generate the actual system prompt
         const promptResult = await generateText({
-          model: openai('gpt-4o-mini'),
+          model: openai('gpt-5.2-instant'),
           system: PROMPT_GENERATOR_SYSTEM,
           messages: [{
             role: 'user',

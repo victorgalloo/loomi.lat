@@ -401,7 +401,7 @@ export async function simpleAgent(
     sellerInstructions = strategyResult.instructions;
     reasoning = reasoningResult;
 
-    console.log('=== ANÁLISIS (gpt-4o-mini) ===');
+    console.log('=== ANÁLISIS (gpt-5.2-instant) ===');
     console.log(`Fase: ${sellerAnalysis.fase_actual}`);
     console.log(`Siguiente paso: ${sellerAnalysis.siguiente_paso}`);
     if (sellerAnalysis.hay_objecion) {

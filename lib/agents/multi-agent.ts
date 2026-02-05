@@ -1,8 +1,8 @@
 /**
  * Multi-Agent System - Venta de Loomi
  *
- * Agente 1 (Análisis - gpt-4o-mini): Analiza contexto completo, decide estrategia
- * Agente 2 (Chat - gpt-4o): Ejecuta la estrategia con personalidad de Lu
+ * Agente 1 (Análisis - gpt-5.2-instant): Analiza contexto completo, decide estrategia
+ * Agente 2 (Chat - gpt-5.2-instant): Ejecuta la estrategia con personalidad de Lu
  *
  * Optimizado para velocidad: ~2-4s total vs ~15-25s con modelos reasoning
  */
@@ -81,7 +81,7 @@ export async function analyzeMessage(
   const clientCompany = leadContext?.company || 'desconocido';
 
   const result = await generateObject({
-    model: openai('gpt-4o-mini'),
+    model: openai('gpt-5.2-instant'),
     schema: AnalysisSchema,
     prompt: `Eres un analista experto en ventas de SaaS B2B. Analiza esta conversación y da instrucciones PRECISAS a Lu (la vendedora de Loomi).
 

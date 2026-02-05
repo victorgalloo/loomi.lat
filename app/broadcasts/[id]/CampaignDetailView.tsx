@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Send, RefreshCw, AlertTriangle } from 'lucide-react';
+import BroadcastConversations from './BroadcastConversations';
 
 interface Campaign {
   id: string;
@@ -365,6 +366,13 @@ export default function CampaignDetailView({
           </div>
         )}
       </div>
+
+      <BroadcastConversations
+        campaignId={campaign.id}
+        campaignStartedAt={campaign.started_at}
+        lang={lang}
+        totalSent={sentCount}
+      />
 
       {/* Confirm Modal */}
       {showConfirm && (

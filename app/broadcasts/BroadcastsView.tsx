@@ -1,8 +1,21 @@
 'use client';
 
-import { useState, useRef, DragEvent, useCallback } from 'react';
+import { useState, useRef, useEffect, DragEvent, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Send, Upload, ChevronRight, X, FileText, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Send, Upload, ChevronRight, X, FileText, AlertTriangle, Loader2 } from 'lucide-react';
+
+interface MetaTemplate {
+  name: string;
+  language: string;
+  category: string;
+  components: Array<{
+    type: string;
+    text?: string;
+    format?: string;
+    buttons?: Array<{ type: string; text: string }>;
+    example?: { body_text?: string[][] };
+  }>;
+}
 
 interface Campaign {
   id: string;
@@ -47,10 +60,15 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
   const [showModal, setShowModal] = useState(false);
   const [modalStep, setModalStep] = useState<ModalStep>('config');
 
+  // Templates from Meta
+  const [templates, setTemplates] = useState<MetaTemplate[]>([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [templatesLoaded, setTemplatesLoaded] = useState(false);
+
   // Form state
   const [formName, setFormName] = useState('');
   const [formTemplate, setFormTemplate] = useState('');
-  const [formLanguage, setFormLanguage] = useState('es');
+  const [formLanguage, setFormLanguage] = useState('');
   const [formComponents, setFormComponents] = useState('');
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvPreview, setCsvPreview] = useState<string[][]>([]);
@@ -70,6 +88,27 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.template_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Fetch templates when modal opens
+  useEffect(() => {
+    if (!showModal || templatesLoaded) return;
+    setLoadingTemplates(true);
+    fetch('/api/broadcasts/templates')
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then((data: MetaTemplate[]) => {
+        setTemplates(data);
+        setTemplatesLoaded(true);
+      })
+      .catch(() => setError('No se pudieron cargar los templates'))
+      .finally(() => setLoadingTemplates(false));
+  }, [showModal, templatesLoaded]);
+
+  const selectedTemplate = templates.find(t => t.name === formTemplate && t.language === formLanguage);
+
+  const getTemplatePreview = (t: MetaTemplate) => {
+    const body = t.components.find(c => c.type === 'BODY');
+    return body?.text || '';
+  };
 
   const resetModal = () => {
     setShowModal(false);
@@ -310,28 +349,67 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                       className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
                     />
                   </div>
+
+                  {/* Template Selector */}
                   <div>
-                    <label className="block text-xs text-muted font-mono mb-1.5">nombre del template (Meta)</label>
-                    <input
-                      type="text"
-                      value={formTemplate}
-                      onChange={e => setFormTemplate(e.target.value)}
-                      placeholder="Ej: growth_ed13"
-                      className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
-                    />
+                    <label className="block text-xs text-muted font-mono mb-1.5">template aprobado</label>
+                    {loadingTemplates ? (
+                      <div className="flex items-center gap-2 px-3 py-3 rounded-lg bg-background border border-border">
+                        <Loader2 className="w-4 h-4 animate-spin text-muted" />
+                        <span className="text-xs font-mono text-muted">cargando templates de Meta...</span>
+                      </div>
+                    ) : templates.length === 0 ? (
+                      <div className="px-3 py-3 rounded-lg bg-background border border-border">
+                        <span className="text-xs font-mono text-muted">No se encontraron templates aprobados</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-52 overflow-y-auto rounded-lg border border-border">
+                        {templates.map((t, i) => {
+                          const isSelected = formTemplate === t.name && formLanguage === t.language;
+                          const preview = getTemplatePreview(t);
+                          return (
+                            <button
+                              key={`${t.name}-${t.language}-${i}`}
+                              type="button"
+                              onClick={() => {
+                                setFormTemplate(t.name);
+                                setFormLanguage(t.language);
+                              }}
+                              className={`w-full text-left px-3 py-2.5 transition-colors ${
+                                isSelected
+                                  ? 'bg-foreground/10 border-l-2 border-l-terminal-green'
+                                  : 'hover:bg-surface-2 border-l-2 border-l-transparent'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className="text-sm font-mono text-foreground">{t.name}</span>
+                                <span className="text-[10px] font-mono text-muted px-1.5 py-0.5 rounded bg-background border border-border">
+                                  {t.language}
+                                </span>
+                                <span className="text-[10px] font-mono text-muted">
+                                  {t.category.toLowerCase()}
+                                </span>
+                              </div>
+                              {preview && (
+                                <p className="text-xs text-muted truncate">{preview}</p>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label className="block text-xs text-muted font-mono mb-1.5">idioma</label>
-                    <select
-                      value={formLanguage}
-                      onChange={e => setFormLanguage(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm font-mono text-foreground focus:outline-none focus:border-foreground/30"
-                    >
-                      <option value="es">Español (es)</option>
-                      <option value="en">English (en)</option>
-                      <option value="pt_BR">Portugués (pt_BR)</option>
-                    </select>
-                  </div>
+
+                  {/* Selected template preview */}
+                  {selectedTemplate && (
+                    <div className="rounded-lg border border-border bg-background p-3">
+                      <span className="text-[10px] font-mono text-muted block mb-1">preview del template</span>
+                      <p className="text-xs font-mono text-foreground whitespace-pre-wrap">
+                        {getTemplatePreview(selectedTemplate)}
+                      </p>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-xs text-muted font-mono mb-1.5">
                       components (JSON, opcional)
@@ -469,8 +547,12 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
               {modalStep === 'config' && (
                 <button
                   onClick={() => {
-                    if (!formName.trim() || !formTemplate.trim()) {
-                      setError('Nombre y template son requeridos');
+                    if (!formName.trim()) {
+                      setError('Nombre de campaña es requerido');
+                      return;
+                    }
+                    if (!formTemplate) {
+                      setError('Selecciona un template');
                       return;
                     }
                     if (formComponents.trim()) {

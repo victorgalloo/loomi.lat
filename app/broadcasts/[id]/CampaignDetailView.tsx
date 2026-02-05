@@ -35,16 +35,12 @@ interface CampaignDetailViewProps {
   tenantId: string;
 }
 
+type Lang = 'en' | 'es';
+
 const recipientStatusColors: Record<string, string> = {
   pending: 'text-muted',
   sent: 'text-terminal-green',
   failed: 'text-terminal-red',
-};
-
-const recipientStatusLabels: Record<string, string> = {
-  pending: 'pendiente',
-  sent: 'enviado',
-  failed: 'fallido',
 };
 
 const campaignStatusColors: Record<string, string> = {
@@ -54,11 +50,61 @@ const campaignStatusColors: Record<string, string> = {
   failed: 'text-terminal-red',
 };
 
-const campaignStatusLabels: Record<string, string> = {
-  draft: 'borrador',
-  sending: 'enviando...',
-  completed: 'completado',
-  failed: 'fallido',
+const i18n: Record<Lang, Record<string, string>> = {
+  en: {
+    total: 'total',
+    sent: 'sent',
+    failed: 'failed',
+    pending: 'pending',
+    sending: 'sending...',
+    sendingProgress: 'Sending... {pct}% completed',
+    phone: 'phone',
+    name: 'name',
+    status: 'status',
+    sentAt: 'sent at',
+    error: 'error',
+    noRecipients: 'No recipients',
+    sendBroadcast: './send-broadcast',
+    sendError: 'Error sending',
+    networkError: 'Network error',
+    confirmTitle: './confirm-send_',
+    confirmWarning: 'This action will send {count} WhatsApp messages',
+    cancel: 'cancel',
+    confirmSend: 'confirm send',
+    draft: 'draft',
+    completed: 'completed',
+    failedStatus: 'failed',
+    recipientPending: 'pending',
+    recipientSent: 'sent',
+    recipientFailed: 'failed',
+  },
+  es: {
+    total: 'total',
+    sent: 'enviados',
+    failed: 'fallidos',
+    pending: 'pendientes',
+    sending: 'enviando...',
+    sendingProgress: 'Enviando... {pct}% completado',
+    phone: 'teléfono',
+    name: 'nombre',
+    status: 'status',
+    sentAt: 'enviado',
+    error: 'error',
+    noRecipients: 'Sin destinatarios',
+    sendBroadcast: './enviar-broadcast',
+    sendError: 'Error al enviar',
+    networkError: 'Error de red',
+    confirmTitle: './confirmar-envío_',
+    confirmWarning: 'Esta acción enviará {count} mensajes de WhatsApp',
+    cancel: 'cancelar',
+    confirmSend: 'confirmar envío',
+    draft: 'borrador',
+    completed: 'completado',
+    failedStatus: 'fallido',
+    recipientPending: 'pendiente',
+    recipientSent: 'enviado',
+    recipientFailed: 'fallido',
+  },
 };
 
 export default function CampaignDetailView({
@@ -67,6 +113,8 @@ export default function CampaignDetailView({
   tenantId,
 }: CampaignDetailViewProps) {
   const router = useRouter();
+  const [lang, setLang] = useState<Lang>('en');
+  const t = i18n[lang];
   const [campaign, setCampaign] = useState(initialCampaign);
   const [recipients, setRecipients] = useState(initialRecipients);
   const [sending, setSending] = useState(false);
@@ -78,6 +126,9 @@ export default function CampaignDetailView({
   const failedCount = recipients.filter(r => r.status === 'failed').length;
   const totalCount = recipients.length;
   const progress = totalCount > 0 ? ((sentCount + failedCount) / totalCount) * 100 : 0;
+
+  const campaignStatusLabel = ({draft: t.draft, sending: t.sending, completed: t.completed, failed: t.failedStatus})[campaign.status] || campaign.status;
+  const getRecipientStatus = (status: string) => ({pending: t.recipientPending, sent: t.recipientSent, failed: t.recipientFailed})[status] || status;
 
   const refreshData = useCallback(async () => {
     try {
@@ -126,7 +177,7 @@ export default function CampaignDetailView({
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || 'Error al enviar');
+        setError(data.error || t.sendError);
         setSending(false);
         return;
       }
@@ -134,7 +185,7 @@ export default function CampaignDetailView({
       // Refresh data after completion
       await refreshData();
     } catch {
-      setError('Error de red');
+      setError(t.networkError);
     } finally {
       setSending(false);
     }
@@ -146,13 +197,21 @@ export default function CampaignDetailView({
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="rounded-xl border border-border bg-surface overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-          <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-terminal-red" />
-            <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
-            <div className="w-3 h-3 rounded-full bg-terminal-green" />
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-terminal-red" />
+              <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
+              <div className="w-3 h-3 rounded-full bg-terminal-green" />
+            </div>
+            <span className="text-sm font-mono text-foreground ml-2">./campaign-detail_</span>
           </div>
-          <span className="text-sm font-mono text-foreground ml-2">./campaign-detail_</span>
+          <button
+            onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
+            className="text-xs font-mono text-muted hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
+          >
+            {lang === 'en' ? 'ES' : 'EN'}
+          </button>
         </div>
 
         {/* Back + Title */}
@@ -174,7 +233,7 @@ export default function CampaignDetailView({
                   lang: {campaign.template_language}
                 </span>
                 <span className={`text-xs font-mono ${campaignStatusColors[campaign.status] || 'text-muted'}`}>
-                  {campaignStatusLabels[campaign.status] || campaign.status}
+                  {campaignStatusLabel}
                 </span>
               </div>
             </div>
@@ -194,7 +253,7 @@ export default function CampaignDetailView({
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 <Send className="w-4 h-4" />
-                {sending ? 'enviando...' : './enviar-broadcast'}
+                {sending ? t.sending : t.sendBroadcast}
               </button>
             )}
           </div>
@@ -231,22 +290,22 @@ export default function CampaignDetailView({
           {/* Stats */}
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted font-mono">total:</span>
+              <span className="text-xs text-muted font-mono">{t.total}:</span>
               <span className="text-sm font-mono text-foreground">{totalCount.toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-terminal-green" />
-              <span className="text-xs text-muted font-mono">enviados:</span>
+              <span className="text-xs text-muted font-mono">{t.sent}:</span>
               <span className="text-sm font-mono text-terminal-green">{sentCount.toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-terminal-red" />
-              <span className="text-xs text-muted font-mono">fallidos:</span>
+              <span className="text-xs text-muted font-mono">{t.failed}:</span>
               <span className="text-sm font-mono text-terminal-red">{failedCount.toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-muted" />
-              <span className="text-xs text-muted font-mono">pendientes:</span>
+              <span className="text-xs text-muted font-mono">{t.pending}:</span>
               <span className="text-sm font-mono text-muted">{pendingCount.toLocaleString()}</span>
             </div>
           </div>
@@ -255,7 +314,7 @@ export default function CampaignDetailView({
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 border-2 border-terminal-yellow border-t-transparent rounded-full animate-spin" />
               <span className="text-xs font-mono text-terminal-yellow">
-                Enviando... {Math.round(progress)}% completado
+                {t.sendingProgress.replace('{pct}', String(Math.round(progress)))}
               </span>
             </div>
           )}
@@ -266,11 +325,11 @@ export default function CampaignDetailView({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-background">
-                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">teléfono</th>
-                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">nombre</th>
-                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">status</th>
-                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">enviado</th>
-                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">error</th>
+                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.phone}</th>
+                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.name}</th>
+                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.status}</th>
+                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.sentAt}</th>
+                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.error}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -280,12 +339,12 @@ export default function CampaignDetailView({
                   <td className="px-4 py-2 font-mono text-muted">{r.name || '-'}</td>
                   <td className="px-4 py-2">
                     <span className={`font-mono text-xs ${recipientStatusColors[r.status] || 'text-muted'}`}>
-                      {recipientStatusLabels[r.status] || r.status}
+                      {getRecipientStatus(r.status)}
                     </span>
                   </td>
                   <td className="px-4 py-2 font-mono text-xs text-muted">
                     {r.sent_at
-                      ? new Date(r.sent_at).toLocaleTimeString('es-MX', {
+                      ? new Date(r.sent_at).toLocaleTimeString(lang === 'es' ? 'es-MX' : 'en-US', {
                           hour: '2-digit',
                           minute: '2-digit',
                         })
@@ -302,7 +361,7 @@ export default function CampaignDetailView({
 
         {recipients.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12">
-            <span className="text-sm text-muted font-mono">Sin destinatarios</span>
+            <span className="text-sm text-muted font-mono">{t.noRecipients}</span>
           </div>
         )}
       </div>
@@ -318,13 +377,13 @@ export default function CampaignDetailView({
                 <div className="w-2.5 h-2.5 rounded-full bg-terminal-yellow" />
                 <div className="w-2.5 h-2.5 rounded-full bg-terminal-green" />
               </div>
-              <span className="text-sm font-mono text-foreground ml-2">./confirmar-envío_</span>
+              <span className="text-sm font-mono text-foreground ml-2">{t.confirmTitle}</span>
             </div>
             <div className="p-4 space-y-4">
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-terminal-yellow/10 border border-terminal-yellow/20">
                 <AlertTriangle className="w-4 h-4 text-terminal-yellow flex-shrink-0" />
                 <span className="text-xs text-terminal-yellow font-mono">
-                  Esta acción enviará {pendingCount.toLocaleString()} mensajes de WhatsApp
+                  {t.confirmWarning.replace('{count}', pendingCount.toLocaleString())}
                 </span>
               </div>
               <div className="flex items-center gap-2 justify-end">
@@ -332,7 +391,7 @@ export default function CampaignDetailView({
                   onClick={() => setShowConfirm(false)}
                   className="px-3 py-1.5 rounded-lg bg-surface border border-border text-sm font-mono text-muted hover:text-foreground transition-colors"
                 >
-                  cancelar
+                  {t.cancel}
                 </button>
                 <button
                   onClick={handleSend}
@@ -340,7 +399,7 @@ export default function CampaignDetailView({
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
-                  {sending ? 'enviando...' : 'confirmar envío'}
+                  {sending ? t.sending : t.confirmSend}
                 </button>
               </div>
             </div>

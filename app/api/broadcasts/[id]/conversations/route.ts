@@ -2,6 +2,35 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getTenantIdForUser } from '@/lib/supabase/user-role';
 
+// Generate all plausible phone formats for matching.
+// Handles: with/without +, Mexican numbers with/without the "1" after "52".
+function phoneVariants(digits: string): string[] {
+  const variants = new Set<string>();
+  variants.add(digits);
+  variants.add(`+${digits}`);
+
+  if (digits.startsWith('521') && digits.length === 13) {
+    const without1 = '52' + digits.slice(3);
+    variants.add(without1);
+    variants.add(`+${without1}`);
+  } else if (digits.startsWith('52') && digits.length === 12) {
+    const with1 = '521' + digits.slice(2);
+    variants.add(with1);
+    variants.add(`+${with1}`);
+  }
+
+  return [...variants];
+}
+
+// Advanced stages that indicate a hot lead
+const HOT_STAGES = new Set([
+  'calificado', 'qualified',
+  'propuesta', 'proposal',
+  'negociacion', 'negotiation',
+  'ganado', 'won',
+  'demo_scheduled',
+]);
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -46,36 +75,59 @@ export async function GET(
       return NextResponse.json({ conversations: [] });
     }
 
-    // Normalize phones: strip everything except digits for matching
-    const normalize = (p: string) => p.replace(/\D/g, '');
-    const phonesDigitsOnly = [...new Set(recipients.map(r => normalize(r.phone)))];
-    // Also keep original formats for exact match (covers both +prefix and no-prefix)
+    // Build all phone format variants for matching
     const phonesAllFormats = [...new Set(
-      phonesDigitsOnly.flatMap(p => [p, `+${p}`])
+      recipients.flatMap(r => phoneVariants(r.phone.replace(/\D/g, '')))
     )];
 
-    // 3. Get conversations from leads matching those phones, started after campaign
+    // 3. Get ALL conversations from leads matching those phones.
+    // Include lead qualification fields for categorization.
     const { data: conversationsData } = await supabase
       .from('conversations')
       .select(`
         id,
         started_at,
-        leads!inner(id, name, phone, stage)
+        bot_paused,
+        leads!inner(id, name, phone, stage, priority, is_qualified)
       `)
       .eq('leads.tenant_id', tenantId)
-      .in('leads.phone', phonesAllFormats)
-      .gte('started_at', campaign.started_at)
-      .order('started_at', { ascending: false });
+      .in('leads.phone', phonesAllFormats);
 
     if (!conversationsData || conversationsData.length === 0) {
       return NextResponse.json({ conversations: [] });
     }
 
-    // 4. Enrich with message count + last message
-    const conversations = await Promise.all(
-      conversationsData.map(async (conv) => {
-        const lead = conv.leads as unknown as { id: string; name: string; phone: string; stage: string };
+    // 4. Get active handoffs for these conversations
+    const convIds = conversationsData.map(c => c.id);
+    const { data: handoffs } = await supabase
+      .from('handoffs')
+      .select('conversation_id, reason, priority')
+      .in('conversation_id', convIds)
+      .is('resolved_at', null);
 
+    const handoffMap = new Map(
+      (handoffs || []).map(h => [h.conversation_id, h])
+    );
+
+    // 5. For each conversation, check post-broadcast messages + categorize
+    const conversations = (await Promise.all(
+      conversationsData.map(async (conv) => {
+        const lead = conv.leads as unknown as {
+          id: string; name: string; phone: string;
+          stage: string; priority: string | null; is_qualified: boolean | null;
+        };
+
+        // Check for user messages after broadcast
+        const { count: postBroadcastCount } = await supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('conversation_id', conv.id)
+          .eq('role', 'user')
+          .gte('created_at', campaign.started_at);
+
+        if (!postBroadcastCount || postBroadcastCount === 0) return null;
+
+        // Get total message count and last message
         const { data: messages, count } = await supabase
           .from('messages')
           .select('content, role, created_at', { count: 'exact' })
@@ -84,6 +136,24 @@ export async function GET(
           .limit(1);
 
         const lastMessage = messages?.[0];
+        const handoff = handoffMap.get(conv.id);
+
+        // Categorize: handoff > hot > normal
+        let category: 'handoff' | 'hot' | 'normal' = 'normal';
+        let handoffReason: string | null = null;
+        let handoffPriority: string | null = null;
+
+        if (handoff || conv.bot_paused) {
+          category = 'handoff';
+          handoffReason = handoff?.reason || null;
+          handoffPriority = handoff?.priority || null;
+        } else if (
+          lead.priority === 'high' ||
+          lead.is_qualified ||
+          HOT_STAGES.has((lead.stage || '').toLowerCase())
+        ) {
+          category = 'hot';
+        }
 
         return {
           id: conv.id,
@@ -95,9 +165,12 @@ export async function GET(
           lastMessageRole: lastMessage?.role || 'user',
           startedAt: conv.started_at,
           lastMessageAt: lastMessage?.created_at || conv.started_at,
+          category,
+          handoffReason,
+          handoffPriority,
         };
       })
-    );
+    )).filter(Boolean);
 
     return NextResponse.json({ conversations });
   } catch (error) {

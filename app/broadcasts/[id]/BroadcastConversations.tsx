@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MessageSquare, ArrowUpRight } from 'lucide-react';
+import { MessageSquare, ArrowUpRight, Flame, PhoneForwarded } from 'lucide-react';
 import Link from 'next/link';
+
+type Category = 'handoff' | 'hot' | 'normal';
 
 interface Conversation {
   id: string;
@@ -14,6 +16,9 @@ interface Conversation {
   lastMessageRole: string;
   startedAt: string;
   lastMessageAt: string;
+  category: Category;
+  handoffReason: string | null;
+  handoffPriority: string | null;
 }
 
 interface BroadcastConversationsProps {
@@ -34,6 +39,11 @@ const i18n = {
     noConversationsHint: 'Conversations will appear here when recipients reply',
     messages: 'msgs',
     viewInbox: 'open inbox',
+    handoff: 'handoff',
+    hotLead: 'hot lead',
+    sectionHandoff: 'Needs attention',
+    sectionHot: 'Hot leads',
+    sectionNormal: 'Conversations',
   },
   es: {
     title: './conversaciones_',
@@ -45,16 +55,41 @@ const i18n = {
     noConversationsHint: 'Las conversaciones aparecerán cuando los destinatarios respondan',
     messages: 'msgs',
     viewInbox: 'abrir inbox',
+    handoff: 'handoff',
+    hotLead: 'lead caliente',
+    sectionHandoff: 'Requieren atención',
+    sectionHot: 'Leads calientes',
+    sectionNormal: 'Conversaciones',
   },
+};
+
+const handoffReasonLabels: Record<string, Record<'en' | 'es', string>> = {
+  user_requested: { en: 'requested human', es: 'pidió humano' },
+  user_frustrated: { en: 'frustrated', es: 'frustrado' },
+  enterprise_lead: { en: 'enterprise', es: 'enterprise' },
+  complex_question: { en: 'complex question', es: 'pregunta compleja' },
+  negative_sentiment: { en: 'negative', es: 'negativo' },
+  competitor_mention: { en: 'competitor', es: 'competidor' },
+  payment_issue: { en: 'payment issue', es: 'problema de pago' },
 };
 
 const stageColors: Record<string, string> = {
   initial: 'text-muted',
+  nuevo: 'text-muted',
+  contactado: 'text-terminal-yellow',
   contacted: 'text-terminal-yellow',
+  calificado: 'text-terminal-green',
   qualified: 'text-terminal-green',
+  propuesta: 'text-blue-400',
+  proposal: 'text-blue-400',
+  negociacion: 'text-orange-400',
+  negotiation: 'text-orange-400',
+  ganado: 'text-terminal-green',
+  won: 'text-terminal-green',
+  perdido: 'text-terminal-red',
+  lost: 'text-terminal-red',
   demo_scheduled: 'text-terminal-green',
   closed: 'text-terminal-green',
-  lost: 'text-terminal-red',
 };
 
 function timeAgo(dateStr: string, lang: 'en' | 'es'): string {
@@ -69,6 +104,92 @@ function timeAgo(dateStr: string, lang: 'en' | 'es'): string {
   if (diffMins < 60) return `${diffMins}m`;
   if (diffHours < 24) return `${diffHours}h`;
   return `${diffDays}d`;
+}
+
+function ConversationRow({ conv, lang, t }: { conv: Conversation; lang: 'en' | 'es'; t: typeof i18n.en }) {
+  return (
+    <Link
+      href={`/dashboard/conversations?id=${conv.id}`}
+      className="flex items-center gap-3 px-4 py-3 hover:bg-surface-2 transition-colors group"
+    >
+      {/* Avatar with category indicator */}
+      <div className="relative flex-shrink-0">
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${
+          conv.category === 'handoff'
+            ? 'bg-terminal-red/10 border-terminal-red/30'
+            : conv.category === 'hot'
+            ? 'bg-orange-500/10 border-orange-500/30'
+            : 'bg-background border-border'
+        }`}>
+          <span className={`text-xs font-mono ${
+            conv.category === 'handoff'
+              ? 'text-terminal-red'
+              : conv.category === 'hot'
+              ? 'text-orange-400'
+              : 'text-foreground'
+          }`}>
+            {conv.leadName.charAt(0).toUpperCase()}
+          </span>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-mono text-foreground truncate">
+            {conv.leadName}
+          </span>
+          <span className={`text-[10px] font-mono ${stageColors[conv.leadStage.toLowerCase()] || 'text-muted'}`}>
+            {conv.leadStage}
+          </span>
+          {conv.category === 'handoff' && (
+            <span className="text-[10px] font-mono text-terminal-red bg-terminal-red/10 px-1.5 py-0.5 rounded">
+              {conv.handoffReason
+                ? handoffReasonLabels[conv.handoffReason]?.[lang] || conv.handoffReason
+                : t.handoff}
+            </span>
+          )}
+          {conv.category === 'hot' && (
+            <span className="text-[10px] font-mono text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded">
+              {t.hotLead}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-xs font-mono text-muted truncate max-w-[300px]">
+            {conv.lastMessageRole === 'assistant' ? '← ' : '→ '}
+            {conv.lastMessage}
+          </span>
+        </div>
+      </div>
+
+      {/* Meta */}
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <span className="text-[10px] font-mono text-muted">
+          {conv.messageCount} {t.messages}
+        </span>
+        <span className="text-[10px] font-mono text-muted">
+          {timeAgo(conv.lastMessageAt, lang)}
+        </span>
+        <ArrowUpRight className="w-3 h-3 text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+    </Link>
+  );
+}
+
+function SectionHeader({ icon, label, count, color }: {
+  icon: React.ReactNode;
+  label: string;
+  count: number;
+  color: string;
+}) {
+  return (
+    <div className={`flex items-center gap-2 px-4 py-2 border-b border-border bg-background`}>
+      <span className={color}>{icon}</span>
+      <span className={`text-xs font-mono ${color}`}>{label}</span>
+      <span className="text-[10px] font-mono text-muted">({count})</span>
+    </div>
+  );
 }
 
 export default function BroadcastConversations({
@@ -106,6 +227,9 @@ export default function BroadcastConversations({
 
   if (!campaignStartedAt) return null;
 
+  const handoffs = conversations.filter(c => c.category === 'handoff');
+  const hot = conversations.filter(c => c.category === 'hot');
+  const normal = conversations.filter(c => c.category === 'normal');
   const responseRate = totalSent > 0 ? ((conversations.length / totalSent) * 100).toFixed(1) : '0';
 
   return (
@@ -144,50 +268,59 @@ export default function BroadcastConversations({
           <span className="text-xs text-muted/60 font-mono">{t.noConversationsHint}</span>
         </div>
       ) : (
-        <div className="divide-y divide-border/50">
-          {conversations.map((conv) => (
-            <Link
-              key={conv.id}
-              href={`/dashboard/conversations?id=${conv.id}`}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-surface-2 transition-colors group"
-            >
-              {/* Avatar */}
-              <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-mono text-foreground">
-                  {conv.leadName.charAt(0).toUpperCase()}
-                </span>
+        <div>
+          {/* Handoffs section */}
+          {handoffs.length > 0 && (
+            <>
+              <SectionHeader
+                icon={<PhoneForwarded className="w-3 h-3" />}
+                label={t.sectionHandoff}
+                count={handoffs.length}
+                color="text-terminal-red"
+              />
+              <div className="divide-y divide-border/50">
+                {handoffs.map(conv => (
+                  <ConversationRow key={conv.id} conv={conv} lang={lang} t={t} />
+                ))}
               </div>
+            </>
+          )}
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-mono text-foreground truncate">
-                    {conv.leadName}
-                  </span>
-                  <span className={`text-[10px] font-mono ${stageColors[conv.leadStage] || 'text-muted'}`}>
-                    {conv.leadStage}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs font-mono text-muted truncate max-w-[300px]">
-                    {conv.lastMessageRole === 'assistant' ? '← ' : '→ '}
-                    {conv.lastMessage}
-                  </span>
-                </div>
+          {/* Hot leads section */}
+          {hot.length > 0 && (
+            <>
+              <SectionHeader
+                icon={<Flame className="w-3 h-3" />}
+                label={t.sectionHot}
+                count={hot.length}
+                color="text-orange-400"
+              />
+              <div className="divide-y divide-border/50">
+                {hot.map(conv => (
+                  <ConversationRow key={conv.id} conv={conv} lang={lang} t={t} />
+                ))}
               </div>
+            </>
+          )}
 
-              {/* Meta */}
-              <div className="flex items-center gap-3 flex-shrink-0">
-                <span className="text-[10px] font-mono text-muted">
-                  {conv.messageCount} {t.messages}
-                </span>
-                <span className="text-[10px] font-mono text-muted">
-                  {timeAgo(conv.lastMessageAt, lang)}
-                </span>
-                <ArrowUpRight className="w-3 h-3 text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+          {/* Normal conversations */}
+          {normal.length > 0 && (
+            <>
+              {(handoffs.length > 0 || hot.length > 0) && (
+                <SectionHeader
+                  icon={<MessageSquare className="w-3 h-3" />}
+                  label={t.sectionNormal}
+                  count={normal.length}
+                  color="text-muted"
+                />
+              )}
+              <div className="divide-y divide-border/50">
+                {normal.map(conv => (
+                  <ConversationRow key={conv.id} conv={conv} lang={lang} t={t} />
+                ))}
               </div>
-            </Link>
-          ))}
+            </>
+          )}
         </div>
       )}
 

@@ -67,6 +67,9 @@ const i18n: Record<Lang, Record<string, string>> = {
     loadingTemplates: 'loading templates from Meta...',
     noTemplates: 'No approved templates found',
     templatePreview: 'template preview',
+    templateVariables: 'template variables',
+    variablePlaceholder: 'Value for',
+    noVariables: 'This template has no variables',
     dragCsv: 'Drag a CSV or click',
     csvColumns: 'Columns: phone (required), name (optional)',
     contactsDetected: 'contacts detected',
@@ -75,6 +78,7 @@ const i18n: Record<Lang, Record<string, string>> = {
     template: 'template',
     language: 'language',
     recipients: 'recipients',
+    variables: 'variables',
     confirmWarning: 'Campaign will be created with {count} recipients. You can send from the detail view.',
     cancel: 'cancel',
     back: 'back',
@@ -84,6 +88,7 @@ const i18n: Record<Lang, Record<string, string>> = {
     nameRequired: 'Campaign name is required',
     selectTemplate: 'Select a template',
     csvRequired: 'Upload a CSV with at least 1 valid contact',
+    variablesRequired: 'Fill all template variables',
     networkError: 'Network error',
     createError: 'Error creating campaign',
     csvOnly: 'Only .csv or .txt files accepted',
@@ -108,6 +113,9 @@ const i18n: Record<Lang, Record<string, string>> = {
     loadingTemplates: 'cargando templates de Meta...',
     noTemplates: 'No se encontraron templates aprobados',
     templatePreview: 'preview del template',
+    templateVariables: 'variables del template',
+    variablePlaceholder: 'Valor para',
+    noVariables: 'Este template no tiene variables',
     dragCsv: 'Arrastra un CSV o haz clic',
     csvColumns: 'Columnas: phone (obligatorio), name (opcional)',
     contactsDetected: 'contactos detectados',
@@ -116,6 +124,7 @@ const i18n: Record<Lang, Record<string, string>> = {
     template: 'template',
     language: 'idioma',
     recipients: 'destinatarios',
+    variables: 'variables',
     confirmWarning: 'Se creará la campaña con {count} destinatarios. Podrás enviar desde la vista de detalle.',
     cancel: 'cancelar',
     back: 'atrás',
@@ -125,6 +134,7 @@ const i18n: Record<Lang, Record<string, string>> = {
     nameRequired: 'Nombre de campaña es requerido',
     selectTemplate: 'Selecciona un template',
     csvRequired: 'Sube un CSV con al menos 1 contacto válido',
+    variablesRequired: 'Completa todas las variables del template',
     networkError: 'Error de red',
     createError: 'Error al crear campaña',
     csvOnly: 'Solo se aceptan archivos .csv o .txt',
@@ -150,6 +160,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
   const [formName, setFormName] = useState('');
   const [formTemplate, setFormTemplate] = useState('');
   const [formLanguage, setFormLanguage] = useState('');
+  const [formVariables, setFormVariables] = useState<Record<string, string>>({});
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvPreview, setCsvPreview] = useState<string[][]>([]);
   const [csvTotal, setCsvTotal] = useState(0);
@@ -185,9 +196,74 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
 
   const selectedTemplate = templates.find(t => t.name === formTemplate && t.language === formLanguage);
 
-  const getTemplatePreview = (t: MetaTemplate) => {
-    const body = t.components.find(c => c.type === 'BODY');
+  const getTemplatePreview = (tmpl: MetaTemplate) => {
+    const body = tmpl.components.find(c => c.type === 'BODY');
     return body?.text || '';
+  };
+
+  // Extract variables like {{1}}, {{2}} from template text
+  const extractVariables = (tmpl: MetaTemplate): { type: 'header' | 'body'; index: number; placeholder: string }[] => {
+    const vars: { type: 'header' | 'body'; index: number; placeholder: string }[] = [];
+
+    // Check header
+    const header = tmpl.components.find(c => c.type === 'HEADER');
+    if (header?.text) {
+      const headerMatches = header.text.match(/\{\{(\d+)\}\}/g) || [];
+      headerMatches.forEach(match => {
+        const num = parseInt(match.replace(/[{}]/g, ''));
+        vars.push({ type: 'header', index: num, placeholder: `Header {{${num}}}` });
+      });
+    }
+
+    // Check body
+    const body = tmpl.components.find(c => c.type === 'BODY');
+    if (body?.text) {
+      const bodyMatches = body.text.match(/\{\{(\d+)\}\}/g) || [];
+      bodyMatches.forEach(match => {
+        const num = parseInt(match.replace(/[{}]/g, ''));
+        vars.push({ type: 'body', index: num, placeholder: `Body {{${num}}}` });
+      });
+    }
+
+    return vars;
+  };
+
+  const templateVariables = selectedTemplate ? extractVariables(selectedTemplate) : [];
+
+  // Build template_components for API
+  const buildTemplateComponents = () => {
+    if (!selectedTemplate || templateVariables.length === 0) return undefined;
+
+    const components: Array<{
+      type: string;
+      parameters: Array<{ type: string; text: string }>;
+    }> = [];
+
+    // Group by type
+    const headerVars = templateVariables.filter(v => v.type === 'header');
+    const bodyVars = templateVariables.filter(v => v.type === 'body');
+
+    if (headerVars.length > 0) {
+      components.push({
+        type: 'header',
+        parameters: headerVars.map(v => ({
+          type: 'text',
+          text: formVariables[`${v.type}_${v.index}`] || '',
+        })),
+      });
+    }
+
+    if (bodyVars.length > 0) {
+      components.push({
+        type: 'body',
+        parameters: bodyVars.map(v => ({
+          type: 'text',
+          text: formVariables[`${v.type}_${v.index}`] || '',
+        })),
+      });
+    }
+
+    return components;
   };
 
   const resetModal = () => {
@@ -196,6 +272,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
     setFormName('');
     setFormTemplate('');
     setFormLanguage('');
+    setFormVariables({});
     setCsvFile(null);
     setCsvPreview([]);
     setCsvTotal(0);
@@ -248,6 +325,10 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
       formData.append('name', formName);
       formData.append('templateName', formTemplate);
       formData.append('language', formLanguage);
+      const components = buildTemplateComponents();
+      if (components) {
+        formData.append('components', JSON.stringify(components));
+      }
       if (csvFile) {
         formData.append('csv', csvFile);
       }
@@ -494,6 +575,38 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     </div>
                   )}
 
+                  {/* Template Variables */}
+                  {selectedTemplate && (
+                    <div>
+                      <label className="block text-xs text-muted font-mono mb-1.5">{t.templateVariables}</label>
+                      {templateVariables.length === 0 ? (
+                        <div className="px-3 py-2 rounded-lg bg-background border border-border">
+                          <span className="text-xs font-mono text-muted">{t.noVariables}</span>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {templateVariables.map((v) => {
+                            const key = `${v.type}_${v.index}`;
+                            return (
+                              <div key={key} className="flex items-center gap-2">
+                                <span className="text-xs font-mono text-muted w-28 flex-shrink-0">
+                                  {v.placeholder}
+                                </span>
+                                <input
+                                  type="text"
+                                  value={formVariables[key] || ''}
+                                  onChange={e => setFormVariables(prev => ({ ...prev, [key]: e.target.value }))}
+                                  placeholder={`${t.variablePlaceholder} ${v.placeholder}`}
+                                  className="flex-1 px-3 py-1.5 rounded-lg bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                 </div>
               )}
 
@@ -591,6 +704,20 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                       <span className="text-xs font-mono text-muted">{t.recipients}</span>
                       <span className="text-sm font-mono text-terminal-green">{csvTotal.toLocaleString()}</span>
                     </div>
+                    {templateVariables.length > 0 && (
+                      <div className="pt-2 border-t border-border/50">
+                        <span className="text-xs font-mono text-muted block mb-2">{t.variables}</span>
+                        {templateVariables.map(v => {
+                          const key = `${v.type}_${v.index}`;
+                          return (
+                            <div key={key} className="flex items-center justify-between text-xs mb-1">
+                              <span className="font-mono text-muted">{v.placeholder}</span>
+                              <span className="font-mono text-foreground">{formVariables[key]}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-terminal-yellow/10 border border-terminal-yellow/20">
@@ -625,6 +752,15 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     }
                     if (!formTemplate) {
                       setError(t.selectTemplate);
+                      return;
+                    }
+                    // Check all variables are filled
+                    const missingVars = templateVariables.some(v => {
+                      const key = `${v.type}_${v.index}`;
+                      return !formVariables[key]?.trim();
+                    });
+                    if (missingVars) {
+                      setError(t.variablesRequired);
                       return;
                     }
                     setError('');

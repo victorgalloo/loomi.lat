@@ -159,7 +159,7 @@ export default function CampaignDetailView({
         <div className="flex items-center justify-between px-4 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.push('/dashboard/broadcasts')}
+              onClick={() => router.push('/broadcasts')}
               className="p-1.5 rounded-lg hover:bg-surface-2 transition-colors text-muted hover:text-foreground"
             >
               <ArrowLeft className="w-4 h-4" />

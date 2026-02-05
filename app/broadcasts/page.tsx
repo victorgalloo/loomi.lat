@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
+import { getTenantIdForUser } from "@/lib/supabase/user-role";
 import BroadcastsView from "./BroadcastsView";
 
 export default async function BroadcastsPage() {
@@ -12,11 +12,6 @@ export default async function BroadcastsPage() {
 
   if (!user || !user.email) {
     redirect("/login");
-  }
-
-  const userRole = await getUserRole(user.email);
-  if (userRole !== "tenant") {
-    redirect("/dashboard");
   }
 
   const tenantId = await getTenantIdForUser(user.email);

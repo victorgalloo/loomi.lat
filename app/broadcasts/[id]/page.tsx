@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
+import { getTenantIdForUser } from "@/lib/supabase/user-role";
 import CampaignDetailView from "./CampaignDetailView";
 
 export default async function CampaignDetailPage({
@@ -19,11 +19,6 @@ export default async function CampaignDetailPage({
     redirect("/login");
   }
 
-  const userRole = await getUserRole(user.email);
-  if (userRole !== "tenant") {
-    redirect("/dashboard");
-  }
-
   const tenantId = await getTenantIdForUser(user.email);
   if (!tenantId) {
     redirect("/login");
@@ -38,7 +33,7 @@ export default async function CampaignDetailPage({
     .single();
 
   if (!campaign) {
-    redirect("/dashboard/broadcasts");
+    redirect("/broadcasts");
   }
 
   // Fetch recipients

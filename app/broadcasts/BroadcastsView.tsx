@@ -153,7 +153,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
       setCampaigns(prev => [newCampaign, ...prev]);
       resetModal();
       // Navigate to campaign detail
-      router.push(`/dashboard/broadcasts/${newCampaign.id}`);
+      router.push(`/broadcasts/${newCampaign.id}`);
     } catch {
       setError('Error de red');
     } finally {
@@ -233,7 +233,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
             filteredCampaigns.map((campaign) => (
               <button
                 key={campaign.id}
-                onClick={() => router.push(`/dashboard/broadcasts/${campaign.id}`)}
+                onClick={() => router.push(`/broadcasts/${campaign.id}`)}
                 className="w-full flex items-center justify-between px-4 py-4 hover:bg-surface-2 transition-colors text-left"
               >
                 <div className="flex-1 min-w-0">

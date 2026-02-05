@@ -16,7 +16,7 @@ const navItems = [
   { href: '/dashboard', label: 'overview' },
   { href: '/dashboard/crm', label: 'pipeline' },
   { href: '/dashboard/conversations', label: 'inbox' },
-  { href: '/dashboard/broadcasts', label: 'broadcasts' },
+  { href: '/broadcasts', label: 'broadcasts' },
   { href: '/dashboard/agent', label: 'agente' },
   { href: '/dashboard/settings', label: 'settings' },
 ];

@@ -16,6 +16,7 @@ const navItems = [
   { href: '/dashboard', label: 'overview' },
   { href: '/dashboard/crm', label: 'pipeline' },
   { href: '/dashboard/conversations', label: 'inbox' },
+  { href: '/dashboard/broadcasts', label: 'broadcasts' },
   { href: '/dashboard/agent', label: 'agente' },
   { href: '/dashboard/settings', label: 'settings' },
 ];
@@ -109,7 +110,7 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
       {/* Mobile Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-background border-border">
         <div className="flex items-center justify-around py-3">
-          {navItems.slice(0, 4).map((item) => {
+          {navItems.slice(0, 5).map((item) => {
             const isActive = pathname === item.href ||
               (item.href !== '/dashboard' && pathname.startsWith(item.href));
 

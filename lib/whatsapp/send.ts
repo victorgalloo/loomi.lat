@@ -6,6 +6,25 @@
  * Falls back to environment variables for backward compatibility
  */
 
+export interface TemplateComponent {
+  type: 'header' | 'body' | 'button';
+  sub_type?: 'quick_reply' | 'url';
+  index?: number;
+  parameters: Array<{
+    type: 'text' | 'image' | 'document' | 'video';
+    text?: string;
+    image?: { link: string };
+    document?: { link: string; filename?: string };
+    video?: { link: string };
+  }>;
+}
+
+export interface SendTemplateResult {
+  success: boolean;
+  messageId?: string;
+  error?: string;
+}
+
 export interface TimeSlot {
   id: string;
   date: string;
@@ -249,6 +268,57 @@ export async function sendWhatsAppLink(
   } catch (error) {
     console.error('[WhatsApp] Link error:', error);
     return false;
+  }
+}
+
+/**
+ * Send a template message (for broadcasts / marketing)
+ */
+export async function sendTemplateMessage(
+  phone: string,
+  templateName: string,
+  language: string,
+  components?: TemplateComponent[],
+  credentials?: TenantCredentials
+): Promise<SendTemplateResult> {
+  try {
+    const payload: Record<string, unknown> = {
+      messaging_product: 'whatsapp',
+      to: phone,
+      type: 'template',
+      template: {
+        name: templateName,
+        language: { code: language },
+        ...(components && components.length > 0 ? { components } : {})
+      }
+    };
+
+    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+      method: 'POST',
+      headers: getHeaders(credentials?.accessToken),
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[WhatsApp] Template send error:', errorText);
+      let errorMsg = `HTTP ${response.status}`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMsg = errorJson?.error?.message || errorMsg;
+      } catch {
+        // keep default
+      }
+      return { success: false, error: errorMsg };
+    }
+
+    const data = await response.json();
+    const messageId = data?.messages?.[0]?.id;
+    return { success: true, messageId };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[WhatsApp] Template send error:', error);
+    return { success: false, error: msg };
   }
 }
 

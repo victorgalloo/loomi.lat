@@ -161,7 +161,7 @@ export async function GET(
           id: conv.id,
           leadName: lead.name || 'Usuario',
           leadPhone: lead.phone,
-          leadStage: lead.stage || 'initial',
+          leadStage: lead.stage || 'Nuevo',
           messageCount: count || 0,
           lastMessage: lastMessage?.content || '',
           lastMessageRole: lastMessage?.role || 'user',

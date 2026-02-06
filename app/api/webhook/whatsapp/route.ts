@@ -719,7 +719,7 @@ export async function POST(request: NextRequest) {
           waitUntil((async () => {
             try {
               const appointment = await createAppointment(context.lead.id, scheduledAt, eventId);
-              await updateLeadStage(context.lead.phone, 'Demo Agendada');
+              await updateLeadStage(context.lead.phone, 'Calificado');
 
               // Use Temporal for follow-ups if enabled, otherwise use legacy scheduler
               if (isTemporalEnabled('followups') && tenantContext) {
@@ -778,7 +778,7 @@ export async function POST(request: NextRequest) {
                     phone: context.lead.phone,
                     name: context.lead.name,
                     email,
-                    stage: 'Demo Agendada',
+                    stage: 'Calificado',
                     messages: [...context.recentMessages, { role: 'user', content: message.text }],
                     appointmentBooked: { date, time, meetingUrl }
                   });
@@ -828,7 +828,7 @@ export async function POST(request: NextRequest) {
           // Update lead stage to payment_pending
           waitUntil((async () => {
             try {
-              await updateLeadStage(context.lead.phone, 'payment_pending');
+              await updateLeadStage(context.lead.phone, 'Negociacion');
             } catch (err) {
               console.error('[Webhook] Update stage error:', err);
             }

@@ -113,7 +113,7 @@ export async function createLead(
   const insertData: Record<string, unknown> = {
     phone,
     name,
-    stage: options?.tenantId ? 'Lead' : 'initial', // Use CRM stage for multi-tenant
+    stage: 'Nuevo',
     is_test: options?.isTest ?? false
   };
 
@@ -190,7 +190,7 @@ export async function saveLeadQualification(
       message_volume: qualification.messageVolume,
       industry: qualification.industry,
       is_qualified: true,
-      stage: 'Lead',
+      stage: 'Nuevo',
       last_interaction: new Date().toISOString(),
     })
     .eq('phone', phone);
@@ -455,7 +455,7 @@ export async function getColdLeads(hoursInactive: number = 48, limit: number = 5
     .from('leads')
     .select('*')
     .lt('last_interaction', cutoffDate.toISOString())
-    .not('stage', 'in', '("Demo Agendada","Ganado")')
+    .not('stage', 'in', '("Calificado","Ganado","Perdido")')
     .order('last_interaction', { ascending: true })
     .limit(limit);
 

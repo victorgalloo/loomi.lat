@@ -82,7 +82,7 @@ export default async function AnalyticsPage() {
   // Calculate stage breakdown
   const stageBreakdown: Record<string, number> = {};
   (stageResult.data || []).forEach((lead) => {
-    const stage = lead.stage || 'initial';
+    const stage = lead.stage || 'Nuevo';
     stageBreakdown[stage] = (stageBreakdown[stage] || 0) + 1;
   });
 

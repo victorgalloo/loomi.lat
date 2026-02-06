@@ -20,10 +20,9 @@ interface KanbanColumnProps {
   leads: Lead[];
   onLeadClick?: (lead: Lead) => void;
   onAddLead?: () => void;
-  isDarkMode?: boolean;
 }
 
-function KanbanColumn({ stage, leads, onLeadClick, onAddLead, isDarkMode = false }: KanbanColumnProps) {
+function KanbanColumn({ stage, leads, onLeadClick, onAddLead }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.name });
 
   const totalValue = leads.reduce((sum, lead) => sum + (lead.dealValue || 0), 0);
@@ -38,16 +37,17 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, isDarkMode = false
     return `$${value.toLocaleString()}`;
   };
 
-  // Minimal color accents
+  // Minimal color accents (stage dots keep accent colors)
   const stageColors: Record<string, string> = {
-    cyan: isDarkMode ? 'bg-cyan-500' : 'bg-cyan-500',
-    amber: isDarkMode ? 'bg-amber-500' : 'bg-amber-500',
-    purple: isDarkMode ? 'bg-purple-500' : 'bg-purple-500',
-    blue: isDarkMode ? 'bg-blue-500' : 'bg-blue-500',
-    orange: isDarkMode ? 'bg-orange-500' : 'bg-orange-500',
-    emerald: isDarkMode ? 'bg-emerald-500' : 'bg-emerald-500',
-    red: isDarkMode ? 'bg-red-500' : 'bg-red-500',
-    gray: isDarkMode ? 'bg-zinc-500' : 'bg-zinc-400',
+    cyan: 'bg-cyan-500',
+    amber: 'bg-amber-500',
+    purple: 'bg-purple-500',
+    blue: 'bg-blue-500',
+    orange: 'bg-orange-500',
+    emerald: 'bg-emerald-500',
+    red: 'bg-red-500',
+    gray: 'bg-zinc-500',
+    indigo: 'bg-indigo-500',
   };
 
   return (
@@ -64,18 +64,15 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, isDarkMode = false
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${stageColors[stage.color] || stageColors.gray}`} />
-          <h3 className={`text-sm font-medium ${isDarkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
+          <h3 className="text-sm font-medium text-foreground/70">
             {stage.name}
           </h3>
-          <span className={`
-            text-xs px-1.5 py-0.5 rounded font-medium
-            ${isDarkMode ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-100 text-zinc-500'}
-          `}>
+          <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-surface text-muted">
             {leads.length}
           </span>
         </div>
         {totalValue > 0 && (
-          <span className={`text-xs font-mono ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+          <span className="text-xs font-mono text-muted">
             {formatCurrency(totalValue)}
           </span>
         )}
@@ -88,14 +85,11 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, isDarkMode = false
           flex-1 rounded-lg p-2 space-y-2
           min-h-[120px] max-h-[calc(100vh-280px)] overflow-y-auto
           transition-colors duration-200
-          ${isDarkMode
-            ? isOver ? 'bg-zinc-800/50' : 'bg-zinc-900/30'
-            : isOver ? 'bg-zinc-100' : 'bg-zinc-50/50'
-          }
+          ${isOver ? 'bg-surface' : 'bg-surface/50'}
         `}
         style={{
           scrollbarWidth: 'thin',
-          scrollbarColor: isDarkMode ? '#3f3f46 transparent' : '#d4d4d8 transparent',
+          scrollbarColor: 'var(--border) transparent',
         }}
       >
         <SortableContext items={leads.map(l => l.id)} strategy={verticalListSortingStrategy}>
@@ -104,7 +98,6 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, isDarkMode = false
               key={lead.id}
               lead={lead}
               onClick={() => onLeadClick?.(lead)}
-              isDarkMode={isDarkMode}
             />
           ))}
         </SortableContext>
@@ -113,15 +106,7 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, isDarkMode = false
         {leads.length === 0 && (
           <button
             onClick={onAddLead}
-            className={`
-              w-full p-3 rounded-lg border border-dashed
-              transition-colors duration-150 flex items-center justify-center gap-2
-              hover:scale-[1.01] active:scale-[0.99]
-              ${isDarkMode
-                ? 'border-zinc-700 text-zinc-600 hover:border-zinc-600 hover:text-zinc-500'
-                : 'border-zinc-200 text-zinc-400 hover:border-zinc-300 hover:text-zinc-500'
-              }
-            `}
+            className="w-full p-3 rounded-lg border border-dashed transition-colors duration-150 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] border-border text-muted hover:border-foreground/20 hover:text-foreground/50"
           >
             <Plus className="w-4 h-4" />
             <span className="text-xs font-medium">Agregar</span>

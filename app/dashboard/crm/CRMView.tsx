@@ -102,7 +102,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
   // Stats
   const totalLeads = leads.length;
   const totalValue = leads.reduce((sum, lead) => sum + (lead.dealValue || 0), 0);
-  const wonDeals = leads.filter(l => l.stage === 'Ganado');
+  const wonDeals = leads.filter(l => stages.find(s => s.name === l.stage)?.isWon);
   const wonValue = wonDeals.reduce((sum, lead) => sum + (lead.dealValue || 0), 0);
 
   const formatCurrency = (value: number) => {
@@ -250,7 +250,6 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
           <KanbanBoard
             stages={stages}
             initialLeads={filteredLeads}
-            isDarkMode={true}
             onAddLead={() => setShowModal(true)}
             onLeadMove={handleLeadMove}
           />

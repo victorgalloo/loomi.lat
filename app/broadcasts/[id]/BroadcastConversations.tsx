@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { MessageSquare, ArrowUpRight, Flame, PhoneForwarded, Download, PhoneOff } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { MessageSquare, Flame, PhoneForwarded, Download, PhoneOff, X } from 'lucide-react';
 import Link from 'next/link';
 
 type Category = 'handoff' | 'hot' | 'normal';
@@ -24,6 +24,13 @@ interface Conversation {
 interface NoResponse {
   phone: string;
   name: string | null;
+}
+
+interface ChatMessage {
+  id: string;
+  role: string;
+  content: string;
+  created_at: string;
 }
 
 interface BroadcastConversationsProps {
@@ -51,8 +58,8 @@ const i18n = {
     sectionNormal: 'Conversations',
     sectionNoResponse: 'No response',
     exportCsv: 'export CSV',
-    phone: 'phone',
-    name: 'name',
+    noMessages: 'No messages',
+    close: 'close',
   },
   es: {
     title: './conversaciones_',
@@ -71,8 +78,8 @@ const i18n = {
     sectionNormal: 'Conversaciones',
     sectionNoResponse: 'Sin respuesta',
     exportCsv: 'exportar CSV',
-    phone: 'teléfono',
-    name: 'nombre',
+    noMessages: 'Sin mensajes',
+    close: 'cerrar',
   },
 };
 
@@ -87,23 +94,14 @@ const handoffReasonLabels: Record<string, Record<'en' | 'es', string>> = {
 };
 
 const stageColors: Record<string, string> = {
-  initial: 'text-muted',
-  lead: 'text-muted',
-  nuevo: 'text-muted',
-  contactado: 'text-terminal-yellow',
-  contacted: 'text-terminal-yellow',
-  calificado: 'text-terminal-green',
-  qualified: 'text-terminal-green',
-  propuesta: 'text-blue-400',
-  proposal: 'text-blue-400',
-  negociacion: 'text-orange-400',
-  negotiation: 'text-orange-400',
-  ganado: 'text-terminal-green',
-  won: 'text-terminal-green',
-  perdido: 'text-terminal-red',
-  lost: 'text-terminal-red',
-  demo_scheduled: 'text-terminal-green',
-  closed: 'text-terminal-green',
+  initial: 'text-muted', lead: 'text-muted', nuevo: 'text-muted',
+  contactado: 'text-terminal-yellow', contacted: 'text-terminal-yellow',
+  calificado: 'text-terminal-green', qualified: 'text-terminal-green',
+  propuesta: 'text-blue-400', proposal: 'text-blue-400',
+  negociacion: 'text-orange-400', negotiation: 'text-orange-400',
+  ganado: 'text-terminal-green', won: 'text-terminal-green',
+  perdido: 'text-terminal-red', lost: 'text-terminal-red',
+  demo_scheduled: 'text-terminal-green', closed: 'text-terminal-green',
 };
 
 function timeAgo(dateStr: string, lang: 'en' | 'es'): string {
@@ -113,11 +111,14 @@ function timeAgo(dateStr: string, lang: 'en' | 'es'): string {
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
-
   if (diffMins < 1) return lang === 'es' ? 'ahora' : 'now';
   if (diffMins < 60) return `${diffMins}m`;
   if (diffHours < 24) return `${diffHours}h`;
   return `${diffDays}d`;
+}
+
+function formatTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 }
 
 function downloadCsv(filename: string, rows: Array<{ phone: string; name: string }>) {
@@ -133,11 +134,122 @@ function downloadCsv(filename: string, rows: Array<{ phone: string; name: string
   URL.revokeObjectURL(url);
 }
 
-function ConversationRow({ conv, lang, t }: { conv: Conversation; lang: 'en' | 'es'; t: typeof i18n.en }) {
+// ── Chat Panel (slide-over) ──────────────────────────────────────────
+
+function ChatPanel({ conv, lang, t, onClose }: {
+  conv: Conversation;
+  lang: 'en' | 'es';
+  t: typeof i18n.en;
+  onClose: () => void;
+}) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    async function fetchMessages() {
+      try {
+        const res = await fetch(`/api/conversations/${conv.id}/messages`);
+        if (res.ok) {
+          const data = await res.json();
+          setMessages(data.messages || []);
+        }
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMessages();
+  }, [conv.id]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   return (
-    <Link
-      href={`/dashboard/conversations?id=${conv.id}`}
-      className="flex items-center gap-3 px-4 py-3 hover:bg-surface-2 transition-colors group"
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md bg-surface border-l border-border flex flex-col h-full animate-in slide-in-from-right duration-200">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-terminal-red" />
+              <div className="w-2.5 h-2.5 rounded-full bg-terminal-yellow" />
+              <div className="w-2.5 h-2.5 rounded-full bg-terminal-green" />
+            </div>
+            <span className="text-sm font-mono text-foreground ml-2 truncate">{conv.leadName}</span>
+            <span className={`text-[10px] font-mono ${stageColors[conv.leadStage.toLowerCase()] || 'text-muted'}`}>
+              {conv.leadStage}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 rounded hover:bg-surface-2 text-muted hover:text-foreground transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Lead info */}
+        <div className="flex items-center gap-4 px-4 py-2 border-b border-border text-xs font-mono text-muted">
+          <span>{conv.leadPhone}</span>
+          <span>{conv.messageCount} {t.messages}</span>
+          {conv.category === 'handoff' && (
+            <span className="text-terminal-red">
+              {conv.handoffReason
+                ? handoffReasonLabels[conv.handoffReason]?.[lang] || conv.handoffReason
+                : t.handoff}
+            </span>
+          )}
+          {conv.category === 'hot' && (
+            <span className="text-orange-400">{t.hotLead}</span>
+          )}
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-4 h-4 border-2 border-muted border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <MessageSquare className="w-6 h-6 text-muted/40 mb-2" />
+              <span className="text-xs font-mono text-muted">{t.noMessages}</span>
+            </div>
+          ) : (
+            messages.map((msg) => (
+              <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[85%] rounded-2xl px-3 py-2 ${
+                  msg.role === 'user'
+                    ? 'bg-terminal-green/20 text-foreground rounded-br-sm'
+                    : 'bg-background border border-border rounded-bl-sm'
+                }`}>
+                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  <p className="text-[10px] text-muted mt-1">{formatTime(msg.created_at)}</p>
+                </div>
+              </div>
+            ))
+          )}
+          <div ref={bottomRef} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Conversation Row ─────────────────────────────────────────────────
+
+function ConversationRow({ conv, lang, t, onClick }: {
+  conv: Conversation; lang: 'en' | 'es'; t: typeof i18n.en;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-3 px-4 py-3 hover:bg-surface-2 transition-colors group w-full text-left"
     >
       <div className="relative flex-shrink-0">
         <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${
@@ -148,11 +260,9 @@ function ConversationRow({ conv, lang, t }: { conv: Conversation; lang: 'en' | '
             : 'bg-background border-border'
         }`}>
           <span className={`text-xs font-mono ${
-            conv.category === 'handoff'
-              ? 'text-terminal-red'
-              : conv.category === 'hot'
-              ? 'text-orange-400'
-              : 'text-foreground'
+            conv.category === 'handoff' ? 'text-terminal-red'
+            : conv.category === 'hot' ? 'text-orange-400'
+            : 'text-foreground'
           }`}>
             {conv.leadName.charAt(0).toUpperCase()}
           </span>
@@ -161,9 +271,7 @@ function ConversationRow({ conv, lang, t }: { conv: Conversation; lang: 'en' | '
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-mono text-foreground truncate">
-            {conv.leadName}
-          </span>
+          <span className="text-sm font-mono text-foreground truncate">{conv.leadName}</span>
           <span className={`text-[10px] font-mono ${stageColors[conv.leadStage.toLowerCase()] || 'text-muted'}`}>
             {conv.leadStage}
           </span>
@@ -189,24 +297,17 @@ function ConversationRow({ conv, lang, t }: { conv: Conversation; lang: 'en' | '
       </div>
 
       <div className="flex items-center gap-3 flex-shrink-0">
-        <span className="text-[10px] font-mono text-muted">
-          {conv.messageCount} {t.messages}
-        </span>
-        <span className="text-[10px] font-mono text-muted">
-          {timeAgo(conv.lastMessageAt, lang)}
-        </span>
-        <ArrowUpRight className="w-3 h-3 text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+        <span className="text-[10px] font-mono text-muted">{conv.messageCount} {t.messages}</span>
+        <span className="text-[10px] font-mono text-muted">{timeAgo(conv.lastMessageAt, lang)}</span>
       </div>
-    </Link>
+    </button>
   );
 }
 
+// ── Section Header ───────────────────────────────────────────────────
+
 function SectionHeader({ icon, label, count, color, onExport }: {
-  icon: React.ReactNode;
-  label: string;
-  count: number;
-  color: string;
-  onExport?: () => void;
+  icon: React.ReactNode; label: string; count: number; color: string; onExport?: () => void;
 }) {
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background">
@@ -228,6 +329,8 @@ function SectionHeader({ icon, label, count, color, onExport }: {
   );
 }
 
+// ── Main Component ───────────────────────────────────────────────────
+
 export default function BroadcastConversations({
   campaignId,
   campaignStartedAt,
@@ -239,12 +342,10 @@ export default function BroadcastConversations({
   const [noResponse, setNoResponse] = useState<NoResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNoResponse, setShowNoResponse] = useState(false);
+  const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
 
   useEffect(() => {
-    if (!campaignStartedAt) {
-      setLoading(false);
-      return;
-    }
+    if (!campaignStartedAt) { setLoading(false); return; }
 
     async function fetchConversations() {
       try {
@@ -254,13 +355,8 @@ export default function BroadcastConversations({
           setConversations(data.conversations || []);
           setNoResponse(data.noResponse || []);
         }
-      } catch {
-        // ignore
-      } finally {
-        setLoading(false);
-      }
+      } catch { /* ignore */ } finally { setLoading(false); }
     }
-
     fetchConversations();
   }, [campaignId, campaignStartedAt]);
 
@@ -276,152 +372,142 @@ export default function BroadcastConversations({
   const responseRate = totalSent > 0 ? ((conversations.length / totalSent) * 100).toFixed(1) : '0';
 
   return (
-    <div className="rounded-xl border border-border bg-surface overflow-hidden mt-6">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-terminal-red" />
-            <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
-            <div className="w-3 h-3 rounded-full bg-terminal-green" />
+    <>
+      <div className="rounded-xl border border-border bg-surface overflow-hidden mt-6">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-terminal-red" />
+              <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
+              <div className="w-3 h-3 rounded-full bg-terminal-green" />
+            </div>
+            <span className="text-sm font-mono text-foreground ml-2">{t.title}</span>
           </div>
-          <span className="text-sm font-mono text-foreground ml-2">{t.title}</span>
+          {!loading && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-mono text-muted">
+                {conversations.length} {t.responses} {t.of} {totalSent} {t.sent}
+              </span>
+              <span className="text-xs font-mono text-terminal-green">
+                {responseRate}% {t.responseRate}
+              </span>
+            </div>
+          )}
         </div>
-        {!loading && (
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-mono text-muted">
-              {conversations.length} {t.responses} {t.of} {totalSent} {t.sent}
-            </span>
-            <span className="text-xs font-mono text-terminal-green">
-              {responseRate}% {t.responseRate}
-            </span>
+
+        {/* Content */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-4 h-4 border-2 border-muted border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : conversations.length === 0 && noResponse.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-2">
+            <MessageSquare className="w-8 h-8 text-muted/40" />
+            <span className="text-sm text-muted font-mono">{t.noConversations}</span>
+            <span className="text-xs text-muted/60 font-mono">{t.noConversationsHint}</span>
+          </div>
+        ) : (
+          <div>
+            {handoffs.length > 0 && (
+              <>
+                <SectionHeader
+                  icon={<PhoneForwarded className="w-3 h-3" />}
+                  label={t.sectionHandoff} count={handoffs.length} color="text-terminal-red"
+                  onExport={() => exportCategory('handoff', handoffs.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
+                />
+                <div className="divide-y divide-border/50">
+                  {handoffs.map(conv => (
+                    <ConversationRow key={conv.id} conv={conv} lang={lang} t={t} onClick={() => setSelectedConv(conv)} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {hot.length > 0 && (
+              <>
+                <SectionHeader
+                  icon={<Flame className="w-3 h-3" />}
+                  label={t.sectionHot} count={hot.length} color="text-orange-400"
+                  onExport={() => exportCategory('hot-leads', hot.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
+                />
+                <div className="divide-y divide-border/50">
+                  {hot.map(conv => (
+                    <ConversationRow key={conv.id} conv={conv} lang={lang} t={t} onClick={() => setSelectedConv(conv)} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {normal.length > 0 && (
+              <>
+                <SectionHeader
+                  icon={<MessageSquare className="w-3 h-3" />}
+                  label={t.sectionNormal} count={normal.length} color="text-muted"
+                  onExport={() => exportCategory('conversations', normal.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
+                />
+                <div className="divide-y divide-border/50">
+                  {normal.map(conv => (
+                    <ConversationRow key={conv.id} conv={conv} lang={lang} t={t} onClick={() => setSelectedConv(conv)} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {noResponse.length > 0 && (
+              <>
+                <SectionHeader
+                  icon={<PhoneOff className="w-3 h-3" />}
+                  label={t.sectionNoResponse} count={noResponse.length} color="text-muted"
+                  onExport={() => exportCategory('no-response', noResponse.map(r => ({ phone: r.phone, name: r.name || '' })))}
+                />
+                <div>
+                  <button
+                    onClick={() => setShowNoResponse(!showNoResponse)}
+                    className="w-full px-4 py-2 text-xs font-mono text-muted hover:text-foreground transition-colors text-left"
+                  >
+                    {showNoResponse ? '▼' : '▶'} {noResponse.length} {lang === 'es' ? 'contactos sin respuesta' : 'contacts without response'}
+                  </button>
+                  {showNoResponse && (
+                    <div className="divide-y divide-border/50 max-h-[300px] overflow-y-auto">
+                      {noResponse.map((r, i) => (
+                        <div key={i} className="flex items-center gap-3 px-4 py-2">
+                          <div className="w-6 h-6 rounded-full bg-background border border-border flex items-center justify-center flex-shrink-0">
+                            <span className="text-[10px] font-mono text-muted">{(r.name || '?').charAt(0).toUpperCase()}</span>
+                          </div>
+                          <span className="text-xs font-mono text-muted">{r.name || '-'}</span>
+                          <span className="text-xs font-mono text-muted/60">{r.phone}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Footer */}
+        {conversations.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-2 border-t border-border">
+            <Link href="/dashboard/conversations" className="text-xs font-mono text-muted hover:text-foreground transition-colors">
+              {t.viewInbox} →
+            </Link>
+            <button
+              onClick={() => exportCategory('all-responses', conversations.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
+              className="flex items-center gap-1 text-xs font-mono text-muted hover:text-foreground transition-colors"
+            >
+              <Download className="w-3 h-3" />
+              {t.exportCsv}
+            </button>
           </div>
         )}
       </div>
 
-      {/* Content */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="w-4 h-4 border-2 border-muted border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : conversations.length === 0 && noResponse.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 gap-2">
-          <MessageSquare className="w-8 h-8 text-muted/40" />
-          <span className="text-sm text-muted font-mono">{t.noConversations}</span>
-          <span className="text-xs text-muted/60 font-mono">{t.noConversationsHint}</span>
-        </div>
-      ) : (
-        <div>
-          {/* Handoffs */}
-          {handoffs.length > 0 && (
-            <>
-              <SectionHeader
-                icon={<PhoneForwarded className="w-3 h-3" />}
-                label={t.sectionHandoff}
-                count={handoffs.length}
-                color="text-terminal-red"
-                onExport={() => exportCategory('handoff', handoffs.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
-              />
-              <div className="divide-y divide-border/50">
-                {handoffs.map(conv => (
-                  <ConversationRow key={conv.id} conv={conv} lang={lang} t={t} />
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* Hot leads */}
-          {hot.length > 0 && (
-            <>
-              <SectionHeader
-                icon={<Flame className="w-3 h-3" />}
-                label={t.sectionHot}
-                count={hot.length}
-                color="text-orange-400"
-                onExport={() => exportCategory('hot-leads', hot.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
-              />
-              <div className="divide-y divide-border/50">
-                {hot.map(conv => (
-                  <ConversationRow key={conv.id} conv={conv} lang={lang} t={t} />
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* Normal */}
-          {normal.length > 0 && (
-            <>
-              <SectionHeader
-                icon={<MessageSquare className="w-3 h-3" />}
-                label={t.sectionNormal}
-                count={normal.length}
-                color="text-muted"
-                onExport={() => exportCategory('conversations', normal.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
-              />
-              <div className="divide-y divide-border/50">
-                {normal.map(conv => (
-                  <ConversationRow key={conv.id} conv={conv} lang={lang} t={t} />
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* No Response */}
-          {noResponse.length > 0 && (
-            <>
-              <SectionHeader
-                icon={<PhoneOff className="w-3 h-3" />}
-                label={t.sectionNoResponse}
-                count={noResponse.length}
-                color="text-muted"
-                onExport={() => exportCategory('no-response', noResponse.map(r => ({ phone: r.phone, name: r.name || '' })))}
-              />
-              <div>
-                <button
-                  onClick={() => setShowNoResponse(!showNoResponse)}
-                  className="w-full px-4 py-2 text-xs font-mono text-muted hover:text-foreground transition-colors text-left"
-                >
-                  {showNoResponse ? '▼' : '▶'} {noResponse.length} {lang === 'es' ? 'contactos sin respuesta' : 'contacts without response'}
-                </button>
-                {showNoResponse && (
-                  <div className="divide-y divide-border/50 max-h-[300px] overflow-y-auto">
-                    {noResponse.map((r, i) => (
-                      <div key={i} className="flex items-center gap-3 px-4 py-2">
-                        <div className="w-6 h-6 rounded-full bg-background border border-border flex items-center justify-center flex-shrink-0">
-                          <span className="text-[10px] font-mono text-muted">
-                            {(r.name || '?').charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="text-xs font-mono text-muted">{r.name || '-'}</span>
-                        <span className="text-xs font-mono text-muted/60">{r.phone}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
+      {/* Chat Panel */}
+      {selectedConv && (
+        <ChatPanel conv={selectedConv} lang={lang} t={t} onClose={() => setSelectedConv(null)} />
       )}
-
-      {/* Footer */}
-      {conversations.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-2 border-t border-border">
-          <Link
-            href="/dashboard/conversations"
-            className="text-xs font-mono text-muted hover:text-foreground transition-colors"
-          >
-            {t.viewInbox} →
-          </Link>
-          <button
-            onClick={() => exportCategory('all-responses', conversations.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
-            className="flex items-center gap-1 text-xs font-mono text-muted hover:text-foreground transition-colors"
-          >
-            <Download className="w-3 h-3" />
-            {t.exportCsv}
-          </button>
-        </div>
-      )}
-    </div>
+    </>
   );
 }

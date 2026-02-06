@@ -235,7 +235,7 @@ export default function ConversationsView({ conversations: initialConversations,
           <p className="text-xs uppercase tracking-wider text-muted font-mono">
             activas hoy
           </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-terminal-green">
+          <p className="text-xl font-semibold font-mono mt-1 text-accent-green">
             {activeToday}
           </p>
         </div>

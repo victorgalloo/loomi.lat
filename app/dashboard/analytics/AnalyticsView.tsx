@@ -90,7 +90,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
           <p className="text-xs uppercase tracking-wider text-muted font-mono">
             calificados
           </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-terminal-green">
+          <p className="text-xl font-semibold font-mono mt-1 text-accent-green">
             {data.qualifiedLeads}
           </p>
         </div>
@@ -128,7 +128,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
                 {metric.value.toLocaleString()}
               </p>
               {metric.change !== undefined && (
-                <p className="text-xs mt-1 flex items-center gap-1 text-terminal-green font-mono">
+                <p className="text-xs mt-1 flex items-center gap-1 text-accent-green font-mono">
                   <TrendingUp className="w-3 h-3" />
                   +{metric.change} {metric.changeLabel}
                 </p>

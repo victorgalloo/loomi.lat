@@ -6,7 +6,11 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Sun, Moon, ArrowRight, Loader2 } from "lucide-react";
 
+type Mode = "login" | "signup";
+
 function LoginContent() {
+  const [mode, setMode] = useState<Mode>("login");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +30,34 @@ function LoginContent() {
     const next = current === 'light' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('loomi-theme', next);
+  };
+
+  const smartRedirect = async (userName?: string) => {
+    try {
+      const res = await fetch('/api/auth/setup-tenant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: userName }),
+      });
+
+      if (!res.ok) {
+        router.push('/dashboard');
+        return;
+      }
+
+      const { hasWhatsApp, onboardingComplete } = await res.json();
+
+      if (!hasWhatsApp) {
+        router.push('/dashboard/connect');
+      } else if (!onboardingComplete) {
+        router.push('/onboarding');
+      } else {
+        router.push('/dashboard');
+      }
+    } catch {
+      router.push('/dashboard');
+    }
+    router.refresh();
   };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -55,13 +87,55 @@ function LoginContent() {
 
       if (data.user) {
         await new Promise(resolve => setTimeout(resolve, 100));
-        router.push("/broadcasts");
-        router.refresh();
+        await smartRedirect();
       }
     } catch {
       setError("Error inesperado");
       setIsLoading(false);
     }
+  };
+
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: { name: name.trim() },
+        },
+      });
+
+      if (signUpError) {
+        let errorMessage = "Error al crear cuenta";
+
+        if (signUpError.message?.includes("already registered")) {
+          errorMessage = "Este email ya tiene cuenta. Inicia sesión.";
+        } else if (signUpError.message?.includes("Password")) {
+          errorMessage = "La contraseña debe tener al menos 6 caracteres";
+        }
+
+        setError(errorMessage);
+        setIsLoading(false);
+        return;
+      }
+
+      if (data.user) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await smartRedirect(name.trim());
+      }
+    } catch {
+      setError("Error inesperado");
+      setIsLoading(false);
+    }
+  };
+
+  const switchMode = (newMode: Mode) => {
+    setMode(newMode);
+    setError(null);
   };
 
   return (
@@ -103,15 +177,60 @@ function LoginContent() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-semibold text-foreground font-mono">
-              login_
+              {mode === "login" ? "login_" : "signup_"}
             </h1>
             <p className="mt-2 text-sm text-muted">
-              Accede a tu dashboard
+              {mode === "login"
+                ? "Accede a tu dashboard"
+                : "Crea tu cuenta y conecta tu agente"}
             </p>
           </div>
 
-          {/* Login Form */}
-          <form onSubmit={handleLogin} className="space-y-4">
+          {/* Mode Toggle */}
+          <div className="flex mb-6 bg-surface border border-border rounded-lg p-1">
+            <button
+              type="button"
+              onClick={() => switchMode("login")}
+              className={`flex-1 py-2 text-sm font-mono rounded-md transition-colors ${
+                mode === "login"
+                  ? "bg-foreground text-background"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              ./login
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode("signup")}
+              className={`flex-1 py-2 text-sm font-mono rounded-md transition-colors ${
+                mode === "signup"
+                  ? "bg-foreground text-background"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              ./signup
+            </button>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={mode === "login" ? handleLogin : handleSignup} className="space-y-4">
+            {mode === "signup" && (
+              <div>
+                <label className="block text-xs font-medium mb-2 text-muted font-mono">
+                  nombre
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  placeholder="Tu nombre o empresa"
+                  className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                />
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-medium mb-2 text-muted font-mono">
                 email
@@ -138,6 +257,7 @@ function LoginContent() {
                 required
                 disabled={isLoading}
                 placeholder="••••••••"
+                minLength={6}
                 className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
@@ -157,23 +277,37 @@ function LoginContent() {
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  ./continuar
+                  {mode === "login" ? "./continuar" : "./crear_cuenta"}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          {/* Link to Demo */}
+          {/* Switch mode link */}
           <div className="mt-8 text-center">
             <p className="text-xs text-muted font-mono">
-              ¿No tienes cuenta?{' '}
-              <Link
-                href="/demo"
-                className="text-terminal-green hover:underline"
-              >
-                solicita una demo
-              </Link>
+              {mode === "login" ? (
+                <>
+                  ¿No tienes cuenta?{' '}
+                  <button
+                    onClick={() => switchMode("signup")}
+                    className="text-terminal-green hover:underline"
+                  >
+                    regístrate
+                  </button>
+                </>
+              ) : (
+                <>
+                  ¿Ya tienes cuenta?{' '}
+                  <button
+                    onClick={() => switchMode("login")}
+                    className="text-terminal-green hover:underline"
+                  >
+                    inicia sesión
+                  </button>
+                </>
+              )}
             </p>
           </div>
 

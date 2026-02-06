@@ -17,7 +17,12 @@ const navItems = [
   { href: '/dashboard/crm', label: 'pipeline' },
   { href: '/dashboard/conversations', label: 'inbox' },
   { href: '/broadcasts', label: 'broadcasts' },
-  { href: '/dashboard/agent', label: 'agente' },
+  { href: '/dashboard/agent', label: 'agente', subItems: [
+    { href: '/dashboard/agent', label: 'config' },
+    { href: '/dashboard/agent/prompt', label: 'prompt' },
+    { href: '/dashboard/agent/knowledge', label: 'knowledge' },
+    { href: '/dashboard/agent/tools', label: 'tools' },
+  ]},
   { href: '/dashboard/settings', label: 'settings' },
 ];
 
@@ -131,8 +136,32 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
         </div>
       </nav>
 
+      {/* Agent Sub-Nav */}
+      {pathname.startsWith('/dashboard/agent') && (
+        <div className="fixed top-12 left-0 right-0 z-40 h-10 border-b bg-surface border-border">
+          <div className="h-full max-w-6xl mx-auto px-4 flex items-center gap-4">
+            {navItems.find(i => i.href === '/dashboard/agent')?.subItems?.map((sub) => {
+              const isSubActive = pathname === sub.href;
+              return (
+                <Link
+                  key={sub.href}
+                  href={sub.href}
+                  className={`text-xs transition-colors font-mono ${
+                    isSubActive
+                      ? 'text-foreground'
+                      : 'text-muted hover:text-foreground'
+                  }`}
+                >
+                  ./{sub.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Content */}
-      <main className="pt-12 pb-16 md:pb-0">
+      <main className={`${pathname.startsWith('/dashboard/agent') ? 'pt-[88px]' : 'pt-12'} pb-16 md:pb-0`}>
         {children}
       </main>
     </div>

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getTenantIdForUser } from '@/lib/supabase/user-role';
+import { getOrCreateTenant } from '@/lib/tenant/context';
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 
 export default async function OnboardingPage() {
@@ -11,9 +12,11 @@ export default async function OnboardingPage() {
     redirect('/login');
   }
 
-  const tenantId = await getTenantIdForUser(user.email);
+  // Try to get existing tenant, or create one if missing
+  let tenantId = await getTenantIdForUser(user.email);
   if (!tenantId) {
-    redirect('/login');
+    const tenant = await getOrCreateTenant(user.email, user.user_metadata?.name);
+    tenantId = tenant.id;
   }
 
   // Check if already completed onboarding

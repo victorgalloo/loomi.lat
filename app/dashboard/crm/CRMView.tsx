@@ -287,7 +287,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowModal(false)}
           />
           <div className="relative w-full max-w-md mx-4 rounded-xl shadow-2xl bg-surface border border-border">

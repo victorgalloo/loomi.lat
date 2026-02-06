@@ -66,7 +66,7 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-background/80 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
       />
 
       <div className="flex min-h-full items-center justify-center p-4">

@@ -19,19 +19,20 @@ export async function GET() {
       return NextResponse.json({ error: 'No tenant found' }, { status: 403 });
     }
 
-    // Get WhatsApp account for this tenant
+    // Get first active WhatsApp account for this tenant (templates are per WABA)
     const db = getSupabase();
-    const { data: account, error: accountError } = await db
+    const { data: accounts, error: accountError } = await db
       .from('whatsapp_accounts')
       .select('waba_id, access_token_encrypted')
       .eq('tenant_id', tenantId)
       .eq('status', 'active')
-      .single();
+      .limit(1);
 
-    if (accountError || !account) {
+    if (accountError || !accounts || accounts.length === 0) {
       return NextResponse.json({ error: 'WhatsApp not connected' }, { status: 400 });
     }
 
+    const account = accounts[0];
     const accessToken = decryptAccessToken(account.access_token_encrypted);
 
     // Fetch templates from Meta API

@@ -123,27 +123,34 @@ export async function getTenantFromPhoneNumberId(
 
 /**
  * Get tenant credentials for sending messages
+ * When multiple numbers exist, returns the first active one unless a specific phoneNumberId is provided
  */
 export async function getTenantCredentials(
-  tenantId: string
+  tenantId: string,
+  phoneNumberId?: string
 ): Promise<TenantCredentials | null> {
   const supabase = getSupabase();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('whatsapp_accounts')
     .select('phone_number_id, access_token_encrypted')
     .eq('tenant_id', tenantId)
-    .eq('status', 'active')
-    .single();
+    .eq('status', 'active');
 
-  if (error || !data) {
+  if (phoneNumberId) {
+    query = query.eq('phone_number_id', phoneNumberId);
+  }
+
+  const { data, error } = await query.limit(1);
+
+  if (error || !data || data.length === 0) {
     console.error(`[Tenant] No active WhatsApp account for tenant: ${tenantId}`);
     return null;
   }
 
   return {
-    phoneNumberId: data.phone_number_id,
-    accessToken: decryptAccessToken(data.access_token_encrypted),
+    phoneNumberId: data[0].phone_number_id,
+    accessToken: decryptAccessToken(data[0].access_token_encrypted),
     tenantId
   };
 }
@@ -301,31 +308,31 @@ export async function getOrCreateTenant(
 }
 
 /**
- * Get WhatsApp account for a tenant
+ * Get all WhatsApp accounts for a tenant
  */
-export async function getWhatsAppAccount(tenantId: string): Promise<WhatsAppAccount | null> {
+export async function getWhatsAppAccounts(tenantId: string): Promise<WhatsAppAccount[]> {
   const supabase = getSupabase();
 
   const { data, error } = await supabase
     .from('whatsapp_accounts')
     .select('*')
     .eq('tenant_id', tenantId)
-    .single();
+    .order('connected_at', { ascending: false });
 
-  if (error || !data) {
-    return null;
+  if (error || !data || data.length === 0) {
+    return [];
   }
 
-  return {
-    id: data.id,
-    tenantId: data.tenant_id,
-    wabaId: data.waba_id,
-    phoneNumberId: data.phone_number_id,
-    displayPhoneNumber: data.display_phone_number,
-    businessName: data.business_name,
-    status: data.status,
-    connectedAt: new Date(data.connected_at)
-  };
+  return data.map(d => ({
+    id: d.id,
+    tenantId: d.tenant_id,
+    wabaId: d.waba_id,
+    phoneNumberId: d.phone_number_id,
+    displayPhoneNumber: d.display_phone_number,
+    businessName: d.business_name,
+    status: d.status,
+    connectedAt: new Date(d.connected_at)
+  }));
 }
 
 /**

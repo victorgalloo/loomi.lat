@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
-import { getWhatsAppAccount } from "@/lib/tenant/context";
+import { getWhatsAppAccounts } from "@/lib/tenant/context";
 import DashboardLayoutClient from "@/app/dashboard/DashboardLayoutClient";
 
 export default async function BroadcastsLayout({
@@ -28,8 +28,8 @@ export default async function BroadcastsLayout({
   let isConnected = false;
 
   if (tenantId) {
-    const whatsappAccount = await getWhatsAppAccount(tenantId);
-    isConnected = whatsappAccount?.status === 'active';
+    const whatsappAccounts = await getWhatsAppAccounts(tenantId);
+    isConnected = whatsappAccounts.some(a => a.status === 'active');
   }
 
   return (

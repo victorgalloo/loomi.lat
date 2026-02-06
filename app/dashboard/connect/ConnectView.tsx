@@ -1,24 +1,49 @@
 'use client';
 
-import { MessageCircle, CheckCircle, Phone, Building, Calendar, Shield, HelpCircle } from 'lucide-react';
+import { useState } from 'react';
+import { MessageCircle, CheckCircle, Phone, Building, Calendar, Shield, HelpCircle, Plus, Trash2 } from 'lucide-react';
+
+interface WhatsAppAccountInfo {
+  phoneNumberId: string;
+  displayPhoneNumber?: string | null;
+  businessName?: string | null;
+  wabaId?: string | null;
+  connectedAt?: string | null;
+}
 
 interface ConnectViewProps {
   isConnected: boolean;
-  whatsappAccount: {
-    displayPhoneNumber?: string | null;
-    businessName?: string | null;
-    wabaId?: string | null;
-    connectedAt?: string | null;
-  } | null;
+  whatsappAccounts: WhatsAppAccountInfo[];
 }
 
-export default function ConnectView({ isConnected, whatsappAccount }: ConnectViewProps) {
+export default function ConnectView({ isConnected, whatsappAccounts }: ConnectViewProps) {
+  const [disconnecting, setDisconnecting] = useState<string | null>(null);
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const handleDisconnect = async (phoneNumberId: string) => {
+    if (!confirm('¿Estás seguro de que quieres desconectar este número?')) return;
+
+    setDisconnecting(phoneNumberId);
+    try {
+      const res = await fetch('/api/whatsapp/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'disconnect', phone_number_id: phoneNumberId }),
+      });
+
+      if (res.ok) {
+        window.location.reload();
+      }
+    } finally {
+      setDisconnecting(null);
+    }
   };
 
   return (
@@ -51,15 +76,15 @@ export default function ConnectView({ isConnected, whatsappAccount }: ConnectVie
           </p>
         </div>
 
-        {isConnected && whatsappAccount?.displayPhoneNumber && (
+        {isConnected && (
           <>
             <div className="w-px h-8 bg-border" />
             <div>
               <p className="text-xs uppercase tracking-wider text-muted font-mono">
-                número
+                números
               </p>
               <p className="text-sm font-mono mt-1 text-foreground">
-                {whatsappAccount.displayPhoneNumber}
+                {whatsappAccounts.length}
               </p>
             </div>
           </>
@@ -69,78 +94,78 @@ export default function ConnectView({ isConnected, whatsappAccount }: ConnectVie
       {isConnected ? (
         /* Connected State */
         <div className="space-y-4">
-          {/* Connection Details */}
-          <div className="rounded-xl p-5 bg-surface border border-border">
-            <h2 className="text-sm font-medium mb-4 flex items-center gap-2 text-foreground font-mono">
-              <CheckCircle className="w-4 h-4 text-terminal-green" />
-              detalles de conexión
-            </h2>
-
-            <dl className="space-y-0">
-              <div className="flex items-center justify-between py-3 border-b border-border">
-                <dt className="text-sm flex items-center gap-2 text-muted">
-                  <Phone className="w-4 h-4" />
-                  número de teléfono
-                </dt>
-                <dd className="text-sm font-mono text-foreground">
-                  {whatsappAccount?.displayPhoneNumber || 'No disponible'}
-                </dd>
-              </div>
-
-              <div className="flex items-center justify-between py-3 border-b border-border">
-                <dt className="text-sm flex items-center gap-2 text-muted">
-                  <Building className="w-4 h-4" />
-                  nombre del negocio
-                </dt>
-                <dd className="text-sm text-foreground">
-                  {whatsappAccount?.businessName || 'No disponible'}
-                </dd>
-              </div>
-
-              <div className="flex items-center justify-between py-3 border-b border-border">
-                <dt className="text-sm flex items-center gap-2 text-muted">
-                  <Shield className="w-4 h-4" />
-                  ID de cuenta
-                </dt>
-                <dd className="text-xs font-mono text-muted">
-                  {whatsappAccount?.wabaId || 'No disponible'}
-                </dd>
-              </div>
-
-              <div className="flex items-center justify-between py-3">
-                <dt className="text-sm flex items-center gap-2 text-muted">
-                  <Calendar className="w-4 h-4" />
-                  conectado desde
-                </dt>
-                <dd className="text-sm text-foreground">
-                  {whatsappAccount?.connectedAt ? formatDate(whatsappAccount.connectedAt) : 'No disponible'}
-                </dd>
-              </div>
-            </dl>
-          </div>
-
-          {/* Actions */}
-          <div className="rounded-xl p-5 bg-surface border border-border">
-            <h3 className="text-sm font-medium mb-4 text-foreground font-mono">
-              acciones
-            </h3>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                className="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors text-muted bg-surface-2 hover:bg-border hover:text-foreground border border-border font-mono"
-              >
-                reconectar
-              </button>
-              <form action="/api/whatsapp/connect" method="POST">
-                <input type="hidden" name="action" value="disconnect" />
+          {/* Connected Numbers List */}
+          {whatsappAccounts.map((account) => (
+            <div key={account.phoneNumberId} className="rounded-xl p-5 bg-surface border border-border">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-medium flex items-center gap-2 text-foreground font-mono">
+                  <CheckCircle className="w-4 h-4 text-terminal-green" />
+                  {account.displayPhoneNumber || account.phoneNumberId}
+                </h2>
                 <button
-                  type="submit"
-                  className="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors text-terminal-red bg-terminal-red/10 hover:bg-terminal-red/20 font-mono"
+                  type="button"
+                  onClick={() => handleDisconnect(account.phoneNumberId)}
+                  disabled={disconnecting === account.phoneNumberId}
+                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors text-terminal-red bg-terminal-red/10 hover:bg-terminal-red/20 font-mono disabled:opacity-50"
                 >
-                  desconectar
+                  <Trash2 className="w-3 h-3" />
+                  {disconnecting === account.phoneNumberId ? 'desconectando...' : 'desconectar'}
                 </button>
-              </form>
+              </div>
+
+              <dl className="space-y-0">
+                <div className="flex items-center justify-between py-3 border-b border-border">
+                  <dt className="text-sm flex items-center gap-2 text-muted">
+                    <Phone className="w-4 h-4" />
+                    número de teléfono
+                  </dt>
+                  <dd className="text-sm font-mono text-foreground">
+                    {account.displayPhoneNumber || 'No disponible'}
+                  </dd>
+                </div>
+
+                <div className="flex items-center justify-between py-3 border-b border-border">
+                  <dt className="text-sm flex items-center gap-2 text-muted">
+                    <Building className="w-4 h-4" />
+                    nombre del negocio
+                  </dt>
+                  <dd className="text-sm text-foreground">
+                    {account.businessName || 'No disponible'}
+                  </dd>
+                </div>
+
+                <div className="flex items-center justify-between py-3 border-b border-border">
+                  <dt className="text-sm flex items-center gap-2 text-muted">
+                    <Shield className="w-4 h-4" />
+                    ID de cuenta
+                  </dt>
+                  <dd className="text-xs font-mono text-muted">
+                    {account.wabaId || 'No disponible'}
+                  </dd>
+                </div>
+
+                <div className="flex items-center justify-between py-3">
+                  <dt className="text-sm flex items-center gap-2 text-muted">
+                    <Calendar className="w-4 h-4" />
+                    conectado desde
+                  </dt>
+                  <dd className="text-sm text-foreground">
+                    {account.connectedAt ? formatDate(account.connectedAt) : 'No disponible'}
+                  </dd>
+                </div>
+              </dl>
             </div>
+          ))}
+
+          {/* Add Number Button */}
+          <div className="rounded-xl p-5 bg-surface border border-border border-dashed">
+            <a
+              href="/api/whatsapp/connect"
+              className="flex items-center justify-center gap-2 py-2 text-sm font-medium text-muted hover:text-foreground transition-colors font-mono"
+            >
+              <Plus className="w-4 h-4" />
+              agregar otro número
+            </a>
           </div>
         </div>
       ) : (

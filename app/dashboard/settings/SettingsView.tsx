@@ -15,6 +15,7 @@ interface SettingsViewProps {
     connected: boolean;
     phoneNumber: string | null;
     businessName: string | null;
+    totalNumbers?: number;
   };
 }
 
@@ -101,6 +102,9 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
           )}
           {whatsapp.connected && whatsapp.businessName && (
             <Row label="negocio" value={whatsapp.businessName} />
+          )}
+          {whatsapp.connected && (whatsapp.totalNumbers ?? 0) > 1 && (
+            <Row label="números conectados" value={String(whatsapp.totalNumbers)} />
           )}
         </div>
       </section>

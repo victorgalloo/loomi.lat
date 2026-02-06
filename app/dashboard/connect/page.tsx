@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
-import { getWhatsAppAccount } from "@/lib/tenant/context";
+import { getWhatsAppAccounts } from "@/lib/tenant/context";
 import ConnectView from "./ConnectView";
 
 export default async function ConnectPage() {
@@ -26,18 +26,19 @@ export default async function ConnectPage() {
     redirect("/login");
   }
 
-  const whatsappAccount = await getWhatsAppAccount(tenantId);
-  const isConnected = whatsappAccount?.status === 'active';
+  const whatsappAccounts = await getWhatsAppAccounts(tenantId);
+  const activeAccounts = whatsappAccounts.filter(a => a.status === 'active');
 
   return (
     <ConnectView
-      isConnected={isConnected}
-      whatsappAccount={whatsappAccount ? {
-        displayPhoneNumber: whatsappAccount.displayPhoneNumber,
-        businessName: whatsappAccount.businessName,
-        wabaId: whatsappAccount.wabaId,
-        connectedAt: whatsappAccount.connectedAt?.toISOString() || null,
-      } : null}
+      isConnected={activeAccounts.length > 0}
+      whatsappAccounts={activeAccounts.map(a => ({
+        phoneNumberId: a.phoneNumberId,
+        displayPhoneNumber: a.displayPhoneNumber,
+        businessName: a.businessName,
+        wabaId: a.wabaId,
+        connectedAt: a.connectedAt?.toISOString() || null,
+      }))}
     />
   );
 }

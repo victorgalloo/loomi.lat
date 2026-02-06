@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import TenantDashboard from "@/components/dashboard/TenantDashboard";
-import { getTenantById, getWhatsAppAccount } from "@/lib/tenant/context";
+import { getTenantById, getWhatsAppAccounts } from "@/lib/tenant/context";
 import { isAuthorizedPartner } from "@/lib/partners/auth";
 
 export default async function DashboardPage() {
@@ -36,7 +36,8 @@ export default async function DashboardPage() {
       redirect("/login");
     }
 
-    const whatsappAccount = await getWhatsAppAccount(tenantId);
+    const whatsappAccounts = await getWhatsAppAccounts(tenantId);
+    const primaryAccount = whatsappAccounts.find(a => a.status === 'active') || whatsappAccounts[0] || null;
 
     // Get stats for this tenant
     const [leadsResult, conversationsResult, messagesResult] = await Promise.all([
@@ -69,9 +70,9 @@ export default async function DashboardPage() {
           subscriptionStatus: tenant.subscriptionStatus
         }}
         whatsappAccount={{
-          connected: whatsappAccount?.status === 'active',
-          phoneNumber: whatsappAccount?.displayPhoneNumber || undefined,
-          businessName: whatsappAccount?.businessName || undefined
+          connected: primaryAccount?.status === 'active',
+          phoneNumber: primaryAccount?.displayPhoneNumber || undefined,
+          businessName: primaryAccount?.businessName || undefined
         }}
         stats={{
           totalLeads: leadsResult.count || 0,

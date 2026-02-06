@@ -22,6 +22,7 @@ interface ConnectRequestBody {
 
 interface DisconnectRequestBody {
   action: 'disconnect';
+  phone_number_id?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
     // Handle disconnect action
     if ('action' in body && body.action === 'disconnect') {
       const tenant = await getOrCreateTenant(user.email);
-      const success = await disconnectWhatsApp(tenant.id);
+      const success = await disconnectWhatsApp(tenant.id, body.phone_number_id);
 
       if (!success) {
         return NextResponse.json(
@@ -142,30 +143,33 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get WhatsApp account
-    const { data: whatsappAccount } = await supabase
+    // Get all WhatsApp accounts
+    const { data: whatsappAccounts } = await supabase
       .from('whatsapp_accounts')
       .select('id, waba_id, phone_number_id, display_phone_number, business_name, status, connected_at')
       .eq('tenant_id', tenant.id)
-      .single();
+      .order('connected_at', { ascending: false });
 
-    if (!whatsappAccount || whatsappAccount.status !== 'active') {
+    const activeAccounts = (whatsappAccounts || []).filter(a => a.status === 'active');
+
+    if (activeAccounts.length === 0) {
       return NextResponse.json({
         connected: false,
+        accounts: [],
         message: 'No active WhatsApp connection'
       });
     }
 
     return NextResponse.json({
       connected: true,
-      data: {
-        wabaId: whatsappAccount.waba_id,
-        phoneNumberId: whatsappAccount.phone_number_id,
-        displayPhoneNumber: whatsappAccount.display_phone_number,
-        businessName: whatsappAccount.business_name,
-        status: whatsappAccount.status,
-        connectedAt: whatsappAccount.connected_at
-      }
+      accounts: activeAccounts.map(a => ({
+        wabaId: a.waba_id,
+        phoneNumberId: a.phone_number_id,
+        displayPhoneNumber: a.display_phone_number,
+        businessName: a.business_name,
+        status: a.status,
+        connectedAt: a.connected_at
+      }))
     });
 
   } catch (error) {

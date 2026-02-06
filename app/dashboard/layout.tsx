@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
-import { getWhatsAppAccount } from "@/lib/tenant/context";
+import { getWhatsAppAccounts } from "@/lib/tenant/context";
 import { isAuthorizedPartner } from "@/lib/partners/auth";
 import DashboardLayoutClient from "./DashboardLayoutClient";
 
@@ -36,8 +36,8 @@ export default async function DashboardLayout({
   let isConnected = false;
 
   if (tenantId) {
-    const whatsappAccount = await getWhatsAppAccount(tenantId);
-    isConnected = whatsappAccount?.status === 'active';
+    const whatsappAccounts = await getWhatsAppAccounts(tenantId);
+    isConnected = whatsappAccounts.some(a => a.status === 'active');
   }
 
   return (

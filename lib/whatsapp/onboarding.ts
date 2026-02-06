@@ -210,12 +210,12 @@ export async function completeOnboarding(params: {
     console.log('[Onboarding] Saving credentials...');
     const encryptedToken = encryptAccessToken(accessToken);
 
-    // Check if account already exists
+    // Check if this phone number already exists for this tenant
     const { data: existingAccount } = await supabase
       .from('whatsapp_accounts')
       .select('id')
       .eq('tenant_id', tenantId)
-      .eq('waba_id', wabaId)
+      .eq('phone_number_id', phoneNumberId)
       .single();
 
     if (existingAccount) {
@@ -277,14 +277,22 @@ export async function completeOnboarding(params: {
 
 /**
  * Disconnect WhatsApp account
+ * If phoneNumberId is provided, disconnects only that number.
+ * Otherwise, disconnects all numbers for the tenant.
  */
-export async function disconnectWhatsApp(tenantId: string): Promise<boolean> {
+export async function disconnectWhatsApp(tenantId: string, phoneNumberId?: string): Promise<boolean> {
   const supabase = getSupabase();
 
-  const { error } = await supabase
+  let query = supabase
     .from('whatsapp_accounts')
     .update({ status: 'inactive' })
     .eq('tenant_id', tenantId);
+
+  if (phoneNumberId) {
+    query = query.eq('phone_number_id', phoneNumberId);
+  }
+
+  const { error } = await query;
 
   if (error) {
     console.error('[Onboarding] Failed to disconnect WhatsApp:', error);

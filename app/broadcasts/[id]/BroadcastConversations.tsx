@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { MessageSquare, Flame, PhoneForwarded, Download, PhoneOff, X } from 'lucide-react';
+import { MessageSquare, Flame, PhoneForwarded, Download, PhoneOff, X, Snowflake, Bot, ThermometerSun } from 'lucide-react';
 import Link from 'next/link';
 
-type Category = 'handoff' | 'hot' | 'normal';
+type Category = 'handoff' | 'hot' | 'warm' | 'cold' | 'bot_autoresponse';
 
 interface Conversation {
   id: string;
@@ -53,9 +53,14 @@ const i18n = {
     viewInbox: 'open inbox',
     handoff: 'handoff',
     hotLead: 'hot lead',
+    warmLead: 'warm',
+    coldLead: 'cold',
+    botAutoresponse: 'auto-reply',
     sectionHandoff: 'Needs attention',
     sectionHot: 'Hot leads',
-    sectionNormal: 'Conversations',
+    sectionWarm: 'Warm leads',
+    sectionCold: 'Cold leads',
+    sectionBot: 'Auto-responses',
     sectionNoResponse: 'No response',
     exportCsv: 'export CSV',
     noMessages: 'No messages',
@@ -73,9 +78,14 @@ const i18n = {
     viewInbox: 'abrir inbox',
     handoff: 'handoff',
     hotLead: 'lead caliente',
+    warmLead: 'tibio',
+    coldLead: 'frío',
+    botAutoresponse: 'auto-respuesta',
     sectionHandoff: 'Requieren atención',
     sectionHot: 'Leads calientes',
-    sectionNormal: 'Conversaciones',
+    sectionWarm: 'Leads tibios',
+    sectionCold: 'Leads fríos',
+    sectionBot: 'Auto-respuestas',
     sectionNoResponse: 'Sin respuesta',
     exportCsv: 'exportar CSV',
     noMessages: 'Sin mensajes',
@@ -206,6 +216,15 @@ function ChatPanel({ conv, lang, t, onClose }: {
           {conv.category === 'hot' && (
             <span className="text-orange-400">{t.hotLead}</span>
           )}
+          {conv.category === 'warm' && (
+            <span className="text-terminal-yellow">{t.warmLead}</span>
+          )}
+          {conv.category === 'cold' && (
+            <span className="text-blue-400">{t.coldLead}</span>
+          )}
+          {conv.category === 'bot_autoresponse' && (
+            <span className="text-muted">{t.botAutoresponse}</span>
+          )}
         </div>
 
         {/* Messages */}
@@ -257,11 +276,20 @@ function ConversationRow({ conv, lang, t, onClick }: {
             ? 'bg-terminal-red/10 border-terminal-red/30'
             : conv.category === 'hot'
             ? 'bg-orange-500/10 border-orange-500/30'
+            : conv.category === 'warm'
+            ? 'bg-terminal-yellow/10 border-terminal-yellow/30'
+            : conv.category === 'cold'
+            ? 'bg-blue-500/10 border-blue-500/30'
+            : conv.category === 'bot_autoresponse'
+            ? 'bg-muted/10 border-muted/30'
             : 'bg-background border-border'
         }`}>
           <span className={`text-xs font-mono ${
             conv.category === 'handoff' ? 'text-terminal-red'
             : conv.category === 'hot' ? 'text-orange-400'
+            : conv.category === 'warm' ? 'text-terminal-yellow'
+            : conv.category === 'cold' ? 'text-blue-400'
+            : conv.category === 'bot_autoresponse' ? 'text-muted'
             : 'text-foreground'
           }`}>
             {conv.leadName.charAt(0).toUpperCase()}
@@ -285,6 +313,21 @@ function ConversationRow({ conv, lang, t, onClick }: {
           {conv.category === 'hot' && (
             <span className="text-[10px] font-mono text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded">
               {t.hotLead}
+            </span>
+          )}
+          {conv.category === 'warm' && (
+            <span className="text-[10px] font-mono text-terminal-yellow bg-terminal-yellow/10 px-1.5 py-0.5 rounded">
+              {t.warmLead}
+            </span>
+          )}
+          {conv.category === 'cold' && (
+            <span className="text-[10px] font-mono text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
+              {t.coldLead}
+            </span>
+          )}
+          {conv.category === 'bot_autoresponse' && (
+            <span className="text-[10px] font-mono text-muted bg-muted/10 px-1.5 py-0.5 rounded">
+              {t.botAutoresponse}
             </span>
           )}
         </div>
@@ -368,7 +411,9 @@ export default function BroadcastConversations({
 
   const handoffs = conversations.filter(c => c.category === 'handoff');
   const hot = conversations.filter(c => c.category === 'hot');
-  const normal = conversations.filter(c => c.category === 'normal');
+  const warm = conversations.filter(c => c.category === 'warm');
+  const cold = conversations.filter(c => c.category === 'cold');
+  const botAutoresponse = conversations.filter(c => c.category === 'bot_autoresponse');
   const responseRate = totalSent > 0 ? ((conversations.length / totalSent) * 100).toFixed(1) : '0';
 
   return (
@@ -439,15 +484,45 @@ export default function BroadcastConversations({
               </>
             )}
 
-            {normal.length > 0 && (
+            {warm.length > 0 && (
               <>
                 <SectionHeader
-                  icon={<MessageSquare className="w-3 h-3" />}
-                  label={t.sectionNormal} count={normal.length} color="text-muted"
-                  onExport={() => exportCategory('conversations', normal.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
+                  icon={<ThermometerSun className="w-3 h-3" />}
+                  label={t.sectionWarm} count={warm.length} color="text-terminal-yellow"
+                  onExport={() => exportCategory('warm-leads', warm.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
                 />
                 <div className="divide-y divide-border/50">
-                  {normal.map(conv => (
+                  {warm.map(conv => (
+                    <ConversationRow key={conv.id} conv={conv} lang={lang} t={t} onClick={() => setSelectedConv(conv)} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {cold.length > 0 && (
+              <>
+                <SectionHeader
+                  icon={<Snowflake className="w-3 h-3" />}
+                  label={t.sectionCold} count={cold.length} color="text-blue-400"
+                  onExport={() => exportCategory('cold-leads', cold.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
+                />
+                <div className="divide-y divide-border/50">
+                  {cold.map(conv => (
+                    <ConversationRow key={conv.id} conv={conv} lang={lang} t={t} onClick={() => setSelectedConv(conv)} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {botAutoresponse.length > 0 && (
+              <>
+                <SectionHeader
+                  icon={<Bot className="w-3 h-3" />}
+                  label={t.sectionBot} count={botAutoresponse.length} color="text-muted"
+                  onExport={() => exportCategory('bot-autoresponse', botAutoresponse.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
+                />
+                <div className="divide-y divide-border/50">
+                  {botAutoresponse.map(conv => (
                     <ConversationRow key={conv.id} conv={conv} lang={lang} t={t} onClick={() => setSelectedConv(conv)} />
                   ))}
                 </div>

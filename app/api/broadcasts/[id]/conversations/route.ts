@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getTenantIdForUser } from '@/lib/supabase/user-role';
+import {
+  classifyConversationWithAI,
+  applyClassificationToLead,
+  type Classification,
+} from '@/lib/broadcasts/classify';
 
 // Generate all plausible phone formats for matching.
 // Handles: with/without +, Mexican numbers with/without the "1" after "52".
@@ -21,14 +26,6 @@ function phoneVariants(digits: string): string[] {
 
   return [...variants];
 }
-
-const HOT_STAGES = new Set([
-  'calificado', 'qualified',
-  'propuesta', 'proposal',
-  'negociacion', 'negotiation',
-  'ganado', 'won',
-  'demo_scheduled',
-]);
 
 export async function GET(
   _request: NextRequest,
@@ -105,7 +102,7 @@ export async function GET(
       (handoffs || []).map(h => [h.conversation_id, h])
     );
 
-    // 5. Check post-broadcast messages + categorize
+    // 5. Check post-broadcast messages + classify
     const respondedDigits = new Set<string>();
 
     const conversations = (await Promise.all(
@@ -115,29 +112,28 @@ export async function GET(
           stage: string; priority: string | null; is_qualified: boolean | null;
         };
 
-        const { count: postBroadcastCount } = await supabase
+        // Fetch ALL post-broadcast messages for classification
+        const { data: allMessages, count } = await supabase
           .from('messages')
-          .select('id', { count: 'exact', head: true })
+          .select('content, role, created_at', { count: 'exact' })
           .eq('conversation_id', conv.id)
-          .eq('role', 'user')
-          .gte('created_at', campaign.started_at);
+          .gte('created_at', campaign.started_at)
+          .order('created_at', { ascending: true });
 
-        if (!postBroadcastCount || postBroadcastCount === 0) return null;
+        // Check if there are any user messages post-broadcast
+        const hasUserMessages = (allMessages || []).some(m => m.role === 'user');
+        if (!hasUserMessages) return null;
 
         // Mark this phone as responded
         respondedDigits.add(lead.phone.replace(/\D/g, ''));
 
-        const { data: messages, count } = await supabase
-          .from('messages')
-          .select('content, role, created_at', { count: 'exact' })
-          .eq('conversation_id', conv.id)
-          .order('created_at', { ascending: false })
-          .limit(1);
+        const lastMessage = allMessages && allMessages.length > 0
+          ? allMessages[allMessages.length - 1]
+          : null;
 
-        const lastMessage = messages?.[0];
         const handoff = handoffMap.get(conv.id);
 
-        let category: 'handoff' | 'hot' | 'normal' = 'normal';
+        let category: 'handoff' | 'hot' | 'warm' | 'cold' | 'bot_autoresponse';
         let handoffReason: string | null = null;
         let handoffPriority: string | null = null;
 
@@ -145,12 +141,20 @@ export async function GET(
           category = 'handoff';
           handoffReason = handoff?.reason || null;
           handoffPriority = handoff?.priority || null;
-        } else if (
-          lead.priority === 'high' ||
-          lead.is_qualified ||
-          HOT_STAGES.has((lead.stage || '').toLowerCase())
-        ) {
-          category = 'hot';
+        } else {
+          // Classify by message content using AI
+          const classification: Classification = await classifyConversationWithAI(
+            (allMessages || []).map(m => ({ role: m.role, content: m.content }))
+          );
+          category = classification;
+
+          // Auto-update lead pipeline (only upgrades)
+          await applyClassificationToLead(
+            supabase,
+            lead.id,
+            classification,
+            lead.stage || 'Nuevo',
+          );
         }
 
         return {

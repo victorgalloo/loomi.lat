@@ -22,7 +22,6 @@ function phoneVariants(digits: string): string[] {
   return [...variants];
 }
 
-// Advanced stages that indicate a hot lead
 const HOT_STAGES = new Set([
   'calificado', 'qualified',
   'propuesta', 'proposal',
@@ -48,7 +47,7 @@ export async function GET(
       return NextResponse.json({ error: 'No tenant found' }, { status: 403 });
     }
 
-    // 1. Get campaign (validate ownership)
+    // 1. Get campaign
     const { data: campaign, error: campaignError } = await supabase
       .from('broadcast_campaigns')
       .select('id, started_at, tenant_id')
@@ -61,27 +60,26 @@ export async function GET(
     }
 
     if (!campaign.started_at) {
-      return NextResponse.json({ conversations: [] });
+      return NextResponse.json({ conversations: [], noResponse: [] });
     }
 
-    // 2. Get unique phones from sent recipients
+    // 2. Get all sent recipients
     const { data: recipients } = await supabase
       .from('broadcast_recipients')
-      .select('phone')
+      .select('phone, name')
       .eq('campaign_id', id)
       .eq('status', 'sent');
 
     if (!recipients || recipients.length === 0) {
-      return NextResponse.json({ conversations: [] });
+      return NextResponse.json({ conversations: [], noResponse: [] });
     }
 
-    // Build all phone format variants for matching
+    // Build phone variants
     const phonesAllFormats = [...new Set(
       recipients.flatMap(r => phoneVariants(r.phone.replace(/\D/g, '')))
     )];
 
-    // 3. Get ALL conversations from leads matching those phones.
-    // Include lead qualification fields for categorization.
+    // 3. Get conversations matching recipient phones
     const { data: conversationsData } = await supabase
       .from('conversations')
       .select(`
@@ -93,31 +91,30 @@ export async function GET(
       .eq('leads.tenant_id', tenantId)
       .in('leads.phone', phonesAllFormats);
 
-    if (!conversationsData || conversationsData.length === 0) {
-      return NextResponse.json({ conversations: [] });
-    }
-
-    // 4. Get active handoffs for these conversations
-    const convIds = conversationsData.map(c => c.id);
-    const { data: handoffs } = await supabase
-      .from('handoffs')
-      .select('conversation_id, reason, priority')
-      .in('conversation_id', convIds)
-      .is('resolved_at', null);
+    // 4. Get handoffs
+    const convIds = (conversationsData || []).map(c => c.id);
+    const { data: handoffs } = convIds.length > 0
+      ? await supabase
+          .from('handoffs')
+          .select('conversation_id, reason, priority')
+          .in('conversation_id', convIds)
+          .is('resolved_at', null)
+      : { data: [] };
 
     const handoffMap = new Map(
       (handoffs || []).map(h => [h.conversation_id, h])
     );
 
-    // 5. For each conversation, check post-broadcast messages + categorize
+    // 5. Check post-broadcast messages + categorize
+    const respondedDigits = new Set<string>();
+
     const conversations = (await Promise.all(
-      conversationsData.map(async (conv) => {
+      (conversationsData || []).map(async (conv) => {
         const lead = conv.leads as unknown as {
           id: string; name: string; phone: string;
           stage: string; priority: string | null; is_qualified: boolean | null;
         };
 
-        // Check for user messages after broadcast
         const { count: postBroadcastCount } = await supabase
           .from('messages')
           .select('id', { count: 'exact', head: true })
@@ -127,7 +124,9 @@ export async function GET(
 
         if (!postBroadcastCount || postBroadcastCount === 0) return null;
 
-        // Get total message count and last message
+        // Mark this phone as responded
+        respondedDigits.add(lead.phone.replace(/\D/g, ''));
+
         const { data: messages, count } = await supabase
           .from('messages')
           .select('content, role, created_at', { count: 'exact' })
@@ -138,7 +137,6 @@ export async function GET(
         const lastMessage = messages?.[0];
         const handoff = handoffMap.get(conv.id);
 
-        // Categorize: handoff > hot > normal
         let category: 'handoff' | 'hot' | 'normal' = 'normal';
         let handoffReason: string | null = null;
         let handoffPriority: string | null = null;
@@ -172,7 +170,17 @@ export async function GET(
       })
     )).filter(Boolean);
 
-    return NextResponse.json({ conversations });
+    // 6. Build no-response list
+    const noResponse = recipients.filter(r => {
+      const digits = r.phone.replace(/\D/g, '');
+      const variants = phoneVariants(digits);
+      return !variants.some(v => respondedDigits.has(v.replace(/\D/g, '')));
+    }).map(r => ({
+      phone: r.phone,
+      name: r.name || null,
+    }));
+
+    return NextResponse.json({ conversations, noResponse });
   } catch (error) {
     console.error('Error in GET /api/broadcasts/[id]/conversations:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

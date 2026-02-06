@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { MessageSquare, ArrowUpRight, Flame, PhoneForwarded } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { MessageSquare, ArrowUpRight, Flame, PhoneForwarded, Download, PhoneOff } from 'lucide-react';
 import Link from 'next/link';
 
 type Category = 'handoff' | 'hot' | 'normal';
@@ -19,6 +19,11 @@ interface Conversation {
   category: Category;
   handoffReason: string | null;
   handoffPriority: string | null;
+}
+
+interface NoResponse {
+  phone: string;
+  name: string | null;
 }
 
 interface BroadcastConversationsProps {
@@ -44,6 +49,10 @@ const i18n = {
     sectionHandoff: 'Needs attention',
     sectionHot: 'Hot leads',
     sectionNormal: 'Conversations',
+    sectionNoResponse: 'No response',
+    exportCsv: 'export CSV',
+    phone: 'phone',
+    name: 'name',
   },
   es: {
     title: './conversaciones_',
@@ -60,6 +69,10 @@ const i18n = {
     sectionHandoff: 'Requieren atención',
     sectionHot: 'Leads calientes',
     sectionNormal: 'Conversaciones',
+    sectionNoResponse: 'Sin respuesta',
+    exportCsv: 'exportar CSV',
+    phone: 'teléfono',
+    name: 'nombre',
   },
 };
 
@@ -75,6 +88,7 @@ const handoffReasonLabels: Record<string, Record<'en' | 'es', string>> = {
 
 const stageColors: Record<string, string> = {
   initial: 'text-muted',
+  lead: 'text-muted',
   nuevo: 'text-muted',
   contactado: 'text-terminal-yellow',
   contacted: 'text-terminal-yellow',
@@ -106,13 +120,25 @@ function timeAgo(dateStr: string, lang: 'en' | 'es'): string {
   return `${diffDays}d`;
 }
 
+function downloadCsv(filename: string, rows: Array<{ phone: string; name: string }>) {
+  const header = 'phone,name';
+  const lines = rows.map(r => `"${r.phone}","${(r.name || '').replace(/"/g, '""')}"`);
+  const csv = [header, ...lines].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function ConversationRow({ conv, lang, t }: { conv: Conversation; lang: 'en' | 'es'; t: typeof i18n.en }) {
   return (
     <Link
       href={`/dashboard/conversations?id=${conv.id}`}
       className="flex items-center gap-3 px-4 py-3 hover:bg-surface-2 transition-colors group"
     >
-      {/* Avatar with category indicator */}
       <div className="relative flex-shrink-0">
         <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${
           conv.category === 'handoff'
@@ -133,7 +159,6 @@ function ConversationRow({ conv, lang, t }: { conv: Conversation; lang: 'en' | '
         </div>
       </div>
 
-      {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-mono text-foreground truncate">
@@ -163,7 +188,6 @@ function ConversationRow({ conv, lang, t }: { conv: Conversation; lang: 'en' | '
         </div>
       </div>
 
-      {/* Meta */}
       <div className="flex items-center gap-3 flex-shrink-0">
         <span className="text-[10px] font-mono text-muted">
           {conv.messageCount} {t.messages}
@@ -177,17 +201,29 @@ function ConversationRow({ conv, lang, t }: { conv: Conversation; lang: 'en' | '
   );
 }
 
-function SectionHeader({ icon, label, count, color }: {
+function SectionHeader({ icon, label, count, color, onExport }: {
   icon: React.ReactNode;
   label: string;
   count: number;
   color: string;
+  onExport?: () => void;
 }) {
   return (
-    <div className={`flex items-center gap-2 px-4 py-2 border-b border-border bg-background`}>
-      <span className={color}>{icon}</span>
-      <span className={`text-xs font-mono ${color}`}>{label}</span>
-      <span className="text-[10px] font-mono text-muted">({count})</span>
+    <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background">
+      <div className="flex items-center gap-2">
+        <span className={color}>{icon}</span>
+        <span className={`text-xs font-mono ${color}`}>{label}</span>
+        <span className="text-[10px] font-mono text-muted">({count})</span>
+      </div>
+      {onExport && (
+        <button
+          onClick={onExport}
+          className="flex items-center gap-1 text-[10px] font-mono text-muted hover:text-foreground transition-colors"
+        >
+          <Download className="w-3 h-3" />
+          CSV
+        </button>
+      )}
     </div>
   );
 }
@@ -200,7 +236,9 @@ export default function BroadcastConversations({
 }: BroadcastConversationsProps) {
   const t = i18n[lang];
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [noResponse, setNoResponse] = useState<NoResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showNoResponse, setShowNoResponse] = useState(false);
 
   useEffect(() => {
     if (!campaignStartedAt) {
@@ -214,6 +252,7 @@ export default function BroadcastConversations({
         if (res.ok) {
           const data = await res.json();
           setConversations(data.conversations || []);
+          setNoResponse(data.noResponse || []);
         }
       } catch {
         // ignore
@@ -224,6 +263,10 @@ export default function BroadcastConversations({
 
     fetchConversations();
   }, [campaignId, campaignStartedAt]);
+
+  const exportCategory = useCallback((category: string, items: Array<{ phone: string; name: string }>) => {
+    downloadCsv(`broadcast-${category}.csv`, items);
+  }, []);
 
   if (!campaignStartedAt) return null;
 
@@ -261,7 +304,7 @@ export default function BroadcastConversations({
         <div className="flex items-center justify-center py-12">
           <div className="w-4 h-4 border-2 border-muted border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : conversations.length === 0 ? (
+      ) : conversations.length === 0 && noResponse.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 gap-2">
           <MessageSquare className="w-8 h-8 text-muted/40" />
           <span className="text-sm text-muted font-mono">{t.noConversations}</span>
@@ -269,7 +312,7 @@ export default function BroadcastConversations({
         </div>
       ) : (
         <div>
-          {/* Handoffs section */}
+          {/* Handoffs */}
           {handoffs.length > 0 && (
             <>
               <SectionHeader
@@ -277,6 +320,7 @@ export default function BroadcastConversations({
                 label={t.sectionHandoff}
                 count={handoffs.length}
                 color="text-terminal-red"
+                onExport={() => exportCategory('handoff', handoffs.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
               />
               <div className="divide-y divide-border/50">
                 {handoffs.map(conv => (
@@ -286,7 +330,7 @@ export default function BroadcastConversations({
             </>
           )}
 
-          {/* Hot leads section */}
+          {/* Hot leads */}
           {hot.length > 0 && (
             <>
               <SectionHeader
@@ -294,6 +338,7 @@ export default function BroadcastConversations({
                 label={t.sectionHot}
                 count={hot.length}
                 color="text-orange-400"
+                onExport={() => exportCategory('hot-leads', hot.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
               />
               <div className="divide-y divide-border/50">
                 {hot.map(conv => (
@@ -303,17 +348,16 @@ export default function BroadcastConversations({
             </>
           )}
 
-          {/* Normal conversations */}
+          {/* Normal */}
           {normal.length > 0 && (
             <>
-              {(handoffs.length > 0 || hot.length > 0) && (
-                <SectionHeader
-                  icon={<MessageSquare className="w-3 h-3" />}
-                  label={t.sectionNormal}
-                  count={normal.length}
-                  color="text-muted"
-                />
-              )}
+              <SectionHeader
+                icon={<MessageSquare className="w-3 h-3" />}
+                label={t.sectionNormal}
+                count={normal.length}
+                color="text-muted"
+                onExport={() => exportCategory('conversations', normal.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
+              />
               <div className="divide-y divide-border/50">
                 {normal.map(conv => (
                   <ConversationRow key={conv.id} conv={conv} lang={lang} t={t} />
@@ -321,18 +365,61 @@ export default function BroadcastConversations({
               </div>
             </>
           )}
+
+          {/* No Response */}
+          {noResponse.length > 0 && (
+            <>
+              <SectionHeader
+                icon={<PhoneOff className="w-3 h-3" />}
+                label={t.sectionNoResponse}
+                count={noResponse.length}
+                color="text-muted"
+                onExport={() => exportCategory('no-response', noResponse.map(r => ({ phone: r.phone, name: r.name || '' })))}
+              />
+              <div>
+                <button
+                  onClick={() => setShowNoResponse(!showNoResponse)}
+                  className="w-full px-4 py-2 text-xs font-mono text-muted hover:text-foreground transition-colors text-left"
+                >
+                  {showNoResponse ? '▼' : '▶'} {noResponse.length} {lang === 'es' ? 'contactos sin respuesta' : 'contacts without response'}
+                </button>
+                {showNoResponse && (
+                  <div className="divide-y divide-border/50 max-h-[300px] overflow-y-auto">
+                    {noResponse.map((r, i) => (
+                      <div key={i} className="flex items-center gap-3 px-4 py-2">
+                        <div className="w-6 h-6 rounded-full bg-background border border-border flex items-center justify-center flex-shrink-0">
+                          <span className="text-[10px] font-mono text-muted">
+                            {(r.name || '?').charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="text-xs font-mono text-muted">{r.name || '-'}</span>
+                        <span className="text-xs font-mono text-muted/60">{r.phone}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 
-      {/* Footer link */}
+      {/* Footer */}
       {conversations.length > 0 && (
-        <div className="px-4 py-2 border-t border-border">
+        <div className="flex items-center justify-between px-4 py-2 border-t border-border">
           <Link
             href="/dashboard/conversations"
             className="text-xs font-mono text-muted hover:text-foreground transition-colors"
           >
             {t.viewInbox} →
           </Link>
+          <button
+            onClick={() => exportCategory('all-responses', conversations.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
+            className="flex items-center gap-1 text-xs font-mono text-muted hover:text-foreground transition-colors"
+          >
+            <Download className="w-3 h-3" />
+            {t.exportCsv}
+          </button>
         </div>
       )}
     </div>

@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import TenantDashboard from "@/components/dashboard/TenantDashboard";
-import { getTenantById, getWhatsAppAccounts } from "@/lib/tenant/context";
+import { getTenantById, getWhatsAppAccounts, getOrCreateTenant } from "@/lib/tenant/context";
 import { isAuthorizedPartner } from "@/lib/partners/auth";
 
 export default async function DashboardPage() {
@@ -22,13 +22,20 @@ export default async function DashboardPage() {
   }
 
   // Determine user role
-  const userRole = await getUserRole(user.email);
+  let userRole = await getUserRole(user.email);
+
+  // For new users (role "admin" but not a partner), auto-create tenant
+  if (userRole === "admin") {
+    await getOrCreateTenant(user.email, user.user_metadata?.name);
+    userRole = "tenant";
+  }
 
   // Handle tenant user (multi-tenant dashboard)
   if (userRole === "tenant") {
-    const tenantId = await getTenantIdForUser(user.email);
+    let tenantId = await getTenantIdForUser(user.email);
     if (!tenantId) {
-      redirect("/login");
+      const tenant = await getOrCreateTenant(user.email, user.user_metadata?.name);
+      tenantId = tenant.id;
     }
 
     const tenant = await getTenantById(tenantId);

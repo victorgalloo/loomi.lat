@@ -41,7 +41,9 @@ function LoginContent() {
       });
 
       if (!res.ok) {
-        router.push('/dashboard');
+        // If setup-tenant fails, go to onboarding (it also creates tenant)
+        router.push('/onboarding');
+        router.refresh();
         return;
       }
 
@@ -55,7 +57,8 @@ function LoginContent() {
         router.push('/dashboard');
       }
     } catch {
-      router.push('/dashboard');
+      // Fallback to onboarding instead of dashboard
+      router.push('/onboarding');
     }
     router.refresh();
   };

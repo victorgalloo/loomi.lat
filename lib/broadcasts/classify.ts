@@ -97,17 +97,22 @@ export async function applyClassificationToLead(
   classification: Classification,
   currentStage: string,
 ): Promise<void> {
-  if (classification === 'bot_autoresponse') return;
+  // Always persist the classification on the lead
+  const update: Record<string, string> = {
+    broadcast_classification: classification,
+    last_activity_at: new Date().toISOString(),
+  };
 
-  const proposedStage = CLASSIFICATION_STAGE[classification];
-  if (!shouldUpdatePipeline(currentStage, proposedStage)) return;
+  if (classification !== 'bot_autoresponse') {
+    const proposedStage = CLASSIFICATION_STAGE[classification];
+    if (shouldUpdatePipeline(currentStage, proposedStage)) {
+      update.stage = proposedStage;
+      update.priority = CLASSIFICATION_PRIORITY[classification];
+    }
+  }
 
   await supabase
     .from('leads')
-    .update({
-      stage: proposedStage,
-      priority: CLASSIFICATION_PRIORITY[classification],
-      last_activity_at: new Date().toISOString(),
-    })
+    .update(update)
     .eq('id', leadId);
 }

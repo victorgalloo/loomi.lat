@@ -15,6 +15,7 @@ export interface Lead {
   stage: string;
   priority: 'low' | 'medium' | 'high';
   lastActivityAt?: string | null;
+  broadcastClassification?: string | null;
   conversationCount?: number;
 }
 
@@ -105,6 +106,18 @@ function LeadCard({ lead, onClick, isDarkMode = false }: LeadCardProps) {
             <p className={`text-xs truncate mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
               {lead.companyName}
             </p>
+          )}
+          {lead.broadcastClassification && (
+            <span className={`inline-block text-[10px] font-mono px-1.5 py-0.5 rounded mt-1 ${
+              {
+                hot: 'bg-orange-500/20 text-orange-400',
+                warm: 'bg-yellow-500/20 text-yellow-400',
+                cold: 'bg-blue-500/20 text-blue-400',
+                bot_autoresponse: 'bg-zinc-500/20 text-zinc-400',
+              }[lead.broadcastClassification] || 'bg-zinc-500/20 text-zinc-400'
+            }`}>
+              {lead.broadcastClassification === 'hot' && '🔥 '}{lead.broadcastClassification === 'bot_autoresponse' ? 'bot' : lead.broadcastClassification}
+            </span>
           )}
         </div>
       </div>

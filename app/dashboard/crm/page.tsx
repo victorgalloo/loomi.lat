@@ -59,6 +59,7 @@ export default async function CRMPage() {
       stage,
       priority,
       last_activity_at,
+      broadcast_classification,
       conversations(count)
     `)
     .eq("tenant_id", tenantId)
@@ -74,6 +75,7 @@ export default async function CRMPage() {
     stage: lead.stage || 'Lead',
     priority: (lead.priority || 'medium') as 'low' | 'medium' | 'high',
     lastActivityAt: lead.last_activity_at,
+    broadcastClassification: lead.broadcast_classification,
     conversationCount: lead.conversations?.[0]?.count || 0,
   }));
 

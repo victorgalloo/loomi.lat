@@ -46,6 +46,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
                 stage: newLead.stage || 'Nuevo',
                 priority: newLead.priority || 'medium',
                 lastActivityAt: newLead.last_activity_at,
+                broadcastClassification: newLead.broadcast_classification,
                 conversationCount: 0,
               }, ...prev];
             });
@@ -63,6 +64,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
                     stage: updated.stage || 'Nuevo',
                     priority: updated.priority || 'medium',
                     lastActivityAt: updated.last_activity_at,
+                    broadcastClassification: updated.broadcast_classification,
                   }
                 : lead
             ));

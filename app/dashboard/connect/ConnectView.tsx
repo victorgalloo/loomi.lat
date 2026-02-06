@@ -71,7 +71,7 @@ export default function ConnectView({ isConnected, whatsappAccounts }: ConnectVi
           <p className="text-xs uppercase tracking-wider text-muted font-mono">
             estado
           </p>
-          <p className={`text-xl font-semibold mt-1 font-mono ${isConnected ? 'text-terminal-green' : 'text-terminal-yellow'}`}>
+          <p className={`text-xl font-semibold mt-1 font-mono ${isConnected ? 'text-accent-green' : 'text-terminal-yellow'}`}>
             {isConnected ? 'activo' : 'pendiente'}
           </p>
         </div>

@@ -23,6 +23,9 @@
   --terminal-red: #FF5F56;
   --terminal-yellow: #FFBD2E;
   --terminal-green: #27C93F;
+
+  /* Accent green - theme-aware for text readability */
+  --accent-green: #34d399;
 }
 
 /* Light mode - Clean Vercel white with terminal accents */
@@ -35,6 +38,7 @@
   --border-hover: #D4D4D4;
   --muted: #737373;
   --muted-foreground: #525252;
+  --accent-green: #059669;
 }
 
 /* Dark mode explicit */
@@ -47,6 +51,7 @@
   --muted-foreground: #A3A3A3;
   --border: #2A2A2A;
   --border-hover: #3A3A3A;
+  --accent-green: #34d399;
 }
 
 body {

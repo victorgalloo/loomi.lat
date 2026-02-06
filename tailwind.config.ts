@@ -32,6 +32,11 @@ const config: Config = {
           green: "var(--terminal-green)",
         },
 
+        // Theme-aware accent colors for text readability
+        accent: {
+          green: "var(--accent-green)",
+        },
+
         // Legacy support
         brand: {
           DEFAULT: "var(--foreground)",

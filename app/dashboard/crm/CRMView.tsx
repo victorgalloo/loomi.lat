@@ -227,7 +227,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
           <p className="text-xs uppercase tracking-wider text-muted font-mono">
             cerrados
           </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-terminal-green">
+          <p className="text-xl font-semibold font-mono mt-1 text-accent-green">
             {formatCurrency(wonValue)}
           </p>
         </div>

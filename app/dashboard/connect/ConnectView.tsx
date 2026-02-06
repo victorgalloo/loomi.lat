@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { MessageCircle, CheckCircle, Phone, Building, Calendar, Shield, HelpCircle, Plus, Trash2 } from 'lucide-react';
+import { CheckCircle, Phone, Building, Calendar, Shield, HelpCircle, Plus, Trash2 } from 'lucide-react';
+import WhatsAppConnectFlow from '@/components/dashboard/WhatsAppConnectFlow';
 
 interface WhatsAppAccountInfo {
   phoneNumberId: string;
@@ -18,6 +19,7 @@ interface ConnectViewProps {
 
 export default function ConnectView({ isConnected, whatsappAccounts }: ConnectViewProps) {
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
+  const [showAddNumber, setShowAddNumber] = useState(false);
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('es-MX', {
@@ -157,37 +159,36 @@ export default function ConnectView({ isConnected, whatsappAccounts }: ConnectVi
             </div>
           ))}
 
-          {/* Add Number Button */}
-          <div className="rounded-xl p-5 bg-surface border border-border border-dashed">
-            <a
-              href="/api/whatsapp/connect"
-              className="flex items-center justify-center gap-2 py-2 text-sm font-medium text-muted hover:text-foreground transition-colors font-mono"
-            >
-              <Plus className="w-4 h-4" />
-              agregar otro número
-            </a>
-          </div>
+          {/* Add Number - Embedded Signup */}
+          {showAddNumber ? (
+            <div className="rounded-xl bg-surface border border-border overflow-hidden">
+              <WhatsAppConnectFlow
+                onSuccess={() => {
+                  window.location.reload();
+                }}
+              />
+            </div>
+          ) : (
+            <div className="rounded-xl p-5 bg-surface border border-border border-dashed">
+              <button
+                onClick={() => setShowAddNumber(true)}
+                className="flex items-center justify-center gap-2 py-2 w-full text-sm font-medium text-muted hover:text-foreground transition-colors font-mono"
+              >
+                <Plus className="w-4 h-4" />
+                agregar otro número
+              </button>
+            </div>
+          )}
         </div>
       ) : (
-        /* Disconnected State - Connect Flow */
+        /* Disconnected State - Embedded Signup Flow */
         <div className="space-y-4">
-          <div className="rounded-xl p-6 text-center bg-surface border border-border">
-            <div className="w-14 h-14 rounded-xl mx-auto mb-4 flex items-center justify-center bg-terminal-green/10">
-              <MessageCircle className="w-6 h-6 text-terminal-green" />
-            </div>
-            <h3 className="text-base font-medium mb-2 text-foreground font-mono">
-              Conecta tu WhatsApp Business
-            </h3>
-            <p className="text-sm mb-6 max-w-sm mx-auto text-muted">
-              Conecta tu cuenta de WhatsApp Business para empezar a recibir y responder mensajes automáticamente
-            </p>
-            <a
-              href="/api/whatsapp/connect"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-foreground text-background hover:bg-foreground/90 font-mono"
-            >
-              <MessageCircle className="w-4 h-4" />
-              ./conectar-whatsapp
-            </a>
+          <div className="rounded-xl bg-surface border border-border overflow-hidden">
+            <WhatsAppConnectFlow
+              onSuccess={() => {
+                window.location.reload();
+              }}
+            />
           </div>
 
           {/* Requirements */}

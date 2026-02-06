@@ -101,32 +101,39 @@ function LoginContent() {
     setIsLoading(true);
 
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: { name: name.trim() },
-        },
+      // Create user via server-side admin API (auto-confirmed, no email rate limits)
+      const signupRes = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          name: name.trim(),
+        }),
       });
 
-      if (signUpError) {
-        let errorMessage = "Error al crear cuenta";
+      const signupData = await signupRes.json();
 
-        if (signUpError.message?.includes("already registered")) {
-          errorMessage = "Este email ya tiene cuenta. Inicia sesión.";
-        } else if (signUpError.message?.includes("Password")) {
-          errorMessage = "La contraseña debe tener al menos 6 caracteres";
-        }
-
-        setError(errorMessage);
+      if (!signupRes.ok) {
+        setError(signupData.error || "Error al crear cuenta");
         setIsLoading(false);
         return;
       }
 
-      if (data.user) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        await smartRedirect(name.trim());
+      // User created and confirmed, now sign in
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (loginError) {
+        setError("Cuenta creada pero error al iniciar sesión. Intenta hacer login.");
+        setIsLoading(false);
+        return;
       }
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await smartRedirect(name.trim());
     } catch {
       setError("Error inesperado");
       setIsLoading(false);

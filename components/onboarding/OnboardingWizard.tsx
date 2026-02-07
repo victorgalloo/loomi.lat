@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send,
   Check,
+  CheckCircle,
   Loader2,
   RotateCcw,
   Brain,
@@ -71,7 +72,7 @@ export function OnboardingWizard({
   existingConfig,
 }: OnboardingWizardProps) {
   const router = useRouter();
-  const [step, setStep] = useState<'connect' | 'chat' | 'test' | 'saving'>(hasWhatsApp ? 'chat' : 'connect');
+  const [step, setStep] = useState<'chat' | 'test' | 'connect' | 'saving'>('chat');
   const [connectMode, setConnectMode] = useState<'choose' | 'new' | 'existing' | null>(null);
   const [whatsappConnected, setWhatsappConnected] = useState(hasWhatsApp);
   const [messages, setMessages] = useState<Message[]>([
@@ -199,7 +200,7 @@ export function OnboardingWizard({
       }
     } catch (err) {
       console.error(err);
-      setStep('test');
+      setStep('connect');
     }
   };
 
@@ -209,7 +210,7 @@ export function OnboardingWizard({
     setGeneratedPrompt('');
     setTestMessages([]);
     setShowCapabilities(true);
-    setStep(whatsappConnected ? 'chat' : 'connect');
+    setStep('chat');
   };
 
   // Quick prompts that showcase agent capabilities
@@ -237,7 +238,7 @@ export function OnboardingWizard({
               <div className="w-3 h-3 rounded-full bg-terminal-green" />
             </div>
             <span className="text-xs text-muted font-mono ml-2">
-              {step === 'connect' ? './connect_whatsapp' : step === 'chat' ? './setup' : step === 'test' ? './loomi-agent --live' : './deploy'}
+              {step === 'chat' ? './setup' : step === 'test' ? './loomi-agent --live' : step === 'connect' ? './connect_whatsapp' : './deploy'}
             </span>
             {step === 'test' && (
               <div className="ml-auto flex items-center gap-2">
@@ -259,14 +260,14 @@ export function OnboardingWizard({
           {/* Step indicators */}
           <div className="px-4 py-2 border-b border-border flex items-center gap-3">
             {[
-              { key: 'connect', label: 'WhatsApp' },
               { key: 'chat', label: 'Configurar' },
               { key: 'test', label: 'Probar' },
+              { key: 'connect', label: 'WhatsApp' },
             ].map((s, i) => {
-              const steps = ['connect', 'chat', 'test', 'saving'];
+              const steps = ['chat', 'test', 'connect', 'saving'];
               const currentIdx = steps.indexOf(step);
               const stepIdx = steps.indexOf(s.key);
-              const isActive = step === s.key || (step === 'saving' && s.key === 'test');
+              const isActive = step === s.key || (step === 'saving' && s.key === 'connect');
               const isDone = stepIdx < currentIdx;
               return (
                 <div key={s.key} className="flex items-center gap-2">
@@ -291,7 +292,27 @@ export function OnboardingWizard({
           {/* Connect WhatsApp phase */}
           {step === 'connect' && (
             <div className="p-5">
-              {connectMode === 'new' ? (
+              {whatsappConnected ? (
+                /* Already connected during this step */
+                <div className="space-y-5">
+                  <div className="text-center space-y-2">
+                    <CheckCircle className="w-10 h-10 text-terminal-green mx-auto" />
+                    <h2 className="text-lg font-semibold text-foreground font-mono">
+                      WhatsApp conectado
+                    </h2>
+                    <p className="text-sm text-muted">
+                      Tu agente está listo para responder mensajes
+                    </p>
+                  </div>
+                  <button
+                    onClick={saveAndFinish}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terminal-green text-background rounded-lg font-mono text-sm hover:opacity-90 transition-opacity"
+                  >
+                    <Check className="w-4 h-4" />
+                    Activar agente
+                  </button>
+                </div>
+              ) : connectMode === 'new' ? (
                 <TwilioNumberProvisioning
                   onBack={() => setConnectMode(null)}
                   onConnectWhatsApp={() => setConnectMode('existing')}
@@ -308,7 +329,6 @@ export function OnboardingWizard({
                   <WhatsAppConnectFlow
                     onSuccess={() => {
                       setWhatsappConnected(true);
-                      setTimeout(() => setStep('chat'), 1000);
                     }}
                   />
                 </div>
@@ -343,10 +363,10 @@ export function OnboardingWizard({
                   </div>
 
                   <button
-                    onClick={() => setStep('chat')}
+                    onClick={saveAndFinish}
                     className="w-full flex items-center justify-center gap-2 text-xs text-muted hover:text-foreground font-mono transition-colors py-2"
                   >
-                    saltar por ahora
+                    saltar y activar después
                     <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
@@ -620,11 +640,26 @@ export function OnboardingWizard({
                   </button>
                 </div>
                 <button
-                  onClick={saveAndFinish}
+                  onClick={() => {
+                    if (whatsappConnected) {
+                      saveAndFinish();
+                    } else {
+                      setStep('connect');
+                    }
+                  }}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terminal-green text-background rounded-lg font-mono text-sm hover:opacity-90 transition-opacity"
                 >
-                  <Check className="w-4 h-4" />
-                  Activar agente
+                  {whatsappConnected ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Activar agente
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRight className="w-4 h-4" />
+                      Conectar WhatsApp
+                    </>
+                  )}
                 </button>
               </div>
             </div>

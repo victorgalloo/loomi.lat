@@ -136,6 +136,56 @@ export async function clearProcessing(messageId: string): Promise<void> {
 }
 
 // ============================================
+// Conversation Lock (prevent duplicate responses)
+// ============================================
+
+const CONVERSATION_LOCK_TTL = 30; // 30 seconds
+
+/**
+ * Acquire a conversation-level lock to prevent duplicate responses.
+ * Uses Redis NX (set-if-not-exists) for atomic locking.
+ * Returns true if lock acquired, false if already locked.
+ */
+export async function acquireConversationLock(phone: string, timeoutMs: number = 5000): Promise<boolean> {
+  if (!process.env.UPSTASH_REDIS_URL || !process.env.UPSTASH_REDIS_TOKEN) {
+    return true; // No Redis = no lock needed
+  }
+
+  const key = `conv_lock:${phone}`;
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < timeoutMs) {
+    try {
+      const result = await redis.set(key, Date.now().toString(), {
+        nx: true,
+        ex: CONVERSATION_LOCK_TTL
+      });
+      if (result === 'OK') return true;
+    } catch (error) {
+      console.error('[ConversationLock] Error:', error);
+      return true; // Fail open
+    }
+
+    // Wait 200ms before retrying
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
+
+  console.warn(`[ConversationLock] Timeout acquiring lock for ${phone}`);
+  return false;
+}
+
+/**
+ * Release the conversation lock
+ */
+export async function releaseConversationLock(phone: string): Promise<void> {
+  try {
+    await redis.del(`conv_lock:${phone}`);
+  } catch (error) {
+    console.error('[ConversationLock] Release error:', error);
+  }
+}
+
+// ============================================
 // Pending Slot Storage
 // ============================================
 
@@ -239,6 +289,53 @@ export async function clearPendingPlan(phone: string): Promise<void> {
     await redis.del(`pending_plan:${phone}`);
   } catch (error) {
     console.error('[PendingPlan] Clear error:', error);
+  }
+}
+
+// ============================================
+// Schedule List Tracking (prevent schedule_demo loop)
+// ============================================
+
+const SCHEDULE_LIST_TTL = 1800; // 30 minutes
+
+/**
+ * Mark that a schedule list was sent to this phone
+ */
+export async function setScheduleListSent(phone: string): Promise<void> {
+  try {
+    const key = `schedule_list_sent:${phone}`;
+    await redis.set(key, Date.now().toString(), { ex: SCHEDULE_LIST_TTL });
+  } catch (error) {
+    console.error('[ScheduleList] Set error:', error);
+  }
+}
+
+/**
+ * Check if a schedule list was already sent to this phone
+ */
+export async function wasScheduleListSent(phone: string): Promise<boolean> {
+  if (!process.env.UPSTASH_REDIS_URL || !process.env.UPSTASH_REDIS_TOKEN) {
+    return false;
+  }
+
+  try {
+    const key = `schedule_list_sent:${phone}`;
+    const data = await redis.get(key);
+    return !!data;
+  } catch (error) {
+    console.error('[ScheduleList] Get error:', error);
+    return false;
+  }
+}
+
+/**
+ * Clear the schedule list sent flag (after slot is selected)
+ */
+export async function clearScheduleListSent(phone: string): Promise<void> {
+  try {
+    await redis.del(`schedule_list_sent:${phone}`);
+  } catch (error) {
+    console.error('[ScheduleList] Clear error:', error);
   }
 }
 

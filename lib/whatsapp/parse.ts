@@ -13,6 +13,8 @@ export interface ParsedWhatsAppMessage {
   interactiveId?: string;      // e.g., "2026-01-28_16:00" for slot selection
   interactiveType?: 'list_reply' | 'button_reply' | 'nfm_reply';
   flowResponseJson?: string;   // JSON response from WhatsApp Flow
+  mediaId?: string;            // Media ID for audio/image/video/document messages
+  mediaType?: string;          // Original message type (audio, voice, image, etc.)
 }
 
 /**
@@ -45,6 +47,12 @@ export function parseWhatsAppWebhook(body: unknown): ParsedWhatsAppMessage | nul
                 };
               };
               button?: { text: string; payload: string };
+              audio?: { id: string; mime_type?: string };
+              voice?: { id: string; mime_type?: string };
+              image?: { id: string; mime_type?: string; caption?: string };
+              video?: { id: string; mime_type?: string; caption?: string };
+              document?: { id: string; mime_type?: string; filename?: string; caption?: string };
+              sticker?: { id: string; mime_type?: string };
             }>;
             contacts?: Array<{
               profile?: { name: string };
@@ -74,6 +82,8 @@ export function parseWhatsAppWebhook(body: unknown): ParsedWhatsAppMessage | nul
     let interactiveId: string | undefined;
     let interactiveType: 'list_reply' | 'button_reply' | 'nfm_reply' | undefined;
     let flowResponseJson: string | undefined;
+    let mediaId: string | undefined;
+    let mediaType: string | undefined;
 
     // Handle different message types
     switch (message.type) {
@@ -104,17 +114,38 @@ export function parseWhatsAppWebhook(body: unknown): ParsedWhatsAppMessage | nul
         break;
 
       case 'image':
+        mediaId = message.image?.id;
+        mediaType = 'image';
+        text = message.image?.caption || '[Archivo multimedia]';
+        break;
+
       case 'video':
+        mediaId = message.video?.id;
+        mediaType = 'video';
+        text = message.video?.caption || '[Archivo multimedia]';
+        break;
+
       case 'document':
-        text = '[Archivo multimedia]';
+        mediaId = message.document?.id;
+        mediaType = 'document';
+        text = message.document?.caption || '[Archivo multimedia]';
         break;
 
       case 'audio':
+        mediaId = message.audio?.id;
+        mediaType = 'audio';
+        text = '[Audio]';
+        break;
+
       case 'voice':
+        mediaId = message.voice?.id;
+        mediaType = 'voice';
         text = '[Audio]';
         break;
 
       case 'sticker':
+        mediaId = message.sticker?.id;
+        mediaType = 'sticker';
         text = '[Sticker]';
         break;
 
@@ -139,7 +170,9 @@ export function parseWhatsAppWebhook(body: unknown): ParsedWhatsAppMessage | nul
       phoneNumberId,
       interactiveId,
       interactiveType,
-      flowResponseJson
+      flowResponseJson,
+      mediaId,
+      mediaType
     };
 
   } catch (error) {

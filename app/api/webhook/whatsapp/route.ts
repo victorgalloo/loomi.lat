@@ -32,7 +32,8 @@ import {
   handoffOnServiceError,
   detectHandoffTrigger,
   detectRepeatedFailures,
-  HandoffContext
+  HandoffContext,
+  REASON_CONFIG
 } from '@/lib/handoff';
 import { getConversationContext } from '@/lib/memory/context';
 import { simpleAgent } from '@/lib/agents/simple-agent';
@@ -40,6 +41,8 @@ import {
   checkRateLimit,
   isProcessing,
   clearProcessing,
+  acquireConversationLock,
+  releaseConversationLock,
   setPendingSlot,
   getPendingSlot,
   clearPendingSlot,
@@ -47,7 +50,10 @@ import {
   setPendingPlan,
   getPendingPlan,
   clearPendingPlan,
-  PendingPlan
+  PendingPlan,
+  setScheduleListSent,
+  wasScheduleListSent,
+  clearScheduleListSent
 } from '@/lib/ratelimit';
 import { createCheckoutSession, getPlanDisplayName } from '@/lib/stripe/checkout';
 import { sendPaymentLink } from '@/lib/whatsapp/send';
@@ -59,12 +65,15 @@ import { ConversationContext } from '@/types';
 import {
   scheduleDemoReminders,
   scheduleSaidLaterFollowUp,
+  scheduleReengagement,
   cancelFollowUps,
   checkAndHandleOptOut
 } from '@/lib/followups/scheduler';
 import { getTenantFromPhoneNumberId, getAgentConfig, AgentConfig } from '@/lib/tenant/context';
 import { getTenantDocuments, getTenantTools } from '@/lib/tenant/knowledge';
 import { isBotPaused } from '@/lib/bot-pause';
+import { isAutoResponder } from '@/lib/whatsapp/autoresponder';
+import { transcribeWhatsAppAudio } from '@/lib/whatsapp/audio';
 import { trackDemoScheduled } from '@/lib/integrations/meta-conversions';
 
 // Temporal feature flags (no gRPC connection required)
@@ -588,6 +597,15 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      // Transcribe audio messages before any other processing
+      if (message.mediaId && (message.mediaType === 'audio' || message.mediaType === 'voice')) {
+        const transcription = await transcribeWhatsAppAudio(message.mediaId, credentials);
+        if (transcription) {
+          message.text = `[Audio transcrito: ${transcription}]`;
+        }
+        // If transcription fails, message.text remains '[Audio]' from the parser
+      }
+
       // Check rate limits
       const rateLimit = await checkRateLimit(message.phone);
       if (!rateLimit.allowed) {
@@ -596,6 +614,17 @@ export async function POST(request: NextRequest) {
           await sendWhatsAppMessage(message.phone, 'Dame un momento para procesar tus mensajes anteriores.', credentials);
         }
         return NextResponse.json({ status: 'rate_limited' });
+      }
+
+      // Acquire conversation lock to prevent duplicate responses from rapid messages
+      const lockAcquired = await acquireConversationLock(message.phone);
+      if (!lockAcquired) {
+        console.log(`[Webhook] Could not acquire conversation lock for ${message.phone}, saving message only`);
+        // Still mark as read and save message, but don't respond
+        await markAsRead(message.messageId, credentials);
+        const ctx = await getConversationContext(message, tenantId);
+        await saveMessage(ctx.conversation.id, 'user', message.text, ctx.lead.id);
+        return NextResponse.json({ status: 'queued_no_response' });
       }
 
       // Mark message as read immediately (shows blue checkmarks)
@@ -609,6 +638,13 @@ export async function POST(request: NextRequest) {
       const tenantContext: TenantContext | null = tenantId
         ? buildTenantContext(tenantId, 'starter')
         : null;
+
+      // Check for auto-responder messages (first interaction only)
+      if (context.recentMessages.length <= 1 && isAutoResponder(message.text)) {
+        console.log(`[Webhook] Auto-responder detected from ${message.phone}, saving without responding`);
+        await saveMessage(context.conversation.id, 'user', message.text, context.lead.id);
+        return NextResponse.json({ status: 'autoresponder_detected' });
+      }
 
       // Check if bot is paused (operator has taken control)
       if (await isBotPaused(context.conversation.id)) {
@@ -658,6 +694,7 @@ export async function POST(request: NextRequest) {
               const moreSlots = await getAvailableTimeSlots(2, 3);
               if (moreSlots.length > 0) {
                 await sendScheduleList(message.phone, moreSlots, 'Más horarios', 'Aquí tienes más opciones:', credentials);
+                await setScheduleListSent(message.phone);
                 saveMessage(context.conversation.id, 'assistant', '[Lista de más horarios]', context.lead.id).catch(console.error);
               } else {
                 await sendWhatsAppMessage(message.phone, 'No hay más horarios disponibles esta semana. ¿Te escribo la próxima?', credentials);
@@ -668,7 +705,10 @@ export async function POST(request: NextRequest) {
         }
 
         await sendWhatsAppMessage(message.phone, slotSelection.response!, credentials);
-        await saveMessage(context.conversation.id, 'assistant', slotSelection.response!, context.lead.id);
+        await Promise.all([
+          saveMessage(context.conversation.id, 'assistant', slotSelection.response!, context.lead.id),
+          clearScheduleListSent(message.phone)
+        ]);
         return NextResponse.json({ status: 'ok', flow: 'slot_selected' });
       }
 
@@ -681,6 +721,7 @@ export async function POST(request: NextRequest) {
             const moreSlots = await getAvailableTimeSlots(2, 3);
             if (moreSlots.length > 0) {
               await sendScheduleList(message.phone, moreSlots, 'Más horarios', 'Aquí tienes más opciones:', credentials);
+              await setScheduleListSent(message.phone);
               saveMessage(context.conversation.id, 'assistant', '[Lista de más horarios]', context.lead.id).catch(console.error);
             } else {
               await sendWhatsAppMessage(message.phone, 'No hay más horarios disponibles esta semana. ¿Te escribo la próxima?', credentials);
@@ -697,12 +738,27 @@ export async function POST(request: NextRequest) {
         const slots = await getAvailableTimeSlots();
         if (slots.length > 0) {
           await sendScheduleList(message.phone, slots, 'Elige otro horario', 'Estos son los horarios disponibles:', credentials);
+          await setScheduleListSent(message.phone);
           await saveMessage(context.conversation.id, 'assistant', '[Lista de horarios enviada]', context.lead.id);
         } else {
           await sendWhatsAppMessage(message.phone, 'No hay horarios disponibles en este momento. Te contactamos pronto.', credentials);
           await saveMessage(context.conversation.id, 'assistant', 'No hay horarios disponibles.', context.lead.id);
         }
         return NextResponse.json({ status: 'ok', flow: 'schedule_list_sent' });
+      }
+
+      // 2b. If schedule list was sent and user types free text (not an interactive reply),
+      //     remind them to use the list instead of calling the agent
+      if (!message.interactiveType && message.text && !extractEmail(message.text)) {
+        const scheduleListPending = await wasScheduleListSent(message.phone);
+        if (scheduleListPending) {
+          console.log(`[Webhook] Schedule list pending for ${message.phone}, nudging to use list`);
+          await saveMessage(context.conversation.id, 'user', message.text, context.lead.id);
+          const nudgeMsg = 'Tienes una lista de horarios arriba ☝️ Elige el que te funcione, o dime si necesitas ver más días.';
+          await sendWhatsAppMessage(message.phone, nudgeMsg, credentials);
+          await saveMessage(context.conversation.id, 'assistant', nudgeMsg, context.lead.id);
+          return NextResponse.json({ status: 'ok', flow: 'schedule_list_nudge' });
+        }
       }
 
       // 3. Handle email for pending slot
@@ -842,6 +898,17 @@ export async function POST(request: NextRequest) {
       // LLM FLOW
       // ============================================
 
+      // Detect alumni/existing customer and inject context
+      const alumniKeywords = ['ya soy cliente', 'ya cursé', 'ya curse', 'ya tomé', 'ya tome', 'ya compré', 'ya compre', 'soy alumno', 'soy alumna', 'ya tengo loomi', 'ya lo tengo'];
+      const isAlumni = ['Ganado', 'customer', 'alumno'].includes(context.lead.stage) ||
+        alumniKeywords.some(kw => message.text.toLowerCase().includes(kw));
+
+      if (isAlumni && context.memory) {
+        context.memory += '\n[ALUMNO/CLIENTE EXISTENTE] No le vendas. Pregunta cómo le ha ido, si necesita ayuda con algo, o si tiene dudas sobre su cuenta.';
+      } else if (isAlumni) {
+        context.memory = '[ALUMNO/CLIENTE EXISTENTE] No le vendas. Pregunta cómo le ha ido, si necesita ayuda con algo, o si tiene dudas sobre su cuenta.';
+      }
+
       // Check for handoff triggers before calling agent
       const handoffTrigger = detectHandoffTrigger(message.text);
       const hasRepeatedFailures = detectRepeatedFailures(
@@ -874,7 +941,8 @@ export async function POST(request: NextRequest) {
         });
 
         if (handoffResult.notifiedClient) {
-          await saveMessage(context.conversation.id, 'assistant', '[Handoff a humano]', context.lead.id);
+          const clientMsg = REASON_CONFIG[reason]?.clientMessage || 'Te comunico con alguien del equipo.';
+          await saveMessage(context.conversation.id, 'assistant', clientMsg, context.lead.id);
         }
 
         return NextResponse.json({
@@ -921,6 +989,7 @@ export async function POST(request: NextRequest) {
             await saveMessage(context.conversation.id, 'assistant', result.response, context.lead.id);
           }
           await sendScheduleList(message.phone, slots, 'Horarios disponibles', 'Elige el que te funcione:', credentials);
+          await setScheduleListSent(message.phone);
           await saveMessage(context.conversation.id, 'assistant', '[Lista de horarios enviada]', context.lead.id);
           return NextResponse.json({ status: 'ok', flow: 'schedule_list_from_agent' });
         } else {
@@ -972,6 +1041,38 @@ export async function POST(request: NextRequest) {
               }
             } else {
               await scheduleSaidLaterFollowUp(context.lead.id, context.lead);
+            }
+          }
+
+          // Schedule re-engagement for early conversations that end with a question
+          // (high chance the lead will go cold if they don't respond)
+          const isEarlyConversation = context.recentMessages.length <= 4;
+          const endsWithQuestion = result.response.trim().endsWith('?');
+          if (isEarlyConversation && endsWithQuestion && !result.saidLater && !result.escalatedToHuman) {
+            if (isTemporalEnabled('followups') && tenantContext) {
+              const temporalLead: TemporalLead = {
+                id: context.lead.id,
+                phone: context.lead.phone,
+                name: context.lead.name,
+                email: context.lead.email ?? null,
+                company: context.lead.company ?? null,
+                industry: context.lead.industry ?? null,
+                stage: context.lead.stage,
+                challenge: context.lead.challenge ?? null
+              };
+              const temporal = await getTemporalModule();
+              if (temporal) {
+                await temporal.startReengagementWorkflow({
+                  tenant: tenantContext,
+                  leadId: context.lead.id,
+                  lead: temporalLead
+                });
+                console.log('[Webhook] Started Temporal re-engagement workflow for early conversation');
+              } else {
+                await scheduleReengagement(context.lead.id, context.lead, context.memory);
+              }
+            } else {
+              await scheduleReengagement(context.lead.id, context.lead, context.memory);
             }
           }
 
@@ -1042,7 +1143,10 @@ export async function POST(request: NextRequest) {
       });
 
     } finally {
-      await clearProcessing(message.messageId);
+      await Promise.all([
+        clearProcessing(message.messageId),
+        releaseConversationLock(message.phone)
+      ]);
     }
   } catch (error) {
     console.error('Webhook error:', error);

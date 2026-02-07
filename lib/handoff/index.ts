@@ -100,7 +100,7 @@ const PRIORITY_CONFIG: Record<HandoffPriority, {
   }
 };
 
-const REASON_CONFIG: Record<HandoffReason, {
+export const REASON_CONFIG: Record<HandoffReason, {
   label: string;
   defaultPriority: HandoffPriority;
   suggestedAction: string;

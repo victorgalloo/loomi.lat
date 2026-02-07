@@ -147,6 +147,29 @@ Lu: Ese es exactamente el problema que resuelve Loomi. Pero tú decides, si quie
   },
 
   // ============================================
+  // RECHAZO - PRIMER NO → SONDEO
+  // ============================================
+  {
+    id: 'first_rejection_probe',
+    tags: ['no me interesa', 'no gracias', 'rechazo', 'no quiero'],
+    context: 'Lead dice que no le interesa por primera vez',
+    conversation: `Cliente: No me interesa, gracias
+Lu: Entiendo, sin presión. ¿Me permites una pregunta? ¿Es porque ya resolviste lo de WhatsApp o es que no es prioridad ahorita?
+Cliente: Es que ahorita tenemos otras prioridades
+Lu: Totalmente válido. Si en algún momento WhatsApp se vuelve un dolor, aquí estamos. ¿Te parece si te escribo en un par de semanas por si cambia?`,
+    whyItWorked: 'No insistió con el producto, hizo una pregunta genuina para entender el no'
+  },
+
+  {
+    id: 'second_rejection_respect',
+    tags: ['no me interesa', 'no gracias', 'rechazo', 'no quiero', 'ya dije que no'],
+    context: 'Lead dice que no por segunda vez (ya se hizo sondeo)',
+    conversation: `Cliente: No, de verdad no me interesa
+Lu: Perfecto, respeto tu decisión. Gracias por tu tiempo, [NOMBRE]. Si en algún momento necesitas automatizar WhatsApp, aquí andamos. ¡Éxito!`,
+    whyItWorked: 'Respetó el segundo no sin insistir, cerró con gracia y dejó la puerta abierta'
+  },
+
+  // ============================================
   // LISTO PARA DEMO
   // ============================================
   {
@@ -263,6 +286,13 @@ function detectTags(message: string, recentMessages: string[]): string[] {
     '10 mensajes': ['pocos', 'mensajes'],
     '15 mensajes': ['pocos', 'mensajes'],
     '20 mensajes': ['pocos', 'mensajes'],
+
+    // Rechazo
+    'no me interesa': ['no me interesa', 'rechazo'],
+    'no gracias': ['no gracias', 'rechazo'],
+    'no quiero': ['no quiero', 'rechazo'],
+    'ya dije que no': ['ya dije que no', 'rechazo'],
+    'no necesito': ['no me interesa', 'rechazo'],
 
     // Postergar
     'pienso': ['pienso', 'pensar'],

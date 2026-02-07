@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
 
 // ── AI Classification Schema ────────────────────────────────────────
@@ -56,7 +56,7 @@ export async function classifyConversationWithAI(messages: Message[]): Promise<C
 
   try {
     const { object } = await generateObject({
-      model: openai('gpt-4o-mini'),
+      model: anthropic('claude-haiku-4-5-20251001'),
       schema: ClassificationSchema,
       temperature: 0.2,
       maxOutputTokens: 100,

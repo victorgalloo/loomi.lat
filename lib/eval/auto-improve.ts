@@ -1,5 +1,5 @@
 import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import { EvalReport, ScenarioResult } from './runner';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -67,7 +67,7 @@ IMPORTANTE:
 
   try {
     const { text } = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: anthropic('claude-sonnet-4-5-20250929'),
       prompt,
     });
 
@@ -127,7 +127,7 @@ Responde SOLO con el nuevo prompt, sin explicaciones ni markdown.`;
 
   try {
     const { text } = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: anthropic('claude-sonnet-4-5-20250929'),
       prompt,
     });
 

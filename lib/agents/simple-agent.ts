@@ -10,7 +10,7 @@
 
 import { generateText } from 'ai';
 import { tool, zodSchema } from '@ai-sdk/provider-utils';
-import { openai } from '@ai-sdk/openai';
+import { resolveModel } from './model';
 import { z } from 'zod';
 import { ConversationContext } from '@/types';
 import { sendPaymentLink } from '@/lib/whatsapp/send';
@@ -694,7 +694,7 @@ Sé directa, inteligente, mensajes cortos.`
 
   try {
     const result = await generateText({
-      model: openai(agentConfig?.model || 'gpt-4o-mini'),
+      model: resolveModel(agentConfig?.model),
       system: systemWithContext,
       messages: history,
       tools,

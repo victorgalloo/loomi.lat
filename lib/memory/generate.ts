@@ -4,7 +4,7 @@
  */
 
 import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import { Message } from '@/types';
 import { saveLeadMemory, getLeadMemory } from './supabase';
 
@@ -65,7 +65,7 @@ Formato: Texto corrido, sin bullets. Incluye solo información confirmada.
 Si hay memoria previa, actualízala con la nueva información.`;
 
     const result = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: anthropic('claude-haiku-4-5-20251001'),
       system: systemPrompt,
       prompt: 'Resume la conversación.'
     });

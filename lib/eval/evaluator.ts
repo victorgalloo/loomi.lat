@@ -1,5 +1,5 @@
 import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
 import { Scenario } from './scenarios';
 
@@ -51,7 +51,7 @@ Sé estricto. Si no cumple un criterio marcado como "SÍ", baja el score signifi
 
   try {
     const { object } = await generateObject({
-      model: openai('gpt-4o-mini'),
+      model: anthropic('claude-haiku-4-5-20251001'),
       schema: evaluationSchema,
       prompt,
     });

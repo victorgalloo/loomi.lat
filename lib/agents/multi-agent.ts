@@ -8,7 +8,7 @@
  */
 
 import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
 
 const AnalysisSchema = z.object({
@@ -81,7 +81,7 @@ export async function analyzeMessage(
   const clientCompany = leadContext?.company || 'desconocido';
 
   const result = await generateObject({
-    model: openai('gpt-4o-mini'),
+    model: anthropic('claude-haiku-4-5-20251001'),
     schema: AnalysisSchema,
     prompt: `Eres un analista experto en ventas de SaaS B2B. Analiza esta conversación y da instrucciones PRECISAS a Lu (la vendedora de Loomi).
 

@@ -9,7 +9,7 @@
  */
 
 import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import { Message, ConversationContext } from '@/types';
 import { detectSentiment, SentimentAnalysis } from './sentiment';
 import { detectIndustry, getIndustryContext, Industry } from './industry';
@@ -215,7 +215,7 @@ Sé directo y conciso. No uses bullet points largos.`;
 
   try {
     const result = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: anthropic('claude-haiku-4-5-20251001'),
       system: systemPrompt,
       prompt: 'Analiza y responde directamente.'
     });

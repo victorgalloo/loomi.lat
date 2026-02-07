@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getTenantIdForUser } from '@/lib/supabase/user-role';
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import { generateText } from 'ai';
 
 const ONBOARDING_SYSTEM_PROMPT = `Eres un asistente que ayuda a configurar un agente de WhatsApp para negocios.
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     // Generate response
     const result = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: anthropic('claude-sonnet-4-5-20250929'),
       system: ONBOARDING_SYSTEM_PROMPT,
       messages,
       maxOutputTokens: 500,
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
 
         // Generate the actual system prompt
         const promptResult = await generateText({
-          model: openai('gpt-4o-mini'),
+          model: anthropic('claude-sonnet-4-5-20250929'),
           system: PROMPT_GENERATOR_SYSTEM,
           messages: [{
             role: 'user',

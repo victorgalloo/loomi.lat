@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getTenantIdForUser } from '@/lib/supabase/user-role';
-import { getOrCreateTenant } from '@/lib/tenant/context';
+import { getOrCreateTenant, getWhatsAppAccounts } from '@/lib/tenant/context';
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 
 export default async function OnboardingPage() {
@@ -30,17 +30,23 @@ export default async function OnboardingPage() {
     redirect('/dashboard');
   }
 
-  // Get existing config if any
-  const { data: config } = await supabase
-    .from('agent_configs')
-    .select('business_name, business_description, industry, tone')
-    .eq('tenant_id', tenantId)
-    .single();
+  // Get existing config and WhatsApp status in parallel
+  const [{ data: config }, whatsappAccounts] = await Promise.all([
+    supabase
+      .from('agent_configs')
+      .select('business_name, business_description, industry, tone')
+      .eq('tenant_id', tenantId)
+      .single(),
+    getWhatsAppAccounts(tenantId),
+  ]);
+
+  const hasWhatsApp = whatsappAccounts.some(a => a.status === 'active');
 
   return (
     <OnboardingWizard
       tenantId={tenantId}
       tenantEmail={user.email}
+      hasWhatsApp={hasWhatsApp}
       existingConfig={config ? {
         businessName: config.business_name || undefined,
         businessDescription: config.business_description || undefined,

@@ -16,8 +16,13 @@ import {
   TrendingUp,
   Shield,
   CreditCard,
-  UserCheck
+  UserCheck,
+  Phone,
+  Plus,
+  ArrowRight
 } from 'lucide-react';
+import WhatsAppConnectFlow from '@/components/dashboard/WhatsAppConnectFlow';
+import TwilioNumberProvisioning from '@/components/dashboard/TwilioNumberProvisioning';
 
 interface Message {
   role: 'assistant' | 'user';
@@ -43,6 +48,7 @@ interface ExtractedConfig {
 interface OnboardingWizardProps {
   tenantId: string;
   tenantEmail: string;
+  hasWhatsApp?: boolean;
   existingConfig?: Partial<ExtractedConfig>;
 }
 
@@ -61,10 +67,13 @@ const ANALYSIS_STEPS = [
 export function OnboardingWizard({
   tenantId,
   tenantEmail,
+  hasWhatsApp = false,
   existingConfig,
 }: OnboardingWizardProps) {
   const router = useRouter();
-  const [step, setStep] = useState<'chat' | 'test' | 'saving'>('chat');
+  const [step, setStep] = useState<'connect' | 'chat' | 'test' | 'saving'>(hasWhatsApp ? 'chat' : 'connect');
+  const [connectMode, setConnectMode] = useState<'choose' | 'new' | 'existing' | null>(null);
+  const [whatsappConnected, setWhatsappConnected] = useState(hasWhatsApp);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: INITIAL_MESSAGE }
   ]);
@@ -200,7 +209,7 @@ export function OnboardingWizard({
     setGeneratedPrompt('');
     setTestMessages([]);
     setShowCapabilities(true);
-    setStep('chat');
+    setStep(whatsappConnected ? 'chat' : 'connect');
   };
 
   // Quick prompts that showcase agent capabilities
@@ -228,7 +237,7 @@ export function OnboardingWizard({
               <div className="w-3 h-3 rounded-full bg-terminal-green" />
             </div>
             <span className="text-xs text-muted font-mono ml-2">
-              {step === 'chat' ? './setup' : step === 'test' ? './loomi-agent --live' : './deploy'}
+              {step === 'connect' ? './connect_whatsapp' : step === 'chat' ? './setup' : step === 'test' ? './loomi-agent --live' : './deploy'}
             </span>
             {step === 'test' && (
               <div className="ml-auto flex items-center gap-2">
@@ -246,6 +255,104 @@ export function OnboardingWizard({
               </div>
             )}
           </div>
+
+          {/* Step indicators */}
+          <div className="px-4 py-2 border-b border-border flex items-center gap-3">
+            {[
+              { key: 'connect', label: 'WhatsApp' },
+              { key: 'chat', label: 'Configurar' },
+              { key: 'test', label: 'Probar' },
+            ].map((s, i) => {
+              const steps = ['connect', 'chat', 'test', 'saving'];
+              const currentIdx = steps.indexOf(step);
+              const stepIdx = steps.indexOf(s.key);
+              const isActive = step === s.key || (step === 'saving' && s.key === 'test');
+              const isDone = stepIdx < currentIdx;
+              return (
+                <div key={s.key} className="flex items-center gap-2">
+                  {i > 0 && <div className={`w-6 h-px ${isDone ? 'bg-terminal-green' : 'bg-border'}`} />}
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono ${
+                      isDone ? 'bg-terminal-green text-background' :
+                      isActive ? 'bg-foreground text-background' :
+                      'bg-surface-2 text-muted border border-border'
+                    }`}>
+                      {isDone ? <Check className="w-3 h-3" /> : i + 1}
+                    </div>
+                    <span className={`text-[10px] font-mono ${isActive || isDone ? 'text-foreground' : 'text-muted'}`}>
+                      {s.label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Connect WhatsApp phase */}
+          {step === 'connect' && (
+            <div className="p-5">
+              {connectMode === 'new' ? (
+                <TwilioNumberProvisioning
+                  onBack={() => setConnectMode(null)}
+                  onConnectWhatsApp={() => setConnectMode('existing')}
+                  onNumberPurchased={() => {}}
+                />
+              ) : connectMode === 'existing' ? (
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setConnectMode(null)}
+                    className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors font-mono"
+                  >
+                    <span>&larr;</span> volver
+                  </button>
+                  <WhatsAppConnectFlow
+                    onSuccess={() => {
+                      setWhatsappConnected(true);
+                      setTimeout(() => setStep('chat'), 1000);
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  <div className="text-center space-y-2">
+                    <h2 className="text-lg font-semibold text-foreground font-mono">
+                      Conecta tu WhatsApp
+                    </h2>
+                    <p className="text-sm text-muted">
+                      Tu agente necesita un número de WhatsApp para responder mensajes
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setConnectMode('new')}
+                      className="flex flex-col items-center gap-3 p-5 rounded-xl border border-border hover:border-muted bg-background transition-colors"
+                    >
+                      <Plus className="w-6 h-6 text-terminal-green" />
+                      <span className="text-sm font-medium font-mono text-foreground">número nuevo</span>
+                      <span className="text-xs text-muted text-center">Compra via Twilio</span>
+                    </button>
+                    <button
+                      onClick={() => setConnectMode('existing')}
+                      className="flex flex-col items-center gap-3 p-5 rounded-xl border border-border hover:border-muted bg-background transition-colors"
+                    >
+                      <Phone className="w-6 h-6 text-foreground" />
+                      <span className="text-sm font-medium font-mono text-foreground">ya tengo uno</span>
+                      <span className="text-xs text-muted text-center">Conectar existente</span>
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => setStep('chat')}
+                    className="w-full flex items-center justify-center gap-2 text-xs text-muted hover:text-foreground font-mono transition-colors py-2"
+                  >
+                    saltar por ahora
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Chat phase */}
           {step === 'chat' && (

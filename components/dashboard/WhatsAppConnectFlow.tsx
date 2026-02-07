@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Loader2, AlertCircle, Sparkles } from 'lucide-react';
+import { Check, Loader2, AlertCircle, Sparkles, Phone } from 'lucide-react';
 
 // Types for Facebook SDK
 declare global {
@@ -56,13 +56,15 @@ interface EmbeddedSignupEvent {
 interface WhatsAppConnectFlowProps {
   onSuccess?: (data: { wabaId: string; phoneNumberId: string; displayPhoneNumber?: string; businessName?: string }) => void;
   onError?: (error: string) => void;
+  /** When set, shows a banner indicating this Twilio number is being registered */
+  twilioPhoneNumber?: string;
 }
 
 // Meta App configuration
 const META_APP_ID = process.env.NEXT_PUBLIC_META_APP_ID || '816459297543576';
 const META_CONFIG_ID = process.env.NEXT_PUBLIC_META_CONFIG_ID || '1931749487714940';
 
-export default function WhatsAppConnectFlow({ onSuccess, onError }: WhatsAppConnectFlowProps) {
+export default function WhatsAppConnectFlow({ onSuccess, onError, twilioPhoneNumber }: WhatsAppConnectFlowProps) {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -305,6 +307,16 @@ export default function WhatsAppConnectFlow({ onSuccess, onError }: WhatsAppConn
           Conecta tu cuenta de WhatsApp Business para que tu agente AI pueda responder mensajes automaticamente.
         </p>
       </div>
+
+      {/* Twilio Number Banner */}
+      {twilioPhoneNumber && (
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 relative z-10">
+          <Phone className="w-4 h-4 text-emerald-600" />
+          <span className="text-sm text-emerald-700">
+            Registrando <span className="font-mono font-medium">{twilioPhoneNumber}</span> con WhatsApp Business
+          </span>
+        </div>
+      )}
 
       {/* SDK Status */}
       <motion.div

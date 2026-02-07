@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { CheckCircle, Phone, Building, Calendar, Shield, HelpCircle, Plus, Trash2 } from 'lucide-react';
 import WhatsAppConnectFlow from '@/components/dashboard/WhatsAppConnectFlow';
+import TwilioNumberProvisioning from '@/components/dashboard/TwilioNumberProvisioning';
 
 interface WhatsAppAccountInfo {
   phoneNumberId: string;
@@ -12,14 +13,22 @@ interface WhatsAppAccountInfo {
   connectedAt?: string | null;
 }
 
+interface PendingTwilioNumber {
+  id: string;
+  phoneNumber: string;
+  status: string;
+}
+
 interface ConnectViewProps {
   isConnected: boolean;
   whatsappAccounts: WhatsAppAccountInfo[];
+  pendingTwilioNumbers?: PendingTwilioNumber[];
 }
 
-export default function ConnectView({ isConnected, whatsappAccounts }: ConnectViewProps) {
+export default function ConnectView({ isConnected, whatsappAccounts, pendingTwilioNumbers = [] }: ConnectViewProps) {
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [showAddNumber, setShowAddNumber] = useState(false);
+  const [addNumberMode, setAddNumberMode] = useState<'choose' | 'new' | 'existing' | null>(null);
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('es-MX', {
@@ -159,19 +168,80 @@ export default function ConnectView({ isConnected, whatsappAccounts }: ConnectVi
             </div>
           ))}
 
-          {/* Add Number - Embedded Signup */}
-          {showAddNumber ? (
-            <div className="rounded-xl bg-surface border border-border overflow-hidden">
-              <WhatsAppConnectFlow
-                onSuccess={() => {
-                  window.location.reload();
-                }}
-              />
+          {/* Pending Twilio Numbers */}
+          {pendingTwilioNumbers.filter(n => n.status === 'active').map((num) => (
+            <div key={num.id} className="rounded-xl p-5 bg-surface border border-terminal-yellow/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-terminal-yellow" />
+                  <span className="text-sm font-mono text-foreground">{num.phoneNumber}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-terminal-yellow/10 text-terminal-yellow font-mono">
+                    pendiente
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowAddNumber(true);
+                    setAddNumberMode('existing');
+                  }}
+                  className="text-xs font-mono text-foreground bg-foreground/10 hover:bg-foreground/20 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  conectar a WhatsApp
+                </button>
+              </div>
             </div>
+          ))}
+
+          {/* Add Number */}
+          {showAddNumber ? (
+            addNumberMode === 'new' ? (
+              <TwilioNumberProvisioning
+                onBack={() => setAddNumberMode('choose')}
+                onConnectWhatsApp={() => setAddNumberMode('existing')}
+                onNumberPurchased={() => {}}
+              />
+            ) : addNumberMode === 'existing' ? (
+              <div className="rounded-xl bg-surface border border-border overflow-hidden">
+                <WhatsAppConnectFlow
+                  onSuccess={() => {
+                    window.location.reload();
+                  }}
+                />
+              </div>
+            ) : (
+              /* Choose mode */
+              <div className="rounded-xl bg-surface border border-border p-5 space-y-3">
+                <h3 className="text-sm font-medium text-foreground font-mono">agregar número</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setAddNumberMode('new')}
+                    className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-muted bg-background transition-colors"
+                  >
+                    <Plus className="w-5 h-5 text-muted" />
+                    <span className="text-sm font-mono text-foreground">obtener número nuevo</span>
+                    <span className="text-xs text-muted">Comprar via Twilio</span>
+                  </button>
+                  <button
+                    onClick={() => setAddNumberMode('existing')}
+                    className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-muted bg-background transition-colors"
+                  >
+                    <Phone className="w-5 h-5 text-muted" />
+                    <span className="text-sm font-mono text-foreground">ya tengo un número</span>
+                    <span className="text-xs text-muted">Conectar existente</span>
+                  </button>
+                </div>
+                <button
+                  onClick={() => { setShowAddNumber(false); setAddNumberMode(null); }}
+                  className="w-full text-xs text-muted hover:text-foreground font-mono transition-colors"
+                >
+                  cancelar
+                </button>
+              </div>
+            )
           ) : (
             <div className="rounded-xl p-5 bg-surface border border-border border-dashed">
               <button
-                onClick={() => setShowAddNumber(true)}
+                onClick={() => { setShowAddNumber(true); setAddNumberMode('choose'); }}
                 className="flex items-center justify-center gap-2 py-2 w-full text-sm font-medium text-muted hover:text-foreground transition-colors font-mono"
               >
                 <Plus className="w-4 h-4" />
@@ -181,35 +251,94 @@ export default function ConnectView({ isConnected, whatsappAccounts }: ConnectVi
           )}
         </div>
       ) : (
-        /* Disconnected State - Embedded Signup Flow */
+        /* Disconnected State - Choose how to connect */
         <div className="space-y-4">
-          <div className="rounded-xl bg-surface border border-border overflow-hidden">
-            <WhatsAppConnectFlow
-              onSuccess={() => {
-                window.location.reload();
-              }}
+          {addNumberMode === 'new' ? (
+            <TwilioNumberProvisioning
+              onBack={() => setAddNumberMode(null)}
+              onConnectWhatsApp={() => setAddNumberMode('existing')}
+              onNumberPurchased={() => {}}
             />
-          </div>
+          ) : addNumberMode === 'existing' ? (
+            <>
+              <button
+                onClick={() => setAddNumberMode(null)}
+                className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors font-mono"
+              >
+                <span>&larr;</span> volver
+              </button>
+              <div className="rounded-xl bg-surface border border-border overflow-hidden">
+                <WhatsAppConnectFlow
+                  onSuccess={() => {
+                    window.location.reload();
+                  }}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Two options */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setAddNumberMode('new')}
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl border border-border hover:border-muted bg-surface transition-colors"
+                >
+                  <Plus className="w-6 h-6 text-terminal-green" />
+                  <span className="text-sm font-medium font-mono text-foreground">obtener número nuevo</span>
+                  <span className="text-xs text-muted text-center">Compra un número via Twilio y conéctalo a WhatsApp</span>
+                </button>
+                <button
+                  onClick={() => setAddNumberMode('existing')}
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl border border-border hover:border-muted bg-surface transition-colors"
+                >
+                  <Phone className="w-6 h-6 text-foreground" />
+                  <span className="text-sm font-medium font-mono text-foreground">ya tengo un número</span>
+                  <span className="text-xs text-muted text-center">Conecta tu número existente con Meta Embedded Signup</span>
+                </button>
+              </div>
 
-          {/* Requirements */}
-          <div className="rounded-xl p-5 bg-surface border border-border">
-            <h3 className="text-sm font-medium mb-4 flex items-center gap-2 text-foreground font-mono">
-              <HelpCircle className="w-4 h-4 text-muted" />
-              requisitos
-            </h3>
-            <ul className="space-y-3">
-              {[
-                'Cuenta de Facebook Business Manager',
-                'Número de teléfono que pueda recibir SMS o llamadas',
-                'El proceso toma aproximadamente 5 minutos'
-              ].map((item, i) => (
-                <li key={i} className="flex items-start gap-3 text-sm text-muted">
-                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-terminal-green" />
-                  {item}
-                </li>
+              {/* Pending Twilio numbers */}
+              {pendingTwilioNumbers.filter(n => n.status === 'active').map((num) => (
+                <div key={num.id} className="rounded-xl p-5 bg-surface border border-terminal-yellow/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-terminal-yellow" />
+                      <span className="text-sm font-mono text-foreground">{num.phoneNumber}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-terminal-yellow/10 text-terminal-yellow font-mono">
+                        pendiente de WhatsApp
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setAddNumberMode('existing')}
+                      className="text-xs font-mono text-background bg-foreground hover:opacity-90 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      conectar
+                    </button>
+                  </div>
+                </div>
               ))}
-            </ul>
-          </div>
+
+              {/* Requirements */}
+              <div className="rounded-xl p-5 bg-surface border border-border">
+                <h3 className="text-sm font-medium mb-4 flex items-center gap-2 text-foreground font-mono">
+                  <HelpCircle className="w-4 h-4 text-muted" />
+                  requisitos
+                </h3>
+                <ul className="space-y-3">
+                  {[
+                    'Cuenta de Facebook Business Manager',
+                    'Número de teléfono que pueda recibir SMS o llamadas',
+                    'El proceso toma aproximadamente 5 minutos'
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm text-muted">
+                      <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-terminal-green" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

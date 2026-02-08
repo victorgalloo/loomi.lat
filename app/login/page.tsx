@@ -151,13 +151,17 @@ function LoginContent() {
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
       {/* Background Grid */}
-      <div
-        className="fixed inset-0 pointer-events-none opacity-30"
-        style={{
-          backgroundImage: 'radial-gradient(var(--muted) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }}
-      />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: 'linear-gradient(var(--foreground) 1px, transparent 1px), linear-gradient(90deg, var(--foreground) 1px, transparent 1px)',
+            backgroundSize: '60px 60px',
+          }}
+        />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-background to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
+      </div>
 
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-50">

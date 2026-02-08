@@ -30,7 +30,7 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
 
   const Row = ({ label, value, action }: { label: string; value: string; action?: React.ReactNode }) => (
     <div className="flex items-center justify-between py-3 border-b border-border">
-      <span className="text-sm text-muted">{label}</span>
+      <span className="text-sm text-muted font-mono">{label}</span>
       <div className="flex items-center gap-3">
         <span className="text-sm text-foreground">{value}</span>
         {action}
@@ -51,7 +51,7 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
 
       {/* Account */}
       <section className="mb-10">
-        <h2 className="text-label font-medium uppercase tracking-wider mb-6 text-muted">
+        <h2 className="text-xs font-medium uppercase tracking-wider mb-4 text-muted font-mono">
           cuenta
         </h2>
         <div>
@@ -64,7 +64,7 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
 
       {/* Plan */}
       <section className="mb-10">
-        <h2 className="text-label font-medium uppercase tracking-wider mb-6 text-muted">
+        <h2 className="text-xs font-medium uppercase tracking-wider mb-4 text-muted font-mono">
           plan
         </h2>
         <div>
@@ -81,7 +81,7 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
 
       {/* WhatsApp */}
       <section className="mb-10">
-        <h2 className="text-label font-medium uppercase tracking-wider mb-6 text-muted">
+        <h2 className="text-xs font-medium uppercase tracking-wider mb-4 text-muted font-mono">
           whatsapp
         </h2>
         <div>
@@ -111,7 +111,7 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
 
       {/* Danger */}
       <section>
-        <h2 className="text-label font-medium uppercase tracking-wider mb-6 text-terminal-red">
+        <h2 className="text-xs font-medium uppercase tracking-wider mb-4 text-terminal-red font-mono">
           zona de peligro
         </h2>
         <div className="flex items-center justify-between py-3">
@@ -120,7 +120,7 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
             <p className="text-xs text-muted">Esta acción es irreversible</p>
           </div>
           <button
-            className="px-3 py-1.5 text-xs font-medium rounded-xl transition-colors text-terminal-red bg-terminal-red/10 hover:bg-terminal-red/20"
+            className="px-3 py-1.5 text-xs font-medium rounded-xl transition-colors text-terminal-red bg-terminal-red/10 hover:bg-terminal-red/20 font-mono"
           >
             eliminar
           </button>

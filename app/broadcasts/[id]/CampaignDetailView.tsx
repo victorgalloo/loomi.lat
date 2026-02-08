@@ -209,7 +209,7 @@ export default function CampaignDetailView({
           </div>
           <button
             onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
-            className="text-xs text-muted hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
+            className="text-xs font-mono text-muted hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
           >
             {lang === 'en' ? 'ES' : 'EN'}
           </button>
@@ -225,15 +225,15 @@ export default function CampaignDetailView({
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div>
-              <h1 className="text-lg text-foreground">{campaign.name}</h1>
+              <h1 className="text-lg font-mono text-foreground">{campaign.name}</h1>
               <div className="flex items-center gap-3 mt-0.5">
-                <span className="text-xs text-muted">
-                  template: <span className="font-mono">{campaign.template_name}</span>
+                <span className="text-xs font-mono text-muted">
+                  template: {campaign.template_name}
                 </span>
-                <span className="text-xs text-muted">
-                  lang: <span className="font-mono">{campaign.template_language}</span>
+                <span className="text-xs font-mono text-muted">
+                  lang: {campaign.template_language}
                 </span>
-                <span className={`text-xs ${campaignStatusColors[campaign.status] || 'text-muted'}`}>
+                <span className={`text-xs font-mono ${campaignStatusColors[campaign.status] || 'text-muted'}`}>
                   {campaignStatusLabel}
                 </span>
               </div>
@@ -264,7 +264,7 @@ export default function CampaignDetailView({
         {error && (
           <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-terminal-red/5">
             <AlertTriangle className="w-4 h-4 text-terminal-red flex-shrink-0" />
-            <span className="text-sm text-terminal-red">{error}</span>
+            <span className="text-sm text-terminal-red font-mono">{error}</span>
           </div>
         )}
 
@@ -291,22 +291,22 @@ export default function CampaignDetailView({
           {/* Stats */}
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <span className="text-label text-muted">{t.total}:</span>
+              <span className="text-xs text-muted font-mono">{t.total}:</span>
               <span className="text-sm font-mono text-foreground">{totalCount.toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-terminal-green" />
-              <span className="text-label text-muted">{t.sent}:</span>
+              <span className="text-xs text-muted font-mono">{t.sent}:</span>
               <span className="text-sm font-mono text-terminal-green">{sentCount.toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-terminal-red" />
-              <span className="text-label text-muted">{t.failed}:</span>
+              <span className="text-xs text-muted font-mono">{t.failed}:</span>
               <span className="text-sm font-mono text-terminal-red">{failedCount.toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-muted" />
-              <span className="text-label text-muted">{t.pending}:</span>
+              <span className="text-xs text-muted font-mono">{t.pending}:</span>
               <span className="text-sm font-mono text-muted">{pendingCount.toLocaleString()}</span>
             </div>
           </div>
@@ -326,20 +326,20 @@ export default function CampaignDetailView({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-background">
-                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.phone}</th>
-                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.name}</th>
-                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.status}</th>
-                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.sentAt}</th>
-                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.error}</th>
+                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.phone}</th>
+                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.name}</th>
+                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.status}</th>
+                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.sentAt}</th>
+                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.error}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
               {recipients.map((r) => (
                 <tr key={r.id} className="hover:bg-surface-2 transition-colors">
                   <td className="px-4 py-2 font-mono text-foreground">{r.phone}</td>
-                  <td className="px-4 py-2 text-muted">{r.name || '-'}</td>
+                  <td className="px-4 py-2 font-mono text-muted">{r.name || '-'}</td>
                   <td className="px-4 py-2">
-                    <span className={`text-xs ${recipientStatusColors[r.status] || 'text-muted'}`}>
+                    <span className={`font-mono text-xs ${recipientStatusColors[r.status] || 'text-muted'}`}>
                       {getRecipientStatus(r.status)}
                     </span>
                   </td>
@@ -351,7 +351,7 @@ export default function CampaignDetailView({
                         })
                       : '-'}
                   </td>
-                  <td className="px-4 py-2 text-xs text-terminal-red truncate max-w-[200px]">
+                  <td className="px-4 py-2 font-mono text-xs text-terminal-red truncate max-w-[200px]">
                     {r.error_message || ''}
                   </td>
                 </tr>
@@ -362,7 +362,7 @@ export default function CampaignDetailView({
 
         {recipients.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12">
-            <span className="text-sm text-muted">{t.noRecipients}</span>
+            <span className="text-sm text-muted font-mono">{t.noRecipients}</span>
           </div>
         )}
       </div>
@@ -390,14 +390,14 @@ export default function CampaignDetailView({
             <div className="p-4 space-y-4">
               <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-terminal-yellow/10 border border-terminal-yellow/20">
                 <AlertTriangle className="w-4 h-4 text-terminal-yellow flex-shrink-0" />
-                <span className="text-xs text-terminal-yellow">
+                <span className="text-xs text-terminal-yellow font-mono">
                   {t.confirmWarning.replace('{count}', pendingCount.toLocaleString())}
                 </span>
               </div>
               <div className="flex items-center gap-2 justify-end">
                 <button
                   onClick={() => setShowConfirm(false)}
-                  className="px-3 py-1.5 rounded-xl bg-surface border border-border text-sm text-muted hover:text-foreground transition-colors"
+                  className="px-3 py-1.5 rounded-xl bg-surface border border-border text-sm font-mono text-muted hover:text-foreground transition-colors"
                 >
                   {t.cancel}
                 </button>

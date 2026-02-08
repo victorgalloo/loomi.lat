@@ -120,8 +120,8 @@ export default function TenantDashboard({
           {tenant.subscriptionTier}
         </span>
         <span className="text-border">·</span>
-        <span className="text-muted">
-          <span className="font-mono">{stats.totalLeads}</span> leads
+        <span className="text-muted font-mono">
+          {stats.totalLeads} leads
         </span>
       </div>
 
@@ -131,7 +131,7 @@ export default function TenantDashboard({
           <p className="text-3xl font-mono text-foreground">
             {stats.totalLeads}
           </p>
-          <p className="text-sm mt-1 text-muted">
+          <p className="text-xs mt-1 text-muted font-mono">
             leads
           </p>
         </div>
@@ -139,7 +139,7 @@ export default function TenantDashboard({
           <p className="text-3xl font-mono text-foreground">
             {stats.totalConversations}
           </p>
-          <p className="text-sm mt-1 text-muted">
+          <p className="text-xs mt-1 text-muted font-mono">
             conversaciones
           </p>
         </div>
@@ -147,7 +147,7 @@ export default function TenantDashboard({
           <p className="text-3xl font-mono text-foreground">
             {stats.messagesThisMonth}
           </p>
-          <p className="text-sm mt-1 text-muted">
+          <p className="text-xs mt-1 text-muted font-mono">
             mensajes
           </p>
         </div>
@@ -155,7 +155,7 @@ export default function TenantDashboard({
           <p className="text-3xl font-mono text-foreground">
             {stats.appointmentsBooked}
           </p>
-          <p className="text-sm mt-1 text-muted">
+          <p className="text-xs mt-1 text-muted font-mono">
             citas
           </p>
         </div>

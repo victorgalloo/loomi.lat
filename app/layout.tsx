@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Lexend } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from '@/components/theme-provider';
 import "./globals.css";
 
-const lexend = Lexend({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-lexend",
+  variable: "--font-dm-sans",
   display: "swap",
 });
 
@@ -30,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" data-theme="light" suppressHydrationWarning>
-      <body className={`${lexend.variable} font-sans`}>
+      <body className={`${dmSans.variable} font-sans`}>
         <ThemeProvider defaultTheme="light">
           <div className="antialiased bg-background text-foreground transition-colors duration-300">
             {children}

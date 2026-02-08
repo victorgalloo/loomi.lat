@@ -47,7 +47,7 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-14 border-b bg-background border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 h-12 border-b bg-background border-border">
         <div className="h-full max-w-6xl mx-auto px-4 flex items-center justify-between">
           {/* Logo */}
           <Link
@@ -63,7 +63,7 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
           </Link>
 
           {/* Nav */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-6">
             {navItems.map((item) => {
               const isActive = pathname === item.href ||
                 (item.href !== '/dashboard' && pathname.startsWith(item.href));
@@ -72,7 +72,7 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`text-body transition-colors font-mono ${
+                  className={`text-sm transition-colors font-mono ${
                     isActive
                       ? 'text-foreground'
                       : 'text-muted hover:text-foreground'
@@ -88,14 +88,14 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-terminal-green' : 'bg-terminal-yellow'}`} />
-              <span className="text-sm text-muted font-mono">
+              <span className="text-xs text-muted font-mono">
                 {isConnected ? 'live' : 'offline'}
               </span>
             </div>
 
             <button
               onClick={toggleTheme}
-              className="p-2 rounded transition-colors text-muted hover:text-foreground"
+              className="p-1.5 rounded transition-colors text-muted hover:text-foreground"
             >
               <Sun className="w-4 h-4 hidden dark:block" />
               <Moon className="w-4 h-4 block dark:hidden" />
@@ -103,7 +103,7 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
 
             <button
               onClick={handleLogout}
-              className="p-2 rounded transition-colors text-muted hover:text-foreground"
+              className="p-1.5 rounded transition-colors text-muted hover:text-foreground"
               title="Salir"
             >
               <LogOut className="w-4 h-4" />
@@ -123,7 +123,7 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-sm font-medium font-mono ${
+                className={`text-xs font-medium font-mono ${
                   isActive
                     ? 'text-foreground'
                     : 'text-muted'
@@ -138,7 +138,7 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
 
       {/* Agent Sub-Nav */}
       {pathname.startsWith('/dashboard/agent') && (
-        <div className="fixed top-14 left-0 right-0 z-40 h-10 border-b bg-surface border-border">
+        <div className="fixed top-12 left-0 right-0 z-40 h-10 border-b bg-surface border-border">
           <div className="h-full max-w-6xl mx-auto px-4 flex items-center gap-4">
             {navItems.find(i => i.href === '/dashboard/agent')?.subItems?.map((sub) => {
               const isSubActive = pathname === sub.href;
@@ -146,7 +146,7 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
                 <Link
                   key={sub.href}
                   href={sub.href}
-                  className={`text-sm transition-colors font-mono ${
+                  className={`text-xs transition-colors font-mono ${
                     isSubActive
                       ? 'text-foreground'
                       : 'text-muted hover:text-foreground'
@@ -161,7 +161,7 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
       )}
 
       {/* Content */}
-      <main className={`${pathname.startsWith('/dashboard/agent') ? 'pt-[96px]' : 'pt-14'} pb-16 md:pb-0`}>
+      <main className={`${pathname.startsWith('/dashboard/agent') ? 'pt-[88px]' : 'pt-12'} pb-16 md:pb-0`}>
         {children}
       </main>
     </div>

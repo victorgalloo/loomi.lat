@@ -58,9 +58,9 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
     }
   };
 
-  const inputClasses = 'w-full px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 outline-none bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30';
+  const inputClasses = 'w-full px-3 py-2 rounded-xl text-sm transition-colors duration-150 outline-none bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30';
 
-  const labelClasses = 'block text-label font-medium mb-2.5 text-muted';
+  const labelClasses = 'block text-xs font-medium mb-1.5 text-muted';
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -172,7 +172,7 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
                 ) : messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12">
                     <MessageCircle className="w-6 h-6 mb-2 text-muted" />
-                    <span className="text-xs text-muted">Sin mensajes</span>
+                    <span className="text-xs font-mono text-muted">Sin mensajes</span>
                   </div>
                 ) : (
                   messages.map((msg) => (
@@ -183,7 +183,7 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
                           : 'bg-surface border border-border rounded-bl-sm'
                       }`}>
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                        <p className="text-xs mt-1 text-muted">
+                        <p className="text-[10px] mt-1 text-muted">
                           {new Date(msg.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>

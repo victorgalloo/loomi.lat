@@ -155,7 +155,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
   }
 
   return (
-    <div className="px-6 py-8">
+    <div className="px-6 py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -173,7 +173,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
               {stage.label}
             </span>
             {botPaused && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium font-mono bg-amber-500/10 text-amber-600 dark:text-amber-400">
                 bot pausado
               </span>
             )}
@@ -185,7 +185,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
             <button
               onClick={handleResumeBot}
               disabled={resuming}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-colors duration-150 bg-terminal-green/10 text-terminal-green hover:bg-terminal-green/20 disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium font-mono transition-colors duration-150 bg-terminal-green/10 text-terminal-green hover:bg-terminal-green/20 disabled:opacity-50"
             >
               <Play className="w-4 h-4" />
               {resuming ? 'Reactivando...' : 'Reactivar bot'}
@@ -208,7 +208,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
       {/* Stats Bar */}
       <div className="flex items-center gap-8 pb-6 mb-6 border-b border-border">
         <div>
-          <p className="text-label uppercase tracking-wider text-muted">
+          <p className="text-xs uppercase tracking-wider text-muted">
             Mensajes
           </p>
           <p className="text-xl font-semibold font-mono mt-1 text-foreground">
@@ -219,7 +219,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
         <div className="w-px h-8 bg-border" />
 
         <div>
-          <p className="text-label uppercase tracking-wider text-muted">
+          <p className="text-xs uppercase tracking-wider text-muted">
             Iniciada
           </p>
           <p className="text-sm font-medium mt-1 text-muted-foreground">
@@ -230,7 +230,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
         <div className="w-px h-8 bg-border" />
 
         <div>
-          <p className="text-label uppercase tracking-wider text-muted">
+          <p className="text-xs uppercase tracking-wider text-muted">
             Telefono
           </p>
           <p className="text-sm font-medium mt-1 text-muted-foreground">
@@ -253,7 +253,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
               {botPaused && (
                 <div className="flex items-center gap-1.5">
                   <PauseCircle className="w-3.5 h-3.5 text-amber-500" />
-                  <span className="text-xs text-amber-500">
+                  <span className="text-xs font-mono text-amber-500">
                     bot pausado - respondiendo manualmente
                   </span>
                 </div>
@@ -318,7 +318,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
                   }}
                   placeholder="Escribe un mensaje..."
                   disabled={sending}
-                  className="flex-1 px-4 py-2.5 rounded-xl text-sm outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 rounded-xl text-sm font-mono outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50"
                 />
                 <button
                   onClick={handleSendReply}
@@ -328,7 +328,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
                   <Send className="w-4 h-4" />
                 </button>
               </div>
-              <p className="text-xs mt-1.5 text-muted">
+              <p className="text-xs mt-1.5 font-mono text-muted">
                 {botPaused
                   ? 'Bot pausado. Tus mensajes se envian directo al WhatsApp del lead.'
                   : 'Al enviar, el bot se pausa automaticamente.'
@@ -357,7 +357,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
                 <div className="flex items-start gap-3">
                   <Mail className="w-4 h-4 mt-0.5 text-muted" />
                   <div>
-                    <dt className="text-label uppercase tracking-wider text-muted">Email</dt>
+                    <dt className="text-xs uppercase tracking-wider text-muted">Email</dt>
                     <dd className="text-sm mt-0.5 text-muted-foreground">{lead.email}</dd>
                   </div>
                 </div>
@@ -366,7 +366,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
                 <div className="flex items-start gap-3">
                   <Building className="w-4 h-4 mt-0.5 text-muted" />
                   <div>
-                    <dt className="text-label uppercase tracking-wider text-muted">Empresa</dt>
+                    <dt className="text-xs uppercase tracking-wider text-muted">Empresa</dt>
                     <dd className="text-sm mt-0.5 text-muted-foreground">{lead.company}</dd>
                   </div>
                 </div>
@@ -375,7 +375,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
                 <div className="flex items-start gap-3">
                   <Tag className="w-4 h-4 mt-0.5 text-muted" />
                   <div>
-                    <dt className="text-label uppercase tracking-wider text-muted">Industria</dt>
+                    <dt className="text-xs uppercase tracking-wider text-muted">Industria</dt>
                     <dd className="text-sm mt-0.5 text-muted-foreground">{lead.industry}</dd>
                   </div>
                 </div>

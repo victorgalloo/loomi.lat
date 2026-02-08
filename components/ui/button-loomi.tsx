@@ -21,9 +21,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         whileTap={{ scale: 0.97 }}
         className={cn(
           'relative inline-flex items-center justify-center font-medium transition-all duration-200 rounded-lg overflow-hidden',
-          size === 'sm' && 'px-4 py-2.5 text-sm',
-          size === 'md' && 'px-5 py-3 text-sm',
-          size === 'lg' && 'px-7 py-4 text-base',
+          size === 'sm' && 'px-4 py-2 text-sm',
+          size === 'md' && 'px-5 py-2.5 text-sm',
+          size === 'lg' && 'px-7 py-3.5 text-base',
           variant === 'primary' && [
             'bg-foreground text-background hover:opacity-90',
             glow && 'shadow-sm',

@@ -83,7 +83,7 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
       {/* Content */}
       <div className="flex items-start gap-3">
         {/* Avatar */}
-        <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm font-medium flex-shrink-0 bg-surface-2 text-muted">
+        <div className="w-8 h-8 rounded-md flex items-center justify-center text-xs font-medium flex-shrink-0 bg-surface-2 text-muted">
           {getInitials(lead.name)}
         </div>
 
@@ -98,7 +98,7 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
             </p>
           )}
           {lead.broadcastClassification && (
-            <span className={`inline-block text-xs px-1.5 py-0.5 rounded mt-1 ${
+            <span className={`inline-block text-[10px] font-mono px-1.5 py-0.5 rounded mt-1 ${
               {
                 hot: 'bg-orange-500/20 text-orange-400',
                 warm: 'bg-yellow-500/20 text-yellow-400',

@@ -55,8 +55,8 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead }: KanbanColumnProp
       style={{
         display: 'flex',
         flexDirection: 'column',
-        width: '300px',
-        minWidth: '300px',
+        width: '280px',
+        minWidth: '280px',
         flexShrink: 0
       }}
     >
@@ -67,12 +67,12 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead }: KanbanColumnProp
           <h3 className="text-sm font-medium text-foreground/70">
             {stage.name}
           </h3>
-          <span className="text-sm px-1.5 py-0.5 rounded font-medium bg-surface text-muted">
+          <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-surface text-muted">
             {leads.length}
           </span>
         </div>
         {totalValue > 0 && (
-          <span className="text-sm font-mono text-muted">
+          <span className="text-xs font-mono text-muted">
             {formatCurrency(totalValue)}
           </span>
         )}

@@ -43,12 +43,8 @@ const config: Config = {
         },
         "surface-2": "var(--surface-2)",
       },
-      fontSize: {
-        label: ["13px", { lineHeight: "1.4" }],
-        body: ["15px", { lineHeight: "1.7" }],
-      },
       fontFamily: {
-        sans: ["var(--font-lexend)", "Lexend", "system-ui", "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "SF Mono", "Menlo", "monospace"],
       },
       borderRadius: {

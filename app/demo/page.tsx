@@ -111,7 +111,7 @@ export default function DemoPage() {
             {/* Access Request Form */}
             <form onSubmit={handleAccessRequest} className="space-y-4">
               <div>
-                <label className="block text-label font-medium mb-2.5 text-muted">
+                <label className="block text-xs font-medium mb-2 text-muted font-mono">
                   nombre
                 </label>
                 <input
@@ -121,12 +121,12 @@ export default function DemoPage() {
                   required
                   disabled={isLoading}
                   placeholder="Tu nombre"
-                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-label font-medium mb-2.5 text-muted">
+                <label className="block text-xs font-medium mb-2 text-muted font-mono">
                   email
                 </label>
                 <input
@@ -136,12 +136,12 @@ export default function DemoPage() {
                   required
                   disabled={isLoading}
                   placeholder="tu@email.com"
-                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-label font-medium mb-2.5 text-muted">
+                <label className="block text-xs font-medium mb-2 text-muted font-mono">
                   teléfono
                 </label>
                 <input
@@ -151,14 +151,14 @@ export default function DemoPage() {
                   required
                   disabled={isLoading}
                   placeholder="+52 55 1234 5678"
-                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 rounded-xl text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-terminal-green text-background hover:bg-terminal-green/90 font-mono"
+                className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-terminal-green text-background hover:bg-terminal-green/90 font-mono"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -173,7 +173,7 @@ export default function DemoPage() {
 
             {/* Link to Login */}
             <div className="mt-8 text-center">
-              <p className="text-xs text-muted">
+              <p className="text-xs text-muted font-mono">
                 ¿Ya tienes cuenta?{' '}
                 <Link
                   href="/login"
@@ -186,7 +186,7 @@ export default function DemoPage() {
 
             {/* Powered by */}
             <div className="mt-12 pt-6 border-t border-border text-center">
-              <p className="text-xs text-muted">
+              <p className="text-xs text-muted font-mono">
                 powered by{' '}
                 <Link
                   href="https://anthana.agency"
@@ -227,12 +227,12 @@ export default function DemoPage() {
             </div>
             <div>
               <h1 className="text-sm font-medium text-foreground">Loomi Demo</h1>
-              <p className="text-xs text-muted">agent testing environment</p>
+              <p className="text-xs text-muted font-mono">agent testing environment</p>
             </div>
           </div>
           <Link
             href="/"
-            className="text-xs text-muted hover:text-foreground transition-colors"
+            className="text-xs text-muted hover:text-foreground transition-colors font-mono"
           >
             ← back
           </Link>

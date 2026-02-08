@@ -19,7 +19,7 @@ export function Card({ children, className, hover = false, terminal = false, tit
             <div className="w-2.5 h-2.5 rounded-full bg-terminal-yellow" />
             <div className="w-2.5 h-2.5 rounded-full bg-terminal-green" />
           </div>
-          {title && <span className="text-xs text-muted font-mono ml-2">{title}</span>}
+          {title && <span className="text-[10px] text-muted font-mono ml-2">{title}</span>}
         </div>
         <div className="p-5">{children}</div>
       </div>

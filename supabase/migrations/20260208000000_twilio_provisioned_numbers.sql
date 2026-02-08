@@ -32,10 +32,18 @@ ALTER TABLE twilio_provisioned_numbers ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Tenants can view their own numbers"
   ON twilio_provisioned_numbers FOR SELECT
   USING (tenant_id IN (
-    SELECT id FROM tenants WHERE owner_email = auth.jwt() ->> 'email'
+    SELECT id FROM tenants WHERE email = auth.jwt() ->> 'email'
   ));
 
--- Updated_at trigger
+-- Updated_at trigger function (if not exists)
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER set_updated_at_twilio_numbers
   BEFORE UPDATE ON twilio_provisioned_numbers
   FOR EACH ROW

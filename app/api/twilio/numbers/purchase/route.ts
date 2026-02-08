@@ -31,10 +31,11 @@ export async function POST(request: NextRequest) {
     const number = await purchaseNumber(phoneNumber, tenantId, webhookBaseUrl);
 
     return NextResponse.json({ success: true, number });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Twilio purchase error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to purchase number';
     return NextResponse.json(
-      { error: 'Failed to purchase number' },
+      { error: message },
       { status: 500 }
     );
   }

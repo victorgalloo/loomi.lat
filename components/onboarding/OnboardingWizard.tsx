@@ -549,7 +549,7 @@ export function OnboardingWizard({
                     if (whatsappConnected) {
                       saveAndFinish(true);
                     } else {
-                      setStep('connect');
+                      setStep('prerequisites');
                     }
                   }}
                   className="w-full flex items-center justify-center gap-2 text-xs text-muted hover:text-foreground font-mono transition-colors py-1"

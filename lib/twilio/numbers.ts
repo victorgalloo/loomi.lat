@@ -173,7 +173,6 @@ export async function purchaseNumber(
   if (countryCode === 'MX') {
     const addressSid = await getOrCreateAddress(client, 'MX');
     const bundleSid = await getOrCreateBundle(client, addressSid);
-    purchaseOpts.addressSid = addressSid;
     purchaseOpts.bundleSid = bundleSid;
   }
 

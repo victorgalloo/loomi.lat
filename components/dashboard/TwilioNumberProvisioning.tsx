@@ -36,6 +36,8 @@ export default function TwilioNumberProvisioning({
   onBack,
 }: TwilioNumberProvisioningProps) {
   const [step, setStep] = useState<Step>('idle');
+  const [isSearching, setIsSearching] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
   const [country, setCountry] = useState<'MX' | 'US'>('MX');
   const [numbers, setNumbers] = useState<AvailableNumber[]>([]);
   const [selectedNumber, setSelectedNumber] = useState<AvailableNumber | null>(null);
@@ -53,6 +55,7 @@ export default function TwilioNumberProvisioning({
   }, []);
 
   const searchNumbers = async () => {
+    setIsSearching(true);
     setStep('searching');
     setError(null);
 
@@ -67,6 +70,8 @@ export default function TwilioNumberProvisioning({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
       setStep('idle');
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -79,6 +84,7 @@ export default function TwilioNumberProvisioning({
 
   const executePurchase = async () => {
     if (!selectedNumber) return;
+    setIsPurchasing(true);
     setStep('purchasing');
     setError(null);
     setNeedsSubscription(false);
@@ -107,6 +113,8 @@ export default function TwilioNumberProvisioning({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
       setStep('confirming');
+    } finally {
+      setIsPurchasing(false);
     }
   };
 
@@ -194,10 +202,20 @@ export default function TwilioNumberProvisioning({
 
             <button
               onClick={searchNumbers}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-foreground text-background text-sm font-medium font-mono transition-colors hover:opacity-90"
+              disabled={isSearching}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-foreground text-background text-sm font-medium font-mono transition-colors hover:opacity-90 disabled:opacity-70"
             >
-              <Search className="w-4 h-4" />
-              buscar números disponibles
+              {isSearching ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  buscando...
+                </>
+              ) : (
+                <>
+                  <Search className="w-4 h-4" />
+                  buscar números disponibles
+                </>
+              )}
             </button>
 
             {error && (
@@ -345,10 +363,17 @@ export default function TwilioNumberProvisioning({
               </button>
               <button
                 onClick={executePurchase}
-                disabled={needsSubscription}
-                className="px-4 py-2.5 rounded-lg bg-foreground text-background text-sm font-medium font-mono transition-colors hover:opacity-90 disabled:opacity-30"
+                disabled={needsSubscription || isPurchasing}
+                className="px-4 py-2.5 rounded-lg bg-foreground text-background text-sm font-medium font-mono transition-colors hover:opacity-90 disabled:opacity-50"
               >
-                comprar número
+                {isPurchasing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    comprando...
+                  </span>
+                ) : (
+                  'comprar número'
+                )}
               </button>
             </div>
           </div>

@@ -21,12 +21,10 @@ function getSupabaseAdmin() {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getOrCreateAddress(client: any, country: string): Promise<string> {
-  // Check for existing address
   const addresses = await client.addresses.list({ customerName: 'Loomi', limit: 10 });
   const existing = addresses.find((a: { isoCountry: string }) => a.isoCountry === country);
   if (existing) return existing.sid;
 
-  // Create new address
   const address = await client.addresses.create({
     customerName: 'Loomi',
     street: 'Av. Américas 1254',
@@ -38,6 +36,57 @@ async function getOrCreateAddress(client: any, country: string): Promise<string>
   });
 
   return address.sid;
+}
+
+/**
+ * Get or create a Regulatory Bundle for MX mobile numbers.
+ * Required by Twilio for purchasing numbers in regulated countries.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getOrCreateBundle(client: any, addressSid: string): Promise<string> {
+  // Check for existing approved/pending bundle
+  const bundles = await client.numbers.v2.regulatoryCompliance.bundles.list({ limit: 20 });
+  const existing = bundles.find(
+    (b: { status: string; friendlyName: string }) =>
+      b.friendlyName === 'Loomi MX' && (b.status === 'twilio-approved' || b.status === 'pending-review')
+  );
+  if (existing) return existing.sid;
+
+  // Create new bundle
+  const bundle = await client.numbers.v2.regulatoryCompliance.bundles.create({
+    friendlyName: 'Loomi MX',
+    email: 'support@loomi.lat',
+    regulationSid: 'RNdfbf3fae0e1107f8571571f4b876d2a6', // MX mobile regulation
+    isoCountry: 'MX',
+    numberType: 'mobile',
+    endUserType: 'business',
+  });
+
+  // Create end-user (business info)
+  const endUser = await client.numbers.v2.regulatoryCompliance.endUsers.create({
+    friendlyName: 'Loomi',
+    type: 'business',
+    attributes: {
+      business_name: 'Loomi',
+      business_identity: 'direct_customer',
+    },
+  });
+
+  // Assign end-user and address to bundle
+  await client.numbers.v2.regulatoryCompliance
+    .bundles(bundle.sid)
+    .itemAssignments.create({ objectSid: endUser.sid });
+
+  await client.numbers.v2.regulatoryCompliance
+    .bundles(bundle.sid)
+    .itemAssignments.create({ objectSid: addressSid });
+
+  // Submit for review
+  await client.numbers.v2.regulatoryCompliance
+    .bundles(bundle.sid)
+    .update({ status: 'pending-review' });
+
+  return bundle.sid;
 }
 
 export interface AvailableNumber {
@@ -121,7 +170,9 @@ export async function purchaseNumber(
 
   if (countryCode === 'MX') {
     const addressSid = await getOrCreateAddress(client, 'MX');
+    const bundleSid = await getOrCreateBundle(client, addressSid);
     purchaseOpts.addressSid = addressSid;
+    purchaseOpts.bundleSid = bundleSid;
   }
 
   const purchased = await client.incomingPhoneNumbers.create(purchaseOpts);

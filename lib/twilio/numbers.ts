@@ -15,6 +15,31 @@ function getSupabaseAdmin() {
   );
 }
 
+/**
+ * Get or create a Twilio address for regulatory compliance.
+ * Reuses existing address if one exists for the country.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getOrCreateAddress(client: any, country: string): Promise<string> {
+  // Check for existing address
+  const addresses = await client.addresses.list({ customerName: 'Loomi', limit: 10 });
+  const existing = addresses.find((a: { isoCountry: string }) => a.isoCountry === country);
+  if (existing) return existing.sid;
+
+  // Create new address
+  const address = await client.addresses.create({
+    customerName: 'Loomi',
+    street: 'Av. Américas 1254',
+    city: 'Guadalajara',
+    region: 'Jalisco',
+    postalCode: '44630',
+    isoCountry: country,
+    friendlyName: `Loomi - ${country}`,
+  });
+
+  return address.sid;
+}
+
 export interface AvailableNumber {
   phoneNumber: string;
   friendlyName: string;
@@ -84,14 +109,23 @@ export async function purchaseNumber(
   const client = getTwilioClient();
   const supabase = getSupabaseAdmin();
 
-  const purchased = await client.incomingPhoneNumbers.create({
+  const countryCode = phoneNumber.startsWith('+52') ? 'MX' : 'US';
+
+  // MX numbers require a registered address
+  const purchaseOpts: Record<string, string> = {
     phoneNumber,
     smsUrl: `${webhookBaseUrl}/api/twilio/sms/webhook`,
     smsMethod: 'POST',
     friendlyName: `Loomi - ${tenantId.slice(0, 8)}`,
-  });
+  };
 
-  const countryCode = phoneNumber.startsWith('+52') ? 'MX' : 'US';
+  if (countryCode === 'MX') {
+    const addressSid = await getOrCreateAddress(client, 'MX');
+    purchaseOpts.addressSid = addressSid;
+  }
+
+  const purchased = await client.incomingPhoneNumbers.create(purchaseOpts);
+
   const monthlyPrice = countryCode === 'MX' ? 3.00 : 1.15;
 
   const { data, error } = await supabase

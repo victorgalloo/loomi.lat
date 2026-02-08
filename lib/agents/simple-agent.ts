@@ -16,6 +16,7 @@ import { ConversationContext } from '@/types';
 import { sendPaymentLink } from '@/lib/whatsapp/send';
 import { executeHandoff, HandoffContext } from '@/lib/handoff';
 import { createCheckoutSession } from '@/lib/stripe/checkout';
+import { createEvent } from '@/lib/tools/calendar';
 import { generateReasoningFast, formatReasoningForPrompt } from './reasoning';
 import { getSentimentInstruction } from './sentiment';
 import { getIndustryPromptSection } from './industry';
@@ -606,7 +607,7 @@ Sé directa, inteligente, mensajes cortos.`
     }),
 
     schedule_demo: tool({
-      description: 'Muestra horarios disponibles para agendar una demo de Loomi. Usa cuando el cliente quiere ver el producto, dice "muéstrame", "quiero ver", "agendemos", o muestra interés claro. NO necesitas el email todavía - se pedirá después de que elija horario.',
+      description: 'Muestra horarios disponibles para agendar una demo de Loomi. Usa SOLO para mostrar horarios inicialmente. Cuando el cliente ya eligió horario y dio nombre+email, usa book_demo en su lugar.',
       inputSchema: zodSchema(z.object({
         reason: z.string().optional().describe('Breve nota del contexto o interés del cliente')
       })),
@@ -622,6 +623,41 @@ Sé directa, inteligente, mensajes cortos.`
           message: '¡Genial! Te muestro los horarios disponibles.',
           reason: reason || 'Lead interesado en demo'
         };
+      }
+    }),
+
+    book_demo: tool({
+      description: 'Confirma y agenda una demo en el calendario. Usa DESPUÉS de que el cliente eligió un horario Y dio su nombre y email. Necesitas: fecha (YYYY-MM-DD), hora (HH:MM), nombre y email.',
+      inputSchema: zodSchema(z.object({
+        date: z.string().describe('Fecha elegida en formato YYYY-MM-DD, ej: 2026-02-09'),
+        time: z.string().describe('Hora elegida en formato HH:MM, ej: 09:00'),
+        name: z.string().describe('Nombre del cliente'),
+        email: z.string().describe('Email del cliente'),
+      })),
+      execute: async (params) => {
+        const { date, time, name, email } = params as { date: string; time: string; name: string; email: string };
+        console.log(`[Tool] Booking demo for ${name} (${email}) on ${date} at ${time}`);
+        try {
+          const result = await createEvent({
+            date,
+            time,
+            name,
+            email,
+            phone: clientPhone,
+          });
+          if (result.success) {
+            console.log(`[Tool] Demo booked! Event ID: ${result.eventId}`);
+            return {
+              success: true,
+              message: `Demo agendada para ${name} el ${date} a las ${time}. Te enviaremos un enlace de confirmación a ${email}.`,
+              meetingUrl: result.meetingUrl,
+            };
+          }
+          return { success: false, message: 'No se pudo agendar la demo. Intenta con otro horario.' };
+        } catch (error) {
+          console.error('[Tool] Book demo error:', error);
+          return { success: false, message: 'Error al agendar. Intenta de nuevo.' };
+        }
       }
     }),
 

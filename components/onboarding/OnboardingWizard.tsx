@@ -182,15 +182,25 @@ export function OnboardingWizard({
     }
   };
 
-  const saveAndFinish = async () => {
+  const defaultConfig: ExtractedConfig = {
+    businessName: 'Loomi',
+    businessDescription: 'Plataforma SaaS de agentes de IA para WhatsApp. Automatiza ventas, califica leads y agenda demos 24/7.',
+    productsServices: 'Agentes de IA para WhatsApp, automatización de ventas, calificación de leads, agendamiento de demos',
+    tone: 'professional',
+    industry: 'saas',
+  };
+
+  const saveAndFinish = async (useDefault = false) => {
     setStep('saving');
+    const config = useDefault ? defaultConfig : (extractedConfig || defaultConfig);
+    const prompt = useDefault ? '' : generatedPrompt;
     try {
       const res = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...extractedConfig,
-          customSystemPrompt: generatedPrompt,
+          ...config,
+          customSystemPrompt: prompt,
         }),
       });
 
@@ -363,7 +373,7 @@ export function OnboardingWizard({
                   </div>
 
                   <button
-                    onClick={saveAndFinish}
+                    onClick={() => saveAndFinish()}
                     className="w-full flex items-center justify-center gap-2 text-xs text-muted hover:text-foreground font-mono transition-colors py-2"
                   >
                     saltar y activar después
@@ -410,23 +420,32 @@ export function OnboardingWizard({
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="p-3 border-t border-border flex gap-2">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                  placeholder="Escribe aquí..."
-                  className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-sm font-mono focus:outline-none focus:border-foreground/30"
-                  disabled={isLoading}
-                  autoFocus
-                />
+              <div className="p-3 border-t border-border space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                    placeholder="Escribe aquí..."
+                    className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-sm font-mono focus:outline-none focus:border-foreground/30"
+                    disabled={isLoading}
+                    autoFocus
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={!input.trim() || isLoading}
+                    className="px-3 py-2 bg-foreground text-background rounded-lg disabled:opacity-30"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
                 <button
-                  onClick={sendMessage}
-                  disabled={!input.trim() || isLoading}
-                  className="px-3 py-2 bg-foreground text-background rounded-lg disabled:opacity-30"
+                  onClick={() => saveAndFinish(true)}
+                  className="w-full flex items-center justify-center gap-2 text-xs text-muted hover:text-foreground font-mono transition-colors py-1"
                 >
-                  <Send className="w-4 h-4" />
+                  saltar — se usará la configuración de Loomi por defecto
+                  <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
             </div>

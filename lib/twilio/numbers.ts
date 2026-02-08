@@ -115,6 +115,38 @@ export async function purchaseNumber(
 }
 
 /**
+ * Mock purchase for testing the UI flow without spending money.
+ * Inserts a fake record in the DB but doesn't call Twilio.
+ */
+export async function mockPurchaseNumber(
+  phoneNumber: string,
+  tenantId: string
+): Promise<ProvisionedNumber> {
+  const supabase = getSupabaseAdmin();
+  const countryCode = phoneNumber.startsWith('+52') ? 'MX' : 'US';
+  const monthlyPrice = countryCode === 'MX' ? 3.00 : 1.15;
+
+  const { data, error } = await supabase
+    .from('twilio_provisioned_numbers')
+    .insert({
+      tenant_id: tenantId,
+      twilio_sid: `MOCK_${Date.now()}`,
+      phone_number: phoneNumber,
+      friendly_name: `Mock - ${phoneNumber}`,
+      country_code: countryCode,
+      status: 'active',
+      monthly_cost: monthlyPrice,
+      currency: 'USD',
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(`DB insert failed: ${error.message}`);
+
+  return mapRow(data);
+}
+
+/**
  * Release a number back to Twilio and mark as released.
  */
 export async function releaseNumber(twilioSid: string, tenantId: string): Promise<void> {

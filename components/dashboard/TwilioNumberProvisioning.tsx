@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Phone, Search, Loader2, CheckCircle, AlertCircle, Globe, Copy, ArrowLeft } from 'lucide-react';
+import { Phone, Search, Loader2, CheckCircle, AlertCircle, Globe, Copy, ArrowLeft, Lock } from 'lucide-react';
 
 type Step = 'idle' | 'searching' | 'results' | 'confirming' | 'purchasing' | 'purchased';
 
@@ -75,10 +75,13 @@ export default function TwilioNumberProvisioning({
     setStep('confirming');
   };
 
+  const [needsSubscription, setNeedsSubscription] = useState(false);
+
   const executePurchase = async () => {
     if (!selectedNumber) return;
     setStep('purchasing');
     setError(null);
+    setNeedsSubscription(false);
 
     try {
       const res = await fetch('/api/twilio/numbers/purchase', {
@@ -89,7 +92,14 @@ export default function TwilioNumberProvisioning({
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || 'Error comprando número');
+      if (!res.ok) {
+        if (data.error === 'subscription_required') {
+          setNeedsSubscription(true);
+          setStep('confirming');
+          return;
+        }
+        throw new Error(data.error || 'Error comprando número');
+      }
 
       setPurchasedNumber(data.number);
       setStep('purchased');
@@ -210,6 +220,15 @@ export default function TwilioNumberProvisioning({
         {/* Step: Results */}
         {step === 'results' && (
           <div className="space-y-3">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors font-mono"
+              >
+                <ArrowLeft className="w-3 h-3" />
+                volver
+              </button>
+            )}
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-foreground font-mono">
                 {numbers.length} números disponibles
@@ -299,16 +318,35 @@ export default function TwilioNumberProvisioning({
               </div>
             )}
 
+            {needsSubscription && (
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-terminal-yellow/10 border border-terminal-yellow/20">
+                <Lock className="w-5 h-5 text-terminal-yellow flex-shrink-0 mt-0.5" />
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">Plan activo requerido</p>
+                  <p className="text-xs text-muted">
+                    Necesitas una suscripción activa para comprar números de teléfono.
+                  </p>
+                  <a
+                    href="/dashboard/settings"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-foreground text-background rounded-lg text-xs font-mono hover:opacity-90 transition-opacity"
+                  >
+                    Ver planes
+                  </a>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => { setStep('results'); setError(null); }}
+                onClick={() => { setStep('results'); setError(null); setNeedsSubscription(false); }}
                 className="px-4 py-2.5 rounded-lg border border-border text-sm font-mono text-foreground hover:bg-surface-2 transition-colors"
               >
                 cancelar
               </button>
               <button
                 onClick={executePurchase}
-                className="px-4 py-2.5 rounded-lg bg-foreground text-background text-sm font-medium font-mono transition-colors hover:opacity-90"
+                disabled={needsSubscription}
+                className="px-4 py-2.5 rounded-lg bg-foreground text-background text-sm font-medium font-mono transition-colors hover:opacity-90 disabled:opacity-30"
               >
                 comprar número
               </button>

@@ -241,9 +241,9 @@ export function OnboardingWizard({
         className="w-full max-w-xl"
       >
         {/* Terminal window */}
-        <div className="rounded-xl border border-border bg-surface overflow-hidden shadow-2xl">
+        <div className="rounded-3xl border border-border bg-surface overflow-hidden shadow-elevated">
           {/* Header */}
-          <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+          <div className="px-5 py-3.5 border-b border-border flex items-center gap-2">
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-terminal-red" />
               <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
@@ -269,34 +269,29 @@ export function OnboardingWizard({
             )}
           </div>
 
-          {/* Step indicators */}
-          <div className="px-4 py-2 border-b border-border flex items-center gap-3">
+          {/* Step indicators — pill tabs */}
+          <div className="px-5 py-3 border-b border-border flex items-center gap-2">
             {[
               { key: 'chat', label: 'Configurar' },
               { key: 'test', label: 'Probar' },
               { key: 'prerequisites', label: 'Preparar' },
               { key: 'connect', label: 'WhatsApp' },
-            ].map((s, i) => {
+            ].map((s) => {
               const steps = ['chat', 'test', 'prerequisites', 'connect', 'saving'];
               const currentIdx = steps.indexOf(step);
               const stepIdx = steps.indexOf(s.key);
               const isActive = step === s.key || (step === 'saving' && s.key === 'connect');
               const isDone = stepIdx < currentIdx;
               return (
-                <div key={s.key} className="flex items-center gap-2">
-                  {i > 0 && <div className={`w-6 h-px ${isDone ? 'bg-terminal-green' : 'bg-border'}`} />}
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono ${
-                      isDone ? 'bg-terminal-green text-background' :
-                      isActive ? 'bg-foreground text-background' :
-                      'bg-surface-2 text-muted border border-border'
-                    }`}>
-                      {isDone ? <Check className="w-3 h-3" /> : i + 1}
-                    </div>
-                    <span className={`text-[10px] font-mono ${isActive || isDone ? 'text-foreground' : 'text-muted'}`}>
-                      {s.label}
-                    </span>
-                  </div>
+                <div
+                  key={s.key}
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-mono transition-colors ${
+                    isDone ? 'bg-terminal-green/15 text-terminal-green' :
+                    isActive ? 'bg-foreground text-background' :
+                    'bg-surface-2 text-muted'
+                  }`}
+                >
+                  {s.label}
                 </div>
               );
             })}
@@ -310,7 +305,7 @@ export function OnboardingWizard({
               className="p-5 space-y-5"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-terminal-yellow/10 border border-terminal-yellow/20 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-2xl bg-terminal-yellow/10 border border-terminal-yellow/20 flex items-center justify-center">
                   <ListChecks className="w-5 h-5 text-terminal-yellow" />
                 </div>
                 <div>
@@ -325,7 +320,7 @@ export function OnboardingWizard({
 
               <div className="space-y-3">
                 {/* Item 1: Meta account */}
-                <div className="flex items-start gap-3 p-3 bg-background border border-border rounded-lg">
+                <div className="flex items-start gap-3 p-3 bg-background border border-border rounded-2xl">
                   <div className="w-5 h-5 rounded-full bg-terminal-green/10 border border-terminal-green/20 flex items-center justify-center mt-0.5 shrink-0">
                     <span className="text-[10px] font-mono text-terminal-green font-bold">1</span>
                   </div>
@@ -344,7 +339,7 @@ export function OnboardingWizard({
                 </div>
 
                 {/* Item 2: Meta Business Portfolio */}
-                <div className="flex items-start gap-3 p-3 bg-background border border-border rounded-lg">
+                <div className="flex items-start gap-3 p-3 bg-background border border-border rounded-2xl">
                   <div className="w-5 h-5 rounded-full bg-terminal-green/10 border border-terminal-green/20 flex items-center justify-center mt-0.5 shrink-0">
                     <span className="text-[10px] font-mono text-terminal-green font-bold">2</span>
                   </div>
@@ -363,7 +358,7 @@ export function OnboardingWizard({
                 </div>
 
                 {/* Item 3: WABA */}
-                <div className="flex items-start gap-3 p-3 bg-background border border-border rounded-lg">
+                <div className="flex items-start gap-3 p-3 bg-background border border-border rounded-2xl">
                   <div className="w-5 h-5 rounded-full bg-surface-2 border border-border flex items-center justify-center mt-0.5 shrink-0">
                     <span className="text-[10px] font-mono text-muted font-bold">3</span>
                   </div>
@@ -381,7 +376,7 @@ export function OnboardingWizard({
               </div>
 
               {/* Tip */}
-              <div className="px-3 py-2.5 bg-terminal-green/5 border border-terminal-green/10 rounded-lg">
+              <div className="px-3 py-2.5 bg-terminal-green/5 border border-terminal-green/10 rounded-2xl">
                 <p className="text-xs text-terminal-green font-mono">
                   <span className="font-semibold">Tip:</span> Si ya tienes una cuenta de Meta Business, el proceso toma menos de 1 minuto
                 </p>
@@ -391,7 +386,7 @@ export function OnboardingWizard({
               <div className="space-y-2">
                 <button
                   onClick={() => setStep('connect')}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-foreground text-background rounded-lg font-mono text-sm hover:opacity-90 transition-opacity"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-foreground text-background rounded-xl font-mono text-sm hover:opacity-90 transition-opacity"
                 >
                   <Check className="w-4 h-4" />
                   Tengo todo listo
@@ -424,7 +419,7 @@ export function OnboardingWizard({
                   </div>
                   <button
                     onClick={() => saveAndFinish()}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terminal-green text-background rounded-lg font-mono text-sm hover:opacity-90 transition-opacity"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terminal-green text-background rounded-xl font-mono text-sm hover:opacity-90 transition-opacity"
                   >
                     <Check className="w-4 h-4" />
                     Activar agente
@@ -464,7 +459,7 @@ export function OnboardingWizard({
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={() => setConnectMode('new')}
-                      className="flex flex-col items-center gap-3 p-5 rounded-xl border border-border hover:border-muted bg-background transition-colors"
+                      className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-border hover:border-muted bg-background transition-colors"
                     >
                       <Plus className="w-6 h-6 text-terminal-green" />
                       <span className="text-sm font-medium font-mono text-foreground">número nuevo</span>
@@ -472,7 +467,7 @@ export function OnboardingWizard({
                     </button>
                     <button
                       onClick={() => setConnectMode('existing')}
-                      className="flex flex-col items-center gap-3 p-5 rounded-xl border border-border hover:border-muted bg-background transition-colors"
+                      className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-border hover:border-muted bg-background transition-colors"
                     >
                       <Phone className="w-6 h-6 text-foreground" />
                       <span className="text-sm font-medium font-mono text-foreground">ya tengo uno</span>
@@ -502,7 +497,7 @@ export function OnboardingWizard({
                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[85%] px-3 py-2 rounded-lg text-sm ${
+                      className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm ${
                         msg.role === 'user'
                           ? 'bg-foreground text-background'
                           : 'bg-surface-2 border border-border'
@@ -516,7 +511,7 @@ export function OnboardingWizard({
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-surface-2 border border-border px-3 py-2 rounded-lg">
+                    <div className="bg-surface-2 border border-border px-3 py-2 rounded-2xl">
                       <span className="flex gap-1">
                         <span className="w-1.5 h-1.5 bg-terminal-green rounded-full animate-pulse" />
                         <span className="w-1.5 h-1.5 bg-terminal-green rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
@@ -536,20 +531,27 @@ export function OnboardingWizard({
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                     placeholder="Escribe aquí..."
-                    className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-sm font-mono focus:outline-none focus:border-foreground/30"
+                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm font-mono focus:outline-none focus:border-foreground/30"
                     disabled={isLoading}
                     autoFocus
                   />
                   <button
                     onClick={sendMessage}
                     disabled={!input.trim() || isLoading}
-                    className="px-3 py-2 bg-foreground text-background rounded-lg disabled:opacity-30"
+                    className="px-3 py-2 bg-foreground text-background rounded-xl disabled:opacity-30"
                   >
                     <Send className="w-4 h-4" />
                   </button>
                 </div>
                 <button
-                  onClick={() => saveAndFinish(true)}
+                  onClick={() => {
+                    setExtractedConfig(defaultConfig);
+                    if (whatsappConnected) {
+                      saveAndFinish(true);
+                    } else {
+                      setStep('connect');
+                    }
+                  }}
                   className="w-full flex items-center justify-center gap-2 text-xs text-muted hover:text-foreground font-mono transition-colors py-1"
                 >
                   saltar — se usará la configuración de Loomi por defecto
@@ -603,19 +605,19 @@ export function OnboardingWizard({
 
                       {/* Feature grid */}
                       <div className="grid grid-cols-2 gap-2 mb-6 w-full max-w-sm">
-                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-lg">
+                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-2xl shadow-subtle">
                           <Brain className="w-4 h-4 text-blue-400" />
                           <span className="text-xs text-muted">Razonamiento o3</span>
                         </div>
-                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-lg">
+                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-2xl shadow-subtle">
                           <Heart className="w-4 h-4 text-pink-400" />
                           <span className="text-xs text-muted">Detección emocional</span>
                         </div>
-                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-lg">
+                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-2xl shadow-subtle">
                           <Shield className="w-4 h-4 text-green-400" />
                           <span className="text-xs text-muted">Escalación inteligente</span>
                         </div>
-                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-lg">
+                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-2xl shadow-subtle">
                           <CreditCard className="w-4 h-4 text-yellow-400" />
                           <span className="text-xs text-muted">Links de pago</span>
                         </div>
@@ -628,7 +630,7 @@ export function OnboardingWizard({
                           <button
                             key={prompt.label}
                             onClick={() => sendTestMessage(prompt.text)}
-                            className="group flex items-center gap-1.5 px-3 py-1.5 bg-background border border-border rounded-lg hover:border-foreground/30 transition-all"
+                            className="group flex items-center gap-1.5 px-3 py-1.5 bg-background border border-border rounded-full hover:border-foreground/30 transition-all"
                           >
                             <prompt.icon className="w-3.5 h-3.5 text-muted group-hover:text-foreground transition-colors" />
                             <span className="text-xs font-mono">{prompt.label}</span>
@@ -648,7 +650,7 @@ export function OnboardingWizard({
                             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                           >
                             <div
-                              className={`max-w-[85%] px-3 py-2 rounded-lg text-sm ${
+                              className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm ${
                                 msg.role === 'user'
                                   ? 'bg-foreground text-background'
                                   : 'bg-surface-2 border border-border'
@@ -703,7 +705,7 @@ export function OnboardingWizard({
                     animate={{ opacity: 1 }}
                     className="flex justify-start"
                   >
-                    <div className="bg-surface-2 border border-border px-4 py-3 rounded-lg">
+                    <div className="bg-surface-2 border border-border px-4 py-3 rounded-2xl">
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <div className="w-8 h-8 border-2 border-terminal-green/30 rounded-full" />
@@ -755,13 +757,13 @@ export function OnboardingWizard({
                     onChange={(e) => setTestInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && sendTestMessage()}
                     placeholder="Escribe como cliente..."
-                    className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-sm font-mono focus:outline-none focus:border-foreground/30"
+                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm font-mono focus:outline-none focus:border-foreground/30"
                     disabled={isTestLoading}
                   />
                   <button
                     onClick={() => sendTestMessage()}
                     disabled={!testInput.trim() || isTestLoading}
-                    className="px-3 py-2 bg-surface border border-border text-foreground rounded-lg disabled:opacity-30"
+                    className="px-3 py-2 bg-surface border border-border text-foreground rounded-xl disabled:opacity-30"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -774,7 +776,7 @@ export function OnboardingWizard({
                       setStep('prerequisites');
                     }
                   }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terminal-green text-background rounded-lg font-mono text-sm hover:opacity-90 transition-opacity"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terminal-green text-background rounded-xl font-mono text-sm hover:opacity-90 transition-opacity"
                 >
                   {whatsappConnected ? (
                     <>

@@ -302,6 +302,111 @@ export function OnboardingWizard({
             })}
           </div>
 
+          {/* Prerequisites phase */}
+          {step === 'prerequisites' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-5 space-y-5"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-terminal-yellow/10 border border-terminal-yellow/20 flex items-center justify-center">
+                  <ListChecks className="w-5 h-5 text-terminal-yellow" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-foreground font-mono">
+                    Antes de conectar WhatsApp
+                  </h2>
+                  <p className="text-xs text-muted">
+                    Verifica que tienes estos requisitos
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {/* Item 1: Meta account */}
+                <div className="flex items-start gap-3 p-3 bg-background border border-border rounded-lg">
+                  <div className="w-5 h-5 rounded-full bg-terminal-green/10 border border-terminal-green/20 flex items-center justify-center mt-0.5 shrink-0">
+                    <span className="text-[10px] font-mono text-terminal-green font-bold">1</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground font-mono">Cuenta de Meta (Facebook)</p>
+                    <p className="text-xs text-muted mt-0.5">Necesitas una cuenta personal de Facebook o Meta</p>
+                    <a
+                      href="https://www.facebook.com/signup"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-terminal-green hover:underline mt-1.5 font-mono"
+                    >
+                      Crear cuenta <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+
+                {/* Item 2: Meta Business Portfolio */}
+                <div className="flex items-start gap-3 p-3 bg-background border border-border rounded-lg">
+                  <div className="w-5 h-5 rounded-full bg-terminal-green/10 border border-terminal-green/20 flex items-center justify-center mt-0.5 shrink-0">
+                    <span className="text-[10px] font-mono text-terminal-green font-bold">2</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground font-mono">Meta Business Portfolio</p>
+                    <p className="text-xs text-muted mt-0.5">Antes conocido como Business Manager — gestiona tus activos de negocio</p>
+                    <a
+                      href="https://business.facebook.com/overview"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-terminal-green hover:underline mt-1.5 font-mono"
+                    >
+                      Crear Business Portfolio <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+
+                {/* Item 3: WABA */}
+                <div className="flex items-start gap-3 p-3 bg-background border border-border rounded-lg">
+                  <div className="w-5 h-5 rounded-full bg-surface-2 border border-border flex items-center justify-center mt-0.5 shrink-0">
+                    <span className="text-[10px] font-mono text-muted font-bold">3</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground font-mono">WhatsApp Business Account</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-terminal-yellow/10 border border-terminal-yellow/20 rounded text-[10px] font-mono text-terminal-yellow">
+                        <Sparkles className="w-2.5 h-2.5" />
+                        Se configura automáticamente
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted mt-1">Se crea en el siguiente paso al conectar tu número</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tip */}
+              <div className="px-3 py-2.5 bg-terminal-green/5 border border-terminal-green/10 rounded-lg">
+                <p className="text-xs text-terminal-green font-mono">
+                  <span className="font-semibold">Tip:</span> Si ya tienes una cuenta de Meta Business, el proceso toma menos de 1 minuto
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="space-y-2">
+                <button
+                  onClick={() => setStep('connect')}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-foreground text-background rounded-lg font-mono text-sm hover:opacity-90 transition-opacity"
+                >
+                  <Check className="w-4 h-4" />
+                  Tengo todo listo
+                </button>
+                <button
+                  onClick={() => saveAndFinish()}
+                  className="w-full flex items-center justify-center gap-2 text-xs text-muted hover:text-foreground font-mono transition-colors py-2"
+                >
+                  saltar y activar después
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+
           {/* Connect WhatsApp phase */}
           {step === 'connect' && (
             <div className="p-5">

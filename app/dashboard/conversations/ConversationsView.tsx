@@ -229,16 +229,16 @@ export default function ConversationsView({ conversations: initialConversations,
           </p>
         </div>
 
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-success rounded-xl px-4 py-3 shadow-subtle">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl px-4 py-3 shadow-subtle">
           <p className="text-label tracking-wider text-muted">
             activas hoy
           </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-accent-green">
+          <p className="text-xl font-semibold font-mono mt-1 text-info">
             {activeToday}
           </p>
         </div>
 
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-warning rounded-xl px-4 py-3 shadow-subtle">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl px-4 py-3 shadow-subtle">
           <p className="text-label tracking-wider text-muted">
             mensajes
           </p>

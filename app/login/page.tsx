@@ -238,7 +238,7 @@ function LoginContent() {
                   required
                   disabled={isLoading}
                   placeholder="Tu nombre o empresa"
-                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-accent-green/30"
+                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-info/30"
                 />
               </div>
             )}
@@ -254,7 +254,7 @@ function LoginContent() {
                 required
                 disabled={isLoading}
                 placeholder="tu@email.com"
-                className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-accent-green/30"
+                className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-info/30"
               />
             </div>
 
@@ -270,7 +270,7 @@ function LoginContent() {
                 disabled={isLoading}
                 placeholder="••••••••"
                 minLength={6}
-                className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-accent-green/30"
+                className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-info/30"
               />
             </div>
 
@@ -304,7 +304,7 @@ function LoginContent() {
                   ¿No tienes cuenta?{' '}
                   <button
                     onClick={() => switchMode("signup")}
-                    className="text-terminal-green hover:underline"
+                    className="text-info hover:underline"
                   >
                     regístrate
                   </button>
@@ -314,7 +314,7 @@ function LoginContent() {
                   ¿Ya tienes cuenta?{' '}
                   <button
                     onClick={() => switchMode("login")}
-                    className="text-terminal-green hover:underline"
+                    className="text-info hover:underline"
                   >
                     inicia sesión
                   </button>

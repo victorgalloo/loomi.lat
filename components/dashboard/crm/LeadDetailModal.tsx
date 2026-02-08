@@ -58,7 +58,7 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
     }
   };
 
-  const inputClasses = 'w-full px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 outline-none bg-background border border-border text-foreground placeholder:text-muted shadow-subtle focus:ring-2 focus:ring-accent-green/30 focus:border-accent-green/50';
+  const inputClasses = 'w-full px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 outline-none bg-background border border-border text-foreground placeholder:text-muted shadow-subtle focus:ring-2 focus:ring-info/30 focus:border-info/50';
 
   const labelClasses = 'block text-label font-medium mb-2.5 text-muted';
 

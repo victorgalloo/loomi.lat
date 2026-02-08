@@ -114,7 +114,7 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
       {/* Deal Value */}
       {lead.dealValue && lead.dealValue > 0 && (
         <div className="mt-3 pt-3 border-t border-border">
-          <span className="text-sm font-mono font-medium text-accent-green">
+          <span className="text-sm font-mono font-medium text-info">
             {formatCurrency(lead.dealValue)}
           </span>
         </div>

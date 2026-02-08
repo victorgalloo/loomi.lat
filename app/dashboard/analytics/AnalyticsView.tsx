@@ -90,7 +90,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
           <p className="text-label uppercase tracking-wider text-muted">
             calificados
           </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-accent-green">
+          <p className="text-xl font-semibold font-mono mt-1 text-info">
             {data.qualifiedLeads}
           </p>
         </div>
@@ -128,7 +128,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
                 {metric.value.toLocaleString()}
               </p>
               {metric.change !== undefined && (
-                <p className="text-xs mt-1 flex items-center gap-1 text-accent-green">
+                <p className="text-xs mt-1 flex items-center gap-1 text-info">
                   <TrendingUp className="w-3 h-3" />
                   +{metric.change} {metric.changeLabel}
                 </p>
@@ -148,7 +148,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
         {/* Lead Quality */}
         <div className="rounded-2xl p-5 bg-surface-elevated border border-border shadow-card">
           <h3 className="text-sm font-medium mb-5 flex items-center gap-2 text-foreground">
-            <Target className="w-4 h-4 text-terminal-green" />
+            <Target className="w-4 h-4 text-info" />
             calidad de leads
           </h3>
           <div className="space-y-5">
@@ -161,7 +161,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
               </div>
               <div className="w-full rounded-full h-2.5 overflow-hidden bg-surface-2">
                 <div
-                  className="h-full rounded-full bg-terminal-green transition-all duration-500"
+                  className="h-full rounded-full bg-info transition-all duration-500"
                   style={{ width: `${data.totalLeads > 0 ? (data.qualifiedLeads / data.totalLeads) * 100 : 0}%` }}
                 />
               </div>

@@ -158,7 +158,7 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
         {/* Submit */}
         <div className="pt-6 border-t border-border">
           <div className="flex items-center justify-between">
-            <span className={`text-sm text-terminal-green font-mono ${saved ? 'opacity-100' : 'opacity-0'}`}>
+            <span className={`text-sm text-info font-mono ${saved ? 'opacity-100' : 'opacity-0'}`}>
               guardado
             </span>
             <div className="flex gap-3">

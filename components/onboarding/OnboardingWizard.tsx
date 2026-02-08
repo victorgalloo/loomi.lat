@@ -286,7 +286,7 @@ export function OnboardingWizard({
                 <div
                   key={s.key}
                   className={`px-3 py-1.5 rounded-full text-xs font-mono transition-colors ${
-                    isDone ? 'bg-terminal-green/15 text-terminal-green' :
+                    isDone ? 'bg-info/15 text-info' :
                     isActive ? 'bg-foreground text-background' :
                     'bg-surface-2 text-muted'
                   }`}
@@ -531,7 +531,7 @@ export function OnboardingWizard({
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                     placeholder="Escribe aquí..."
-                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-accent-green/30"
+                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-info/30"
                     disabled={isLoading}
                     autoFocus
                   />
@@ -757,7 +757,7 @@ export function OnboardingWizard({
                     onChange={(e) => setTestInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && sendTestMessage()}
                     placeholder="Escribe como cliente..."
-                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-accent-green/30"
+                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-info/30"
                     disabled={isTestLoading}
                   />
                   <button

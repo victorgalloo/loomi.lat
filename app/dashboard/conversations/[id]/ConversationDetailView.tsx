@@ -318,7 +318,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
                   }}
                   placeholder="Escribe un mensaje..."
                   disabled={sending}
-                  className="flex-1 px-4 py-2 rounded-xl text-sm outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted shadow-subtle focus:ring-2 focus:ring-accent-green/30 focus:border-accent-green/50 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 rounded-xl text-sm outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted shadow-subtle focus:ring-2 focus:ring-info/30 focus:border-info/50 disabled:opacity-50"
                 />
                 <button
                   onClick={handleSendReply}

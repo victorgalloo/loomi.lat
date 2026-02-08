@@ -82,7 +82,7 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
           <p className="text-label uppercase tracking-wider text-muted">
             estado
           </p>
-          <p className={`text-xl font-semibold mt-1 font-mono ${isConnected ? 'text-accent-green' : 'text-terminal-yellow'}`}>
+          <p className={`text-xl font-semibold mt-1 font-mono ${isConnected ? 'text-info' : 'text-terminal-yellow'}`}>
             {isConnected ? 'activo' : 'pendiente'}
           </p>
         </div>

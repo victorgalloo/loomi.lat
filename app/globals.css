@@ -29,8 +29,8 @@
   --accent-green: #34d399;
 
   /* Semantic colors */
-  --info: #3B82F6;
-  --info-muted: #1E3A5F;
+  --info: #007AFF;
+  --info-muted: #001A3A;
   --warning: #F59E0B;
   --warning-muted: #422006;
   --success: #22C55E;
@@ -43,8 +43,8 @@
   --shadow-strength: 0.4;
 
   /* Focus */
-  --focus-ring: #27C93F;
-  --focus-ring-alpha: rgba(39, 201, 63, 0.25);
+  --focus-ring: #007AFF;
+  --focus-ring-alpha: rgba(0, 122, 255, 0.25);
 }
 
 /* Light mode - Clean Vercel white with terminal accents */
@@ -61,8 +61,8 @@
   --accent-green: #059669;
 
   /* Semantic colors - light */
-  --info: #2563EB;
-  --info-muted: #DBEAFE;
+  --info: #007AFF;
+  --info-muted: #D6EAFF;
   --warning: #D97706;
   --warning-muted: #FEF3C7;
   --success: #16A34A;
@@ -75,8 +75,8 @@
   --shadow-strength: 0.1;
 
   /* Focus - light */
-  --focus-ring: #059669;
-  --focus-ring-alpha: rgba(5, 150, 105, 0.2);
+  --focus-ring: #007AFF;
+  --focus-ring-alpha: rgba(0, 122, 255, 0.2);
 }
 
 /* Dark mode explicit */
@@ -93,8 +93,8 @@
   --accent-green: #34d399;
 
   /* Semantic colors - dark */
-  --info: #3B82F6;
-  --info-muted: #1E3A5F;
+  --info: #007AFF;
+  --info-muted: #001A3A;
   --warning: #F59E0B;
   --warning-muted: #422006;
   --success: #22C55E;
@@ -107,8 +107,8 @@
   --shadow-strength: 0.4;
 
   /* Focus - dark */
-  --focus-ring: #27C93F;
-  --focus-ring-alpha: rgba(39, 201, 63, 0.25);
+  --focus-ring: #007AFF;
+  --focus-ring-alpha: rgba(0, 122, 255, 0.25);
 }
 
 body {

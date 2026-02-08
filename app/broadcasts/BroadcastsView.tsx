@@ -427,7 +427,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-3 py-1.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-accent-green/30"
+              className="pl-9 pr-3 py-1.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-info/30"
             />
           </div>
         </div>
@@ -528,7 +528,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                       value={formName}
                       onChange={e => setFormName(e.target.value)}
                       placeholder={t.campaignNamePlaceholder}
-                      className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-accent-green/30"
+                      className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-info/30"
                     />
                   </div>
 
@@ -559,7 +559,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                               }}
                               className={`w-full text-left px-3 py-2.5 transition-colors ${
                                 isSelected
-                                  ? 'bg-foreground/10 border-l-2 border-l-terminal-green'
+                                  ? 'bg-foreground/10 border-l-2 border-l-info'
                                   : 'hover:bg-surface-2 border-l-2 border-l-transparent'
                               }`}
                             >

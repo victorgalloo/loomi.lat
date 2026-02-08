@@ -138,33 +138,33 @@ export default function TenantDashboard({
             {stats.totalLeads}
           </p>
         </div>
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-success rounded-xl p-4 shadow-card">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl p-4 shadow-card">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm text-muted">conversaciones</p>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-success-muted">
-              <MessageCircle className="w-4 h-4 text-success" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-info-muted">
+              <MessageCircle className="w-4 h-4 text-info" />
             </div>
           </div>
           <p className="text-3xl font-mono text-foreground">
             {stats.totalConversations}
           </p>
         </div>
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-warning rounded-xl p-4 shadow-card">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl p-4 shadow-card">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm text-muted">mensajes</p>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-warning-muted">
-              <Mail className="w-4 h-4 text-warning" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-info-muted">
+              <Mail className="w-4 h-4 text-info" />
             </div>
           </div>
           <p className="text-3xl font-mono text-foreground">
             {stats.messagesThisMonth}
           </p>
         </div>
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-terminal-green rounded-xl p-4 shadow-card">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl p-4 shadow-card">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm text-muted">citas</p>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-terminal-green/10">
-              <Calendar className="w-4 h-4 text-terminal-green" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-info-muted">
+              <Calendar className="w-4 h-4 text-info" />
             </div>
           </div>
           <p className="text-3xl font-mono text-foreground">

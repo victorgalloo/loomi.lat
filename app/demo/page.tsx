@@ -121,7 +121,7 @@ export default function DemoPage() {
                   required
                   disabled={isLoading}
                   placeholder="Tu nombre"
-                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-accent-green/30"
+                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-info/30"
                 />
               </div>
 
@@ -136,7 +136,7 @@ export default function DemoPage() {
                   required
                   disabled={isLoading}
                   placeholder="tu@email.com"
-                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-accent-green/30"
+                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-info/30"
                 />
               </div>
 
@@ -151,14 +151,14 @@ export default function DemoPage() {
                   required
                   disabled={isLoading}
                   placeholder="+52 55 1234 5678"
-                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-accent-green/30"
+                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-info/30"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-terminal-green text-background hover:bg-terminal-green/90"
+                className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-info text-background hover:bg-info/90"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

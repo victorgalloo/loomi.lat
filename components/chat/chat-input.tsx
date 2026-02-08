@@ -52,7 +52,7 @@ export const ChatInput = ({ onSubmit, className, disabled }: ChatInputProps) => 
         className
       )}
     >
-      <div className="flex w-full items-center gap-3 rounded-full border-2 border-border bg-surface px-5 py-3 shadow-subtle transition-all focus-within:border-foreground/30 focus-within:ring-2 focus-within:ring-accent-green/30">
+      <div className="flex w-full items-center gap-3 rounded-full border-2 border-border bg-surface px-5 py-3 shadow-subtle transition-all focus-within:border-foreground/30 focus-within:ring-2 focus-within:ring-info/30">
         <Input
           className="h-auto flex-1 border-none bg-transparent px-0 text-base font-medium text-black/90 placeholder:text-black/50 outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
           placeholder="Ask about sales, points of sale, trends…"

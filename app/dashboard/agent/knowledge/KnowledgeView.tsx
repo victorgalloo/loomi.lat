@@ -140,7 +140,7 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
       {/* Create Form */}
       {showForm && (
         <form onSubmit={handleCreate} className="mb-8 p-4 rounded-2xl border border-border bg-surface">
-          <label className="block text-xs font-medium mb-3 text-muted font-mono">
+          <label className="block text-label font-medium mb-3 text-muted">
             nuevo documento
           </label>
           <div className="space-y-3">
@@ -150,14 +150,14 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
               onChange={(e) => setDocName(e.target.value)}
               placeholder="Nombre del documento"
               required
-              className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
+              className="w-full px-3 py-2.5 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
             />
             <input
               type="text"
               value={docDescription}
               onChange={(e) => setDocDescription(e.target.value)}
               placeholder="Descripción (opcional)"
-              className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
+              className="w-full px-3 py-2.5 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
             />
             <textarea
               value={docContent}
@@ -198,7 +198,7 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
       ) : documents.length === 0 ? (
         <div className="text-center py-20">
           <FileText className="w-10 h-10 text-border mx-auto mb-4" />
-          <p className="text-sm text-muted font-mono">
+          <p className="text-sm text-muted">
             Sin documentos aún
           </p>
           <p className="text-xs text-muted mt-1">

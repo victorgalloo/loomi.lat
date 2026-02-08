@@ -191,14 +191,14 @@ export default function ConversationsView({ conversations: initialConversations,
   const totalMessages = conversations.reduce((sum, c) => sum + c.messageCount, 0);
 
   return (
-    <div className="px-6 py-6">
+    <div className="px-6 py-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold text-foreground font-mono">
             ./inbox_
           </h1>
-          <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-surface border border-border text-muted font-mono">
+          <span className="text-label px-2 py-0.5 rounded-full font-medium bg-surface border border-border text-muted">
             {totalConversations} chats
           </span>
         </div>
@@ -212,7 +212,7 @@ export default function ConversationsView({ conversations: initialConversations,
               placeholder="buscar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-48 pl-9 pr-3 py-1.5 rounded-xl text-sm outline-none transition-colors duration-150 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
+              className="w-48 pl-9 pr-3 py-1.5 rounded-xl text-sm outline-none transition-colors duration-150 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
             />
           </div>
         </div>
@@ -221,7 +221,7 @@ export default function ConversationsView({ conversations: initialConversations,
       {/* Stats Bar */}
       <div className="flex items-center gap-8 pb-6 mb-6 border-b border-border">
         <div>
-          <p className="text-xs uppercase tracking-wider text-muted font-mono">
+          <p className="text-label uppercase tracking-wider text-muted">
             total chats
           </p>
           <p className="text-xl font-semibold font-mono mt-1 text-foreground">
@@ -232,7 +232,7 @@ export default function ConversationsView({ conversations: initialConversations,
         <div className="w-px h-8 bg-border" />
 
         <div>
-          <p className="text-xs uppercase tracking-wider text-muted font-mono">
+          <p className="text-label uppercase tracking-wider text-muted">
             activas hoy
           </p>
           <p className="text-xl font-semibold font-mono mt-1 text-accent-green">
@@ -243,7 +243,7 @@ export default function ConversationsView({ conversations: initialConversations,
         <div className="w-px h-8 bg-border" />
 
         <div>
-          <p className="text-xs uppercase tracking-wider text-muted font-mono">
+          <p className="text-label uppercase tracking-wider text-muted">
             mensajes
           </p>
           <p className="text-xl font-semibold font-mono mt-1 text-foreground">
@@ -262,7 +262,7 @@ export default function ConversationsView({ conversations: initialConversations,
           <button
             key={tab.key}
             onClick={() => setFilter(tab.key as typeof filter)}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors font-mono ${
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
               filter === tab.key
                 ? 'bg-foreground text-background'
                 : 'text-muted hover:text-foreground'
@@ -335,7 +335,7 @@ export default function ConversationsView({ conversations: initialConversations,
                     <div className="px-5 py-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="w-11 h-11 rounded-full flex items-center justify-center text-base font-medium bg-surface-2 text-muted font-mono">
+                          <div className="w-11 h-11 rounded-full flex items-center justify-center text-base font-medium bg-surface-2 text-muted">
                             {conversation.leadName.charAt(0).toUpperCase()}
                           </div>
                           <div>
@@ -343,7 +343,7 @@ export default function ConversationsView({ conversations: initialConversations,
                               <h3 className="font-medium text-sm text-foreground">
                                 {conversation.leadName}
                               </h3>
-                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-surface-2 text-muted font-mono">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-surface-2 text-muted">
                                 {getStageLabel(conversation.stage)}
                               </span>
                             </div>
@@ -353,10 +353,10 @@ export default function ConversationsView({ conversations: initialConversations,
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-muted font-mono">
+                          <p className="text-sm text-muted">
                             {formatTimeAgo(conversation.lastMessageTime)}
                           </p>
-                          <p className="text-xs mt-0.5 text-muted/50 font-mono">
+                          <p className="text-sm mt-0.5 text-muted/50">
                             {conversation.messageCount} msgs
                           </p>
                         </div>
@@ -373,7 +373,7 @@ export default function ConversationsView({ conversations: initialConversations,
         </div>
       ) : searchQuery ? (
         <div className="text-center py-12">
-          <p className="text-sm text-muted font-mono">
+          <p className="text-sm text-muted">
             No se encontraron resultados para &quot;{searchQuery}&quot;
           </p>
         </div>
@@ -385,7 +385,7 @@ export default function ConversationsView({ conversations: initialConversations,
           <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-surface border border-border">
             <MessageSquare className="w-6 h-6 text-muted" />
           </div>
-          <h3 className="text-base font-medium mb-1 text-foreground font-mono">
+          <h3 className="text-base font-medium mb-1 text-foreground">
             Sin conversaciones
           </h3>
           <p className="text-sm max-w-sm mx-auto text-muted">

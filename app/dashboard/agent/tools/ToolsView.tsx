@@ -168,7 +168,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
       {/* Create Form */}
       {showForm && (
         <form onSubmit={handleCreate} className="mb-8 p-4 rounded-2xl border border-border bg-surface">
-          <label className="block text-xs font-medium mb-3 text-muted font-mono">
+          <label className="block text-label font-medium mb-3 text-muted">
             nueva herramienta
           </label>
           <div className="space-y-3">
@@ -201,7 +201,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
 
             {/* Execution Type */}
             <div>
-              <label className="block text-xs font-medium mb-2 text-muted font-mono">
+              <label className="block text-label font-medium mb-2.5 text-muted">
                 tipo de ejecución
               </label>
               <div className="flex gap-2">
@@ -243,7 +243,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
 
             {/* Parameters */}
             <div>
-              <label className="block text-xs font-medium mb-2 text-muted font-mono">
+              <label className="block text-label font-medium mb-2.5 text-muted">
                 parámetros (JSON Schema)
               </label>
               <textarea
@@ -257,7 +257,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
             {/* Mock Response */}
             {toolExecutionType === 'mock' && (
               <div>
-                <label className="block text-xs font-medium mb-2 text-muted font-mono">
+                <label className="block text-label font-medium mb-2.5 text-muted">
                   respuesta mock (JSON)
                 </label>
                 <textarea
@@ -297,7 +297,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
       ) : tools.length === 0 ? (
         <div className="text-center py-20">
           <Wrench className="w-10 h-10 text-border mx-auto mb-4" />
-          <p className="text-sm text-muted font-mono">
+          <p className="text-sm text-muted">
             Sin herramientas aún
           </p>
           <p className="text-xs text-muted mt-1">

@@ -63,7 +63,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
   };
 
   return (
-    <div className="px-6 py-6">
+    <div className="px-6 py-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -76,7 +76,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
       {/* Stats Bar */}
       <div className="flex items-center gap-8 pb-6 mb-6 border-b border-border">
         <div>
-          <p className="text-xs uppercase tracking-wider text-muted font-mono">
+          <p className="text-label uppercase tracking-wider text-muted">
             total leads
           </p>
           <p className="text-xl font-semibold font-mono mt-1 text-foreground">
@@ -87,7 +87,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
         <div className="w-px h-8 bg-border" />
 
         <div>
-          <p className="text-xs uppercase tracking-wider text-muted font-mono">
+          <p className="text-label uppercase tracking-wider text-muted">
             calificados
           </p>
           <p className="text-xl font-semibold font-mono mt-1 text-accent-green">
@@ -98,7 +98,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
         <div className="w-px h-8 bg-border" />
 
         <div>
-          <p className="text-xs uppercase tracking-wider text-muted font-mono">
+          <p className="text-label uppercase tracking-wider text-muted">
             tasa respuesta
           </p>
           <p className="text-xl font-semibold font-mono mt-1 text-foreground">
@@ -117,7 +117,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
               className="rounded-2xl p-5 transition-colors bg-surface border border-border hover:border-muted"
             >
               <div className="flex items-start justify-between mb-3">
-                <p className="text-xs text-muted font-mono">
+                <p className="text-label text-muted">
                   {metric.label}
                 </p>
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-surface-2">
@@ -128,13 +128,13 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
                 {metric.value.toLocaleString()}
               </p>
               {metric.change !== undefined && (
-                <p className="text-xs mt-1 flex items-center gap-1 text-accent-green font-mono">
+                <p className="text-xs mt-1 flex items-center gap-1 text-accent-green">
                   <TrendingUp className="w-3 h-3" />
                   +{metric.change} {metric.changeLabel}
                 </p>
               )}
               {metric.subLabel && (
-                <p className="text-xs mt-1 text-muted font-mono">
+                <p className="text-xs mt-1 text-muted">
                   {metric.subLabel}
                 </p>
               )}
@@ -147,14 +147,14 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Lead Quality */}
         <div className="rounded-2xl p-5 bg-surface border border-border">
-          <h3 className="text-sm font-medium mb-5 flex items-center gap-2 text-foreground font-mono">
+          <h3 className="text-sm font-medium mb-5 flex items-center gap-2 text-foreground">
             <Target className="w-4 h-4 text-terminal-green" />
             calidad de leads
           </h3>
           <div className="space-y-5">
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted font-mono">leads calificados</span>
+                <span className="text-muted">leads calificados</span>
                 <span className="font-mono text-foreground">
                   {data.qualifiedLeads} / {data.totalLeads}
                 </span>
@@ -168,7 +168,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted font-mono">tasa de respuesta</span>
+                <span className="text-muted">tasa de respuesta</span>
                 <span className="font-mono text-foreground">
                   {data.responseRate}%
                 </span>
@@ -185,7 +185,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
 
         {/* Stage Breakdown */}
         <div className="rounded-2xl p-5 bg-surface border border-border">
-          <h3 className="text-sm font-medium mb-5 flex items-center gap-2 text-foreground font-mono">
+          <h3 className="text-sm font-medium mb-5 flex items-center gap-2 text-foreground">
             <BarChart3 className="w-4 h-4 text-muted" />
             leads por etapa
           </h3>
@@ -196,7 +196,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
 
                 return (
                   <div key={stage} className="flex items-center gap-3">
-                    <span className="text-xs w-24 truncate text-muted font-mono">
+                    <span className="text-sm w-28 truncate text-muted">
                       {stageLabels[stage] || stage}
                     </span>
                     <div className="flex-1 rounded-full h-1.5 overflow-hidden bg-surface-2">
@@ -212,7 +212,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
                 );
               })
             ) : (
-              <p className="text-sm text-center py-4 text-muted font-mono">
+              <p className="text-sm text-center py-4 text-muted">
                 No hay datos disponibles
               </p>
             )}
@@ -225,7 +225,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
         <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-surface-2">
           <BarChart3 className="w-5 h-5 text-muted" />
         </div>
-        <h3 className="text-sm font-medium mb-1 text-foreground font-mono">
+        <h3 className="text-sm font-medium mb-1 text-foreground">
           más analíticas próximamente
         </h3>
         <p className="text-xs max-w-sm mx-auto text-muted">

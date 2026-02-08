@@ -189,8 +189,8 @@ function ChatPanel({ conv, lang, t, onClose }: {
               <div className="w-2.5 h-2.5 rounded-full bg-terminal-yellow" />
               <div className="w-2.5 h-2.5 rounded-full bg-terminal-green" />
             </div>
-            <span className="text-sm font-mono text-foreground ml-2 truncate">{conv.leadName}</span>
-            <span className={`text-[10px] font-mono ${stageColors[conv.leadStage.toLowerCase()] || 'text-muted'}`}>
+            <span className="text-sm text-foreground ml-2 truncate">{conv.leadName}</span>
+            <span className={`text-xs ${stageColors[conv.leadStage.toLowerCase()] || 'text-muted'}`}>
               {conv.leadStage}
             </span>
           </div>
@@ -203,8 +203,8 @@ function ChatPanel({ conv, lang, t, onClose }: {
         </div>
 
         {/* Lead info */}
-        <div className="flex items-center gap-4 px-4 py-2 border-b border-border text-xs font-mono text-muted">
-          <span>{conv.leadPhone}</span>
+        <div className="flex items-center gap-4 px-4 py-2 border-b border-border text-xs text-muted">
+          <span className="font-mono">{conv.leadPhone}</span>
           <span>{conv.messageCount} {t.messages}</span>
           {conv.category === 'handoff' && (
             <span className="text-terminal-red">
@@ -236,7 +236,7 @@ function ChatPanel({ conv, lang, t, onClose }: {
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <MessageSquare className="w-6 h-6 text-muted/40 mb-2" />
-              <span className="text-xs font-mono text-muted">{t.noMessages}</span>
+              <span className="text-xs text-muted">{t.noMessages}</span>
             </div>
           ) : (
             messages.map((msg) => (
@@ -247,7 +247,7 @@ function ChatPanel({ conv, lang, t, onClose }: {
                     : 'bg-background border border-border rounded-bl-sm'
                 }`}>
                   <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                  <p className="text-[10px] text-muted mt-1">{formatTime(msg.created_at)}</p>
+                  <p className="text-xs text-muted mt-1">{formatTime(msg.created_at)}</p>
                 </div>
               </div>
             ))
@@ -284,7 +284,7 @@ function ConversationRow({ conv, lang, t, onClick }: {
             ? 'bg-muted/10 border-muted/30'
             : 'bg-background border-border'
         }`}>
-          <span className={`text-xs font-mono ${
+          <span className={`text-xs ${
             conv.category === 'handoff' ? 'text-terminal-red'
             : conv.category === 'hot' ? 'text-orange-400'
             : conv.category === 'warm' ? 'text-terminal-yellow'
@@ -299,40 +299,40 @@ function ConversationRow({ conv, lang, t, onClick }: {
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-mono text-foreground truncate">{conv.leadName}</span>
-          <span className={`text-[10px] font-mono ${stageColors[conv.leadStage.toLowerCase()] || 'text-muted'}`}>
+          <span className="text-sm text-foreground truncate">{conv.leadName}</span>
+          <span className={`text-xs ${stageColors[conv.leadStage.toLowerCase()] || 'text-muted'}`}>
             {conv.leadStage}
           </span>
           {conv.category === 'handoff' && (
-            <span className="text-[10px] font-mono text-terminal-red bg-terminal-red/10 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-terminal-red bg-terminal-red/10 px-1.5 py-0.5 rounded">
               {conv.handoffReason
                 ? handoffReasonLabels[conv.handoffReason]?.[lang] || conv.handoffReason
                 : t.handoff}
             </span>
           )}
           {conv.category === 'hot' && (
-            <span className="text-[10px] font-mono text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded">
               {t.hotLead}
             </span>
           )}
           {conv.category === 'warm' && (
-            <span className="text-[10px] font-mono text-terminal-yellow bg-terminal-yellow/10 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-terminal-yellow bg-terminal-yellow/10 px-1.5 py-0.5 rounded">
               {t.warmLead}
             </span>
           )}
           {conv.category === 'cold' && (
-            <span className="text-[10px] font-mono text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
               {t.coldLead}
             </span>
           )}
           {conv.category === 'bot_autoresponse' && (
-            <span className="text-[10px] font-mono text-muted bg-muted/10 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-muted bg-muted/10 px-1.5 py-0.5 rounded">
               {t.botAutoresponse}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-xs font-mono text-muted truncate max-w-[300px]">
+          <span className="text-xs text-muted truncate max-w-[300px]">
             {conv.lastMessageRole === 'assistant' ? '← ' : '→ '}
             {conv.lastMessage}
           </span>
@@ -340,8 +340,8 @@ function ConversationRow({ conv, lang, t, onClick }: {
       </div>
 
       <div className="flex items-center gap-3 flex-shrink-0">
-        <span className="text-[10px] font-mono text-muted">{conv.messageCount} {t.messages}</span>
-        <span className="text-[10px] font-mono text-muted">{timeAgo(conv.lastMessageAt, lang)}</span>
+        <span className="text-xs text-muted">{conv.messageCount} {t.messages}</span>
+        <span className="text-xs text-muted">{timeAgo(conv.lastMessageAt, lang)}</span>
       </div>
     </button>
   );
@@ -356,13 +356,13 @@ function SectionHeader({ icon, label, count, color, onExport }: {
     <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background">
       <div className="flex items-center gap-2">
         <span className={color}>{icon}</span>
-        <span className={`text-xs font-mono ${color}`}>{label}</span>
-        <span className="text-[10px] font-mono text-muted">({count})</span>
+        <span className={`text-xs ${color}`}>{label}</span>
+        <span className="text-xs text-muted">({count})</span>
       </div>
       {onExport && (
         <button
           onClick={onExport}
-          className="flex items-center gap-1 text-[10px] font-mono text-muted hover:text-foreground transition-colors"
+          className="flex items-center gap-1 text-xs text-muted hover:text-foreground transition-colors"
         >
           <Download className="w-3 h-3" />
           CSV
@@ -431,10 +431,10 @@ export default function BroadcastConversations({
           </div>
           {!loading && (
             <div className="flex items-center gap-3">
-              <span className="text-xs font-mono text-muted">
+              <span className="text-xs text-muted">
                 {conversations.length} {t.responses} {t.of} {totalSent} {t.sent}
               </span>
-              <span className="text-xs font-mono text-terminal-green">
+              <span className="text-xs text-terminal-green">
                 {responseRate}% {t.responseRate}
               </span>
             </div>
@@ -449,8 +449,8 @@ export default function BroadcastConversations({
         ) : conversations.length === 0 && noResponse.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-2">
             <MessageSquare className="w-8 h-8 text-muted/40" />
-            <span className="text-sm text-muted font-mono">{t.noConversations}</span>
-            <span className="text-xs text-muted/60 font-mono">{t.noConversationsHint}</span>
+            <span className="text-sm text-muted">{t.noConversations}</span>
+            <span className="text-xs text-muted/60">{t.noConversationsHint}</span>
           </div>
         ) : (
           <div>
@@ -539,7 +539,7 @@ export default function BroadcastConversations({
                 <div>
                   <button
                     onClick={() => setShowNoResponse(!showNoResponse)}
-                    className="w-full px-4 py-2 text-xs font-mono text-muted hover:text-foreground transition-colors text-left"
+                    className="w-full px-4 py-2 text-xs text-muted hover:text-foreground transition-colors text-left"
                   >
                     {showNoResponse ? '▼' : '▶'} {noResponse.length} {lang === 'es' ? 'contactos sin respuesta' : 'contacts without response'}
                   </button>
@@ -548,9 +548,9 @@ export default function BroadcastConversations({
                       {noResponse.map((r, i) => (
                         <div key={i} className="flex items-center gap-3 px-4 py-2">
                           <div className="w-6 h-6 rounded-full bg-background border border-border flex items-center justify-center flex-shrink-0">
-                            <span className="text-[10px] font-mono text-muted">{(r.name || '?').charAt(0).toUpperCase()}</span>
+                            <span className="text-xs text-muted">{(r.name || '?').charAt(0).toUpperCase()}</span>
                           </div>
-                          <span className="text-xs font-mono text-muted">{r.name || '-'}</span>
+                          <span className="text-xs text-muted">{r.name || '-'}</span>
                           <span className="text-xs font-mono text-muted/60">{r.phone}</span>
                         </div>
                       ))}
@@ -565,12 +565,12 @@ export default function BroadcastConversations({
         {/* Footer */}
         {conversations.length > 0 && (
           <div className="flex items-center justify-between px-4 py-2 border-t border-border">
-            <Link href="/dashboard/conversations" className="text-xs font-mono text-muted hover:text-foreground transition-colors">
+            <Link href="/dashboard/conversations" className="text-xs text-muted hover:text-foreground transition-colors">
               {t.viewInbox} →
             </Link>
             <button
               onClick={() => exportCategory('all-responses', conversations.map(c => ({ phone: c.leadPhone, name: c.leadName })))}
-              className="flex items-center gap-1 text-xs font-mono text-muted hover:text-foreground transition-colors"
+              className="flex items-center gap-1 text-xs text-muted hover:text-foreground transition-colors"
             >
               <Download className="w-3 h-3" />
               {t.exportCsv}

@@ -8,7 +8,7 @@ const Table = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <table
     ref={ref}
-    className={cn("w-full caption-bottom text-sm text-base-foreground", className)}
+    className={cn("w-full caption-bottom text-body text-base-foreground", className)}
     {...props}
   />
 ));
@@ -20,7 +20,7 @@ const TableHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <thead
     ref={ref}
-    className={cn("bg-muted/80 text-xs uppercase text-muted-foreground", className)}
+    className={cn("bg-muted/80 text-label uppercase text-muted-foreground", className)}
     {...props}
   />
 ));
@@ -68,7 +68,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "sticky top-0 z-10 bg-muted/80 px-4 py-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground",
+      "sticky top-0 z-10 bg-muted/80 px-4 py-4 text-left text-label font-semibold uppercase tracking-wide text-muted-foreground",
       className
     )}
     {...props}

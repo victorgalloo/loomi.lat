@@ -51,7 +51,7 @@ export default function PartnersView({ userEmail }: PartnersViewProps) {
 
           {/* Right */}
           <div className="flex items-center gap-4">
-            <span className="text-xs text-muted font-mono hidden sm:block">
+            <span className="text-xs text-muted hidden sm:block">
               {userEmail}
             </span>
 
@@ -131,8 +131,8 @@ export default function PartnersView({ userEmail }: PartnersViewProps) {
 
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-border">
-            <p className="text-xs text-muted font-mono text-center">
-              $ last_updated: <span className="text-terminal-green">{new Date().toLocaleDateString('es-MX')}</span>
+            <p className="text-xs text-muted text-center">
+              <span className="font-mono">$ last_updated:</span> <span className="text-terminal-green">{new Date().toLocaleDateString('es-MX')}</span>
             </p>
           </div>
         </div>

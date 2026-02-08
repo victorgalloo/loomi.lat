@@ -47,11 +47,9 @@ function LoginContent() {
         return;
       }
 
-      const { hasWhatsApp, onboardingComplete } = await res.json();
+      const { onboardingComplete } = await res.json();
 
-      if (!hasWhatsApp) {
-        router.push('/dashboard/connect');
-      } else if (!onboardingComplete) {
+      if (!onboardingComplete) {
         router.push('/onboarding');
       } else {
         router.push('/dashboard');

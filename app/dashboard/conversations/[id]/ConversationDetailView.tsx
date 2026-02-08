@@ -242,7 +242,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Messages + Reply Input */}
         <div className="lg:col-span-2">
-          <div className="rounded-2xl overflow-hidden bg-surface border border-border">
+          <div className="rounded-2xl overflow-hidden bg-surface-elevated border border-border shadow-card">
             <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-muted" />
@@ -268,7 +268,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
                 >
                   <div
                     className={`
-                      max-w-[80%] rounded-2xl px-4 py-2.5
+                      max-w-[80%] rounded-2xl px-4 py-2.5 shadow-subtle
                       ${message.role === "assistant"
                         ? 'bg-surface-2 border border-border rounded-bl-sm'
                         : 'bg-emerald-600 text-white rounded-br-sm'
@@ -318,7 +318,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
                   }}
                   placeholder="Escribe un mensaje..."
                   disabled={sending}
-                  className="flex-1 px-4 py-2 rounded-xl text-sm outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 rounded-xl text-sm outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted shadow-subtle focus:ring-2 focus:ring-accent-green/30 focus:border-accent-green/50 disabled:opacity-50"
                 />
                 <button
                   onClick={handleSendReply}
@@ -385,7 +385,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
 
           {/* Summary Card */}
           {conversation.summary && (
-            <div className="rounded-2xl p-5 bg-surface border border-border">
+            <div className="rounded-2xl p-5 bg-surface-elevated border border-border shadow-card">
               <h3 className="font-medium text-sm mb-3 text-foreground">
                 Resumen
               </h3>

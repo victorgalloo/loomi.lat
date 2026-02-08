@@ -195,7 +195,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
               placeholder="buscar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-48 pl-9 pr-3 py-1.5 rounded-xl text-sm outline-none transition-colors duration-150 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
+              className="w-48 pl-9 pr-3 py-1.5 rounded-xl text-sm outline-none transition-colors duration-150 bg-surface border border-border text-foreground placeholder:text-muted shadow-subtle focus:ring-2 focus:ring-accent-green/30 focus:border-accent-green/50"
             />
           </div>
 
@@ -211,9 +211,9 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
       </div>
 
       {/* Stats Bar */}
-      <div className="flex items-center gap-8 pb-6 mb-6 border-b border-border">
-        <div>
-          <p className="text-label uppercase tracking-wider text-muted">
+      <div className="flex items-center gap-4 pb-6 mb-6 border-b border-border">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl px-4 py-3 shadow-subtle">
+          <p className="text-label tracking-wider text-muted">
             pipeline total
           </p>
           <p className="text-xl font-semibold font-mono mt-1 text-foreground">
@@ -221,10 +221,8 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
           </p>
         </div>
 
-        <div className="w-px h-8 bg-border" />
-
-        <div>
-          <p className="text-label uppercase tracking-wider text-muted">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-success rounded-xl px-4 py-3 shadow-subtle">
+          <p className="text-label tracking-wider text-muted">
             cerrados
           </p>
           <p className="text-xl font-semibold font-mono mt-1 text-accent-green">
@@ -232,10 +230,8 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
           </p>
         </div>
 
-        <div className="w-px h-8 bg-border" />
-
-        <div>
-          <p className="text-label uppercase tracking-wider text-muted">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-warning rounded-xl px-4 py-3 shadow-subtle">
+          <p className="text-label tracking-wider text-muted">
             conversión
           </p>
           <p className="text-xl font-semibold font-mono mt-1 text-foreground">
@@ -290,7 +286,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowModal(false)}
           />
-          <div className="relative w-full max-w-md mx-4 rounded-2xl shadow-2xl bg-surface border border-border">
+          <div className="relative w-full max-w-md mx-4 rounded-2xl shadow-elevated bg-surface-elevated border border-border">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <h2 className="text-base font-semibold text-foreground font-mono">

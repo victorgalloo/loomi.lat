@@ -199,7 +199,7 @@ function LoginContent() {
           </div>
 
           {/* Mode Toggle */}
-          <div className="flex mb-6 bg-surface border border-border rounded-xl p-1">
+          <div className="flex mb-6 bg-surface border border-border rounded-xl p-1 shadow-subtle">
             <button
               type="button"
               onClick={() => switchMode("login")}
@@ -238,7 +238,7 @@ function LoginContent() {
                   required
                   disabled={isLoading}
                   placeholder="Tu nombre o empresa"
-                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-accent-green/30"
                 />
               </div>
             )}
@@ -254,7 +254,7 @@ function LoginContent() {
                 required
                 disabled={isLoading}
                 placeholder="tu@email.com"
-                className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-accent-green/30"
               />
             </div>
 
@@ -270,7 +270,7 @@ function LoginContent() {
                 disabled={isLoading}
                 placeholder="••••••••"
                 minLength={6}
-                className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-accent-green/30"
               />
             </div>
 

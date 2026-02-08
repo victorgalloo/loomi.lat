@@ -39,16 +39,16 @@ interface CampaignDetailViewProps {
 type Lang = 'en' | 'es';
 
 const recipientStatusColors: Record<string, string> = {
-  pending: 'text-muted',
-  sent: 'text-terminal-green',
-  failed: 'text-terminal-red',
+  pending: 'bg-surface-2 text-muted border-border',
+  sent: 'bg-terminal-green/10 text-terminal-green border-terminal-green/20',
+  failed: 'bg-terminal-red/10 text-terminal-red border-terminal-red/20',
 };
 
 const campaignStatusColors: Record<string, string> = {
-  draft: 'text-muted',
-  sending: 'text-terminal-yellow',
-  completed: 'text-terminal-green',
-  failed: 'text-terminal-red',
+  draft: 'bg-surface-2 text-muted border-border',
+  sending: 'bg-terminal-yellow/10 text-terminal-yellow border-terminal-yellow/20',
+  completed: 'bg-terminal-green/10 text-terminal-green border-terminal-green/20',
+  failed: 'bg-terminal-red/10 text-terminal-red border-terminal-red/20',
 };
 
 const i18n: Record<Lang, Record<string, string>> = {
@@ -197,7 +197,7 @@ export default function CampaignDetailView({
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
-      <div className="rounded-2xl border border-border bg-surface overflow-hidden">
+      <div className="rounded-2xl border border-border bg-surface-elevated overflow-hidden shadow-elevated">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
             <div className="flex gap-1.5">
@@ -233,7 +233,7 @@ export default function CampaignDetailView({
                 <span className="text-xs font-mono text-muted">
                   lang: {campaign.template_language}
                 </span>
-                <span className={`text-xs font-mono ${campaignStatusColors[campaign.status] || 'text-muted'}`}>
+                <span className={`text-xs font-mono px-2 py-0.5 rounded-full border ${campaignStatusColors[campaign.status] || 'bg-surface-2 text-muted border-border'}`}>
                   {campaignStatusLabel}
                 </span>
               </div>
@@ -271,7 +271,7 @@ export default function CampaignDetailView({
         {/* Progress & Stats */}
         <div className="px-4 py-4 border-b border-border space-y-3">
           {/* Progress bar */}
-          <div className="w-full h-2 rounded-full bg-background overflow-hidden">
+          <div className="w-full h-3 rounded-full bg-background overflow-hidden">
             <div className="h-full flex">
               {sentCount > 0 && (
                 <div
@@ -325,21 +325,21 @@ export default function CampaignDetailView({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-background">
-                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.phone}</th>
-                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.name}</th>
-                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.status}</th>
-                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.sentAt}</th>
-                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.error}</th>
+              <tr className="border-b-2 border-border bg-surface-2">
+                <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.phone}</th>
+                <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.name}</th>
+                <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.status}</th>
+                <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.sentAt}</th>
+                <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.error}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/50">
+            <tbody className="divide-y divide-border">
               {recipients.map((r) => (
-                <tr key={r.id} className="hover:bg-surface-2 transition-colors">
+                <tr key={r.id} className="hover:bg-surface-2 even:bg-surface/30 transition-colors">
                   <td className="px-4 py-2 font-mono text-foreground">{r.phone}</td>
                   <td className="px-4 py-2 text-muted">{r.name || '-'}</td>
                   <td className="px-4 py-2">
-                    <span className={`text-xs ${recipientStatusColors[r.status] || 'text-muted'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${recipientStatusColors[r.status] || 'bg-surface-2 text-muted border-border'}`}>
                       {getRecipientStatus(r.status)}
                     </span>
                   </td>
@@ -378,7 +378,7 @@ export default function CampaignDetailView({
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowConfirm(false)} />
-          <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-border bg-surface overflow-hidden">
+          <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-border bg-surface-elevated overflow-hidden shadow-elevated">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
               <div className="flex gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full bg-terminal-red" />

@@ -81,11 +81,11 @@ export const DataTable = ({
   };
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-black/5 bg-white/90 shadow-inner">
+    <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-inner">
       <div className="max-h-[360px] overflow-auto">
         <Table>
           <TableHeader>
-            <TableRow className="bg-white/80">
+            <TableRow className="bg-surface">
               {columns.map((column) => {
                 const isSorted = sortState?.accessor === column.accessor;
                 return (

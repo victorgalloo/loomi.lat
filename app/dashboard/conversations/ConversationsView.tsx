@@ -219,9 +219,9 @@ export default function ConversationsView({ conversations: initialConversations,
       </div>
 
       {/* Stats Bar */}
-      <div className="flex items-center gap-8 pb-6 mb-6 border-b border-border">
-        <div>
-          <p className="text-label uppercase tracking-wider text-muted">
+      <div className="flex items-center gap-4 pb-6 mb-6 border-b border-border">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl px-4 py-3 shadow-subtle">
+          <p className="text-label tracking-wider text-muted">
             total chats
           </p>
           <p className="text-xl font-semibold font-mono mt-1 text-foreground">
@@ -229,10 +229,8 @@ export default function ConversationsView({ conversations: initialConversations,
           </p>
         </div>
 
-        <div className="w-px h-8 bg-border" />
-
-        <div>
-          <p className="text-label uppercase tracking-wider text-muted">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-success rounded-xl px-4 py-3 shadow-subtle">
+          <p className="text-label tracking-wider text-muted">
             activas hoy
           </p>
           <p className="text-xl font-semibold font-mono mt-1 text-accent-green">
@@ -240,10 +238,8 @@ export default function ConversationsView({ conversations: initialConversations,
           </p>
         </div>
 
-        <div className="w-px h-8 bg-border" />
-
-        <div>
-          <p className="text-label uppercase tracking-wider text-muted">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-warning rounded-xl px-4 py-3 shadow-subtle">
+          <p className="text-label tracking-wider text-muted">
             mensajes
           </p>
           <p className="text-xl font-semibold font-mono mt-1 text-foreground">
@@ -323,7 +319,7 @@ export default function ConversationsView({ conversations: initialConversations,
 
       {/* Conversation List */}
       {filteredConversations.length > 0 ? (
-        <div className="rounded-2xl overflow-hidden bg-surface border border-border">
+        <div className="rounded-2xl overflow-hidden bg-surface-elevated border border-border shadow-card">
           <ul className="divide-y divide-border">
             {filteredConversations.map((conversation) => {
               return (
@@ -335,7 +331,7 @@ export default function ConversationsView({ conversations: initialConversations,
                     <div className="px-5 py-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="w-11 h-11 rounded-full flex items-center justify-center text-base font-medium bg-surface-2 text-muted">
+                          <div className="w-11 h-11 rounded-full flex items-center justify-center text-base font-medium bg-info-muted text-info border-2 border-border">
                             {conversation.leadName.charAt(0).toUpperCase()}
                           </div>
                           <div>

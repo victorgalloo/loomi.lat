@@ -29,7 +29,7 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
   };
 
   const Row = ({ label, value, action }: { label: string; value: string; action?: React.ReactNode }) => (
-    <div className="flex items-center justify-between py-3 border-b border-border">
+    <div className="flex items-center justify-between py-3 border-b border-border hover:bg-surface/50 rounded-lg px-2 -mx-2 transition-colors">
       <span className="text-sm text-muted">{label}</span>
       <div className="flex items-center gap-3">
         <span className="text-sm text-foreground">{value}</span>
@@ -51,7 +51,7 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
 
       {/* Account */}
       <section className="mb-10">
-        <h2 className="text-label font-medium uppercase tracking-wider mb-4 text-muted">
+        <h2 className="text-label font-medium uppercase tracking-wider mb-4 text-muted border-l-2 border-l-info pl-3">
           cuenta
         </h2>
         <div>
@@ -64,7 +64,7 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
 
       {/* Plan */}
       <section className="mb-10">
-        <h2 className="text-label font-medium uppercase tracking-wider mb-4 text-muted">
+        <h2 className="text-label font-medium uppercase tracking-wider mb-4 text-muted border-l-2 border-l-info pl-3">
           plan
         </h2>
         <div>
@@ -81,7 +81,7 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
 
       {/* WhatsApp */}
       <section className="mb-10">
-        <h2 className="text-label font-medium uppercase tracking-wider mb-4 text-muted">
+        <h2 className="text-label font-medium uppercase tracking-wider mb-4 text-muted border-l-2 border-l-info pl-3">
           whatsapp
         </h2>
         <div>
@@ -111,7 +111,7 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
 
       {/* Danger */}
       <section>
-        <h2 className="text-label font-medium uppercase tracking-wider mb-4 text-terminal-red">
+        <h2 className="text-label font-medium uppercase tracking-wider mb-4 text-terminal-red border-l-2 border-l-error pl-3">
           zona de peligro
         </h2>
         <div className="flex items-center justify-between py-3">

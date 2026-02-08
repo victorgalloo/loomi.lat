@@ -309,7 +309,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
           {tools.map((tool) => (
             <div
               key={tool.id}
-              className="p-4 rounded-2xl border border-border bg-surface"
+              className="p-4 rounded-2xl border border-border bg-surface-elevated shadow-subtle hover:shadow-card transition-all"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">

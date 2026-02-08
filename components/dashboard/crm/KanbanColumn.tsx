@@ -61,13 +61,13 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead }: KanbanColumnProp
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-3 px-1">
+      <div className="flex items-center justify-between mb-3 bg-surface rounded-xl px-3 py-2.5 border border-border/50">
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${stageColors[stage.color] || stageColors.gray}`} />
+          <div className={`w-3 h-3 rounded-full ${stageColors[stage.color] || stageColors.gray}`} />
           <h3 className="text-sm font-medium text-foreground/70">
             {stage.name}
           </h3>
-          <span className="text-sm px-1.5 py-0.5 rounded font-medium bg-surface text-muted">
+          <span className="text-sm px-1.5 py-0.5 rounded font-medium bg-surface-2 border border-border text-muted">
             {leads.length}
           </span>
         </div>
@@ -85,7 +85,8 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead }: KanbanColumnProp
           flex-1 rounded-2xl p-2 space-y-2
           min-h-[120px] max-h-[calc(100vh-280px)] overflow-y-auto
           transition-colors duration-200
-          ${isOver ? 'bg-surface' : 'bg-surface/50'}
+          border border-border/50
+          ${isOver ? 'bg-surface' : 'bg-surface/30'}
         `}
         style={{
           scrollbarWidth: 'thin',

@@ -459,7 +459,7 @@ export function OnboardingWizard({
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={() => setConnectMode('new')}
-                      className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-border hover:border-muted bg-background transition-colors"
+                      className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-border hover:border-border-hover bg-background shadow-subtle hover:shadow-card transition-all"
                     >
                       <Plus className="w-6 h-6 text-terminal-green" />
                       <span className="text-sm font-medium text-foreground">número nuevo</span>
@@ -467,7 +467,7 @@ export function OnboardingWizard({
                     </button>
                     <button
                       onClick={() => setConnectMode('existing')}
-                      className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-border hover:border-muted bg-background transition-colors"
+                      className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-border hover:border-border-hover bg-background shadow-subtle hover:shadow-card transition-all"
                     >
                       <Phone className="w-6 h-6 text-foreground" />
                       <span className="text-sm font-medium text-foreground">ya tengo uno</span>
@@ -531,7 +531,7 @@ export function OnboardingWizard({
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                     placeholder="Escribe aquí..."
-                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-foreground/30"
+                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-accent-green/30"
                     disabled={isLoading}
                     autoFocus
                   />
@@ -757,7 +757,7 @@ export function OnboardingWizard({
                     onChange={(e) => setTestInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && sendTestMessage()}
                     placeholder="Escribe como cliente..."
-                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-foreground/30"
+                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-accent-green/30"
                     disabled={isTestLoading}
                   />
                   <button

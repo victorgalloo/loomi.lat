@@ -8,7 +8,7 @@ const Table = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <table
     ref={ref}
-    className={cn("w-full caption-bottom text-body text-base-foreground", className)}
+    className={cn("w-full caption-bottom text-body text-foreground", className)}
     {...props}
   />
 ));
@@ -20,7 +20,7 @@ const TableHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <thead
     ref={ref}
-    className={cn("bg-muted/80 text-label uppercase text-muted-foreground", className)}
+    className={cn("bg-surface-2 text-label text-muted-foreground", className)}
     {...props}
   />
 ));
@@ -40,7 +40,7 @@ const TableFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tfoot
     ref={ref}
-    className={cn("bg-muted font-medium text-base-foreground", className)}
+    className={cn("bg-muted font-medium text-foreground", className)}
     {...props}
   />
 ));
@@ -53,7 +53,7 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b border-black/5 transition hover:bg-muted/50 data-[state=selected]:bg-muted",
+      "border-b border-border transition-colors even:bg-surface/50 hover:bg-surface-2 data-[state=selected]:bg-surface-2",
       className
     )}
     {...props}
@@ -68,7 +68,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "sticky top-0 z-10 bg-muted/80 px-4 py-4 text-left text-label font-semibold uppercase tracking-wide text-muted-foreground",
+      "sticky top-0 z-10 bg-surface-2 px-4 py-4 text-left text-label font-semibold tracking-wide text-muted-foreground border-b-2 border-border",
       className
     )}
     {...props}
@@ -106,4 +106,3 @@ export {
   TableCell,
   TableCaption
 };
-

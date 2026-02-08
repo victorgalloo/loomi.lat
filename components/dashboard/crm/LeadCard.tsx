@@ -57,10 +57,10 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
       .slice(0, 2);
   };
 
-  const priorityIndicator = {
-    low: 'bg-muted',
-    medium: 'bg-amber-500',
-    high: 'bg-red-500',
+  const priorityBorder = {
+    low: '',
+    medium: 'border-l-[3px] border-l-warning',
+    high: 'border-l-[3px] border-l-error',
   };
 
   return (
@@ -72,18 +72,17 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
       onClick={onClick}
       className={`
         group relative rounded-2xl border p-3 cursor-grab active:cursor-grabbing
-        transition-all duration-150
-        bg-surface border-border hover:border-foreground/20 hover:bg-surface-2/50
-        ${isDragging ? 'opacity-50 scale-105 shadow-2xl z-50' : ''}
+        transition-all duration-150 shadow-subtle
+        bg-surface-elevated border-border hover:shadow-card hover:-translate-y-0.5
+        ${priorityBorder[lead.priority]}
+        ${isDragging ? 'opacity-50 scale-105 shadow-elevated z-50' : ''}
       `}
     >
-      {/* Priority indicator */}
-      <div className={`absolute top-3 right-3 w-1.5 h-1.5 rounded-full ${priorityIndicator[lead.priority]}`} />
 
       {/* Content */}
       <div className="flex items-start gap-3">
         {/* Avatar */}
-        <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm font-medium flex-shrink-0 bg-surface-2 text-muted">
+        <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm font-medium flex-shrink-0 bg-info-muted text-info">
           {getInitials(lead.name)}
         </div>
 
@@ -98,7 +97,7 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
             </p>
           )}
           {lead.broadcastClassification && (
-            <span className={`inline-block text-xs px-1.5 py-0.5 rounded mt-1 ${
+            <span className={`inline-block text-xs px-2 py-1 rounded mt-1 ${
               {
                 hot: 'bg-orange-500/20 text-orange-400',
                 warm: 'bg-yellow-500/20 text-yellow-400',

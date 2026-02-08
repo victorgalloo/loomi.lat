@@ -48,11 +48,11 @@ export const ChatInput = ({ onSubmit, className, disabled }: ChatInputProps) => 
     <form
       onSubmit={handleSubmit}
       className={cn(
-        "flex flex-col gap-3 border-t border-white/20 bg-white/80 backdrop-blur-sm p-5 md:flex-row md:items-center md:gap-4 md:p-6",
+        "flex flex-col gap-3 border-t border-border bg-surface/80 backdrop-blur-sm p-5 md:flex-row md:items-center md:gap-4 md:p-6",
         className
       )}
     >
-      <div className="flex w-full items-center gap-3 rounded-full border-2 border-black/20 bg-white px-5 py-3 shadow-sm transition-all focus-within:border-primary/40 focus-within:shadow-[0_0_0_4px_rgba(255,159,50,0.1)] focus-within:ring-2 focus-within:ring-primary/20">
+      <div className="flex w-full items-center gap-3 rounded-full border-2 border-border bg-surface px-5 py-3 shadow-subtle transition-all focus-within:border-foreground/30 focus-within:ring-2 focus-within:ring-accent-green/30">
         <Input
           className="h-auto flex-1 border-none bg-transparent px-0 text-base font-medium text-black/90 placeholder:text-black/50 outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
           placeholder="Ask about sales, points of sale, trends…"

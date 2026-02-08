@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 // Clean thinking animation with wave dots
 export const ThinkingIndicator = () => {
   return (
-    <div className="flex items-center gap-4 rounded-3xl border border-black/5 bg-white px-6 py-5 text-left shadow-sm">
+    <div className="flex items-center gap-4 rounded-3xl border border-border bg-surface px-6 py-5 text-left shadow-subtle">
       {/* Text and wave dots */}
       <div className="flex flex-col gap-2.5">
         <p className="text-[15px] font-semibold text-base-foreground">

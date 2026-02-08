@@ -6,12 +6,13 @@ interface CardProps {
   hover?: boolean;
   terminal?: boolean;
   title?: string;
+  accent?: 'info' | 'warning' | 'success' | 'error';
 }
 
-export function Card({ children, className, hover = false, terminal = false, title }: CardProps) {
+export function Card({ children, className, hover = false, terminal = false, title, accent }: CardProps) {
   if (terminal) {
     return (
-      <div className={cn('bg-surface rounded-xl border border-border overflow-hidden', className)}>
+      <div className={cn('bg-surface-elevated rounded-xl border border-border overflow-hidden shadow-card', className)}>
         {/* Terminal header */}
         <div className="flex items-center gap-2 px-4 py-2 bg-surface-2 border-b border-border">
           <div className="flex gap-1.5">
@@ -29,9 +30,13 @@ export function Card({ children, className, hover = false, terminal = false, tit
   return (
     <div
       className={cn(
-        'rounded-xl p-6 transition-all duration-300',
-        'border border-border bg-surface',
-        hover && 'hover:border-border-hover',
+        'rounded-xl p-6 transition-all duration-200',
+        'border border-border bg-surface-elevated shadow-card',
+        hover && 'hover:shadow-card-hover hover:-translate-y-0.5 hover:border-border-hover',
+        accent === 'info' && 'border-l-[3px] border-l-info',
+        accent === 'warning' && 'border-l-[3px] border-l-warning',
+        accent === 'success' && 'border-l-[3px] border-l-success',
+        accent === 'error' && 'border-l-[3px] border-l-error',
         className
       )}
     >

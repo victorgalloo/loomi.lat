@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Users, MessageCircle, Mail, Calendar } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 interface TenantDashboardProps {
@@ -126,37 +126,49 @@ export default function TenantDashboard({
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-4 gap-8 mb-12">
-        <div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl p-4 shadow-card">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-muted">leads</p>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-info-muted">
+              <Users className="w-4 h-4 text-info" />
+            </div>
+          </div>
           <p className="text-3xl font-mono text-foreground">
             {stats.totalLeads}
           </p>
-          <p className="text-sm mt-1 text-muted">
-            leads
-          </p>
         </div>
-        <div>
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-success rounded-xl p-4 shadow-card">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-muted">conversaciones</p>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-success-muted">
+              <MessageCircle className="w-4 h-4 text-success" />
+            </div>
+          </div>
           <p className="text-3xl font-mono text-foreground">
             {stats.totalConversations}
           </p>
-          <p className="text-sm mt-1 text-muted">
-            conversaciones
-          </p>
         </div>
-        <div>
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-warning rounded-xl p-4 shadow-card">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-muted">mensajes</p>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-warning-muted">
+              <Mail className="w-4 h-4 text-warning" />
+            </div>
+          </div>
           <p className="text-3xl font-mono text-foreground">
             {stats.messagesThisMonth}
           </p>
-          <p className="text-sm mt-1 text-muted">
-            mensajes
-          </p>
         </div>
-        <div>
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-terminal-green rounded-xl p-4 shadow-card">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-muted">citas</p>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-terminal-green/10">
+              <Calendar className="w-4 h-4 text-terminal-green" />
+            </div>
+          </div>
           <p className="text-3xl font-mono text-foreground">
             {stats.appointmentsBooked}
-          </p>
-          <p className="text-sm mt-1 text-muted">
-            citas
           </p>
         </div>
       </div>
@@ -165,7 +177,7 @@ export default function TenantDashboard({
       <nav className="space-y-1 border-t pt-8 border-border">
         <Link
           href="/dashboard/crm"
-          className="flex items-center justify-between py-3 group text-muted hover:text-foreground transition-colors"
+          className="flex items-center justify-between py-3 px-3 -mx-3 rounded-xl group text-muted hover:text-foreground hover:bg-surface-2 transition-colors"
         >
           <span className="font-mono">./pipeline</span>
           <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -173,7 +185,7 @@ export default function TenantDashboard({
 
         <Link
           href="/dashboard/conversations"
-          className="flex items-center justify-between py-3 group text-muted hover:text-foreground transition-colors"
+          className="flex items-center justify-between py-3 px-3 -mx-3 rounded-xl group text-muted hover:text-foreground hover:bg-surface-2 transition-colors"
         >
           <span className="font-mono">./conversaciones</span>
           <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -181,7 +193,7 @@ export default function TenantDashboard({
 
         <Link
           href="/dashboard/agent"
-          className="flex items-center justify-between py-3 group text-muted hover:text-foreground transition-colors"
+          className="flex items-center justify-between py-3 px-3 -mx-3 rounded-xl group text-muted hover:text-foreground hover:bg-surface-2 transition-colors"
         >
           <span className="font-mono">./configurar-agente</span>
           <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -190,7 +202,7 @@ export default function TenantDashboard({
         {!whatsappAccount.connected && (
           <Link
             href="/dashboard/connect"
-            className="flex items-center justify-between py-3 group text-terminal-yellow hover:text-terminal-yellow/80 transition-colors"
+            className="flex items-center justify-between py-3 px-3 -mx-3 rounded-xl group text-terminal-yellow hover:text-terminal-yellow/80 hover:bg-terminal-yellow/5 transition-colors"
           >
             <span className="font-mono">./conectar-whatsapp</span>
             <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />

@@ -114,14 +114,14 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
           return (
             <div
               key={metric.label}
-              className="rounded-2xl p-5 transition-colors bg-surface border border-border hover:border-muted"
+              className="rounded-2xl p-5 transition-all bg-surface-elevated border border-border shadow-card hover:shadow-card-hover hover:-translate-y-0.5"
             >
               <div className="flex items-start justify-between mb-3">
                 <p className="text-label text-muted">
                   {metric.label}
                 </p>
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-surface-2">
-                  <Icon className="w-4 h-4 text-muted" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-info-muted">
+                  <Icon className="w-4 h-4 text-info" />
                 </div>
               </div>
               <p className="text-2xl font-semibold font-mono text-foreground">
@@ -146,7 +146,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
       {/* Secondary Metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Lead Quality */}
-        <div className="rounded-2xl p-5 bg-surface border border-border">
+        <div className="rounded-2xl p-5 bg-surface-elevated border border-border shadow-card">
           <h3 className="text-sm font-medium mb-5 flex items-center gap-2 text-foreground">
             <Target className="w-4 h-4 text-terminal-green" />
             calidad de leads
@@ -159,7 +159,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
                   {data.qualifiedLeads} / {data.totalLeads}
                 </span>
               </div>
-              <div className="w-full rounded-full h-1.5 overflow-hidden bg-surface-2">
+              <div className="w-full rounded-full h-2.5 overflow-hidden bg-surface-2">
                 <div
                   className="h-full rounded-full bg-terminal-green transition-all duration-500"
                   style={{ width: `${data.totalLeads > 0 ? (data.qualifiedLeads / data.totalLeads) * 100 : 0}%` }}
@@ -173,7 +173,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
                   {data.responseRate}%
                 </span>
               </div>
-              <div className="w-full rounded-full h-1.5 overflow-hidden bg-surface-2">
+              <div className="w-full rounded-full h-2.5 overflow-hidden bg-surface-2">
                 <div
                   className="h-full rounded-full bg-foreground transition-all duration-500"
                   style={{ width: `${data.responseRate}%` }}
@@ -184,7 +184,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
         </div>
 
         {/* Stage Breakdown */}
-        <div className="rounded-2xl p-5 bg-surface border border-border">
+        <div className="rounded-2xl p-5 bg-surface-elevated border border-border shadow-card">
           <h3 className="text-sm font-medium mb-5 flex items-center gap-2 text-foreground">
             <BarChart3 className="w-4 h-4 text-muted" />
             leads por etapa
@@ -199,7 +199,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
                     <span className="text-sm w-28 truncate text-muted">
                       {stageLabels[stage] || stage}
                     </span>
-                    <div className="flex-1 rounded-full h-1.5 overflow-hidden bg-surface-2">
+                    <div className="flex-1 rounded-full h-2.5 overflow-hidden bg-surface-2">
                       <div
                         className="h-full rounded-full bg-foreground transition-all duration-500"
                         style={{ width: `${percentage}%` }}

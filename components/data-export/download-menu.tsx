@@ -161,7 +161,7 @@ export const DownloadMenu = ({ table, heading, summary }: DownloadMenuProps) => 
         <Button
           variant="ghost"
           size="sm"
-          className="h-10 rounded-full border border-black/5 bg-white/70 px-3 text-xs font-semibold text-muted-foreground shadow-sm hover:bg-white/90 md:px-4"
+          className="h-10 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-muted shadow-subtle hover:bg-surface-2 md:px-4"
         >
           <Download className="mr-2 h-4 w-4" />
           Export

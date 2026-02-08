@@ -15,6 +15,7 @@ const config: Config = {
         surface: {
           DEFAULT: "var(--surface)",
           2: "var(--surface-2)",
+          elevated: "var(--surface-elevated)",
         },
         muted: {
           DEFAULT: "var(--muted)",
@@ -37,11 +38,30 @@ const config: Config = {
           green: "var(--accent-green)",
         },
 
+        // Semantic colors
+        info: {
+          DEFAULT: "var(--info)",
+          muted: "var(--info-muted)",
+        },
+        warning: {
+          DEFAULT: "var(--warning)",
+          muted: "var(--warning-muted)",
+        },
+        success: {
+          DEFAULT: "var(--success)",
+          muted: "var(--success-muted)",
+        },
+        error: {
+          DEFAULT: "var(--error)",
+          muted: "var(--error-muted)",
+        },
+
         // Legacy support
         brand: {
           DEFAULT: "var(--foreground)",
         },
         "surface-2": "var(--surface-2)",
+        "surface-elevated": "var(--surface-elevated)",
       },
       fontFamily: {
         sans: ["Lexend", "Inter", "system-ui", "sans-serif"],
@@ -52,10 +72,11 @@ const config: Config = {
         "3xl": "1.5rem",
       },
       boxShadow: {
-        subtle: "0 1px 2px rgba(0, 0, 0, 0.1)",
-        card: "0 2px 8px rgba(0, 0, 0, 0.15)",
-        "card-hover": "0 4px 16px rgba(0, 0, 0, 0.2)",
-        elevated: "0 8px 24px rgba(0, 0, 0, 0.25)",
+        subtle: "0 1px 3px hsl(var(--shadow-color) / calc(var(--shadow-strength) * 0.4)), 0 1px 2px hsl(var(--shadow-color) / calc(var(--shadow-strength) * 0.3))",
+        card: "0 2px 8px hsl(var(--shadow-color) / calc(var(--shadow-strength) * 0.5)), 0 1px 3px hsl(var(--shadow-color) / calc(var(--shadow-strength) * 0.3))",
+        "card-hover": "0 4px 16px hsl(var(--shadow-color) / calc(var(--shadow-strength) * 0.7)), 0 2px 6px hsl(var(--shadow-color) / calc(var(--shadow-strength) * 0.4))",
+        elevated: "0 8px 24px hsl(var(--shadow-color) / calc(var(--shadow-strength) * 0.8)), 0 4px 8px hsl(var(--shadow-color) / calc(var(--shadow-strength) * 0.5))",
+        "focus-green": "0 0 0 3px var(--focus-ring-alpha)",
       },
       fontSize: {
         'label': ['13px', { lineHeight: '1.4' }],

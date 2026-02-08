@@ -41,10 +41,10 @@ type ModalStep = 'config' | 'csv' | 'confirm';
 type Lang = 'en' | 'es';
 
 const statusColors: Record<string, string> = {
-  draft: 'text-muted',
-  sending: 'text-terminal-yellow',
-  completed: 'text-terminal-green',
-  failed: 'text-terminal-red',
+  draft: 'bg-surface-2 text-muted border-border',
+  sending: 'bg-terminal-yellow/10 text-terminal-yellow border-terminal-yellow/20',
+  completed: 'bg-terminal-green/10 text-terminal-green border-terminal-green/20',
+  failed: 'bg-terminal-red/10 text-terminal-red border-terminal-red/20',
 };
 
 const i18n: Record<Lang, Record<string, string>> = {
@@ -377,7 +377,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
-      <div className="rounded-2xl border border-border bg-surface overflow-hidden">
+      <div className="rounded-2xl border border-border bg-surface-elevated overflow-hidden shadow-elevated">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
           <div className="flex gap-1.5">
             <div className="w-3 h-3 rounded-full bg-terminal-red" />
@@ -427,7 +427,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-3 py-1.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
+              className="pl-9 pr-3 py-1.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-accent-green/30"
             />
           </div>
         </div>
@@ -455,14 +455,14 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
               <button
                 key={campaign.id}
                 onClick={() => router.push(`/broadcasts/${campaign.id}`)}
-                className="w-full flex items-center justify-between px-4 py-4 hover:bg-surface-2 transition-colors text-left"
+                className="w-full flex items-center justify-between px-4 py-4 hover:bg-surface-2 even:bg-surface/30 transition-colors text-left"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-1">
                     <span className="text-sm text-foreground truncate">
                       {campaign.name}
                     </span>
-                    <span className={`text-xs ${statusColors[campaign.status] || 'text-muted'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${statusColors[campaign.status] || 'bg-surface-2 text-muted border-border'}`}>
                       {({draft: t.draft, sending: t.sending, completed: t.completed, failed: t.failedStatus})[campaign.status] || campaign.status}
                     </span>
                     {campaign.total_recipients > 0 && (
@@ -491,7 +491,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={resetModal} />
-          <div className="relative w-full max-w-lg mx-4 rounded-2xl border border-border bg-surface overflow-hidden max-h-[90vh] flex flex-col">
+          <div className="relative w-full max-w-lg mx-4 rounded-2xl border border-border bg-surface-elevated overflow-hidden max-h-[90vh] flex flex-col shadow-elevated">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
@@ -528,7 +528,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                       value={formName}
                       onChange={e => setFormName(e.target.value)}
                       placeholder={t.campaignNamePlaceholder}
-                      className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
+                      className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-accent-green/30"
                     />
                   </div>
 

@@ -144,8 +144,8 @@ export default function PartnersView({ userEmail }: PartnersViewProps) {
 // Section Components
 function ArchitectureSection() {
   return (
-    <div className="space-y-6 font-mono text-sm">
-      <p className="text-terminal-green">$ tree arquitectura/</p>
+    <div className="space-y-6 text-sm">
+      <p className="text-terminal-green font-mono">$ tree arquitectura/</p>
 
       {/* Sistema Multi-Agente */}
       <div className="space-y-3">
@@ -282,8 +282,8 @@ function TechStackSection() {
   ];
 
   return (
-    <div className="space-y-6 font-mono text-sm">
-      <p className="text-terminal-green">$ cat package.json | jq &apos;.dependencies&apos;</p>
+    <div className="space-y-6 text-sm">
+      <p className="text-terminal-green font-mono">$ cat package.json | jq &apos;.dependencies&apos;</p>
 
       {/* Stack Cards */}
       <div className="space-y-3">
@@ -323,8 +323,8 @@ function TechStackSection() {
 
 function DatabaseSection() {
   return (
-    <div className="space-y-6 font-mono text-sm">
-      <p className="text-terminal-green">$ psql -c &quot;\dt&quot;</p>
+    <div className="space-y-6 text-sm">
+      <p className="text-terminal-green font-mono">$ psql -c &quot;\dt&quot;</p>
 
       {/* Integraciones */}
       <div className="space-y-3">
@@ -385,8 +385,8 @@ function DatabaseSection() {
 
 function RoadmapSection() {
   return (
-    <div className="space-y-6 font-mono text-sm">
-      <p className="text-terminal-green">$ git log --oneline roadmap</p>
+    <div className="space-y-6 text-sm">
+      <p className="text-terminal-green font-mono">$ git log --oneline roadmap</p>
 
       {/* En desarrollo */}
       <div className="space-y-3">

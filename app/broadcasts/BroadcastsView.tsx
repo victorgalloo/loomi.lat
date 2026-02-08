@@ -391,15 +391,15 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted font-mono">{t.campaigns}:</span>
+              <span className="text-label text-muted">{t.campaigns}:</span>
               <span className="text-sm font-mono text-foreground">{totalCampaigns}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted font-mono">{t.sent}:</span>
+              <span className="text-label text-muted">{t.sent}:</span>
               <span className="text-sm font-mono text-terminal-green">{totalSent.toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted font-mono">{t.failed}:</span>
+              <span className="text-label text-muted">{t.failed}:</span>
               <span className="text-sm font-mono text-terminal-red">{totalFailed.toLocaleString()}</span>
             </div>
           </div>
@@ -427,7 +427,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-3 py-1.5 rounded-xl bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
+              className="pl-9 pr-3 py-1.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
             />
           </div>
         </div>
@@ -437,7 +437,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
           {filteredCampaigns.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-4">
               <Send className="w-10 h-10 text-muted mb-4" />
-              <p className="text-sm text-muted font-mono mb-4">
+              <p className="text-sm text-muted mb-4">
                 {searchQuery ? t.noResults : t.noCampaigns}
               </p>
               {!searchQuery && (
@@ -459,10 +459,10 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-1">
-                    <span className="text-sm font-mono text-foreground truncate">
+                    <span className="text-sm text-foreground truncate">
                       {campaign.name}
                     </span>
-                    <span className={`text-xs font-mono ${statusColors[campaign.status] || 'text-muted'}`}>
+                    <span className={`text-xs ${statusColors[campaign.status] || 'text-muted'}`}>
                       {({draft: t.draft, sending: t.sending, completed: t.completed, failed: t.failedStatus})[campaign.status] || campaign.status}
                     </span>
                     {campaign.total_recipients > 0 && (
@@ -471,7 +471,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-muted font-mono">
+                  <div className="flex items-center gap-3 text-xs text-muted">
                     <span>template: {campaign.template_name}</span>
                     <span>{new Date(campaign.created_at).toLocaleDateString('es-MX', {
                       day: 'numeric',
@@ -522,7 +522,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
               {modalStep === 'config' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs text-muted font-mono mb-1.5">{t.campaignName}</label>
+                    <label className="block text-label text-muted mb-2.5">{t.campaignName}</label>
                     <input
                       type="text"
                       value={formName}
@@ -534,7 +534,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
 
                   {/* Template Selector */}
                   <div>
-                    <label className="block text-xs text-muted font-mono mb-1.5">{t.approvedTemplate}</label>
+                    <label className="block text-label text-muted mb-2.5">{t.approvedTemplate}</label>
                     {loadingTemplates ? (
                       <div className="flex items-center gap-2 px-3 py-3 rounded-2xl bg-background border border-border">
                         <Loader2 className="w-4 h-4 animate-spin text-muted" />
@@ -565,10 +565,10 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                             >
                               <div className="flex items-center gap-2 mb-0.5">
                                 <span className="text-sm font-mono text-foreground">{t.name}</span>
-                                <span className="text-[10px] font-mono text-muted px-1.5 py-0.5 rounded bg-background border border-border">
+                                <span className="text-xs text-muted px-1.5 py-0.5 rounded bg-background border border-border">
                                   {t.language}
                                 </span>
-                                <span className="text-[10px] font-mono text-muted">
+                                <span className="text-xs text-muted">
                                   {t.category.toLowerCase()}
                                 </span>
                               </div>
@@ -585,7 +585,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   {/* Selected template preview */}
                   {selectedTemplate && (
                     <div className="rounded-2xl border border-border bg-background p-3">
-                      <span className="text-[10px] font-mono text-muted block mb-1">{t.templatePreview}</span>
+                      <span className="text-xs text-muted block mb-1">{t.templatePreview}</span>
                       <p className="text-xs font-mono text-foreground whitespace-pre-wrap">
                         {getTemplatePreview(selectedTemplate)}
                       </p>
@@ -595,10 +595,10 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   {/* Template Variables */}
                   {selectedTemplate && (
                     <div>
-                      <label className="block text-xs text-muted font-mono mb-1.5">{t.templateVariables}</label>
+                      <label className="block text-label text-muted mb-2.5">{t.templateVariables}</label>
                       {templateVariables.length === 0 ? (
                         <div className="px-3 py-2 rounded-2xl bg-background border border-border">
-                          <span className="text-xs font-mono text-muted">{t.noVariables}</span>
+                          <span className="text-xs text-muted">{t.noVariables}</span>
                         </div>
                       ) : (
                         <div className="space-y-3">
@@ -615,7 +615,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                                     <button
                                       type="button"
                                       onClick={() => setFormVariableSource(prev => ({ ...prev, [key]: 'fixed' }))}
-                                      className={`text-[10px] font-mono px-2 py-1 rounded transition-colors ${
+                                      className={`text-xs px-3 py-1.5 rounded transition-colors ${
                                         source === 'fixed'
                                           ? 'bg-foreground text-background'
                                           : 'bg-surface-2 text-muted hover:text-foreground'
@@ -626,7 +626,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                                     <button
                                       type="button"
                                       onClick={() => setFormVariableSource(prev => ({ ...prev, [key]: 'csv_name' }))}
-                                      className={`text-[10px] font-mono px-2 py-1 rounded transition-colors ${
+                                      className={`text-xs px-3 py-1.5 rounded transition-colors ${
                                         source === 'csv_name'
                                           ? 'bg-terminal-green text-background'
                                           : 'bg-surface-2 text-muted hover:text-foreground'
@@ -642,7 +642,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                                     value={formVariables[key] || ''}
                                     onChange={e => setFormVariables(prev => ({ ...prev, [key]: e.target.value }))}
                                     placeholder={`${t.variablePlaceholder} ${v.placeholder}`}
-                                    className="w-full px-3 py-1.5 rounded-xl bg-surface border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
+                                    className="w-full px-3 py-1.5 rounded-xl bg-surface border border-border text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
                                   />
                                 ) : (
                                   <div className="px-3 py-1.5 rounded-xl bg-terminal-green/10 border border-terminal-green/20 text-sm font-mono text-terminal-green">
@@ -690,18 +690,18 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     {csvFile ? (
                       <>
                         <FileText className="w-8 h-8 text-terminal-green mb-2" />
-                        <span className="text-sm font-mono text-foreground">{csvFile.name}</span>
-                        <span className="text-xs font-mono text-terminal-green mt-1">
+                        <span className="text-sm text-foreground">{csvFile.name}</span>
+                        <span className="text-xs text-terminal-green mt-1">
                           {csvTotal.toLocaleString()} {t.contactsDetected}
                         </span>
                       </>
                     ) : (
                       <>
                         <Upload className="w-8 h-8 text-muted mb-2" />
-                        <span className="text-sm font-mono text-muted">
+                        <span className="text-sm text-muted">
                           {t.dragCsv}
                         </span>
-                        <span className="text-xs font-mono text-muted mt-1">
+                        <span className="text-xs text-muted mt-1">
                           {t.csvColumns}
                         </span>
                       </>
@@ -712,7 +712,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   {csvPreview.length > 0 && (
                     <div className="rounded-2xl border border-border overflow-hidden">
                       <div className="px-3 py-2 border-b border-border bg-background">
-                        <span className="text-xs font-mono text-muted">{t.csvPreview}</span>
+                        <span className="text-xs text-muted">{t.csvPreview}</span>
                       </div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-xs font-mono">
@@ -739,30 +739,30 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                 <div className="space-y-4">
                   <div className="rounded-2xl border border-border bg-background p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-muted">{t.campaign}</span>
+                      <span className="text-label text-muted">{t.campaign}</span>
                       <span className="text-sm font-mono text-foreground">{formName}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-muted">{t.template}</span>
+                      <span className="text-label text-muted">{t.template}</span>
                       <span className="text-sm font-mono text-foreground">{formTemplate}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-muted">{t.language}</span>
+                      <span className="text-label text-muted">{t.language}</span>
                       <span className="text-sm font-mono text-foreground">{formLanguage}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-muted">{t.recipients}</span>
+                      <span className="text-label text-muted">{t.recipients}</span>
                       <span className="text-sm font-mono text-terminal-green">{csvTotal.toLocaleString()}</span>
                     </div>
                     {templateVariables.length > 0 && (
                       <div className="pt-2 border-t border-border/50">
-                        <span className="text-xs font-mono text-muted block mb-2">{t.variables}</span>
+                        <span className="text-xs text-muted block mb-2">{t.variables}</span>
                         {templateVariables.map(v => {
                           const key = `${v.type}_${v.index}`;
                           const source = formVariableSource[key] || 'fixed';
                           return (
                             <div key={key} className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-mono text-muted">{v.placeholder}</span>
+                              <span className="text-muted">{v.placeholder}</span>
                               {source === 'csv_name' ? (
                                 <span className="font-mono text-terminal-green">recipient.name {t.fromCsv}</span>
                               ) : (
@@ -793,7 +793,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   else if (modalStep === 'confirm') setModalStep('csv');
                   else resetModal();
                 }}
-                className="px-3 py-1.5 rounded-xl bg-surface border border-border text-sm font-mono text-muted hover:text-foreground transition-colors"
+                className="px-3 py-1.5 rounded-xl bg-surface border border-border text-sm text-muted hover:text-foreground transition-colors"
               >
                 {modalStep === 'config' ? t.cancel : t.back}
               </button>

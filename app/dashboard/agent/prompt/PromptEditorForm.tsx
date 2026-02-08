@@ -162,7 +162,7 @@ export default function PromptEditorForm({ initialConfig, onSave }: PromptEditor
         {activeTab === 'prompt' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium mb-2 text-muted font-mono">
+              <label className="block text-label font-medium mb-2.5 text-muted">
                 system prompt
                 <span className="ml-2 text-xs text-muted/50">
                   (deja vacío para usar el prompt por defecto)
@@ -202,7 +202,7 @@ Define el tono y estilo de respuestas...
             {/* Existing Examples */}
             {config.fewShotExamples.length > 0 && (
               <div className="space-y-4">
-                <label className="block text-xs font-medium mb-2 text-muted font-mono">ejemplos guardados</label>
+                <label className="block text-label font-medium mb-2.5 text-muted">ejemplos guardados</label>
                 {config.fewShotExamples.map((example) => (
                   <div
                     key={example.id}
@@ -229,7 +229,7 @@ Define el tono y estilo de respuestas...
                       {example.tags.map(tag => (
                         <span
                           key={tag}
-                          className="px-2 py-0.5 text-xs rounded bg-surface-2 text-muted font-mono"
+                          className="px-2 py-0.5 text-xs rounded bg-surface-2 text-muted"
                         >
                           {tag}
                         </span>
@@ -245,7 +245,7 @@ Define el tono y estilo de respuestas...
 
             {/* Add New Example */}
             <div className="p-4 rounded-2xl border border-border">
-              <label className="block text-xs font-medium mb-2 text-muted font-mono">agregar nuevo ejemplo</label>
+              <label className="block text-label font-medium mb-2.5 text-muted">agregar nuevo ejemplo</label>
               <div className="space-y-3">
                 <input
                   type="text"
@@ -288,7 +288,7 @@ Agente: Hola! Qué bueno que escribiste. ¿Qué te interesa saber sobre Bitcoin?
                   type="button"
                   onClick={addExample}
                   disabled={!newExample.id || !newExample.context || !newExample.conversation}
-                  className="px-4 py-2 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-surface text-muted hover:text-foreground border border-border font-mono"
+                  className="px-4 py-2 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-surface text-muted hover:text-foreground border border-border"
                 >
                   agregar ejemplo
                 </button>
@@ -301,7 +301,7 @@ Agente: Hola! Qué bueno que escribiste. ¿Qué te interesa saber sobre Bitcoin?
         {activeTab === 'products' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium mb-2 text-muted font-mono">
+              <label className="block text-label font-medium mb-2.5 text-muted">
                 catálogo de productos (JSON)
               </label>
               <textarea

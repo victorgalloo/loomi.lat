@@ -44,7 +44,7 @@ const config: Config = {
         "surface-2": "var(--surface-2)",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Lexend", "Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "SF Mono", "Menlo", "monospace"],
       },
       borderRadius: {
@@ -56,6 +56,10 @@ const config: Config = {
         card: "0 2px 8px rgba(0, 0, 0, 0.15)",
         "card-hover": "0 4px 16px rgba(0, 0, 0, 0.2)",
         elevated: "0 8px 24px rgba(0, 0, 0, 0.25)",
+      },
+      fontSize: {
+        'label': ['13px', { lineHeight: '1.4' }],
+        'body': ['15px', { lineHeight: '1.7' }],
       },
       animation: {
         blink: "blink 1s step-end infinite",

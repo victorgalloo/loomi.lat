@@ -157,7 +157,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-foreground text-background hover:bg-foreground/90 font-mono"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-foreground text-background hover:bg-foreground/90"
           >
             <Plus className="w-4 h-4" />
             agregar
@@ -168,7 +168,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
       {/* Create Form */}
       {showForm && (
         <form onSubmit={handleCreate} className="mb-8 p-4 rounded-2xl border border-border bg-surface">
-          <label className="block text-xs font-medium mb-3 text-muted font-mono">
+          <label className="block text-label font-medium mb-3 text-muted">
             nueva herramienta
           </label>
           <div className="space-y-3">
@@ -187,7 +187,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
                 onChange={(e) => setToolDisplayName(e.target.value)}
                 placeholder="Nombre para mostrar"
                 required
-                className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
+                className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
               />
             </div>
             <input
@@ -196,12 +196,12 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
               onChange={(e) => setToolDescription(e.target.value)}
               placeholder="Descripción de qué hace esta herramienta"
               required
-              className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
+              className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
             />
 
             {/* Execution Type */}
             <div>
-              <label className="block text-xs font-medium mb-2 text-muted font-mono">
+              <label className="block text-label font-medium mb-2.5 text-muted">
                 tipo de ejecución
               </label>
               <div className="flex gap-2">
@@ -243,7 +243,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
 
             {/* Parameters */}
             <div>
-              <label className="block text-xs font-medium mb-2 text-muted font-mono">
+              <label className="block text-label font-medium mb-2.5 text-muted">
                 parámetros (JSON Schema)
               </label>
               <textarea
@@ -257,7 +257,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
             {/* Mock Response */}
             {toolExecutionType === 'mock' && (
               <div>
-                <label className="block text-xs font-medium mb-2 text-muted font-mono">
+                <label className="block text-label font-medium mb-2.5 text-muted">
                   respuesta mock (JSON)
                 </label>
                 <textarea
@@ -273,7 +273,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border font-mono"
+                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
               >
                 cancelar
               </button>
@@ -297,7 +297,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
       ) : tools.length === 0 ? (
         <div className="text-center py-20">
           <Wrench className="w-10 h-10 text-border mx-auto mb-4" />
-          <p className="text-sm text-muted font-mono">
+          <p className="text-sm text-muted">
             Sin herramientas aún
           </p>
           <p className="text-xs text-muted mt-1">

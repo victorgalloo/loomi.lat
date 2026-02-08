@@ -190,7 +190,7 @@ function ChatPanel({ conv, lang, t, onClose }: {
               <div className="w-2.5 h-2.5 rounded-full bg-terminal-green" />
             </div>
             <span className="text-sm font-mono text-foreground ml-2 truncate">{conv.leadName}</span>
-            <span className={`text-[10px] font-mono ${stageColors[conv.leadStage.toLowerCase()] || 'text-muted'}`}>
+            <span className={`text-xs ${stageColors[conv.leadStage.toLowerCase()] || 'text-muted'}`}>
               {conv.leadStage}
             </span>
           </div>
@@ -236,7 +236,7 @@ function ChatPanel({ conv, lang, t, onClose }: {
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <MessageSquare className="w-6 h-6 text-muted/40 mb-2" />
-              <span className="text-xs font-mono text-muted">{t.noMessages}</span>
+              <span className="text-xs text-muted">{t.noMessages}</span>
             </div>
           ) : (
             messages.map((msg) => (
@@ -247,7 +247,7 @@ function ChatPanel({ conv, lang, t, onClose }: {
                     : 'bg-background border border-border rounded-bl-sm'
                 }`}>
                   <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                  <p className="text-[10px] text-muted mt-1">{formatTime(msg.created_at)}</p>
+                  <p className="text-xs text-muted mt-1">{formatTime(msg.created_at)}</p>
                 </div>
               </div>
             ))
@@ -299,40 +299,40 @@ function ConversationRow({ conv, lang, t, onClick }: {
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-mono text-foreground truncate">{conv.leadName}</span>
-          <span className={`text-[10px] font-mono ${stageColors[conv.leadStage.toLowerCase()] || 'text-muted'}`}>
+          <span className="text-sm text-foreground truncate">{conv.leadName}</span>
+          <span className={`text-xs ${stageColors[conv.leadStage.toLowerCase()] || 'text-muted'}`}>
             {conv.leadStage}
           </span>
           {conv.category === 'handoff' && (
-            <span className="text-[10px] font-mono text-terminal-red bg-terminal-red/10 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-terminal-red bg-terminal-red/10 px-1.5 py-0.5 rounded">
               {conv.handoffReason
                 ? handoffReasonLabels[conv.handoffReason]?.[lang] || conv.handoffReason
                 : t.handoff}
             </span>
           )}
           {conv.category === 'hot' && (
-            <span className="text-[10px] font-mono text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded">
               {t.hotLead}
             </span>
           )}
           {conv.category === 'warm' && (
-            <span className="text-[10px] font-mono text-terminal-yellow bg-terminal-yellow/10 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-terminal-yellow bg-terminal-yellow/10 px-1.5 py-0.5 rounded">
               {t.warmLead}
             </span>
           )}
           {conv.category === 'cold' && (
-            <span className="text-[10px] font-mono text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
               {t.coldLead}
             </span>
           )}
           {conv.category === 'bot_autoresponse' && (
-            <span className="text-[10px] font-mono text-muted bg-muted/10 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-muted bg-muted/10 px-1.5 py-0.5 rounded">
               {t.botAutoresponse}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-xs font-mono text-muted truncate max-w-[300px]">
+          <span className="text-xs text-muted truncate max-w-[300px]">
             {conv.lastMessageRole === 'assistant' ? '← ' : '→ '}
             {conv.lastMessage}
           </span>
@@ -340,8 +340,8 @@ function ConversationRow({ conv, lang, t, onClick }: {
       </div>
 
       <div className="flex items-center gap-3 flex-shrink-0">
-        <span className="text-[10px] font-mono text-muted">{conv.messageCount} {t.messages}</span>
-        <span className="text-[10px] font-mono text-muted">{timeAgo(conv.lastMessageAt, lang)}</span>
+        <span className="text-xs text-muted">{conv.messageCount} {t.messages}</span>
+        <span className="text-xs text-muted">{timeAgo(conv.lastMessageAt, lang)}</span>
       </div>
     </button>
   );
@@ -357,12 +357,12 @@ function SectionHeader({ icon, label, count, color, onExport }: {
       <div className="flex items-center gap-2">
         <span className={color}>{icon}</span>
         <span className={`text-xs font-mono ${color}`}>{label}</span>
-        <span className="text-[10px] font-mono text-muted">({count})</span>
+        <span className="text-xs text-muted">({count})</span>
       </div>
       {onExport && (
         <button
           onClick={onExport}
-          className="flex items-center gap-1 text-[10px] font-mono text-muted hover:text-foreground transition-colors"
+          className="flex items-center gap-1 text-xs text-muted hover:text-foreground transition-colors"
         >
           <Download className="w-3 h-3" />
           CSV
@@ -449,8 +449,8 @@ export default function BroadcastConversations({
         ) : conversations.length === 0 && noResponse.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-2">
             <MessageSquare className="w-8 h-8 text-muted/40" />
-            <span className="text-sm text-muted font-mono">{t.noConversations}</span>
-            <span className="text-xs text-muted/60 font-mono">{t.noConversationsHint}</span>
+            <span className="text-sm text-muted">{t.noConversations}</span>
+            <span className="text-xs text-muted/60">{t.noConversationsHint}</span>
           </div>
         ) : (
           <div>
@@ -548,9 +548,9 @@ export default function BroadcastConversations({
                       {noResponse.map((r, i) => (
                         <div key={i} className="flex items-center gap-3 px-4 py-2">
                           <div className="w-6 h-6 rounded-full bg-background border border-border flex items-center justify-center flex-shrink-0">
-                            <span className="text-[10px] font-mono text-muted">{(r.name || '?').charAt(0).toUpperCase()}</span>
+                            <span className="text-xs text-muted">{(r.name || '?').charAt(0).toUpperCase()}</span>
                           </div>
-                          <span className="text-xs font-mono text-muted">{r.name || '-'}</span>
+                          <span className="text-xs text-muted">{r.name || '-'}</span>
                           <span className="text-xs font-mono text-muted/60">{r.phone}</span>
                         </div>
                       ))}

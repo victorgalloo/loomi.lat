@@ -228,7 +228,7 @@ function LoginContent() {
           <form onSubmit={mode === "login" ? handleLogin : handleSignup} className="space-y-4">
             {mode === "signup" && (
               <div>
-                <label className="block text-xs font-medium mb-2 text-muted font-mono">
+                <label className="block text-label font-medium mb-2.5 text-muted">
                   nombre
                 </label>
                 <input
@@ -238,13 +238,13 @@ function LoginContent() {
                   required
                   disabled={isLoading}
                   placeholder="Tu nombre o empresa"
-                  className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium mb-2 text-muted font-mono">
+              <label className="block text-label font-medium mb-2.5 text-muted">
                 email
               </label>
               <input
@@ -254,12 +254,12 @@ function LoginContent() {
                 required
                 disabled={isLoading}
                 placeholder="tu@email.com"
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium mb-2 text-muted font-mono">
+              <label className="block text-label font-medium mb-2.5 text-muted">
                 password
               </label>
               <input
@@ -270,12 +270,12 @@ function LoginContent() {
                 disabled={isLoading}
                 placeholder="••••••••"
                 minLength={6}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
             {error && (
-              <div className="p-3 rounded-xl text-sm bg-terminal-red/10 text-terminal-red border border-terminal-red/20 font-mono">
+              <div className="p-3 rounded-xl text-sm bg-terminal-red/10 text-terminal-red border border-terminal-red/20">
                 {error}
               </div>
             )}
@@ -283,7 +283,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90 font-mono"
+              className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -298,7 +298,7 @@ function LoginContent() {
 
           {/* Switch mode link */}
           <div className="mt-8 text-center">
-            <p className="text-xs text-muted font-mono">
+            <p className="text-xs text-muted">
               {mode === "login" ? (
                 <>
                   ¿No tienes cuenta?{' '}
@@ -325,7 +325,7 @@ function LoginContent() {
 
           {/* Powered by */}
           <div className="mt-12 pt-6 border-t border-border text-center">
-            <p className="text-xs text-muted font-mono">
+            <p className="text-xs text-muted">
               powered by{' '}
               <Link
                 href="https://anthana.agency"

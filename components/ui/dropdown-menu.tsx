@@ -25,7 +25,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      "flex cursor-default select-none items-center rounded-md px-3 py-2 text-sm font-medium outline-none focus:bg-muted/70 data-[state=open]:bg-muted/70",
+      "flex cursor-default select-none items-center rounded-md px-3 py-2.5 text-sm font-medium outline-none focus:bg-muted/70 data-[state=open]:bg-muted/70",
       inset && "pl-8",
       className
     )}
@@ -81,7 +81,7 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium outline-none transition-colors focus:bg-muted/70 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex cursor-pointer select-none items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium outline-none transition-colors focus:bg-muted/70 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       inset && "pl-8",
       className
     )}
@@ -140,7 +140,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center rounded-xl px-3 py-2 text-sm font-medium outline-none focus:bg-muted/70 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex cursor-pointer select-none items-center rounded-xl px-3 py-2.5 text-sm font-medium outline-none focus:bg-muted/70 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
     checked={checked}
@@ -164,7 +164,7 @@ const DropdownMenuRadioItem = React.forwardRef<
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center rounded-xl px-3 py-2 text-sm font-medium outline-none focus:bg-muted/70 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex cursor-pointer select-none items-center rounded-xl px-3 py-2.5 text-sm font-medium outline-none focus:bg-muted/70 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
     {...props}

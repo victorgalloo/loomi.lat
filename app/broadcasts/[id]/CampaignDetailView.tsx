@@ -326,20 +326,20 @@ export default function CampaignDetailView({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-background">
-                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.phone}</th>
-                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.name}</th>
-                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.status}</th>
-                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.sentAt}</th>
-                <th className="text-left px-4 py-2 text-xs font-mono text-muted font-normal">{t.error}</th>
+                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.phone}</th>
+                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.name}</th>
+                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.status}</th>
+                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.sentAt}</th>
+                <th className="text-left px-4 py-2 text-label text-muted font-normal">{t.error}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
               {recipients.map((r) => (
                 <tr key={r.id} className="hover:bg-surface-2 transition-colors">
                   <td className="px-4 py-2 font-mono text-foreground">{r.phone}</td>
-                  <td className="px-4 py-2 font-mono text-muted">{r.name || '-'}</td>
+                  <td className="px-4 py-2 text-muted">{r.name || '-'}</td>
                   <td className="px-4 py-2">
-                    <span className={`font-mono text-xs ${recipientStatusColors[r.status] || 'text-muted'}`}>
+                    <span className={`text-xs ${recipientStatusColors[r.status] || 'text-muted'}`}>
                       {getRecipientStatus(r.status)}
                     </span>
                   </td>
@@ -362,7 +362,7 @@ export default function CampaignDetailView({
 
         {recipients.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12">
-            <span className="text-sm text-muted font-mono">{t.noRecipients}</span>
+            <span className="text-sm text-muted">{t.noRecipients}</span>
           </div>
         )}
       </div>

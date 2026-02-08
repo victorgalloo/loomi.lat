@@ -171,9 +171,11 @@ export async function purchaseNumber(
   };
 
   if (countryCode === 'MX') {
-    const addressSid = await getOrCreateAddress(client, 'MX');
-    const bundleSid = await getOrCreateBundle(client, addressSid);
-    purchaseOpts.bundleSid = bundleSid;
+    // Use pre-approved regulatory bundle for MX Mobile
+    const bundleSid = process.env.TWILIO_MX_BUNDLE_SID;
+    const addressSid = process.env.TWILIO_MX_ADDRESS_SID;
+    if (bundleSid) purchaseOpts.bundleSid = bundleSid;
+    if (addressSid) purchaseOpts.addressSid = addressSid;
   }
 
   const purchased = await client.incomingPhoneNumbers.create(purchaseOpts);

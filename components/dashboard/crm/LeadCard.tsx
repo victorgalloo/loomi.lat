@@ -71,7 +71,7 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
       {...listeners}
       onClick={onClick}
       className={`
-        group relative rounded-lg border p-3 cursor-grab active:cursor-grabbing
+        group relative rounded-2xl border p-3 cursor-grab active:cursor-grabbing
         transition-all duration-150
         bg-surface border-border hover:border-foreground/20 hover:bg-surface-2/50
         ${isDragging ? 'opacity-50 scale-105 shadow-2xl z-50' : ''}

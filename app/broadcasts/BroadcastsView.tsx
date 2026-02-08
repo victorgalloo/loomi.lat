@@ -377,7 +377,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
-      <div className="rounded-xl border border-border bg-surface overflow-hidden">
+      <div className="rounded-2xl border border-border bg-surface overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
           <div className="flex gap-1.5">
             <div className="w-3 h-3 rounded-full bg-terminal-red" />
@@ -415,7 +415,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
           >
             <Plus className="w-4 h-4" />
             {t.newCampaign}
@@ -427,7 +427,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-3 py-1.5 rounded-lg bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
+              className="pl-9 pr-3 py-1.5 rounded-xl bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
             />
           </div>
         </div>
@@ -443,7 +443,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
               {!searchQuery && (
                 <button
                   onClick={() => setShowModal(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
                 >
                   <Plus className="w-4 h-4" />
                   {t.createFirst}
@@ -491,7 +491,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={resetModal} />
-          <div className="relative w-full max-w-lg mx-4 rounded-xl border border-border bg-surface overflow-hidden max-h-[90vh] flex flex-col">
+          <div className="relative w-full max-w-lg mx-4 rounded-2xl border border-border bg-surface overflow-hidden max-h-[90vh] flex flex-col">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
@@ -512,7 +512,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-4">
               {error && (
-                <div className="flex items-center gap-2 px-3 py-2 mb-4 rounded-lg bg-terminal-red/10 border border-terminal-red/20">
+                <div className="flex items-center gap-2 px-3 py-2 mb-4 rounded-2xl bg-terminal-red/10 border border-terminal-red/20">
                   <AlertTriangle className="w-4 h-4 text-terminal-red flex-shrink-0" />
                   <span className="text-sm text-terminal-red font-mono">{error}</span>
                 </div>
@@ -528,7 +528,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                       value={formName}
                       onChange={e => setFormName(e.target.value)}
                       placeholder={t.campaignNamePlaceholder}
-                      className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
+                      className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
                     />
                   </div>
 
@@ -536,16 +536,16 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   <div>
                     <label className="block text-xs text-muted font-mono mb-1.5">{t.approvedTemplate}</label>
                     {loadingTemplates ? (
-                      <div className="flex items-center gap-2 px-3 py-3 rounded-lg bg-background border border-border">
+                      <div className="flex items-center gap-2 px-3 py-3 rounded-2xl bg-background border border-border">
                         <Loader2 className="w-4 h-4 animate-spin text-muted" />
                         <span className="text-xs font-mono text-muted">{t.loadingTemplates}</span>
                       </div>
                     ) : templates.length === 0 ? (
-                      <div className="px-3 py-3 rounded-lg bg-background border border-border">
+                      <div className="px-3 py-3 rounded-2xl bg-background border border-border">
                         <span className="text-xs font-mono text-muted">{t.noTemplates}</span>
                       </div>
                     ) : (
-                      <div className="space-y-2 max-h-52 overflow-y-auto rounded-lg border border-border">
+                      <div className="space-y-2 max-h-52 overflow-y-auto rounded-2xl border border-border">
                         {templates.map((t, i) => {
                           const isSelected = formTemplate === t.name && formLanguage === t.language;
                           const preview = getTemplatePreview(t);
@@ -584,7 +584,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
 
                   {/* Selected template preview */}
                   {selectedTemplate && (
-                    <div className="rounded-lg border border-border bg-background p-3">
+                    <div className="rounded-2xl border border-border bg-background p-3">
                       <span className="text-[10px] font-mono text-muted block mb-1">{t.templatePreview}</span>
                       <p className="text-xs font-mono text-foreground whitespace-pre-wrap">
                         {getTemplatePreview(selectedTemplate)}
@@ -597,7 +597,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     <div>
                       <label className="block text-xs text-muted font-mono mb-1.5">{t.templateVariables}</label>
                       {templateVariables.length === 0 ? (
-                        <div className="px-3 py-2 rounded-lg bg-background border border-border">
+                        <div className="px-3 py-2 rounded-2xl bg-background border border-border">
                           <span className="text-xs font-mono text-muted">{t.noVariables}</span>
                         </div>
                       ) : (
@@ -606,7 +606,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                             const key = `${v.type}_${v.index}`;
                             const source = formVariableSource[key] || 'fixed';
                             return (
-                              <div key={key} className="rounded-lg border border-border bg-background p-3">
+                              <div key={key} className="rounded-2xl border border-border bg-background p-3">
                                 <div className="flex items-center justify-between mb-2">
                                   <span className="text-xs font-mono text-foreground">
                                     {v.placeholder}
@@ -642,10 +642,10 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                                     value={formVariables[key] || ''}
                                     onChange={e => setFormVariables(prev => ({ ...prev, [key]: e.target.value }))}
                                     placeholder={`${t.variablePlaceholder} ${v.placeholder}`}
-                                    className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
+                                    className="w-full px-3 py-1.5 rounded-xl bg-surface border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
                                   />
                                 ) : (
-                                  <div className="px-3 py-1.5 rounded-lg bg-terminal-green/10 border border-terminal-green/20 text-sm font-mono text-terminal-green">
+                                  <div className="px-3 py-1.5 rounded-xl bg-terminal-green/10 border border-terminal-green/20 text-sm font-mono text-terminal-green">
                                     → recipient.name
                                   </div>
                                 )}
@@ -669,7 +669,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     onDragLeave={e => { e.preventDefault(); setIsDragging(false); }}
                     onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
-                    className={`flex flex-col items-center justify-center py-10 rounded-lg border-2 border-dashed cursor-pointer transition-colors ${
+                    className={`flex flex-col items-center justify-center py-10 rounded-2xl border-2 border-dashed cursor-pointer transition-colors ${
                       isDragging
                         ? 'border-foreground/50 bg-foreground/5'
                         : csvFile
@@ -710,7 +710,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
 
                   {/* CSV Preview */}
                   {csvPreview.length > 0 && (
-                    <div className="rounded-lg border border-border overflow-hidden">
+                    <div className="rounded-2xl border border-border overflow-hidden">
                       <div className="px-3 py-2 border-b border-border bg-background">
                         <span className="text-xs font-mono text-muted">{t.csvPreview}</span>
                       </div>
@@ -737,7 +737,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
               {/* Step 3: Confirm */}
               {modalStep === 'confirm' && (
                 <div className="space-y-4">
-                  <div className="rounded-lg border border-border bg-background p-4 space-y-3">
+                  <div className="rounded-2xl border border-border bg-background p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-mono text-muted">{t.campaign}</span>
                       <span className="text-sm font-mono text-foreground">{formName}</span>
@@ -775,7 +775,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-terminal-yellow/10 border border-terminal-yellow/20">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-terminal-yellow/10 border border-terminal-yellow/20">
                     <AlertTriangle className="w-4 h-4 text-terminal-yellow flex-shrink-0" />
                     <span className="text-xs text-terminal-yellow font-mono">
                       {t.confirmWarning.replace('{count}', csvTotal.toLocaleString())}
@@ -793,7 +793,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   else if (modalStep === 'confirm') setModalStep('csv');
                   else resetModal();
                 }}
-                className="px-3 py-1.5 rounded-lg bg-surface border border-border text-sm font-mono text-muted hover:text-foreground transition-colors"
+                className="px-3 py-1.5 rounded-xl bg-surface border border-border text-sm font-mono text-muted hover:text-foreground transition-colors"
               >
                 {modalStep === 'config' ? t.cancel : t.back}
               </button>
@@ -825,7 +825,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     setError('');
                     setModalStep('csv');
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
+                  className="px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
                 >
                   {t.next}
                 </button>
@@ -841,7 +841,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     setError('');
                     setModalStep('confirm');
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
+                  className="px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
                 >
                   {t.next}
                 </button>
@@ -851,7 +851,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                 <button
                   onClick={handleSubmit}
                   disabled={creating}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                   {creating ? t.creating : t.createCampaign}

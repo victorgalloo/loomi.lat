@@ -465,7 +465,7 @@ export default function ClientView({ client }: ClientViewProps) {
           ].map((resource, index) => (
             <div
               key={index}
-              className="rounded-lg overflow-hidden transition-all duration-300 hover:opacity-90 cursor-pointer"
+              className="rounded-2xl overflow-hidden transition-all duration-300 hover:opacity-90 cursor-pointer"
               style={{
                 backgroundColor: `var(--card-bg)`,
               }}
@@ -559,7 +559,7 @@ export default function ClientView({ client }: ClientViewProps) {
               </h2>
 
               {/* Proposals Table */}
-              <div className="border rounded-lg overflow-hidden" style={{ borderColor: `var(--border)` }}>
+              <div className="border rounded-2xl overflow-hidden" style={{ borderColor: `var(--border)` }}>
                 {/* Table Header */}
                 <div className="flex items-center border-b" style={{ borderColor: `var(--border)`, backgroundColor: `var(--card-bg)` }}>
                   <div className="flex-1 px-4 py-3 text-sm font-semibold transition-colors duration-300" style={{ color: `var(--foreground)` }}>
@@ -791,7 +791,7 @@ export default function ClientView({ client }: ClientViewProps) {
               </h2>
 
               {/* Legal Documents Table */}
-              <div className="border rounded-lg overflow-hidden" style={{ borderColor: `var(--border)` }}>
+              <div className="border rounded-2xl overflow-hidden" style={{ borderColor: `var(--border)` }}>
                 {/* Table Header */}
                 <div className="flex items-center border-b" style={{ borderColor: `var(--border)`, backgroundColor: `var(--card-bg)` }}>
                   <div className="flex-1 px-4 py-3 text-sm font-semibold transition-colors duration-300" style={{ color: `var(--foreground)` }}>
@@ -969,7 +969,7 @@ export default function ClientView({ client }: ClientViewProps) {
               </h2>
 
               {/* Files Table */}
-              <div className="border rounded-lg overflow-hidden" style={{ borderColor: `var(--border)` }}>
+              <div className="border rounded-2xl overflow-hidden" style={{ borderColor: `var(--border)` }}>
                 {/* Table Header */}
                 <div className="flex items-center border-b" style={{ borderColor: `var(--border)`, backgroundColor: `var(--card-bg)` }}>
                   <div className="flex-1 px-4 py-3 text-sm font-semibold transition-colors duration-300" style={{ color: `var(--foreground)` }}>
@@ -1067,7 +1067,7 @@ export default function ClientView({ client }: ClientViewProps) {
                     href={viewingProposal.attachment.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2"
+                    className="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2"
                     style={{
                       backgroundColor: `var(--card-bg)`,
                       color: `var(--foreground)`,
@@ -1134,7 +1134,7 @@ export default function ClientView({ client }: ClientViewProps) {
                         href={viewingProposal.attachment.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-4 inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                        className="mt-4 inline-block px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300"
                         style={{
                           backgroundColor: `var(--card-bg)`,
                           color: `var(--foreground)`,
@@ -1177,7 +1177,7 @@ export default function ClientView({ client }: ClientViewProps) {
                     href={viewingLegalDoc.attachment.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2"
+                    className="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2"
                     style={{
                       backgroundColor: `var(--card-bg)`,
                       color: `var(--foreground)`,
@@ -1244,7 +1244,7 @@ export default function ClientView({ client }: ClientViewProps) {
                         href={viewingLegalDoc.attachment.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-4 inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                        className="mt-4 inline-block px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300"
                         style={{
                           backgroundColor: `var(--card-bg)`,
                           color: `var(--foreground)`,
@@ -1287,7 +1287,7 @@ export default function ClientView({ client }: ClientViewProps) {
                     href={viewingGeneralFile.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2"
+                    className="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2"
                     style={{
                       backgroundColor: `var(--card-bg)`,
                       color: `var(--foreground)`,
@@ -1354,7 +1354,7 @@ export default function ClientView({ client }: ClientViewProps) {
                         href={viewingGeneralFile.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-4 inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                        className="mt-4 inline-block px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300"
                         style={{
                           backgroundColor: `var(--card-bg)`,
                           color: `var(--foreground)`,

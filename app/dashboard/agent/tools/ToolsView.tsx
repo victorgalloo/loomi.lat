@@ -157,7 +157,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-foreground text-background hover:bg-foreground/90 font-mono"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-foreground text-background hover:bg-foreground/90 font-mono"
           >
             <Plus className="w-4 h-4" />
             agregar
@@ -167,7 +167,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
 
       {/* Create Form */}
       {showForm && (
-        <form onSubmit={handleCreate} className="mb-8 p-4 rounded-lg border border-border bg-surface">
+        <form onSubmit={handleCreate} className="mb-8 p-4 rounded-2xl border border-border bg-surface">
           <label className="block text-xs font-medium mb-3 text-muted font-mono">
             nueva herramienta
           </label>
@@ -179,7 +179,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
                 onChange={(e) => setToolName(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'))}
                 placeholder="nombre_snake_case"
                 required
-                className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
+                className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
               />
               <input
                 type="text"
@@ -187,7 +187,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
                 onChange={(e) => setToolDisplayName(e.target.value)}
                 placeholder="Nombre para mostrar"
                 required
-                className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
+                className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
               />
             </div>
             <input
@@ -196,7 +196,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
               onChange={(e) => setToolDescription(e.target.value)}
               placeholder="Descripción de qué hace esta herramienta"
               required
-              className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
+              className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
             />
 
             {/* Execution Type */}
@@ -208,7 +208,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
                 <button
                   type="button"
                   onClick={() => setToolExecutionType('mock')}
-                  className={`px-3 py-1.5 text-xs font-mono rounded-lg transition-colors border ${
+                  className={`px-3 py-1.5 text-xs font-mono rounded-xl transition-colors border ${
                     toolExecutionType === 'mock'
                       ? 'bg-foreground text-background border-foreground'
                       : 'bg-surface text-muted border-border hover:text-foreground'
@@ -219,7 +219,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
                 <button
                   type="button"
                   onClick={() => setToolExecutionType('webhook')}
-                  className={`px-3 py-1.5 text-xs font-mono rounded-lg transition-colors border ${
+                  className={`px-3 py-1.5 text-xs font-mono rounded-xl transition-colors border ${
                     toolExecutionType === 'webhook'
                       ? 'bg-foreground text-background border-foreground'
                       : 'bg-surface text-muted border-border hover:text-foreground'
@@ -237,7 +237,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
                 onChange={(e) => setToolWebhookUrl(e.target.value)}
                 placeholder="https://tu-api.com/endpoint"
                 required
-                className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
+                className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
               />
             )}
 
@@ -250,7 +250,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
                 value={toolParameters}
                 onChange={(e) => setToolParameters(e.target.value)}
                 rows={6}
-                className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono text-xs leading-relaxed"
+                className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono text-xs leading-relaxed"
               />
             </div>
 
@@ -264,7 +264,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
                   value={toolMockResponse}
                   onChange={(e) => setToolMockResponse(e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono text-xs leading-relaxed"
+                  className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono text-xs leading-relaxed"
                 />
               </div>
             )}
@@ -273,14 +273,14 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-surface text-muted hover:text-foreground border border-border font-mono"
+                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border font-mono"
               >
                 cancelar
               </button>
               <button
                 type="submit"
                 disabled={isCreating || !toolName.trim() || !toolDisplayName.trim() || !toolDescription.trim()}
-                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90 font-mono"
+                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90 font-mono"
               >
                 {isCreating ? 'guardando...' : './guardar'}
               </button>
@@ -309,7 +309,7 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
           {tools.map((tool) => (
             <div
               key={tool.id}
-              className="p-4 rounded-lg border border-border bg-surface"
+              className="p-4 rounded-2xl border border-border bg-surface"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
@@ -365,19 +365,19 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
       <div className="mt-10 pt-6 border-t border-border flex gap-3 font-mono">
         <Link
           href="/dashboard/agent"
-          className="px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-surface text-muted hover:text-foreground border border-border"
+          className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
         >
           config básica
         </Link>
         <Link
           href="/dashboard/agent/prompt"
-          className="px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-surface text-muted hover:text-foreground border border-border"
+          className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
         >
           prompt
         </Link>
         <Link
           href="/dashboard/agent/knowledge"
-          className="px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-surface text-muted hover:text-foreground border border-border"
+          className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
         >
           knowledge
         </Link>

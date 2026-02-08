@@ -80,7 +80,7 @@ export function KnowledgeFeatures() {
             >
               <div className="h-full p-8 rounded-2xl bg-surface border border-border hover:border-border/80 transition-all duration-300">
                 {/* Icon */}
-                <div className={`w-14 h-14 rounded-xl bg-${feature.colorClass}/10 flex items-center justify-center mb-6`}>
+                <div className={`w-14 h-14 rounded-2xl bg-${feature.colorClass}/10 flex items-center justify-center mb-6`}>
                   <feature.icon className={`w-7 h-7 text-${feature.colorClass}`} />
                 </div>
 
@@ -152,7 +152,7 @@ export function KnowledgeFeatures() {
               </div>
 
               {/* Right - Code snippet */}
-              <div className="relative rounded-xl overflow-hidden bg-background border border-border">
+              <div className="relative rounded-2xl overflow-hidden bg-background border border-border">
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-surface">
                   <div className="flex gap-1.5">
                     <div className="w-3 h-3 rounded-full bg-red-500/20" />

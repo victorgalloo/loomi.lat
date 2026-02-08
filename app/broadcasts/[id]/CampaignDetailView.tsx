@@ -197,7 +197,7 @@ export default function CampaignDetailView({
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
-      <div className="rounded-xl border border-border bg-surface overflow-hidden">
+      <div className="rounded-2xl border border-border bg-surface overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
             <div className="flex gap-1.5">
@@ -220,7 +220,7 @@ export default function CampaignDetailView({
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push('/broadcasts')}
-              className="p-1.5 rounded-lg hover:bg-surface-2 transition-colors text-muted hover:text-foreground"
+              className="p-1.5 rounded-xl hover:bg-surface-2 transition-colors text-muted hover:text-foreground"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -242,7 +242,7 @@ export default function CampaignDetailView({
           <div className="flex items-center gap-2">
             <button
               onClick={refreshData}
-              className="p-1.5 rounded-lg bg-surface border border-border text-muted hover:text-foreground transition-colors"
+              className="p-1.5 rounded-xl bg-surface border border-border text-muted hover:text-foreground transition-colors"
               title="Refresh"
             >
               <RefreshCw className="w-4 h-4" />
@@ -251,7 +251,7 @@ export default function CampaignDetailView({
               <button
                 onClick={() => setShowConfirm(true)}
                 disabled={sending}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 <Send className="w-4 h-4" />
                 {sending ? t.sending : t.sendBroadcast}
@@ -378,7 +378,7 @@ export default function CampaignDetailView({
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowConfirm(false)} />
-          <div className="relative w-full max-w-sm mx-4 rounded-xl border border-border bg-surface overflow-hidden">
+          <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-border bg-surface overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
               <div className="flex gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full bg-terminal-red" />
@@ -388,7 +388,7 @@ export default function CampaignDetailView({
               <span className="text-sm font-mono text-foreground ml-2">{t.confirmTitle}</span>
             </div>
             <div className="p-4 space-y-4">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-terminal-yellow/10 border border-terminal-yellow/20">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-terminal-yellow/10 border border-terminal-yellow/20">
                 <AlertTriangle className="w-4 h-4 text-terminal-yellow flex-shrink-0" />
                 <span className="text-xs text-terminal-yellow font-mono">
                   {t.confirmWarning.replace('{count}', pendingCount.toLocaleString())}
@@ -397,14 +397,14 @@ export default function CampaignDetailView({
               <div className="flex items-center gap-2 justify-end">
                 <button
                   onClick={() => setShowConfirm(false)}
-                  className="px-3 py-1.5 rounded-lg bg-surface border border-border text-sm font-mono text-muted hover:text-foreground transition-colors"
+                  className="px-3 py-1.5 rounded-xl bg-surface border border-border text-sm font-mono text-muted hover:text-foreground transition-colors"
                 >
                   {t.cancel}
                 </button>
                 <button
                   onClick={handleSend}
                   disabled={sending}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                   {sending ? t.sending : t.confirmSend}

@@ -164,7 +164,7 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className={`
-                  relative flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300
+                  relative flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300
                   ${colorClasses[option.color]}
                 `}
               >

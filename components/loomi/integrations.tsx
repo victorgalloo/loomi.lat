@@ -106,7 +106,7 @@ export function Integrations() {
               className="flex flex-col items-center gap-3 group cursor-pointer"
             >
               <div
-                className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gray-900/50 border border-gray-800 flex items-center justify-center text-gray-500 group-hover:text-white group-hover:border-gray-700 transition-all duration-300"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gray-900/50 border border-gray-800 flex items-center justify-center text-gray-500 group-hover:text-white group-hover:border-gray-700 transition-all duration-300"
                 style={{
                   '--hover-color': integration.color,
                 } as React.CSSProperties}

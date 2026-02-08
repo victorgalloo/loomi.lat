@@ -113,7 +113,7 @@ export default function AnalyticsCards({ data }: AnalyticsCardsProps) {
               <div className="relative z-10">
                 <div className="flex items-start justify-between mb-4">
                   <p className="text-sm text-gray-600">{metric.label}</p>
-                  <div className={`w-10 h-10 ${colors.bg} rounded-xl flex items-center justify-center`}>
+                  <div className={`w-10 h-10 ${colors.bg} rounded-2xl flex items-center justify-center`}>
                     <Icon className={`w-5 h-5 ${colors.icon}`} />
                   </div>
                 </div>

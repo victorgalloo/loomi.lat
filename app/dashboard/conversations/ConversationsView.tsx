@@ -212,7 +212,7 @@ export default function ConversationsView({ conversations: initialConversations,
               placeholder="buscar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-48 pl-9 pr-3 py-1.5 rounded-lg text-sm outline-none transition-colors duration-150 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
+              className="w-48 pl-9 pr-3 py-1.5 rounded-xl text-sm outline-none transition-colors duration-150 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
             />
           </div>
         </div>
@@ -253,7 +253,7 @@ export default function ConversationsView({ conversations: initialConversations,
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-1 p-1 rounded-lg mb-6 w-fit bg-surface border border-border">
+      <div className="flex items-center gap-1 p-1 rounded-xl mb-6 w-fit bg-surface border border-border">
         {[
           { key: 'all', label: 'todas' },
           { key: 'active', label: 'activas' },
@@ -280,7 +280,7 @@ export default function ConversationsView({ conversations: initialConversations,
             <div
               key={alert.id}
               className={`
-                flex items-center justify-between px-4 py-3 rounded-lg border font-mono
+                flex items-center justify-between px-4 py-3 rounded-2xl border font-mono
                 ${alert.priority === 'critical'
                   ? 'bg-red-500/10 border-red-500/20 text-red-400'
                   : alert.priority === 'urgent'
@@ -323,7 +323,7 @@ export default function ConversationsView({ conversations: initialConversations,
 
       {/* Conversation List */}
       {filteredConversations.length > 0 ? (
-        <div className="rounded-xl overflow-hidden bg-surface border border-border">
+        <div className="rounded-2xl overflow-hidden bg-surface border border-border">
           <ul className="divide-y divide-border">
             {filteredConversations.map((conversation) => {
               return (
@@ -382,7 +382,7 @@ export default function ConversationsView({ conversations: initialConversations,
       {/* Empty State */}
       {conversations.length === 0 && (
         <div className="text-center py-20">
-          <div className="w-14 h-14 rounded-xl mx-auto mb-4 flex items-center justify-center bg-surface border border-border">
+          <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-surface border border-border">
             <MessageSquare className="w-6 h-6 text-muted" />
           </div>
           <h3 className="text-base font-medium mb-1 text-foreground font-mono">

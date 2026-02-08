@@ -130,7 +130,7 @@ export default function FileUploader({
         onDrop={handleDrop}
         onClick={!uploading ? triggerFileInput : undefined}
         className={`
-          relative w-full p-8 rounded-lg border-2 border-dashed transition-all duration-300 cursor-pointer
+          relative w-full p-8 rounded-2xl border-2 border-dashed transition-all duration-300 cursor-pointer
           ${isDragging ? "border-opacity-100" : "border-opacity-50"}
           ${uploading ? "cursor-not-allowed opacity-50" : "hover:opacity-80"}
         `}

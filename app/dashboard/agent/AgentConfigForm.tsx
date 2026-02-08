@@ -63,7 +63,7 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
               value={config.businessName || ''}
               onChange={(e) => handleChange('businessName', e.target.value)}
               placeholder="Ej: Clínica Dental Sonrisa"
-              className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
+              className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
             />
           </div>
 
@@ -74,7 +74,7 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
               onChange={(e) => handleChange('businessDescription', e.target.value)}
               rows={3}
               placeholder="Qué hace tu negocio..."
-              className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
+              className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
             />
           </div>
 
@@ -85,7 +85,7 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
               onChange={(e) => handleChange('productsServices', e.target.value)}
               rows={3}
               placeholder="Lista tus productos o servicios principales..."
-              className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
+              className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
             />
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
                 key={tone}
                 type="button"
                 onClick={() => handleChange('tone', tone)}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors font-mono ${
+                className={`px-3 py-1.5 text-sm rounded-xl transition-colors font-mono ${
                   config.tone === tone
                     ? 'bg-foreground text-background'
                     : 'bg-surface text-muted hover:text-foreground border border-border'
@@ -122,7 +122,7 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
             onChange={(e) => handleChange('customInstructions', e.target.value)}
             rows={4}
             placeholder="Instrucciones específicas para el agente..."
-            className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
+            className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
           />
         </div>
 
@@ -164,14 +164,14 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
             <div className="flex gap-3">
               <Link
                 href="/dashboard/agent/prompt"
-                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-surface text-muted hover:text-foreground border border-border font-mono"
+                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border font-mono"
               >
                 prompt avanzado
               </Link>
               <button
                 type="submit"
                 disabled={isSaving}
-                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90 font-mono"
+                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90 font-mono"
               >
                 {isSaving ? 'guardando...' : './guardar'}
               </button>

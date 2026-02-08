@@ -41,7 +41,7 @@ export function HeroDemo() {
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] px-4 py-2 rounded-xl text-sm ${
+                className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm ${
                   msg.role === 'user'
                     ? 'bg-foreground text-background'
                     : 'bg-surface-2 text-foreground border border-border'
@@ -60,7 +60,7 @@ export function HeroDemo() {
             transition={{ delay: 1.2 }}
             className="flex justify-start"
           >
-            <div className="bg-surface-2 border border-border px-4 py-2 rounded-xl flex items-center gap-1">
+            <div className="bg-surface-2 border border-border px-4 py-2 rounded-2xl flex items-center gap-1">
               <motion.span
                 animate={{ opacity: [0.3, 1, 0.3] }}
                 transition={{ duration: 1, repeat: Infinity }}
@@ -152,7 +152,7 @@ export function Hero() {
             <Button
               variant="primary"
               size="lg"
-              className="group text-lg px-8 py-6 rounded-lg font-mono"
+              className="group text-lg px-8 py-6 rounded-xl font-mono"
             >
               <MessageCircle className="w-5 h-5 mr-3" />
               ./agendar-demo

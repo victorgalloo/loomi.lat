@@ -35,7 +35,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="w-9 h-9 rounded-lg bg-surface-2 border border-border flex items-center justify-center text-muted hover:text-foreground transition-colors"
+                  className="w-9 h-9 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-muted hover:text-foreground transition-colors"
                 >
                   <social.icon className="w-4 h-4" />
                 </a>

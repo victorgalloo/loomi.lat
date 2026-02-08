@@ -58,7 +58,7 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
     }
   };
 
-  const inputClasses = 'w-full px-3 py-2 rounded-lg text-sm transition-colors duration-150 outline-none bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30';
+  const inputClasses = 'w-full px-3 py-2 rounded-xl text-sm transition-colors duration-150 outline-none bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30';
 
   const labelClasses = 'block text-xs font-medium mb-1.5 text-muted';
 
@@ -70,7 +70,7 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
       />
 
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-md rounded-xl border shadow-2xl overflow-hidden bg-surface border-border">
+        <div className="relative w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden bg-surface border-border">
 
           {/* Header */}
           <div className="px-5 py-4 border-b border-border">
@@ -79,7 +79,7 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
                 {editing && (
                   <button
                     onClick={() => setEditing(false)}
-                    className="p-1 rounded-lg transition-colors text-muted hover:text-foreground hover:bg-surface-2"
+                    className="p-1 rounded-xl transition-colors text-muted hover:text-foreground hover:bg-surface-2"
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </button>
@@ -97,7 +97,7 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
                 {!editing && (
                   <button
                     onClick={() => setEditing(true)}
-                    className="p-1.5 rounded-lg transition-colors text-muted hover:text-foreground hover:bg-surface-2"
+                    className="p-1.5 rounded-xl transition-colors text-muted hover:text-foreground hover:bg-surface-2"
                     title="Editar lead"
                   >
                     <Pencil className="w-4 h-4" />
@@ -105,7 +105,7 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
                 )}
                 <button
                   onClick={onClose}
-                  className="p-1.5 rounded-lg transition-colors text-muted hover:text-foreground hover:bg-surface-2"
+                  className="p-1.5 rounded-xl transition-colors text-muted hover:text-foreground hover:bg-surface-2"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -151,10 +151,10 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
                 </div>
               </div>
               <div className="flex gap-2 pt-2 border-t border-border">
-                <button type="button" onClick={() => setEditing(false)} className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150 text-muted hover:text-foreground hover:bg-surface-2">
+                <button type="button" onClick={() => setEditing(false)} className="flex-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-150 text-muted hover:text-foreground hover:bg-surface-2">
                   Cancelar
                 </button>
-                <button type="submit" disabled={isSaving} className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90">
+                <button type="submit" disabled={isSaving} className="flex-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90">
                   {isSaving ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>

@@ -120,7 +120,7 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
             <p className="text-xs text-muted">Esta acción es irreversible</p>
           </div>
           <button
-            className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors text-terminal-red bg-terminal-red/10 hover:bg-terminal-red/20 font-mono"
+            className="px-3 py-1.5 text-xs font-medium rounded-xl transition-colors text-terminal-red bg-terminal-red/10 hover:bg-terminal-red/20 font-mono"
           >
             eliminar
           </button>

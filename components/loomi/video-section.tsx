@@ -68,7 +68,7 @@ function Calculator() {
   return (
     <div className="p-8 lg:p-10">
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-12 h-12 rounded-xl bg-terminal-red/10 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-2xl bg-terminal-red/10 flex items-center justify-center">
           <TrendingDown className="w-6 h-6 text-terminal-red" />
         </div>
         <h3 className="text-2xl font-bold text-foreground font-mono">./calcula-pérdida</h3>
@@ -112,7 +112,7 @@ function Calculator() {
 
         <motion.button
           onClick={() => setShowResult(true)}
-          className="w-full py-4 bg-terminal-red/10 hover:bg-terminal-red/20 text-terminal-red rounded-xl text-lg font-bold transition-colors border border-terminal-red/20"
+          className="w-full py-4 bg-terminal-red/10 hover:bg-terminal-red/20 text-terminal-red rounded-2xl text-lg font-bold transition-colors border border-terminal-red/20"
           whileTap={{ scale: 0.98 }}
         >
           $ calcular
@@ -157,10 +157,10 @@ function BeforeAfter() {
     <div className="p-8 lg:p-10 h-full">
       <div className="flex items-center justify-between mb-8">
         <h3 className="text-2xl font-bold text-foreground font-mono">./tu-whatsapp</h3>
-        <div className="flex items-center gap-1 p-1 bg-surface rounded-xl">
+        <div className="flex items-center gap-1 p-1 bg-surface rounded-2xl">
           <button
             onClick={() => setIsAfter(false)}
-            className={`px-4 py-2 text-sm font-mono rounded-lg transition-colors ${
+            className={`px-4 py-2 text-sm font-mono rounded-xl transition-colors ${
               !isAfter ? 'bg-terminal-red/20 text-terminal-red' : 'text-muted'
             }`}
           >
@@ -168,7 +168,7 @@ function BeforeAfter() {
           </button>
           <button
             onClick={() => setIsAfter(true)}
-            className={`px-4 py-2 text-sm font-mono rounded-lg transition-colors ${
+            className={`px-4 py-2 text-sm font-mono rounded-xl transition-colors ${
               isAfter ? 'bg-terminal-green/20 text-terminal-green' : 'text-muted'
             }`}
           >
@@ -186,28 +186,28 @@ function BeforeAfter() {
             exit={{ opacity: 0, x: 20 }}
             className="space-y-4 font-mono"
           >
-            <div className="flex items-center gap-4 p-4 bg-terminal-red/5 border border-terminal-red/20 rounded-xl">
+            <div className="flex items-center gap-4 p-4 bg-terminal-red/5 border border-terminal-red/20 rounded-2xl">
               <AlertTriangle className="w-6 h-6 text-terminal-red flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-foreground">47 mensajes sin leer</p>
                 <p className="text-sm text-terminal-red">hace 3 horas</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-4 bg-terminal-red/5 border border-terminal-red/20 rounded-xl">
+            <div className="flex items-center gap-4 p-4 bg-terminal-red/5 border border-terminal-red/20 rounded-2xl">
               <Clock className="w-6 h-6 text-terminal-red flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-foreground">"¿Siguen disponibles?"</p>
                 <p className="text-sm text-terminal-red">sin respuesta - lead perdido</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-4 bg-terminal-red/5 border border-terminal-red/20 rounded-xl">
+            <div className="flex items-center gap-4 p-4 bg-terminal-red/5 border border-terminal-red/20 rounded-2xl">
               <DollarSign className="w-6 h-6 text-terminal-red flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-foreground">"Compré con la competencia"</p>
                 <p className="text-sm text-terminal-red">venta perdida: $2,500</p>
               </div>
             </div>
-            <div className="mt-6 p-4 bg-terminal-red/10 rounded-xl text-center border border-terminal-red/20">
+            <div className="mt-6 p-4 bg-terminal-red/10 rounded-2xl text-center border border-terminal-red/20">
               <p className="text-terminal-red font-bold text-lg">status: stress</p>
               <p className="text-muted mt-1">// siempre atrasado</p>
             </div>
@@ -220,28 +220,28 @@ function BeforeAfter() {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4 font-mono"
           >
-            <div className="flex items-center gap-4 p-4 bg-terminal-green/5 border border-terminal-green/20 rounded-xl">
+            <div className="flex items-center gap-4 p-4 bg-terminal-green/5 border border-terminal-green/20 rounded-2xl">
               <CheckCircle className="w-6 h-6 text-terminal-green flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-foreground">todos respondidos</p>
                 <p className="text-sm text-terminal-green">avg: 0.8s</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-4 bg-terminal-green/5 border border-terminal-green/20 rounded-xl">
+            <div className="flex items-center gap-4 p-4 bg-terminal-green/5 border border-terminal-green/20 rounded-2xl">
               <Users className="w-6 h-6 text-terminal-green flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-foreground">12 demos agendadas</p>
                 <p className="text-sm text-terminal-green">esta semana</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-4 bg-terminal-green/5 border border-terminal-green/20 rounded-xl">
+            <div className="flex items-center gap-4 p-4 bg-terminal-green/5 border border-terminal-green/20 rounded-2xl">
               <TrendingUp className="w-6 h-6 text-terminal-green flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-foreground">+340% conversiones</p>
                 <p className="text-sm text-terminal-green">vs. mes anterior</p>
               </div>
             </div>
-            <div className="mt-6 p-4 bg-terminal-green/10 rounded-xl text-center border border-terminal-green/20">
+            <div className="mt-6 p-4 bg-terminal-green/10 rounded-2xl text-center border border-terminal-green/20">
               <p className="text-terminal-green font-bold text-lg">status: relax</p>
               <p className="text-muted mt-1">// loomi trabaja 24/7</p>
             </div>
@@ -311,7 +311,7 @@ function SlotCounter() {
         {Array.from({ length: totalSlots }).map((_, i) => (
           <motion.div
             key={i}
-            className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center ${
+            className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center ${
               i < takenSlots
                 ? 'bg-foreground/20 border-foreground'
                 : 'border-border'

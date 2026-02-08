@@ -195,14 +195,14 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
               placeholder="buscar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-48 pl-9 pr-3 py-1.5 rounded-lg text-sm outline-none transition-colors duration-150 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
+              className="w-48 pl-9 pr-3 py-1.5 rounded-xl text-sm outline-none transition-colors duration-150 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
             />
           </div>
 
           {/* Add Lead */}
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150 bg-foreground text-background hover:bg-foreground/90 font-mono"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-colors duration-150 bg-foreground text-background hover:bg-foreground/90 font-mono"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">nuevo lead</span>
@@ -265,7 +265,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
       {/* Empty State */}
       {leads.length === 0 && (
         <div className="text-center py-20">
-          <div className="w-14 h-14 rounded-xl mx-auto mb-4 flex items-center justify-center bg-surface border border-border">
+          <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-surface border border-border">
             <Users className="w-6 h-6 text-muted" />
           </div>
           <h3 className="text-base font-medium mb-1 text-foreground font-mono">
@@ -276,7 +276,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
           </p>
           <button
             onClick={() => setShowModal(true)}
-            className="mt-4 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150 bg-foreground text-background hover:bg-foreground/90 font-mono"
+            className="mt-4 px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-150 bg-foreground text-background hover:bg-foreground/90 font-mono"
           >
             agregar primer lead
           </button>
@@ -290,7 +290,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowModal(false)}
           />
-          <div className="relative w-full max-w-md mx-4 rounded-xl shadow-2xl bg-surface border border-border">
+          <div className="relative w-full max-w-md mx-4 rounded-2xl shadow-2xl bg-surface border border-border">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <h2 className="text-base font-semibold text-foreground font-mono">
@@ -298,7 +298,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-1 rounded-lg transition-colors hover:bg-surface-2 text-muted"
+                className="p-1 rounded-xl transition-colors hover:bg-surface-2 text-muted"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -315,7 +315,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
                   value={newLead.name}
                   onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
                   placeholder="Juan Pérez"
-                  className="w-full px-3 py-2 rounded-lg text-sm outline-none bg-surface-2 border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
+                  className="w-full px-3 py-2 rounded-xl text-sm outline-none bg-surface-2 border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
                 />
               </div>
 
@@ -328,7 +328,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
                   value={newLead.phone}
                   onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
                   placeholder="+52 55 1234 5678"
-                  className="w-full px-3 py-2 rounded-lg text-sm outline-none bg-surface-2 border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
+                  className="w-full px-3 py-2 rounded-xl text-sm outline-none bg-surface-2 border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
                 />
               </div>
 
@@ -341,7 +341,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
                   value={newLead.companyName}
                   onChange={(e) => setNewLead({ ...newLead, companyName: e.target.value })}
                   placeholder="Acme Inc."
-                  className="w-full px-3 py-2 rounded-lg text-sm outline-none bg-surface-2 border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
+                  className="w-full px-3 py-2 rounded-xl text-sm outline-none bg-surface-2 border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
                 />
               </div>
 
@@ -354,7 +354,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
                   value={newLead.contactEmail}
                   onChange={(e) => setNewLead({ ...newLead, contactEmail: e.target.value })}
                   placeholder="juan@empresa.com"
-                  className="w-full px-3 py-2 rounded-lg text-sm outline-none bg-surface-2 border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
+                  className="w-full px-3 py-2 rounded-xl text-sm outline-none bg-surface-2 border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
                 />
               </div>
 
@@ -367,7 +367,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
                   value={newLead.dealValue}
                   onChange={(e) => setNewLead({ ...newLead, dealValue: e.target.value })}
                   placeholder="50000"
-                  className="w-full px-3 py-2 rounded-lg text-sm outline-none bg-surface-2 border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
+                  className="w-full px-3 py-2 rounded-xl text-sm outline-none bg-surface-2 border border-border text-foreground placeholder:text-muted focus:border-foreground/30"
                 />
               </div>
             </div>
@@ -376,14 +376,14 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
             <div className="flex justify-end gap-2 px-5 py-4 border-t border-border">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-muted hover:text-foreground hover:bg-surface-2 font-mono"
+                className="px-4 py-2 rounded-xl text-sm font-medium transition-colors text-muted hover:text-foreground hover:bg-surface-2 font-mono"
               >
                 cancelar
               </button>
               <button
                 onClick={handleCreateLead}
                 disabled={!newLead.name || !newLead.phone || isCreating}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90 font-mono"
+                className="px-4 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90 font-mono"
               >
                 {isCreating ? 'creando...' : './crear-lead'}
               </button>

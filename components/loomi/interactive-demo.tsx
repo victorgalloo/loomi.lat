@@ -242,7 +242,7 @@ export function InteractiveDemo() {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bg-surface rounded-xl overflow-hidden border border-border shadow-2xl"
+          className="bg-surface rounded-3xl overflow-hidden border border-border shadow-2xl"
         >
           {/* Header */}
           <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-surface-2">
@@ -296,7 +296,7 @@ export function InteractiveDemo() {
                 >
                   <div className={`flex mb-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div
-                      className={`max-w-[80%] rounded-lg px-4 py-3 font-mono text-sm ${
+                      className={`max-w-[80%] rounded-2xl px-4 py-3 font-mono text-sm ${
                         message.type === 'user'
                           ? 'bg-foreground text-background'
                           : 'bg-surface-2 border border-border text-foreground'
@@ -317,7 +317,7 @@ export function InteractiveDemo() {
                           key={slot.id}
                           onClick={() => handleRealMessage(`Quiero el ${slot.label}`)}
                           disabled={isTyping}
-                          className="flex items-center gap-1.5 px-3 py-2 bg-terminal-green/10 border border-terminal-green/30 hover:border-terminal-green/60 rounded-lg text-xs text-terminal-green font-mono transition-colors disabled:opacity-50"
+                          className="flex items-center gap-1.5 px-3 py-2 bg-terminal-green/10 border border-terminal-green/30 hover:border-terminal-green/60 rounded-xl text-xs text-terminal-green font-mono transition-colors disabled:opacity-50"
                         >
                           <Calendar className="w-3 h-3" />
                           {slot.label}
@@ -369,7 +369,7 @@ export function InteractiveDemo() {
                 animate={{ opacity: 1 }}
                 className="flex justify-start"
               >
-                <div className="bg-surface-2 border border-border rounded-lg px-4 py-3">
+                <div className="bg-surface-2 border border-border rounded-2xl px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <div className="w-6 h-6 border-2 border-terminal-green/30 rounded-full" />
@@ -421,13 +421,13 @@ export function InteractiveDemo() {
                 onKeyDown={handleKeyDown}
                 placeholder="Escribe como cliente..."
                 disabled={isTyping}
-                className="flex-1 bg-background border border-border rounded-lg px-4 py-3 text-foreground text-sm placeholder-muted focus:outline-none focus:border-muted transition-colors font-mono disabled:opacity-50"
+                className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder-muted focus:outline-none focus:border-muted transition-colors font-mono disabled:opacity-50"
               />
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={handleSend}
                 disabled={!input.trim() || isTyping}
-                className="w-12 h-12 rounded-lg bg-foreground flex items-center justify-center disabled:opacity-50"
+                className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center disabled:opacity-50"
               >
                 <Send className="w-5 h-5 text-background" />
               </motion.button>
@@ -444,7 +444,7 @@ export function InteractiveDemo() {
                 key={prompt.label}
                 onClick={() => handleQuickButton(prompt.text)}
                 disabled={isTyping}
-                className={`group flex items-center gap-2.5 px-4 py-3 text-sm rounded-lg transition-all font-mono disabled:opacity-50 bg-surface hover:bg-surface-2 ${prompt.borderColor}`}
+                className={`group flex items-center gap-2.5 px-4 py-3 text-sm rounded-2xl transition-all font-mono disabled:opacity-50 bg-surface hover:bg-surface-2 ${prompt.borderColor}`}
               >
                 <prompt.icon className={`w-4 h-4 ${prompt.iconColor}`} />
                 <span className="text-foreground text-xs">{prompt.label}</span>
@@ -463,7 +463,7 @@ export function InteractiveDemo() {
         >
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-lg font-mono text-sm hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-xl font-mono text-sm hover:opacity-90 transition-opacity"
           >
             <Sparkles className="w-4 h-4" />
             Configura tu propio agente

@@ -1515,7 +1515,7 @@ export default function ClientEditor({
   const renderFileBlock = (block: Block) => {
     const isImage = block.fileName?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
     return (
-      <div key={block.id} className="mb-4 p-4 rounded-lg border transition-colors duration-300" style={{ backgroundColor: `var(--card-bg)`, borderColor: `var(--border)` }}>
+      <div key={block.id} className="mb-4 p-4 rounded-2xl border transition-colors duration-300" style={{ backgroundColor: `var(--card-bg)`, borderColor: `var(--border)` }}>
         <div className="flex items-start gap-3">
           {isImage && block.fileUrl ? (
             <div className="w-16 h-16 rounded overflow-hidden flex-shrink-0" style={{ backgroundColor: `var(--accent)` }}>
@@ -1871,7 +1871,7 @@ export default function ClientEditor({
           {/* Error Message */}
           {error && (
             <div
-              className="mb-6 p-4 rounded-lg border transition-colors duration-300"
+              className="mb-6 p-4 rounded-xl border transition-colors duration-300"
               style={{
                 backgroundColor: "rgba(239, 68, 68, 0.1)",
                 borderColor: "#ef4444",
@@ -2129,7 +2129,7 @@ export default function ClientEditor({
                   ].map((resource, index) => (
                     <div
                       key={index}
-                      className="rounded-lg overflow-hidden transition-all duration-300 hover:opacity-90 cursor-pointer"
+                      className="rounded-2xl overflow-hidden transition-all duration-300 hover:opacity-90 cursor-pointer"
                       style={{ 
                         backgroundColor: `var(--card-bg)`,
                       }}
@@ -2191,7 +2191,7 @@ export default function ClientEditor({
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingFile !== null}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
                     style={{
                       backgroundColor: `var(--card-bg)`,
                       border: 'none',
@@ -2246,7 +2246,7 @@ export default function ClientEditor({
             </button>
             {sectionsOpen.calendar && (
               <div className="ml-7 mt-4">
-                <div className="p-4 rounded-lg" style={{ backgroundColor: `var(--card-bg)` }}>
+                <div className="p-4 rounded-2xl" style={{ backgroundColor: `var(--card-bg)` }}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold transition-colors duration-300" style={{ color: `var(--foreground)` }}>
                       {new Date().toLocaleDateString("es-MX", { month: "long", year: "numeric" })}
@@ -2331,7 +2331,7 @@ export default function ClientEditor({
                 <button
                   onClick={handleOpenWebProposalModal}
                   disabled={!client?.id}
-                  className="w-full px-6 py-4 rounded-lg text-lg font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                  className="w-full px-6 py-4 rounded-xl text-lg font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                   style={{
                     backgroundColor: "#37352F",
                     color: "#ffffff",
@@ -2431,7 +2431,7 @@ export default function ClientEditor({
               />
 
               {/* Proposals Table */}
-              <div className="border rounded-lg overflow-hidden" style={{ borderColor: `var(--border)` }}>
+              <div className="border rounded-2xl overflow-hidden" style={{ borderColor: `var(--border)` }}>
                 {/* Table Header */}
                 <div className="flex items-center border-b" style={{ borderColor: `var(--border)`, backgroundColor: `var(--card-bg)` }}>
                   <div className="flex-1 px-4 py-3 text-sm font-semibold transition-colors duration-300" style={{ color: `var(--foreground)` }}>
@@ -2693,7 +2693,7 @@ export default function ClientEditor({
                     href={viewingProposal.attachment.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2"
+                    className="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2"
                     style={{
                       backgroundColor: `var(--card-bg)`,
                       color: `var(--foreground)`,
@@ -2845,7 +2845,7 @@ export default function ClientEditor({
                   type="text"
                   value={editingProposal.title}
                   onChange={(e) => setEditingProposal({ ...editingProposal, title: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]"
+                  className="w-full px-4 py-3 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]"
                   style={{
                     backgroundColor: `var(--card-bg)`,
                     border: 'none',
@@ -2895,7 +2895,7 @@ export default function ClientEditor({
                         addTagToProposal(newTag);
                       }
                     }}
-                    className="flex-1 px-4 py-3 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]"
+                    className="flex-1 px-4 py-3 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]"
                     style={{
                       backgroundColor: `var(--card-bg)`,
                       border: 'none',
@@ -2905,7 +2905,7 @@ export default function ClientEditor({
                   />
                   <button
                     onClick={() => addTagToProposal(newTag)}
-                    className="px-4 py-3 rounded-lg font-medium transition-all duration-300"
+                    className="px-4 py-3 rounded-xl font-medium transition-all duration-300"
                     style={{
                       backgroundColor: `var(--accent)`,
                       color: `var(--foreground)`,
@@ -2931,7 +2931,7 @@ export default function ClientEditor({
                   value={editingProposal.notes}
                   onChange={(e) => setEditingProposal({ ...editingProposal, notes: e.target.value })}
                   rows={6}
-                  className="w-full px-4 py-3 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] resize-none"
+                  className="w-full px-4 py-3 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] resize-none"
                   style={{
                     backgroundColor: `var(--card-bg)`,
                     border: 'none',
@@ -2946,7 +2946,7 @@ export default function ClientEditor({
             <div className="flex items-center justify-end gap-3 p-6 border-t flex-shrink-0" style={{ borderColor: `var(--border)` }}>
               <button
                 onClick={() => setEditingProposal(null)}
-                className="px-6 py-2 rounded-lg font-medium transition-all duration-300"
+                className="px-6 py-2 rounded-xl font-medium transition-all duration-300"
                 style={{
                   backgroundColor: `var(--card-bg)`,
                   color: `var(--foreground)`,
@@ -3095,7 +3095,7 @@ export default function ClientEditor({
               />
 
               {/* Legal Documents Table */}
-              <div className="border rounded-lg overflow-hidden" style={{ borderColor: `var(--border)` }}>
+              <div className="border rounded-2xl overflow-hidden" style={{ borderColor: `var(--border)` }}>
                 {/* Table Header */}
                 <div className="flex items-center border-b" style={{ borderColor: `var(--border)`, backgroundColor: `var(--card-bg)` }}>
                   <div className="flex-1 px-4 py-3 text-sm font-semibold transition-colors duration-300" style={{ color: `var(--foreground)` }}>
@@ -3308,7 +3308,7 @@ export default function ClientEditor({
                     href={viewingLegalDoc.attachment.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2"
+                    className="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2"
                     style={{
                       backgroundColor: `var(--card-bg)`,
                       color: `var(--foreground)`,
@@ -3460,7 +3460,7 @@ export default function ClientEditor({
                   type="text"
                   value={editingLegalDoc.title}
                   onChange={(e) => setEditingLegalDoc({ ...editingLegalDoc, title: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]"
+                  className="w-full px-4 py-3 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]"
                   style={{
                     backgroundColor: `var(--card-bg)`,
                     border: 'none',
@@ -3510,7 +3510,7 @@ export default function ClientEditor({
                         addTagToLegalDoc(newLegalDocTag);
                       }
                     }}
-                    className="flex-1 px-4 py-3 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]"
+                    className="flex-1 px-4 py-3 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]"
                     style={{
                       backgroundColor: `var(--card-bg)`,
                       border: 'none',
@@ -3520,7 +3520,7 @@ export default function ClientEditor({
                   />
                   <button
                     onClick={() => addTagToLegalDoc(newLegalDocTag)}
-                    className="px-4 py-3 rounded-lg font-medium transition-all duration-300"
+                    className="px-4 py-3 rounded-xl font-medium transition-all duration-300"
                     style={{
                       backgroundColor: `var(--accent)`,
                       color: `var(--foreground)`,
@@ -3546,7 +3546,7 @@ export default function ClientEditor({
                   value={editingLegalDoc.notes}
                   onChange={(e) => setEditingLegalDoc({ ...editingLegalDoc, notes: e.target.value })}
                   rows={6}
-                  className="w-full px-4 py-3 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] resize-none"
+                  className="w-full px-4 py-3 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] resize-none"
                   style={{
                     backgroundColor: `var(--card-bg)`,
                     border: 'none',
@@ -3561,7 +3561,7 @@ export default function ClientEditor({
             <div className="flex items-center justify-end gap-3 p-6 border-t flex-shrink-0" style={{ borderColor: `var(--border)` }}>
               <button
                 onClick={() => setEditingLegalDoc(null)}
-                className="px-6 py-2 rounded-lg font-medium transition-all duration-300"
+                className="px-6 py-2 rounded-xl font-medium transition-all duration-300"
                 style={{
                   backgroundColor: `var(--card-bg)`,
                   color: `var(--foreground)`,
@@ -3657,7 +3657,7 @@ export default function ClientEditor({
                   value={webProposalTitle}
                   onChange={(e) => setWebProposalTitle(e.target.value)}
                   placeholder="Ej: Propuesta de Desarrollo - Proyecto X"
-                  className="w-full px-4 py-3 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]"
+                  className="w-full px-4 py-3 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]"
                   style={{
                     backgroundColor: `var(--card-bg)`,
                     border: 'none',
@@ -3682,7 +3682,7 @@ export default function ClientEditor({
                       }
                     }}
                     disabled={uploadingWebProposal}
-                    className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
                       webProposalMode === "paste" ? "opacity-100" : "opacity-70"
                     }`}
                     style={{
@@ -3702,7 +3702,7 @@ export default function ClientEditor({
                       }
                     }}
                     disabled={uploadingWebProposal}
-                    className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
                       webProposalMode === "upload" ? "opacity-100" : "opacity-70"
                     }`}
                     style={{
@@ -3717,7 +3717,7 @@ export default function ClientEditor({
               </div>
 
               {/* PDF Exportable Toggle */}
-              <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: `var(--card-bg)`, border: `1px solid var(--border)` }}>
+              <div className="flex items-center justify-between p-4 rounded-2xl" style={{ backgroundColor: `var(--card-bg)`, border: `1px solid var(--border)` }}>
                 <div className="flex-1">
                   <label className="block text-sm font-medium mb-1 transition-colors duration-300" style={{ color: `var(--foreground)` }}>
                     PDF Exportable
@@ -3761,7 +3761,7 @@ export default function ClientEditor({
                     onChange={(e) => setWebProposalHtml(e.target.value)}
                     placeholder="<!DOCTYPE html>&#10;<html>&#10;  <head>&#10;    <title>Propuesta</title>&#10;  </head>&#10;  <body>&#10;    ...&#10;  </body>&#10;</html>"
                     rows={20}
-                    className="w-full px-4 py-3 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] resize-none font-mono text-sm"
+                    className="w-full px-4 py-3 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] resize-none font-mono text-sm"
                     style={{
                       backgroundColor: `var(--card-bg)`,
                       border: 'none',
@@ -3783,7 +3783,7 @@ export default function ClientEditor({
                     Archivo HTML *
                   </label>
                   <div
-                    className="border-2 border-dashed rounded-lg p-8 text-center transition-colors duration-300"
+                    className="border-2 border-dashed rounded-2xl p-8 text-center transition-colors duration-300"
                     style={{ borderColor: `var(--border)`, backgroundColor: `var(--card-bg)` }}
                     onDragOver={(e) => {
                       e.preventDefault();
@@ -3851,7 +3851,7 @@ export default function ClientEditor({
                             }
                           }}
                           disabled={uploadingWebProposal}
-                          className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                           style={{
                             backgroundColor: `var(--accent)`,
                             color: `var(--foreground)`,
@@ -3876,7 +3876,7 @@ export default function ClientEditor({
                         <button
                           onClick={() => webProposalHtmlInputRef.current?.click()}
                           disabled={uploadingWebProposal}
-                          className="px-6 py-2 rounded-lg text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-6 py-2 rounded-xl text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                           style={{
                             backgroundColor: `var(--accent)`,
                             color: `var(--foreground)`,
@@ -3892,7 +3892,7 @@ export default function ClientEditor({
 
               {/* Error Display */}
               {error && (
-                <div className="p-4 rounded-lg" style={{ backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)" }}>
+                <div className="p-4 rounded-xl" style={{ backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)" }}>
                   <p className="text-sm" style={{ color: "#ef4444" }}>
                     {error}
                   </p>
@@ -3913,7 +3913,7 @@ export default function ClientEditor({
                   }
                 }}
                 disabled={uploadingWebProposal}
-                className="px-6 py-2 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 rounded-xl font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   backgroundColor: `var(--card-bg)`,
                   color: `var(--foreground)`,
@@ -3925,7 +3925,7 @@ export default function ClientEditor({
               <button
                 onClick={handleCreateWebProposal}
                 disabled={uploadingWebProposal || !webProposalTitle.trim() || (!webProposalHtml.trim() && !webProposalHtmlFile)}
-                className="px-6 py-2 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-2 rounded-xl font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 style={{
                   backgroundColor: "#37352F",
                   color: "#ffffff",

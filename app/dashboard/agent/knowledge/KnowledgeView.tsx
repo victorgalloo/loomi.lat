@@ -129,7 +129,7 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-foreground text-background hover:bg-foreground/90 font-mono"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-foreground text-background hover:bg-foreground/90 font-mono"
           >
             <Plus className="w-4 h-4" />
             agregar
@@ -139,7 +139,7 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
 
       {/* Create Form */}
       {showForm && (
-        <form onSubmit={handleCreate} className="mb-8 p-4 rounded-lg border border-border bg-surface">
+        <form onSubmit={handleCreate} className="mb-8 p-4 rounded-2xl border border-border bg-surface">
           <label className="block text-xs font-medium mb-3 text-muted font-mono">
             nuevo documento
           </label>
@@ -150,14 +150,14 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
               onChange={(e) => setDocName(e.target.value)}
               placeholder="Nombre del documento"
               required
-              className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
+              className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
             />
             <input
               type="text"
               value={docDescription}
               onChange={(e) => setDocDescription(e.target.value)}
               placeholder="Descripción (opcional)"
-              className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
+              className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono"
             />
             <textarea
               value={docContent}
@@ -165,7 +165,7 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
               placeholder="Contenido del documento (FAQ, info de productos, políticas...)"
               rows={10}
               required
-              className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono text-xs leading-relaxed"
+              className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono text-xs leading-relaxed"
             />
             <p className="text-xs text-muted">
               Máximo 50KB de contenido. El agente usará este documento para responder preguntas.
@@ -174,14 +174,14 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-surface text-muted hover:text-foreground border border-border font-mono"
+                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border font-mono"
               >
                 cancelar
               </button>
               <button
                 type="submit"
                 disabled={isCreating || !docName.trim() || !docContent.trim()}
-                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90 font-mono"
+                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90 font-mono"
               >
                 {isCreating ? 'guardando...' : './guardar'}
               </button>
@@ -210,7 +210,7 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
           {documents.map((doc) => (
             <div
               key={doc.id}
-              className="p-4 rounded-lg border border-border bg-surface"
+              className="p-4 rounded-2xl border border-border bg-surface"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
@@ -264,19 +264,19 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
       <div className="mt-10 pt-6 border-t border-border flex gap-3 font-mono">
         <Link
           href="/dashboard/agent"
-          className="px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-surface text-muted hover:text-foreground border border-border"
+          className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
         >
           config básica
         </Link>
         <Link
           href="/dashboard/agent/prompt"
-          className="px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-surface text-muted hover:text-foreground border border-border"
+          className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
         >
           prompt
         </Link>
         <Link
           href="/dashboard/agent/tools"
-          className="px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-surface text-muted hover:text-foreground border border-border"
+          className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
         >
           tools
         </Link>

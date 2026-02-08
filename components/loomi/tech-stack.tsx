@@ -82,7 +82,7 @@ export function TechStack() {
                 <FadeIn key={tech.name} delay={index * 0.1}>
                   <motion.div
                     whileHover={{ scale: 1.05 }}
-                    className={`bg-gradient-to-br ${tech.gradient} border border-gray-200 rounded-xl p-4 hover:border-brand/30 hover:shadow-md transition-all`}
+                    className={`bg-gradient-to-br ${tech.gradient} border border-gray-200 rounded-2xl p-4 hover:border-brand/30 hover:shadow-md transition-all`}
                   >
                     <h3 className="font-semibold text-gray-900">{tech.name}</h3>
                     <p className="text-sm text-gray-500">{tech.description}</p>

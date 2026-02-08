@@ -404,7 +404,7 @@ export function SandboxChat() {
                 )}
                 <div
                   className={cn(
-                    'max-w-[75%] rounded-xl px-4 py-3 text-sm',
+                    'max-w-[75%] rounded-2xl px-4 py-3 text-sm',
                     message.role === 'user'
                       ? 'bg-foreground text-background'
                       : 'bg-surface border border-border text-foreground'
@@ -433,7 +433,7 @@ export function SandboxChat() {
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-2 border border-border">
                 <Bot className="h-4 w-4 text-muted" />
               </div>
-              <div className="flex items-center gap-2 rounded-xl bg-surface border border-border px-4 py-3 text-sm text-muted">
+              <div className="flex items-center gap-2 rounded-2xl bg-surface border border-border px-4 py-3 text-sm text-muted">
                 <Loader2 className="h-4 w-4 animate-spin text-terminal-green" />
                 <span className="font-mono text-xs">thinking...</span>
               </div>
@@ -443,7 +443,7 @@ export function SandboxChat() {
           {/* Error Message */}
           {error && (
             <div className="flex justify-center">
-              <div className="rounded-lg bg-terminal-red/10 border border-terminal-red/20 px-4 py-2 text-sm text-terminal-red font-mono">
+              <div className="rounded-2xl bg-terminal-red/10 border border-terminal-red/20 px-4 py-2 text-sm text-terminal-red font-mono">
                 {error}
               </div>
             </div>
@@ -456,7 +456,7 @@ export function SandboxChat() {
         onSubmit={handleSubmit}
         className="border-t border-border bg-surface p-4"
       >
-        <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-2">
+        <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-2">
           <span className="text-terminal-green font-mono text-sm">$</span>
           <Input
             value={input}

@@ -61,7 +61,7 @@ function ReasoningVisual() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="inline-block px-4 py-2 bg-surface text-foreground text-lg rounded-lg border border-border"
+            className="inline-block px-4 py-2 bg-surface text-foreground text-lg rounded-full border border-border"
           >
             intent: PRICING_INQUIRY
           </motion.span>
@@ -70,7 +70,7 @@ function ReasoningVisual() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.4 }}
-            className="inline-block px-4 py-2 bg-terminal-green/10 text-terminal-green text-lg rounded-lg ml-4"
+            className="inline-block px-4 py-2 bg-terminal-green/10 text-terminal-green text-lg rounded-full ml-4"
           >
             confidence: 94%
           </motion.span>
@@ -134,7 +134,7 @@ function CalendarVisual() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ delay: i * 0.15 }}
-          className={`p-6 rounded-xl border-2 transition-all ${
+          className={`p-6 rounded-2xl border-2 transition-all ${
             i === 1
               ? 'border-foreground bg-foreground/5 scale-105'
               : 'border-border bg-surface/50'
@@ -209,7 +209,7 @@ function MetaVisual() {
           <p className="text-muted">Meta Conversions API</p>
           <p className="text-xl text-foreground font-medium">server_side_tracking</p>
         </div>
-        <span className="px-4 py-2 bg-terminal-green/10 text-terminal-green rounded-lg ml-auto">
+        <span className="px-4 py-2 bg-terminal-green/10 text-terminal-green rounded-full ml-auto">
           active
         </span>
       </motion.div>
@@ -225,7 +225,7 @@ function MetaVisual() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 + i * 0.1 }}
-            className="text-center p-6 rounded-xl border border-border bg-surface"
+            className="text-center p-6 rounded-2xl border border-border bg-surface"
           >
             <p className="text-muted mb-2">.{stat.label}</p>
             <p className="text-4xl font-black text-foreground">{stat.value}</p>

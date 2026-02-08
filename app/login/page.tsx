@@ -173,7 +173,7 @@ function LoginContent() {
 
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-colors"
+            className="p-2 rounded-full text-muted hover:text-foreground hover:bg-surface transition-colors"
           >
             <Sun className="w-4 h-4 hidden dark:block" />
             <Moon className="w-4 h-4 block dark:hidden" />
@@ -197,7 +197,7 @@ function LoginContent() {
           </div>
 
           {/* Mode Toggle */}
-          <div className="flex mb-6 bg-surface border border-border rounded-lg p-1">
+          <div className="flex mb-6 bg-surface border border-border rounded-xl p-1">
             <button
               type="button"
               onClick={() => switchMode("login")}
@@ -236,7 +236,7 @@ function LoginContent() {
                   required
                   disabled={isLoading}
                   placeholder="Tu nombre o empresa"
-                  className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
                 />
               </div>
             )}
@@ -252,7 +252,7 @@ function LoginContent() {
                 required
                 disabled={isLoading}
                 placeholder="tu@email.com"
-                className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
               />
             </div>
 
@@ -268,12 +268,12 @@ function LoginContent() {
                 disabled={isLoading}
                 placeholder="••••••••"
                 minLength={6}
-                className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
             {error && (
-              <div className="p-3 rounded-lg text-sm bg-terminal-red/10 text-terminal-red border border-terminal-red/20 font-mono">
+              <div className="p-3 rounded-xl text-sm bg-terminal-red/10 text-terminal-red border border-terminal-red/20 font-mono">
                 {error}
               </div>
             )}
@@ -281,7 +281,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90 font-mono"
+              className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90 font-mono"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

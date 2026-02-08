@@ -310,7 +310,7 @@ export default function WhatsAppConnectFlow({ onSuccess, onError, twilioPhoneNum
 
       {/* Twilio Number Banner */}
       {twilioPhoneNumber && (
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 relative z-10">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 relative z-10">
           <Phone className="w-4 h-4 text-emerald-600" />
           <span className="text-sm text-emerald-700">
             Registrando <span className="font-mono font-medium">{twilioPhoneNumber}</span> con WhatsApp Business
@@ -371,7 +371,7 @@ export default function WhatsAppConnectFlow({ onSuccess, onError, twilioPhoneNum
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 z-10"
+          className="w-full max-w-md p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3 z-10"
         >
           <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <p className="text-red-600 text-sm">{error}</p>

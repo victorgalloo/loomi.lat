@@ -230,7 +230,7 @@ export function SandboxToolsPanel({ isOpen, onClose, tenantId, onUpdate }: Sandb
           {activeTab === 'documents' ? (
             <div className="space-y-4">
               {/* Add Document Form */}
-              <div className="p-4 rounded-lg border border-border bg-background space-y-3">
+              <div className="p-4 rounded-2xl border border-border bg-background space-y-3">
                 <div className="flex items-center gap-2 text-xs font-medium text-foreground">
                   <Plus className="h-3.5 w-3.5" />
                   Add Document
@@ -277,7 +277,7 @@ export function SandboxToolsPanel({ isOpen, onClose, tenantId, onUpdate }: Sandb
                 {documents.map((doc) => (
                   <div
                     key={doc.id}
-                    className="p-3 rounded-lg border border-border bg-background hover:bg-surface transition-colors group"
+                    className="p-3 rounded-2xl border border-border bg-background hover:bg-surface transition-colors group"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -313,7 +313,7 @@ export function SandboxToolsPanel({ isOpen, onClose, tenantId, onUpdate }: Sandb
           ) : (
             <div className="space-y-4">
               {/* Add Tool Form */}
-              <div className="p-4 rounded-lg border border-border bg-background space-y-3">
+              <div className="p-4 rounded-2xl border border-border bg-background space-y-3">
                 <div className="flex items-center gap-2 text-xs font-medium text-foreground">
                   <Plus className="h-3.5 w-3.5" />
                   Add Tool
@@ -372,7 +372,7 @@ export function SandboxToolsPanel({ isOpen, onClose, tenantId, onUpdate }: Sandb
                 {tools.map((tool) => (
                   <div
                     key={tool.id}
-                    className="p-3 rounded-lg border border-border bg-background hover:bg-surface transition-colors group"
+                    className="p-3 rounded-2xl border border-border bg-background hover:bg-surface transition-colors group"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">

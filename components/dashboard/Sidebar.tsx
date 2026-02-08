@@ -190,7 +190,7 @@ export default function Sidebar({ userName, isConnected }: SidebarProps) {
             onClick={handleLogout}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+            className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-xl hover:bg-red-50"
             title="Cerrar sesion"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

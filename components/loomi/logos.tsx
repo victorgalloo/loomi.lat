@@ -46,7 +46,7 @@ export function Logos() {
             {[...TECH_LOGOS, ...TECH_LOGOS, ...TECH_LOGOS].map((logo, index) => (
               <div
                 key={`${logo.name}-${index}`}
-                className="flex items-center gap-3 px-6 py-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-brand/30 hover:bg-brand/5 transition-all flex-shrink-0"
+                className="flex items-center gap-3 px-6 py-3 bg-gray-50 rounded-2xl border border-gray-100 hover:border-brand/30 hover:bg-brand/5 transition-all flex-shrink-0"
               >
                 <span className="text-2xl">{logo.icon}</span>
                 <span className="font-medium text-gray-700 whitespace-nowrap">

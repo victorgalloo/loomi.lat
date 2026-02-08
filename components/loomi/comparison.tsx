@@ -55,7 +55,7 @@ export function Comparison() {
             <div className="grid grid-cols-2 border-b border-border">
               <div className="p-6 sm:p-8 bg-red-500/5 border-r border-border">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-red-500/10 flex items-center justify-center">
                     <Bot className="w-5 h-5 text-red-400" />
                   </div>
                   <div>
@@ -66,7 +66,7 @@ export function Comparison() {
               </div>
               <div className="p-6 sm:p-8 bg-brand/5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-brand/20 flex items-center justify-center">
                     <Brain className="w-5 h-5 text-brand" />
                   </div>
                   <div>

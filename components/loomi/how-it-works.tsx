@@ -60,7 +60,7 @@ function StepItem({ step, index, isLast }: { step: typeof STEPS[0]; index: numbe
           <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4 font-mono">
             {step.title}
           </h3>
-          <span className="inline-block text-lg font-mono text-muted px-4 py-2 bg-surface rounded-lg border border-border">
+          <span className="inline-block text-lg font-mono text-muted px-4 py-2 bg-surface rounded-full border border-border">
             {step.detail}
           </span>
         </motion.div>

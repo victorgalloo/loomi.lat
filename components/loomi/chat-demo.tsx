@@ -147,7 +147,7 @@ export function ChatDemo() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-surface rounded-xl border border-border overflow-hidden shadow-elevated">
+      <div className="bg-surface rounded-2xl border border-border overflow-hidden shadow-elevated">
         {/* Terminal header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-surface-2">
           <div className="flex gap-2">
@@ -177,7 +177,7 @@ export function ChatDemo() {
                 >
                   <div
                     className={cn(
-                      'rounded-lg px-4 py-3 max-w-[85%] font-mono text-sm',
+                      'rounded-2xl px-4 py-3 max-w-[85%] font-mono text-sm',
                       message.type === 'user'
                         ? 'bg-foreground text-background'
                         : 'bg-surface-2 border border-border text-foreground'
@@ -205,7 +205,7 @@ export function ChatDemo() {
                   exit={{ opacity: 0 }}
                   className="flex justify-start"
                 >
-                  <div className="bg-surface-2 rounded-lg px-4 py-3 border border-border">
+                  <div className="bg-surface-2 rounded-2xl px-4 py-3 border border-border">
                     <div className="flex gap-1.5 items-center">
                       <Loader2 className="w-3.5 h-3.5 text-terminal-green animate-spin" />
                       <span className="text-xs text-muted font-mono">thinking...</span>
@@ -246,12 +246,12 @@ export function ChatDemo() {
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmit(e)}
               placeholder="$ escribe un mensaje..."
               disabled={isLoading}
-              className="flex-1 bg-background border border-border rounded-lg px-4 py-3 text-foreground text-sm placeholder-muted focus:outline-none focus:border-muted transition-colors font-mono"
+              className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder-muted focus:outline-none focus:border-muted transition-colors font-mono"
             />
             <button
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="w-12 h-12 rounded-lg bg-foreground flex items-center justify-center disabled:opacity-50 hover:opacity-90 transition-opacity"
+              className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center disabled:opacity-50 hover:opacity-90 transition-opacity"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 text-background animate-spin" />

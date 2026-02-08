@@ -246,7 +246,7 @@ export function TechProvider() {
         >
           <div className="grid lg:grid-cols-2 gap-6 items-stretch">
             {/* Code Editor */}
-            <div className="relative rounded-xl overflow-hidden bg-surface border border-border">
+            <div className="relative rounded-2xl overflow-hidden bg-surface border border-border">
               {/* Title bar */}
               <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-surface">
                 <div className="flex gap-1.5">
@@ -263,7 +263,7 @@ export function TechProvider() {
             </div>
 
             {/* Terminal */}
-            <div className="relative rounded-xl overflow-hidden bg-surface border border-border">
+            <div className="relative rounded-2xl overflow-hidden bg-surface border border-border">
               {/* Title bar */}
               <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-surface">
                 <div className="flex gap-1.5">

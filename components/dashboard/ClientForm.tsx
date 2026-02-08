@@ -141,7 +141,7 @@ export default function ClientForm({
               }
               required
               disabled={loading}
-              className="w-full px-4 py-3 rounded-lg border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: `var(--card-bg)`,
                 borderColor: `var(--border)`,
@@ -168,7 +168,7 @@ export default function ClientForm({
                 setFormData({ ...formData, email: e.target.value })
               }
               disabled={loading}
-              className="w-full px-4 py-3 rounded-lg border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: `var(--card-bg)`,
                 borderColor: `var(--border)`,
@@ -195,7 +195,7 @@ export default function ClientForm({
                 setFormData({ ...formData, phone: e.target.value })
               }
               disabled={loading}
-              className="w-full px-4 py-3 rounded-lg border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: `var(--card-bg)`,
                 borderColor: `var(--border)`,
@@ -222,7 +222,7 @@ export default function ClientForm({
                 setFormData({ ...formData, company_name: e.target.value })
               }
               disabled={loading}
-              className="w-full px-4 py-3 rounded-lg border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: `var(--card-bg)`,
                 borderColor: `var(--border)`,
@@ -249,7 +249,7 @@ export default function ClientForm({
               }
               disabled={loading}
               rows={4}
-              className="w-full px-4 py-3 rounded-lg border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed resize-none"
+              className="w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed resize-none"
               style={{
                 backgroundColor: `var(--card-bg)`,
                 borderColor: `var(--border)`,
@@ -262,7 +262,7 @@ export default function ClientForm({
           {/* Error Message */}
           {error && (
             <div
-              className="p-4 rounded-lg border transition-colors duration-300"
+              className="p-4 rounded-xl border transition-colors duration-300"
               style={{
                 backgroundColor: "rgba(239, 68, 68, 0.1)",
                 borderColor: "#ef4444",

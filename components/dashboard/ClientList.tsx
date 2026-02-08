@@ -42,7 +42,7 @@ export default function ClientList({ onEdit, onDelete }: ClientListProps) {
   if (error) {
     return (
       <div
-        className="p-4 rounded-lg border mb-6"
+        className="p-4 rounded-xl border mb-6"
         style={{
           backgroundColor: "rgba(239, 68, 68, 0.1)",
           borderColor: "#ef4444",
@@ -69,7 +69,7 @@ export default function ClientList({ onEdit, onDelete }: ClientListProps) {
       {clients.map((client) => (
         <div
           key={client.id}
-          className="p-6 rounded-xl transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-lg"
+          className="p-6 rounded-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-lg"
           style={{
             backgroundColor: `var(--background)`,
             border: `1px solid var(--border)`,
@@ -93,7 +93,7 @@ export default function ClientList({ onEdit, onDelete }: ClientListProps) {
                 handleDelete(client);
               }}
               disabled={deletingId === client.id}
-              className="p-2 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: deletingId === client.id ? "rgba(239, 68, 68, 0.1)" : "transparent",
                 color: "#ef4444",

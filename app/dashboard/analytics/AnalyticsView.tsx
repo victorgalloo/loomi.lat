@@ -114,13 +114,13 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
           return (
             <div
               key={metric.label}
-              className="rounded-xl p-5 transition-colors bg-surface border border-border hover:border-muted"
+              className="rounded-2xl p-5 transition-colors bg-surface border border-border hover:border-muted"
             >
               <div className="flex items-start justify-between mb-3">
                 <p className="text-xs text-muted font-mono">
                   {metric.label}
                 </p>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-2">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-surface-2">
                   <Icon className="w-4 h-4 text-muted" />
                 </div>
               </div>
@@ -146,7 +146,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
       {/* Secondary Metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Lead Quality */}
-        <div className="rounded-xl p-5 bg-surface border border-border">
+        <div className="rounded-2xl p-5 bg-surface border border-border">
           <h3 className="text-sm font-medium mb-5 flex items-center gap-2 text-foreground font-mono">
             <Target className="w-4 h-4 text-terminal-green" />
             calidad de leads
@@ -184,7 +184,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
         </div>
 
         {/* Stage Breakdown */}
-        <div className="rounded-xl p-5 bg-surface border border-border">
+        <div className="rounded-2xl p-5 bg-surface border border-border">
           <h3 className="text-sm font-medium mb-5 flex items-center gap-2 text-foreground font-mono">
             <BarChart3 className="w-4 h-4 text-muted" />
             leads por etapa
@@ -221,8 +221,8 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
       </div>
 
       {/* Coming Soon */}
-      <div className="mt-6 rounded-xl p-8 text-center bg-surface border border-border">
-        <div className="w-12 h-12 rounded-xl mx-auto mb-4 flex items-center justify-center bg-surface-2">
+      <div className="mt-6 rounded-2xl p-8 text-center bg-surface border border-border">
+        <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-surface-2">
           <BarChart3 className="w-5 h-5 text-muted" />
         </div>
         <h3 className="text-sm font-medium mb-1 text-foreground font-mono">

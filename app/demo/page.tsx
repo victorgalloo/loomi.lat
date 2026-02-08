@@ -87,7 +87,7 @@ export default function DemoPage() {
 
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-colors"
+              className="p-2 rounded-xl text-muted hover:text-foreground hover:bg-surface transition-colors"
             >
               <Sun className="w-4 h-4 hidden dark:block" />
               <Moon className="w-4 h-4 block dark:hidden" />
@@ -121,7 +121,7 @@ export default function DemoPage() {
                   required
                   disabled={isLoading}
                   placeholder="Tu nombre"
-                  className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
                 />
               </div>
 
@@ -136,7 +136,7 @@ export default function DemoPage() {
                   required
                   disabled={isLoading}
                   placeholder="tu@email.com"
-                  className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
                 />
               </div>
 
@@ -151,14 +151,14 @@ export default function DemoPage() {
                   required
                   disabled={isLoading}
                   placeholder="+52 55 1234 5678"
-                  className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-terminal-green text-background hover:bg-terminal-green/90 font-mono"
+                className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-terminal-green text-background hover:bg-terminal-green/90 font-mono"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -210,7 +210,7 @@ export default function DemoPage() {
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-foreground">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground">
               <svg
                 className="h-5 w-5 text-background"
                 fill="none"
@@ -241,7 +241,7 @@ export default function DemoPage() {
 
       {/* Chat Container */}
       <div className="mx-auto max-w-3xl px-4 py-6">
-        <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-card">
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
           <SandboxChat />
         </div>
       </div>

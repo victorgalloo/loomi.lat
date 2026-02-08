@@ -82,7 +82,7 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead }: KanbanColumnProp
       <div
         ref={setNodeRef}
         className={`
-          flex-1 rounded-lg p-2 space-y-2
+          flex-1 rounded-2xl p-2 space-y-2
           min-h-[120px] max-h-[calc(100vh-280px)] overflow-y-auto
           transition-colors duration-200
           ${isOver ? 'bg-surface' : 'bg-surface/50'}
@@ -106,7 +106,7 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead }: KanbanColumnProp
         {leads.length === 0 && (
           <button
             onClick={onAddLead}
-            className="w-full p-3 rounded-lg border border-dashed transition-colors duration-150 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] border-border text-muted hover:border-foreground/20 hover:text-foreground/50"
+            className="w-full p-3 rounded-xl border border-dashed transition-colors duration-150 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] border-border text-muted hover:border-foreground/20 hover:text-foreground/50"
           >
             <Plus className="w-4 h-4" />
             <span className="text-xs font-medium">Agregar</span>

@@ -419,20 +419,27 @@ export async function simpleAgent(
         company: context.lead.company,
         industry: context.lead.industry,
         previousInteractions: context.recentMessages.length,
+      }).catch((err: Error) => {
+        console.error('[Multi-Agent] Analysis failed, falling back to simple path:', err.message);
+        return null;
       }),
       generateReasoningFast(message, context)
     ]);
 
-    sellerAnalysis = strategyResult.analysis;
-    sellerInstructions = strategyResult.instructions;
-    reasoning = reasoningResult;
+    if (strategyResult) {
+      sellerAnalysis = strategyResult.analysis;
+      sellerInstructions = strategyResult.instructions;
 
-    console.log('=== ANÁLISIS (gpt-4o-mini) ===');
-    console.log(`Fase: ${sellerAnalysis.fase_actual}`);
-    console.log(`Siguiente paso: ${sellerAnalysis.siguiente_paso}`);
-    if (sellerAnalysis.hay_objecion) {
-      console.log(`Objeción detectada: ${sellerAnalysis.tipo_objecion}`);
+      console.log('=== ANÁLISIS (claude-haiku) ===');
+      console.log(`Fase: ${sellerAnalysis.fase_actual}`);
+      console.log(`Siguiente paso: ${sellerAnalysis.siguiente_paso}`);
+      if (sellerAnalysis.hay_objecion) {
+        console.log(`Objeción detectada: ${sellerAnalysis.tipo_objecion}`);
+      }
+    } else {
+      console.log('=== ANÁLISIS SKIPPED (fallback to fast path) ===');
     }
+    reasoning = reasoningResult;
   }
   console.log('=== REASONING ===');
   console.log(reasoning.analysis);
@@ -820,28 +827,32 @@ Sé directa, inteligente, mensajes cortos.`
     console.error('Agent error:', error);
 
     // Automatic handoff on error using new system
-    const recentMsgs = history.slice(-5).map(m => ({
-      role: m.role as 'user' | 'assistant',
-      content: m.content
-    }));
+    try {
+      const recentMsgs = history.slice(-5).map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content
+      }));
 
-    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
 
-    const result = await executeHandoff({
-      phone: clientPhone,
-      name: clientName,
-      recentMessages: recentMsgs,
-      reason: 'agent_error',
-      priority: 'critical',
-      errorMessage
-    });
+      const result = await executeHandoff({
+        phone: clientPhone,
+        name: clientName,
+        recentMessages: recentMsgs,
+        reason: 'agent_error',
+        priority: 'critical',
+        errorMessage
+      });
 
-    if (result.notifiedOperator) {
-      console.log('[Agent] Auto-escalated due to error');
-      return {
-        response: '', // Client already notified by handoff system
-        escalatedToHuman: { reason: 'agent_error', summary: errorMessage }
-      };
+      if (result.notifiedOperator) {
+        console.log('[Agent] Auto-escalated due to error');
+        return {
+          response: '', // Client already notified by handoff system
+          escalatedToHuman: { reason: 'agent_error', summary: errorMessage }
+        };
+      }
+    } catch (handoffError) {
+      console.error('[Agent] Handoff also failed:', handoffError instanceof Error ? handoffError.message : handoffError);
     }
 
     // Fallback if escalation also fails

@@ -109,7 +109,15 @@ export async function POST(request: NextRequest) {
     if (result.showScheduleList) {
       try {
         const dates = getNextBusinessDays(2);
-        const allSlots = await checkAvailability(dates.join(','));
+        let allSlots = await checkAvailability(dates.join(','));
+
+        // Fallback to mock slots for demo when Cal.com has no availability
+        if (allSlots.length === 0) {
+          const mockTimes = ['09:00', '10:30', '12:00', '14:00', '16:00', '17:30'];
+          allSlots = dates.flatMap(date =>
+            mockTimes.map(time => ({ date, time }))
+          );
+        }
 
         // Format slots for frontend
         const formattedSlots = allSlots.slice(0, 6).map(slot => {

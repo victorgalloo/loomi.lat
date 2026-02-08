@@ -44,11 +44,13 @@ async function getOrCreateAddress(client: any, country: string): Promise<string>
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getOrCreateBundle(client: any, addressSid: string): Promise<string> {
-  // Check for existing approved/pending bundle for MX
+  // Check for existing approved/pending bundle for MX Mobile
   const bundles = await client.numbers.v2.regulatoryCompliance.bundles.list({ limit: 20 });
   const existing = bundles.find(
-    (b: { status: string; isoCountry: string }) =>
-      b.isoCountry === 'MX' && (b.status === 'twilio-approved' || b.status === 'pending-review')
+    (b: { status: string; isoCountry: string; friendlyName: string }) =>
+      b.isoCountry === 'MX' &&
+      b.friendlyName.toLowerCase().includes('mobile') &&
+      (b.status === 'twilio-approved' || b.status === 'pending-review')
   );
   if (existing) return existing.sid;
 

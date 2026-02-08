@@ -20,7 +20,9 @@ import {
   UserCheck,
   Phone,
   Plus,
-  ArrowRight
+  ArrowRight,
+  ListChecks,
+  ExternalLink
 } from 'lucide-react';
 import WhatsAppConnectFlow from '@/components/dashboard/WhatsAppConnectFlow';
 import TwilioNumberProvisioning from '@/components/dashboard/TwilioNumberProvisioning';
@@ -72,7 +74,7 @@ export function OnboardingWizard({
   existingConfig,
 }: OnboardingWizardProps) {
   const router = useRouter();
-  const [step, setStep] = useState<'chat' | 'test' | 'connect' | 'saving'>('chat');
+  const [step, setStep] = useState<'chat' | 'test' | 'prerequisites' | 'connect' | 'saving'>('chat');
   const [connectMode, setConnectMode] = useState<'choose' | 'new' | 'existing' | null>(null);
   const [whatsappConnected, setWhatsappConnected] = useState(hasWhatsApp);
   const [messages, setMessages] = useState<Message[]>([
@@ -248,7 +250,7 @@ export function OnboardingWizard({
               <div className="w-3 h-3 rounded-full bg-terminal-green" />
             </div>
             <span className="text-xs text-muted font-mono ml-2">
-              {step === 'chat' ? './setup' : step === 'test' ? './loomi-agent --live' : step === 'connect' ? './connect_whatsapp' : './deploy'}
+              {step === 'chat' ? './setup' : step === 'test' ? './loomi-agent --live' : step === 'prerequisites' ? './check_requirements' : step === 'connect' ? './connect_whatsapp' : './deploy'}
             </span>
             {step === 'test' && (
               <div className="ml-auto flex items-center gap-2">
@@ -272,9 +274,10 @@ export function OnboardingWizard({
             {[
               { key: 'chat', label: 'Configurar' },
               { key: 'test', label: 'Probar' },
+              { key: 'prerequisites', label: 'Preparar' },
               { key: 'connect', label: 'WhatsApp' },
             ].map((s, i) => {
-              const steps = ['chat', 'test', 'connect', 'saving'];
+              const steps = ['chat', 'test', 'prerequisites', 'connect', 'saving'];
               const currentIdx = steps.indexOf(step);
               const stepIdx = steps.indexOf(s.key);
               const isActive = step === s.key || (step === 'saving' && s.key === 'connect');
@@ -315,7 +318,7 @@ export function OnboardingWizard({
                     </p>
                   </div>
                   <button
-                    onClick={saveAndFinish}
+                    onClick={() => saveAndFinish()}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terminal-green text-background rounded-lg font-mono text-sm hover:opacity-90 transition-opacity"
                   >
                     <Check className="w-4 h-4" />
@@ -663,7 +666,7 @@ export function OnboardingWizard({
                     if (whatsappConnected) {
                       saveAndFinish();
                     } else {
-                      setStep('connect');
+                      setStep('prerequisites');
                     }
                   }}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terminal-green text-background rounded-lg font-mono text-sm hover:opacity-90 transition-opacity"

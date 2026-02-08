@@ -23,19 +23,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Tenant not found' }, { status: 403 });
     }
 
-    // Check active subscription before allowing purchase
-    const { data: tenant } = await adminSupabase
-      .from('tenants')
-      .select('subscription_status')
-      .eq('id', tenantId)
-      .single();
-
-    if (tenant?.subscription_status !== 'active') {
-      return NextResponse.json(
-        { error: 'subscription_required' },
-        { status: 403 }
-      );
-    }
+    // TODO: Re-enable subscription check when Stripe is live
+    // const { data: tenant } = await adminSupabase
+    //   .from('tenants')
+    //   .select('subscription_status')
+    //   .eq('id', tenantId)
+    //   .single();
+    //
+    // if (tenant?.subscription_status !== 'active') {
+    //   return NextResponse.json(
+    //     { error: 'subscription_required' },
+    //     { status: 403 }
+    //   );
+    // }
 
     const { phoneNumber } = await request.json();
 

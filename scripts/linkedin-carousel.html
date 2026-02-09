@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loomi LinkedIn Carousel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --background: #0A0A0A;
+      --foreground: #FAFAFA;
+      --surface: #141414;
+      --surface-2: #1C1C1C;
+      --border: #2A2A2A;
+      --border-hover: #3A3A3A;
+      --muted: #6B6B6B;
+      --muted-foreground: #A3A3A3;
+      --accent-green: #34d399;
+      --terminal-red: #FF5F56;
+      --terminal-yellow: #FFBD2E;
+      --terminal-green: #27C93F;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      padding: 40px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .slide-label {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: -30px;
+    }
+
+    .slide {
+      width: 1080px;
+      height: 1350px;
+      background: var(--background);
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    /* Grid background pattern */
+    .grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(250, 250, 250, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(250, 250, 250, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    /* Top/bottom gradient fade */
+    .grid-bg::before,
+    .grid-bg::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 200px;
+      z-index: 1;
+    }
+    .grid-bg::before {
+      top: 0;
+      background: linear-gradient(to bottom, var(--background), transparent);
+    }
+    .grid-bg::after {
+      bottom: 0;
+      background: linear-gradient(to top, var(--background), transparent);
+    }
+
+    .slide-content {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 80px;
+    }
+
+    /* Traffic lights */
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 60px;
+    }
+    .traffic-lights .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+    }
+    .dot-red { background: var(--terminal-red); }
+    .dot-yellow { background: var(--terminal-yellow); }
+    .dot-green { background: var(--terminal-green); }
+
+    /* Brand */
+    .brand {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 22px;
+      color: var(--foreground);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand .dots {
+      display: flex;
+      gap: 6px;
+    }
+    .brand .dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    /* Typography */
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .headline {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--foreground);
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      font-family: 'Inter', sans-serif;
+      color: var(--muted-foreground);
+      font-size: 28px;
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    .text-green { color: var(--accent-green); }
+    .text-muted { color: var(--muted); }
+    .text-muted-fg { color: var(--muted-foreground); }
+    .text-foreground { color: var(--foreground); }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+    }
+
+    .card-highlight {
+      background: var(--surface);
+      border: 1px solid var(--accent-green);
+      border-radius: 16px;
+      padding: 36px;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      border-radius: 999px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .badge-green {
+      background: rgba(52, 211, 153, 0.1);
+      color: var(--accent-green);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+    }
+    .badge-muted {
+      background: var(--surface-2);
+      color: var(--muted-foreground);
+      border: 1px solid var(--border);
+    }
+
+    /* Terminal-style command */
+    .command {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      color: var(--muted);
+    }
+    .command .prompt {
+      color: var(--accent-green);
+    }
+
+    /* Divider */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Page indicator */
+    .page-indicator {
+      position: absolute;
+      bottom: 60px;
+      left: 80px;
+      right: 80px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .page-dots {
+      display: flex;
+      gap: 8px;
+    }
+    .page-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+    .page-dot.active {
+      background: var(--foreground);
+      width: 24px;
+      border-radius: 4px;
+    }
+
+    /* Feature row */
+    .feature-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      padding: 28px 0;
+    }
+    .feature-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--border);
+      line-height: 1;
+      min-width: 56px;
+    }
+    .feature-content h3 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--foreground);
+      margin-bottom: 8px;
+    }
+    .feature-content p {
+      font-size: 20px;
+      color: var(--muted-foreground);
+      line-height: 1.5;
+    }
+
+    /* Stat block */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+      text-align: center;
+    }
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 56px;
+      font-weight: 700;
+      color: var(--foreground);
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+    .stat-value .green { color: var(--accent-green); }
+    .stat-label {
+      font-size: 20px;
+      color: var(--muted-foreground);
+    }
+
+    /* CTA button */
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 20px 40px;
+      background: var(--foreground);
+      color: var(--background);
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+    }
+
+    /* Chat bubble */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .chat-bubble {
+      max-width: 75%;
+      padding: 20px 28px;
+      border-radius: 20px;
+      font-size: 22px;
+      line-height: 1.5;
+    }
+    .chat-user {
+      background: var(--surface-2);
+      color: var(--foreground);
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-bot {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--foreground);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .chat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .chat-label.right { text-align: right; }
+
+    /* Testimonial */
+    .testimonial {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+    }
+    .testimonial-quote {
+      font-size: 24px;
+      color: var(--foreground);
+      line-height: 1.6;
+      font-style: italic;
+      margin-bottom: 20px;
+    }
+    .testimonial-author {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      color: var(--accent-green);
+    }
+    .testimonial-role {
+      font-size: 16px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* WhatsApp icon */
+    .wa-icon {
+      width: 56px;
+      height: 56px;
+      background: #25D366;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .wa-icon svg {
+      width: 32px;
+      height: 32px;
+      fill: white;
+    }
+
+    /* Comparison table */
+    .compare-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+    }
+    .compare-row.header {
+      border-bottom: 1px solid var(--border-hover);
+    }
+    .compare-cell {
+      font-size: 20px;
+      color: var(--muted-foreground);
+      padding: 0 12px;
+    }
+    .compare-cell:first-child {
+      color: var(--foreground);
+      font-weight: 500;
+    }
+    .compare-cell .check {
+      color: var(--accent-green);
+      font-size: 24px;
+    }
+    .compare-cell .cross {
+      color: var(--terminal-red);
+      font-size: 24px;
+    }
+    .compare-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--muted);
+      padding: 0 12px;
+    }
+    .compare-header.highlight {
+      color: var(--accent-green);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ==================== SLIDE 1: COVER ==================== -->
+<p class="slide-label">Slide 1 — Cover</p>
+<div class="slide" id="slide1">
+  <div class="grid-bg"></div>
+  <div class="slide-content" style="justify-content: space-between;">
+
+    <!-- Top: Brand -->
+    <div>
+      <div class="traffic-lights">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+      </div>
+      <div class="brand">
+        <div class="dots">
+          <span class="dot-red" style="width:10px;height:10px;border-radius:50%;display:inline-block;background:var(--terminal-red)"></span>
+          <span class="dot-yellow" style="width:10px;height:10px;border-radius:50%;display:inline-block;background:var(--terminal-yellow)"></span>
+          <span class="dot-green" style="width:10px;height:10px;border-radius:50%;display:inline-block;background:var(--terminal-green)"></span>
+        </div>
+        loomi_
+      </div>
+    </div>
+
+    <!-- Center: Main headline -->
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 40px;">
+      <div class="command"><span class="prompt">$</span> ./vender-por-whatsapp</div>
+      <h1 class="headline" style="font-size: 86px;">
+        Tu agente de IA<br>
+        que vende por<br>
+        WhatsApp <span class="text-green">24/7</span>
+      </h1>
+      <p class="subtitle" style="max-width: 700px;">
+        No es un chatbot de flujos.<br>
+        Es inteligencia artificial real que entiende,<br>
+        responde y cierra ventas.
+      </p>
+    </div>
+
+    <!-- Bottom: Page indicator -->
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="command"><span class="prompt">&gt;</span> desliza para conocer más</div>
+      <div class="page-dots">
+        <div class="page-dot active"></div>
+        <div class="page-dot"></div>
+        <div class="page-dot"></div>
+        <div class="page-dot"></div>
+        <div class="page-dot"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== SLIDE 2: WHAT IT DOES ==================== -->
+<p class="slide-label">Slide 2 — Features</p>
+<div class="slide" id="slide2">
+  <div class="grid-bg"></div>
+  <div class="slide-content" style="justify-content: space-between;">
+
+    <div>
+      <div class="traffic-lights">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+      </div>
+      <div class="badge badge-green" style="margin-bottom: 32px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Qué hace Loomi
+      </div>
+      <h2 class="headline" style="font-size: 58px; margin-bottom: 20px;">
+        No solo responde.<br><span class="text-green">Vende.</span>
+      </h2>
+      <p class="subtitle" style="font-size: 24px; margin-bottom: 48px;">
+        Un agente con inteligencia real que trabaja por ti.
+      </p>
+    </div>
+
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+      <div class="feature-row" style="border-bottom: 1px solid var(--border);">
+        <div class="feature-number">01</div>
+        <div class="feature-content">
+          <h3>.reasoning()</h3>
+          <p>Análisis multi-agente. Piensa antes de responder, no sigue scripts.</p>
+        </div>
+      </div>
+      <div class="feature-row" style="border-bottom: 1px solid var(--border);">
+        <div class="feature-number">02</div>
+        <div class="feature-content">
+          <h3>.sentiment()</h3>
+          <p>Detecta frustración, entusiasmo o escepticismo en tiempo real.</p>
+        </div>
+      </div>
+      <div class="feature-row" style="border-bottom: 1px solid var(--border);">
+        <div class="feature-number">03</div>
+        <div class="feature-content">
+          <h3>.schedule()</h3>
+          <p>Agenda demos y citas directo en Cal.com sin intervención humana.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-number">04</div>
+        <div class="feature-content">
+          <h3>.followUp()</h3>
+          <p>Secuencias automáticas. Nunca pierde un lead, aunque diga "luego".</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="brand" style="font-size: 18px;">
+        <div class="dots">
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--terminal-red)"></span>
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--terminal-yellow)"></span>
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--terminal-green)"></span>
+        </div>
+        loomi_
+      </div>
+      <div class="page-dots">
+        <div class="page-dot"></div>
+        <div class="page-dot active"></div>
+        <div class="page-dot"></div>
+        <div class="page-dot"></div>
+        <div class="page-dot"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== SLIDE 3: LIVE DEMO ==================== -->
+<p class="slide-label">Slide 3 — Demo en vivo</p>
+<div class="slide" id="slide3">
+  <div class="grid-bg"></div>
+  <div class="slide-content" style="justify-content: space-between;">
+
+    <div>
+      <div class="traffic-lights">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+      </div>
+      <div class="badge badge-green" style="margin-bottom: 32px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Así se ve en acción
+      </div>
+      <h2 class="headline" style="font-size: 52px; margin-bottom: 48px;">
+        Una conversación real<br>con <span class="text-green">Loomi</span>
+      </h2>
+    </div>
+
+    <!-- Chat mockup -->
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 40px; max-width: 820px;">
+        <!-- Chat header -->
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border);">
+          <div class="wa-icon">
+            <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </div>
+          <div>
+            <div class="mono" style="font-size: 20px; font-weight: 600; color: var(--foreground);">Lu (Loomi AI)</div>
+            <div style="font-size: 16px; color: var(--accent-green);">en linea</div>
+          </div>
+        </div>
+
+        <div class="chat-container">
+          <div>
+            <div class="chat-label right">Lead</div>
+            <div class="chat-bubble chat-user">Hola, vi su anuncio. ¿Cuánto cuesta?</div>
+          </div>
+          <div>
+            <div class="chat-label">Lu (Loomi)</div>
+            <div class="chat-bubble chat-bot">
+              ¡Hola! Depende del volumen. Starter es $199/mes para 100 msgs/día.
+              ¿Cuántos mensajes reciben ustedes?
+            </div>
+          </div>
+          <div>
+            <div class="chat-label right">Lead</div>
+            <div class="chat-bubble chat-user">Como 80 al día, pero no damos abasto</div>
+          </div>
+          <div>
+            <div class="chat-label">Lu (Loomi)</div>
+            <div class="chat-bubble chat-bot">
+              Te entiendo. Un vendedor cuesta $800-1,500/mes y solo trabaja 8hrs. Loomi $199 y trabaja 24/7. ¿Te muestro cómo funciona?
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="brand" style="font-size: 18px;">
+        <div class="dots">
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--terminal-red)"></span>
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--terminal-yellow)"></span>
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--terminal-green)"></span>
+        </div>
+        loomi_
+      </div>
+      <div class="page-dots">
+        <div class="page-dot"></div>
+        <div class="page-dot"></div>
+        <div class="page-dot active"></div>
+        <div class="page-dot"></div>
+        <div class="page-dot"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== SLIDE 4: RESULTS ==================== -->
+<p class="slide-label">Slide 4 — Resultados</p>
+<div class="slide" id="slide4">
+  <div class="grid-bg"></div>
+  <div class="slide-content" style="justify-content: space-between;">
+
+    <div>
+      <div class="traffic-lights">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+      </div>
+      <div class="badge badge-green" style="margin-bottom: 32px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Resultados reales
+      </div>
+      <h2 class="headline" style="font-size: 58px; margin-bottom: 48px;">
+        Números que<br><span class="text-green">hablan solos</span>
+      </h2>
+    </div>
+
+    <!-- Stats grid -->
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 24px;">
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value"><span class="green">3x</span></div>
+          <div class="stat-label">más demos agendadas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value"><span class="green">0.8</span>s</div>
+          <div class="stat-label">tiempo de respuesta</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value"><span class="green">100</span>%</div>
+          <div class="stat-label">leads atendidos 24/7</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value"><span class="green">-32</span>%</div>
+          <div class="stat-label">costo por lead (Meta CAPI)</div>
+        </div>
+      </div>
+
+      <!-- Testimonial -->
+      <div class="testimonial" style="margin-top: 12px;">
+        <div class="testimonial-quote">
+          "Loomi nos dio +340% en demos sin contratar a nadie. Es como tener un vendedor estrella que nunca duerme."
+        </div>
+        <div class="testimonial-author">Maria Gonzalez</div>
+        <div class="testimonial-role">CEO, ModaLab MX</div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="brand" style="font-size: 18px;">
+        <div class="dots">
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--terminal-red)"></span>
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--terminal-yellow)"></span>
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--terminal-green)"></span>
+        </div>
+        loomi_
+      </div>
+      <div class="page-dots">
+        <div class="page-dot"></div>
+        <div class="page-dot"></div>
+        <div class="page-dot"></div>
+        <div class="page-dot active"></div>
+        <div class="page-dot"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== SLIDE 5: CTA ==================== -->
+<p class="slide-label">Slide 5 — CTA</p>
+<div class="slide" id="slide5">
+  <div class="grid-bg"></div>
+  <div class="slide-content" style="justify-content: space-between; align-items: center; text-align: center;">
+
+    <div style="width: 100%;">
+      <div class="traffic-lights">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+      </div>
+    </div>
+
+    <!-- Center CTA -->
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 48px;">
+
+      <div class="brand" style="font-size: 40px; gap: 16px;">
+        <div class="dots" style="gap: 10px;">
+          <span style="width:16px;height:16px;border-radius:50%;display:inline-block;background:var(--terminal-red)"></span>
+          <span style="width:16px;height:16px;border-radius:50%;display:inline-block;background:var(--terminal-yellow)"></span>
+          <span style="width:16px;height:16px;border-radius:50%;display:inline-block;background:var(--terminal-green)"></span>
+        </div>
+        loomi_
+      </div>
+
+      <h2 class="headline" style="font-size: 72px; text-align: center;">
+        Deja de perder<br>leads en WhatsApp
+      </h2>
+
+      <p class="subtitle" style="font-size: 28px; text-align: center; max-width: 700px;">
+        14 dias de prueba gratis.<br>Sin tarjeta. Setup en 5 minutos.
+      </p>
+
+      <div class="cta-button" style="font-size: 26px; padding: 24px 56px;">
+        ./agendar-demo
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </div>
+
+      <div style="display: flex; gap: 32px; margin-top: 16px;">
+        <div class="badge badge-muted">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Sin tarjeta
+        </div>
+        <div class="badge badge-muted">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          5 min setup
+        </div>
+        <div class="badge badge-muted">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          14 dias gratis
+        </div>
+      </div>
+
+      <div class="command" style="margin-top: 32px;">
+        <span class="prompt">www</span>.loomi.lat
+      </div>
+    </div>
+
+    <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+      <div class="brand" style="font-size: 18px;">
+        <div class="dots">
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--terminal-red)"></span>
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--terminal-yellow)"></span>
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--terminal-green)"></span>
+        </div>
+        loomi_
+      </div>
+      <div class="page-dots">
+        <div class="page-dot"></div>
+        <div class="page-dot"></div>
+        <div class="page-dot"></div>
+        <div class="page-dot"></div>
+        <div class="page-dot active"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

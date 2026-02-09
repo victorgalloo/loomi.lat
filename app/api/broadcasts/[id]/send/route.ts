@@ -49,11 +49,31 @@ export async function POST(
       return NextResponse.json({ error: 'WhatsApp not connected' }, { status: 400 });
     }
 
-    // Mark as sending
-    await supabase
-      .from('broadcast_campaigns')
-      .update({ status: 'sending', started_at: new Date().toISOString() })
-      .eq('id', id);
+    // Pre-flight check: verify WhatsApp account health before sending
+    try {
+      const healthCheck = await fetch(
+        `https://graph.facebook.com/v21.0/${credentials.phoneNumberId}?fields=quality_rating,messaging_limit_tier,status,name_status`,
+        { headers: { Authorization: `Bearer ${credentials.accessToken}` } }
+      );
+      if (healthCheck.ok) {
+        const health = await healthCheck.json();
+        if (health.status && health.status !== 'CONNECTED') {
+          return NextResponse.json(
+            { error: `WhatsApp no está conectado (status: ${health.status}). Verifica tu cuenta en Meta Business.` },
+            { status: 400 }
+          );
+        }
+        if (health.quality_rating === 'RED') {
+          return NextResponse.json(
+            { error: 'Tu número de WhatsApp tiene calidad ROJA. Meta puede bloquear los mensajes. Mejora la calidad antes de enviar broadcasts.' },
+            { status: 400 }
+          );
+        }
+        console.log(`[Broadcast] Health check OK: quality=${health.quality_rating}, limit=${health.messaging_limit_tier}, status=${health.status}`);
+      }
+    } catch (e) {
+      console.warn('[Broadcast] Health check failed, proceeding anyway:', e);
+    }
 
     // Get pending recipients
     const { data: recipients } = await supabase
@@ -92,6 +112,44 @@ export async function POST(
     const BATCH_SIZE = 50;
     let sentCount = campaign.sent_count || 0;
     let failedCount = campaign.failed_count || 0;
+
+    // Send a single test message first to verify delivery actually works
+    // This catches issues like missing payment method that Meta accepts silently
+    if (recipients.length > 5) {
+      const testRecipient = recipients[0];
+      const testComponents = buildRecipientComponents(testRecipient);
+      const testResult = await sendTemplateMessage(
+        testRecipient.phone,
+        campaign.template_name,
+        campaign.template_language || 'es',
+        testComponents,
+        credentials
+      );
+      if (!testResult.success) {
+        return NextResponse.json(
+          { error: `Mensaje de prueba falló: ${testResult.error}. Verifica que tienes un método de pago configurado en Meta Business.` },
+          { status: 400 }
+        );
+      }
+      // Mark test recipient as sent and remove from pending list
+      sentCount++;
+      await supabase
+        .from('broadcast_recipients')
+        .update({
+          status: 'sent',
+          wa_message_id: testResult.messageId,
+          sent_at: new Date().toISOString(),
+        })
+        .eq('id', testRecipient.id);
+      recipients.shift();
+      console.log(`[Broadcast] Test message sent OK to ${testRecipient.phone}, proceeding with ${recipients.length} remaining`);
+    }
+
+    // Mark as sending
+    await supabase
+      .from('broadcast_campaigns')
+      .update({ status: 'sending', started_at: new Date().toISOString() })
+      .eq('id', id);
 
     for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
       const batch = recipients.slice(i, i + BATCH_SIZE);

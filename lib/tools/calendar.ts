@@ -22,6 +22,47 @@ const CAL_API_URL = 'https://api.cal.com/v1';
 // Timezone for Mexico City
 const TIMEZONE = 'America/Mexico_City';
 
+// Cache event type duration to avoid repeated API calls
+let cachedEventLength: number | null = null;
+
+async function getEventLength(): Promise<number> {
+  if (cachedEventLength) return cachedEventLength;
+  try {
+    const res = await fetch(`${CAL_API_URL}/event-types/${CAL_EVENT_TYPE_ID}?apiKey=${CAL_API_KEY}`);
+    if (res.ok) {
+      const data = await res.json();
+      cachedEventLength = data.event_type?.length || 15;
+      return cachedEventLength as number;
+    }
+  } catch (e) {
+    console.error('[Calendar] Failed to fetch event length:', e);
+  }
+  return 15; // fallback
+}
+
+/**
+ * Get the UTC offset string for Mexico City at a given date
+ * Mexico City is UTC-6 (CST) or UTC-5 (CDT during DST)
+ */
+function getMexicoCityOffset(dateStr: string): string {
+  const date = new Date(dateStr + 'T12:00:00Z');
+  // Create a formatter to check if DST is active
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: TIMEZONE,
+    timeZoneName: 'shortOffset'
+  });
+  const parts = formatter.formatToParts(date);
+  const tzPart = parts.find(p => p.type === 'timeZoneName');
+  // Parse offset like "GMT-6" or "GMT-5"
+  const match = tzPart?.value?.match(/GMT([+-]\d+)/);
+  if (match) {
+    const hours = parseInt(match[1]);
+    const sign = hours < 0 ? '-' : '+';
+    return `${sign}${String(Math.abs(hours)).padStart(2, '0')}:00`;
+  }
+  return '-06:00'; // fallback CST
+}
+
 /**
  * Check availability for given dates
  * @param dates Comma-separated dates in YYYY-MM-DD format
@@ -98,7 +139,12 @@ export async function createEvent(params: {
   }
 
   try {
-    const startTime = `${params.date}T${params.time}:00`;
+    const offset = getMexicoCityOffset(params.date);
+    const startTime = `${params.date}T${params.time}:00${offset}`;
+    const eventLength = await getEventLength();
+    const endTime = `${params.date}T${addMinutesFormatted(params.time, eventLength)}:00${offset}`;
+
+    console.log(`[Calendar] Booking: start=${startTime}, end=${endTime}, length=${eventLength}min`);
 
     const response = await fetch(`${CAL_API_URL}/bookings?apiKey=${CAL_API_KEY}`, {
       method: 'POST',
@@ -106,7 +152,7 @@ export async function createEvent(params: {
       body: JSON.stringify({
         eventTypeId: parseInt(CAL_EVENT_TYPE_ID || '0'),
         start: startTime,
-        end: addMinutes(startTime, 30), // 30 min meeting
+        end: endTime,
         responses: {
           name: params.name,
           email: params.email,
@@ -196,11 +242,13 @@ export async function updateEventEmail(eventId: string, email: string): Promise<
   }
 }
 
-// Helper to add minutes to ISO time string
-function addMinutes(isoTime: string, minutes: number): string {
-  const date = new Date(isoTime);
-  date.setMinutes(date.getMinutes() + minutes);
-  return date.toISOString().replace('Z', '');
+// Helper to add minutes to HH:MM time string, returns HH:MM
+function addMinutesFormatted(time: string, minutes: number): string {
+  const [h, m] = time.split(':').map(Number);
+  const totalMinutes = h * 60 + m + minutes;
+  const newH = Math.floor(totalMinutes / 60) % 24;
+  const newM = totalMinutes % 60;
+  return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
 }
 
 // Mock slots for testing

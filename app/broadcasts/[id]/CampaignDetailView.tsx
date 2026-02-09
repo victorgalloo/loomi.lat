@@ -40,7 +40,9 @@ type Lang = 'en' | 'es';
 
 const recipientStatusColors: Record<string, string> = {
   pending: 'bg-surface-2 text-muted border-border',
-  sent: 'bg-terminal-green/10 text-terminal-green border-terminal-green/20',
+  sent: 'bg-terminal-yellow/10 text-terminal-yellow border-terminal-yellow/20',
+  delivered: 'bg-terminal-green/10 text-terminal-green border-terminal-green/20',
+  read: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
   failed: 'bg-terminal-red/10 text-terminal-red border-terminal-red/20',
 };
 
@@ -55,6 +57,8 @@ const i18n: Record<Lang, Record<string, string>> = {
   en: {
     total: 'total',
     sent: 'sent',
+    delivered: 'delivered',
+    read: 'read',
     failed: 'failed',
     pending: 'pending',
     sending: 'sending...',
@@ -77,11 +81,15 @@ const i18n: Record<Lang, Record<string, string>> = {
     failedStatus: 'failed',
     recipientPending: 'pending',
     recipientSent: 'sent',
+    recipientDelivered: 'delivered',
+    recipientRead: 'read',
     recipientFailed: 'failed',
   },
   es: {
     total: 'total',
     sent: 'enviados',
+    delivered: 'entregados',
+    read: 'leídos',
     failed: 'fallidos',
     pending: 'pendientes',
     sending: 'enviando...',
@@ -104,6 +112,8 @@ const i18n: Record<Lang, Record<string, string>> = {
     failedStatus: 'fallido',
     recipientPending: 'pendiente',
     recipientSent: 'enviado',
+    recipientDelivered: 'entregado',
+    recipientRead: 'leído',
     recipientFailed: 'fallido',
   },
 };
@@ -124,12 +134,15 @@ export default function CampaignDetailView({
 
   const pendingCount = recipients.filter(r => r.status === 'pending').length;
   const sentCount = recipients.filter(r => r.status === 'sent').length;
+  const deliveredCount = recipients.filter(r => r.status === 'delivered').length;
+  const readCount = recipients.filter(r => r.status === 'read').length;
   const failedCount = recipients.filter(r => r.status === 'failed').length;
   const totalCount = recipients.length;
-  const progress = totalCount > 0 ? ((sentCount + failedCount) / totalCount) * 100 : 0;
+  const processedCount = sentCount + deliveredCount + readCount + failedCount;
+  const progress = totalCount > 0 ? (processedCount / totalCount) * 100 : 0;
 
   const campaignStatusLabel = ({draft: t.draft, sending: t.sending, completed: t.completed, failed: t.failedStatus})[campaign.status] || campaign.status;
-  const getRecipientStatus = (status: string) => ({pending: t.recipientPending, sent: t.recipientSent, failed: t.recipientFailed})[status] || status;
+  const getRecipientStatus = (status: string) => ({pending: t.recipientPending, sent: t.recipientSent, delivered: t.recipientDelivered, read: t.recipientRead, failed: t.recipientFailed})[status] || status;
 
   const refreshData = useCallback(async () => {
     try {
@@ -273,9 +286,21 @@ export default function CampaignDetailView({
           {/* Progress bar */}
           <div className="w-full h-3 rounded-full bg-background overflow-hidden">
             <div className="h-full flex">
-              {sentCount > 0 && (
+              {readCount > 0 && (
+                <div
+                  className="h-full bg-blue-500 transition-all duration-500"
+                  style={{ width: `${(readCount / totalCount) * 100}%` }}
+                />
+              )}
+              {deliveredCount > 0 && (
                 <div
                   className="h-full bg-terminal-green transition-all duration-500"
+                  style={{ width: `${(deliveredCount / totalCount) * 100}%` }}
+                />
+              )}
+              {sentCount > 0 && (
+                <div
+                  className="h-full bg-terminal-yellow transition-all duration-500"
                   style={{ width: `${(sentCount / totalCount) * 100}%` }}
                 />
               )}
@@ -289,26 +314,44 @@ export default function CampaignDetailView({
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted font-mono">{t.total}:</span>
               <span className="text-sm font-mono text-foreground">{totalCount.toLocaleString()}</span>
             </div>
+            {readCount > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                <span className="text-xs text-muted font-mono">{t.read}:</span>
+                <span className="text-sm font-mono text-blue-500">{readCount.toLocaleString()}</span>
+              </div>
+            )}
+            {deliveredCount > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-terminal-green" />
+                <span className="text-xs text-muted font-mono">{t.delivered}:</span>
+                <span className="text-sm font-mono text-terminal-green">{deliveredCount.toLocaleString()}</span>
+              </div>
+            )}
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-terminal-green" />
+              <div className="w-2 h-2 rounded-full bg-terminal-yellow" />
               <span className="text-xs text-muted font-mono">{t.sent}:</span>
-              <span className="text-sm font-mono text-terminal-green">{sentCount.toLocaleString()}</span>
+              <span className="text-sm font-mono text-terminal-yellow">{sentCount.toLocaleString()}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-terminal-red" />
-              <span className="text-xs text-muted font-mono">{t.failed}:</span>
-              <span className="text-sm font-mono text-terminal-red">{failedCount.toLocaleString()}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-muted" />
-              <span className="text-xs text-muted font-mono">{t.pending}:</span>
-              <span className="text-sm font-mono text-muted">{pendingCount.toLocaleString()}</span>
-            </div>
+            {failedCount > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-terminal-red" />
+                <span className="text-xs text-muted font-mono">{t.failed}:</span>
+                <span className="text-sm font-mono text-terminal-red">{failedCount.toLocaleString()}</span>
+              </div>
+            )}
+            {pendingCount > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-muted" />
+                <span className="text-xs text-muted font-mono">{t.pending}:</span>
+                <span className="text-sm font-mono text-muted">{pendingCount.toLocaleString()}</span>
+              </div>
+            )}
           </div>
 
           {campaign.status === 'sending' && (

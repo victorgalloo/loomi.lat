@@ -47,25 +47,15 @@ export default async function DashboardPage() {
     const primaryAccount = whatsappAccounts.find(a => a.status === 'active') || whatsappAccounts[0] || null;
 
     // Get stats for this tenant
-    const [leadsResult, conversationsResult, messagesResult] = await Promise.all([
+    const now = new Date();
+    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+
+    const [leadsResult, activeConversationsResult, warmLeadsResult, hotLeadsResult] = await Promise.all([
       supabase.from("leads").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
-      supabase.from("conversations").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
-      supabase.from("messages").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
+      supabase.from("conversations").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).gte("updated_at", last24h),
+      supabase.from("leads").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("broadcast_classification", "warm"),
+      supabase.from("leads").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("broadcast_classification", "hot"),
     ]);
-
-    // Get appointments separately since they need to join with leads
-    const { data: tenantLeadIds } = await supabase
-      .from("leads")
-      .select("id")
-      .eq("tenant_id", tenantId);
-
-    const leadIds = tenantLeadIds?.map(l => l.id) || [];
-    const appointmentsResult = leadIds.length > 0
-      ? await supabase.from("appointments")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "scheduled")
-          .in("lead_id", leadIds)
-      : { count: 0 };
 
     return (
       <TenantDashboard
@@ -83,9 +73,9 @@ export default async function DashboardPage() {
         }}
         stats={{
           totalLeads: leadsResult.count || 0,
-          totalConversations: conversationsResult.count || 0,
-          messagesThisMonth: messagesResult.count || 0,
-          appointmentsBooked: appointmentsResult.count || 0
+          activeConversations: activeConversationsResult.count || 0,
+          warmLeads: warmLeadsResult.count || 0,
+          hotLeads: hotLeadsResult.count || 0,
         }}
         tenantId={tenantId}
       />

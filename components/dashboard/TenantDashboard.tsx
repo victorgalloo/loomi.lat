@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Users, MessageCircle, Mail, Calendar } from 'lucide-react';
+import { ArrowUpRight, Users, MessageCircle, Flame, Thermometer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 interface TenantDashboardProps {
@@ -19,10 +19,10 @@ interface TenantDashboardProps {
     businessName?: string;
   };
   stats: {
-    totalConversations: number;
     totalLeads: number;
-    messagesThisMonth: number;
-    appointmentsBooked: number;
+    activeConversations: number;
+    warmLeads: number;
+    hotLeads: number;
   };
   tenantId: string;
 }
@@ -56,36 +56,38 @@ export default function TenantDashboard({
       .on(
         'postgres_changes',
         {
+          event: '*',
+          schema: 'public',
+          table: 'leads',
+          filter: `tenant_id=eq.${tenantId}`
+        },
+        (payload) => {
+          if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as { broadcast_classification?: string };
+            const old = payload.old as { broadcast_classification?: string };
+            if (updated.broadcast_classification !== old.broadcast_classification) {
+              setStats(prev => {
+                let { warmLeads, hotLeads } = prev;
+                if (old.broadcast_classification === 'warm') warmLeads--;
+                if (old.broadcast_classification === 'hot') hotLeads--;
+                if (updated.broadcast_classification === 'warm') warmLeads++;
+                if (updated.broadcast_classification === 'hot') hotLeads++;
+                return { ...prev, warmLeads: Math.max(0, warmLeads), hotLeads: Math.max(0, hotLeads) };
+              });
+            }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
           event: 'INSERT',
           schema: 'public',
           table: 'conversations',
           filter: `tenant_id=eq.${tenantId}`
         },
         () => {
-          setStats(prev => ({ ...prev, totalConversations: prev.totalConversations + 1 }));
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `tenant_id=eq.${tenantId}`
-        },
-        () => {
-          setStats(prev => ({ ...prev, messagesThisMonth: prev.messagesThisMonth + 1 }));
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'appointments',
-        },
-        () => {
-          setStats(prev => ({ ...prev, appointmentsBooked: prev.appointmentsBooked + 1 }));
+          setStats(prev => ({ ...prev, activeConversations: prev.activeConversations + 1 }));
         }
       )
       .subscribe();
@@ -140,35 +142,35 @@ export default function TenantDashboard({
         </div>
         <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl p-4 shadow-card">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted">conversaciones</p>
+            <p className="text-sm text-muted">activas</p>
             <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-info-muted">
               <MessageCircle className="w-4 h-4 text-info" />
             </div>
           </div>
           <p className="text-3xl font-mono text-foreground">
-            {stats.totalConversations}
+            {stats.activeConversations}
           </p>
         </div>
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl p-4 shadow-card">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-terminal-yellow rounded-xl p-4 shadow-card">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted">mensajes</p>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-info-muted">
-              <Mail className="w-4 h-4 text-info" />
+            <p className="text-sm text-muted">tibios</p>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-terminal-yellow/10">
+              <Thermometer className="w-4 h-4 text-terminal-yellow" />
             </div>
           </div>
           <p className="text-3xl font-mono text-foreground">
-            {stats.messagesThisMonth}
+            {stats.warmLeads}
           </p>
         </div>
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl p-4 shadow-card">
+        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-terminal-red rounded-xl p-4 shadow-card">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted">citas</p>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-info-muted">
-              <Calendar className="w-4 h-4 text-info" />
+            <p className="text-sm text-muted">calientes</p>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-terminal-red/10">
+              <Flame className="w-4 h-4 text-terminal-red" />
             </div>
           </div>
           <p className="text-3xl font-mono text-foreground">
-            {stats.appointmentsBooked}
+            {stats.hotLeads}
           </p>
         </div>
       </div>

@@ -319,69 +319,52 @@ export default function ConversationsView({ conversations: initialConversations,
 
       {/* Conversation List */}
       {filteredConversations.length > 0 ? (
-        <div className="rounded-2xl overflow-hidden bg-surface-elevated border border-border shadow-card">
-          <ul className="divide-y divide-border">
-            {filteredConversations.map((conversation) => {
-              return (
-                <li key={conversation.id}>
-                  <Link
-                    href={`/dashboard/conversations/${conversation.id}`}
-                    className="block transition-colors hover:bg-surface-2"
-                  >
-                    <div className="px-5 py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-11 h-11 rounded-full flex items-center justify-center text-base font-medium bg-info-muted text-info border-2 border-border">
-                            {conversation.leadName.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-medium text-sm text-foreground">
-                                {conversation.leadName}
-                              </h3>
-                              <span className="px-2.5 py-1 rounded-full text-label font-medium bg-surface-2 text-muted">
-                                {getStageLabel(conversation.stage)}
-                              </span>
-                              {conversation.broadcastClassification && conversation.broadcastClassification !== 'bot_autoresponse' && (
-                                <span className={`px-2 py-0.5 rounded-full text-label font-medium ${
-                                  conversation.broadcastClassification === 'hot'
-                                    ? 'bg-orange-500/15 text-orange-500'
-                                    : conversation.broadcastClassification === 'warm'
-                                      ? 'bg-yellow-500/15 text-yellow-500'
-                                      : 'bg-blue-400/15 text-blue-400'
-                                }`}>
-                                  {conversation.broadcastClassification === 'hot' ? '🔥 hot' : conversation.broadcastClassification === 'warm' ? '🟡 warm' : '🥶 cold'}
-                                </span>
-                              )}
-                              {conversation.broadcastClassification === 'bot_autoresponse' && (
-                                <span className="px-2 py-0.5 rounded-full text-label font-medium bg-zinc-500/15 text-zinc-400">
-                                  🤖 bot
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs mt-0.5 text-muted font-mono">
-                              {conversation.leadPhone}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-muted">
-                            {formatTimeAgo(conversation.lastMessageTime)}
-                          </p>
-                          <p className="text-sm mt-0.5 text-muted/50">
-                            {conversation.messageCount} msgs
-                          </p>
-                        </div>
-                      </div>
-                      <p className="mt-2 text-sm line-clamp-1 pl-[60px] text-muted">
-                        {conversation.lastMessage}
-                      </p>
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+        <div className="divide-y divide-border border-t border-border">
+          {filteredConversations.map((conversation) => (
+            <Link
+              key={conversation.id}
+              href={`/dashboard/conversations/${conversation.id}`}
+              className="flex items-center justify-between py-3 -mx-3 px-3 rounded-xl transition-colors hover:bg-surface-2"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium bg-info-muted text-info border border-border flex-shrink-0">
+                  {conversation.leadName.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm text-foreground">
+                      {conversation.leadName}
+                    </span>
+                    <span className="text-xs text-muted">
+                      {getStageLabel(conversation.stage)}
+                    </span>
+                    {conversation.broadcastClassification && conversation.broadcastClassification !== 'bot_autoresponse' && (
+                      <span className={`text-xs ${
+                        conversation.broadcastClassification === 'hot'
+                          ? 'text-orange-500'
+                          : conversation.broadcastClassification === 'warm'
+                            ? 'text-yellow-500'
+                            : 'text-blue-400'
+                      }`}>
+                        {conversation.broadcastClassification === 'hot' ? '🔥' : conversation.broadcastClassification === 'warm' ? '🟡' : '🥶'}
+                      </span>
+                    )}
+                    {conversation.broadcastClassification === 'bot_autoresponse' && (
+                      <span className="text-xs text-muted">🤖</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted truncate max-w-[400px]">
+                    {conversation.lastMessage}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 flex-shrink-0 text-xs text-muted">
+                <span className="font-mono">{conversation.leadPhone}</span>
+                <span>{conversation.messageCount} msgs</span>
+                <span>{formatTimeAgo(conversation.lastMessageTime)}</span>
+              </div>
+            </Link>
+          ))}
         </div>
       ) : searchQuery ? (
         <div className="text-center py-12">

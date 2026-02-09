@@ -121,7 +121,7 @@ export default function DemoPage() {
                   required
                   disabled={isLoading}
                   placeholder="Tu nombre"
-                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-info/30"
+                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-info/30"
                 />
               </div>
 
@@ -136,7 +136,7 @@ export default function DemoPage() {
                   required
                   disabled={isLoading}
                   placeholder="tu@email.com"
-                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-info/30"
+                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-info/30"
                 />
               </div>
 
@@ -151,7 +151,7 @@ export default function DemoPage() {
                   required
                   disabled={isLoading}
                   placeholder="+52 55 1234 5678"
-                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle focus:ring-2 focus:ring-info/30"
+                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-info/30"
                 />
               </div>
 
@@ -241,7 +241,7 @@ export default function DemoPage() {
 
       {/* Chat Container */}
       <div className="mx-auto max-w-3xl px-4 py-6">
-        <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface">
           <SandboxChat />
         </div>
       </div>

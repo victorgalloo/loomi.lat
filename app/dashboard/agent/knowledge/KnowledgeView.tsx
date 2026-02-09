@@ -210,7 +210,7 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
           {documents.map((doc) => (
             <div
               key={doc.id}
-              className="p-4 rounded-2xl border border-border bg-surface-elevated shadow-subtle hover:shadow-card transition-all"
+              className="p-4 rounded-xl border border-border bg-surface-elevated transition-colors hover:border-foreground/20"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">

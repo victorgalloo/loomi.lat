@@ -296,7 +296,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
               placeholder="buscar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-48 pl-9 pr-3 py-1.5 rounded-xl text-sm outline-none transition-colors duration-150 bg-surface border border-border text-foreground placeholder:text-muted shadow-subtle focus:ring-2 focus:ring-info/30 focus:border-info/50"
+              className="w-48 pl-9 pr-3 py-1.5 rounded-xl text-sm outline-none transition-colors duration-150 bg-surface border border-border text-foreground placeholder:text-muted focus:ring-2 focus:ring-info/30 focus:border-info/50"
             />
           </div>
 

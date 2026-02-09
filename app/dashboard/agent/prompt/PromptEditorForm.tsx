@@ -186,7 +186,7 @@ Define el tono y estilo de respuestas...
 # HERRAMIENTAS DISPONIBLES
 - escalate_to_human: Transferir a humano
 - send_payment_link: Enviar link de pago`}
-                className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono text-xs leading-relaxed shadow-subtle focus:ring-2 focus:ring-info/30"
+                className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono text-xs leading-relaxed focus:ring-2 focus:ring-info/30"
               />
               <p className="mt-2 text-xs text-muted">
                 El prompt define completamente como se comporta tu agente. Si no defines uno,
@@ -206,7 +206,7 @@ Define el tono y estilo de respuestas...
                 {config.fewShotExamples.map((example) => (
                   <div
                     key={example.id}
-                    className="p-4 rounded-2xl border border-border bg-surface-elevated shadow-subtle hover:shadow-card transition-all"
+                    className="p-4 rounded-xl border border-border bg-surface-elevated transition-colors hover:border-foreground/20"
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div>
@@ -252,21 +252,21 @@ Define el tono y estilo de respuestas...
                   value={newExample.id || ''}
                   onChange={(e) => setNewExample(prev => ({ ...prev, id: e.target.value }))}
                   placeholder="ID del ejemplo (ej: new_lead_crypto)"
-                  className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-info/30"
+                  className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 focus:ring-2 focus:ring-info/30"
                 />
                 <input
                   type="text"
                   value={tagsInput}
                   onChange={(e) => setTagsInput(e.target.value)}
                   placeholder="Tags separados por coma (ej: hola, bitcoin, precio)"
-                  className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-info/30"
+                  className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 focus:ring-2 focus:ring-info/30"
                 />
                 <input
                   type="text"
                   value={newExample.context || ''}
                   onChange={(e) => setNewExample(prev => ({ ...prev, context: e.target.value }))}
                   placeholder="Contexto (ej: Lead nuevo preguntando por Bitcoin)"
-                  className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-info/30"
+                  className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 focus:ring-2 focus:ring-info/30"
                 />
                 <textarea
                   value={newExample.conversation || ''}
@@ -275,14 +275,14 @@ Define el tono y estilo de respuestas...
                   placeholder={`Conversación de ejemplo:
 Cliente: Hola, vi su contenido sobre Bitcoin
 Agente: Hola! Qué bueno que escribiste. ¿Qué te interesa saber sobre Bitcoin?`}
-                  className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-info/30"
+                  className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 focus:ring-2 focus:ring-info/30"
                 />
                 <input
                   type="text"
                   value={newExample.whyItWorked || ''}
                   onChange={(e) => setNewExample(prev => ({ ...prev, whyItWorked: e.target.value }))}
                   placeholder="Por qué funcionó (ej: Fue cálido y preguntó qué le interesa)"
-                  className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-info/30"
+                  className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 focus:ring-2 focus:ring-info/30"
                 />
                 <button
                   type="button"
@@ -324,7 +324,7 @@ Agente: Hola! Qué bueno que escribiste. ¿Qué te interesa saber sobre Bitcoin?
     }
   ]
 }`}
-                className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono text-xs shadow-subtle focus:ring-2 focus:ring-info/30"
+                className="w-full px-3 py-2 text-sm rounded-xl outline-none transition-colors bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 font-mono text-xs focus:ring-2 focus:ring-info/30"
               />
               <p className="mt-2 text-xs text-muted">
                 Define tu catálogo de productos/servicios en formato JSON.

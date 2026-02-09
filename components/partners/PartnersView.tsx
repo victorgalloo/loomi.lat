@@ -97,8 +97,8 @@ export default function PartnersView({ userEmail }: PartnersViewProps) {
                   onClick={() => setActiveSection(section.id)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-mono transition-all ${
                     activeSection === section.id
-                      ? 'bg-foreground text-background shadow-subtle'
-                      : 'bg-surface border border-border text-muted hover:text-foreground hover:border-foreground/20 hover:shadow-subtle'
+                      ? 'bg-foreground text-background'
+                      : 'bg-surface border border-border text-muted hover:text-foreground hover:border-foreground/20'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -109,7 +109,7 @@ export default function PartnersView({ userEmail }: PartnersViewProps) {
           </nav>
 
           {/* Content Area */}
-          <div className="bg-surface-elevated border border-border rounded-xl p-6 shadow-card">
+          <div className="bg-surface-elevated border border-border rounded-xl p-6">
             {/* Terminal Header */}
             <div className="flex items-center gap-2 pb-4 mb-6 border-b border-border">
               <div className="flex items-center gap-1.5">
@@ -288,7 +288,7 @@ function TechStackSection() {
       {/* Stack Cards */}
       <div className="space-y-3">
         {stack.map((item, i) => (
-          <div key={i} className="bg-background/50 p-4 rounded-lg border border-border shadow-subtle">
+          <div key={i} className="bg-background/50 p-4 rounded-lg border border-border">
             <div className="flex items-center justify-between mb-2">
               <span className="text-foreground font-medium">{item.tech}</span>
               <span className="text-xs text-terminal-green bg-terminal-green/10 px-2 py-0.5 rounded">
@@ -333,23 +333,23 @@ function DatabaseSection() {
       <div className="space-y-3">
         <h3 className="text-foreground text-lg font-medium">Integraciones Completas</h3>
         <div className="space-y-3">
-          <div className="bg-background/50 p-3 rounded-lg border border-border shadow-subtle">
+          <div className="bg-background/50 p-3 rounded-lg border border-border">
             <p className="text-foreground font-medium">WhatsApp Cloud API</p>
             <p className="text-muted text-xs mt-1">mensajes, botones interactivos, escalacion a humanos</p>
           </div>
-          <div className="bg-background/50 p-3 rounded-lg border border-border shadow-subtle">
+          <div className="bg-background/50 p-3 rounded-lg border border-border">
             <p className="text-foreground font-medium">Stripe</p>
             <p className="text-muted text-xs mt-1">checkout sessions, webhooks de pago</p>
           </div>
-          <div className="bg-background/50 p-3 rounded-lg border border-border shadow-subtle">
+          <div className="bg-background/50 p-3 rounded-lg border border-border">
             <p className="text-foreground font-medium">Meta Conversions API</p>
             <p className="text-muted text-xs mt-1">optimizacion de campanas publicitarias</p>
           </div>
-          <div className="bg-background/50 p-3 rounded-lg border border-border shadow-subtle">
+          <div className="bg-background/50 p-3 rounded-lg border border-border">
             <p className="text-foreground font-medium">HubSpot</p>
             <p className="text-muted text-xs mt-1">sincronizacion de leads</p>
           </div>
-          <div className="bg-background/50 p-3 rounded-lg border border-border shadow-subtle">
+          <div className="bg-background/50 p-3 rounded-lg border border-border">
             <p className="text-foreground font-medium">Cal.com</p>
             <p className="text-muted text-xs mt-1">agendamiento de demos</p>
           </div>
@@ -395,7 +395,7 @@ function RoadmapSection() {
       <div className="space-y-3">
         <h3 className="text-foreground text-lg font-medium">En Desarrollo</h3>
         <div className="space-y-3">
-          <div className="bg-background/50 p-4 rounded-lg border border-border shadow-subtle">
+          <div className="bg-background/50 p-4 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-2">
               <span className="w-2 h-2 rounded-full bg-terminal-yellow animate-pulse" />
               <span className="text-foreground font-medium">Llamadas de voz</span>
@@ -403,7 +403,7 @@ function RoadmapSection() {
             <p className="text-muted text-xs">WhatsApp Voice - atencion por voz con IA</p>
           </div>
 
-          <div className="bg-background/50 p-4 rounded-lg border border-border shadow-subtle">
+          <div className="bg-background/50 p-4 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-2">
               <span className="w-2 h-2 rounded-full bg-terminal-yellow animate-pulse" />
               <span className="text-foreground font-medium">Multi-numero</span>
@@ -411,7 +411,7 @@ function RoadmapSection() {
             <p className="text-muted text-xs">Multiples numeros WhatsApp por tenant</p>
           </div>
 
-          <div className="bg-background/50 p-4 rounded-lg border border-border shadow-subtle">
+          <div className="bg-background/50 p-4 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-2">
               <span className="w-2 h-2 rounded-full bg-terminal-yellow animate-pulse" />
               <span className="text-foreground font-medium">A/B Testing</span>

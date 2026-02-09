@@ -242,151 +242,138 @@ export default function ConversationDetailView({ conversation, lead, messages: i
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Messages + Reply Input */}
         <div className="lg:col-span-2">
-          <div className="rounded-2xl overflow-hidden bg-surface-elevated border border-border shadow-card">
-            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-muted" />
-                <h2 className="font-medium text-sm text-foreground">
-                  Historial de mensajes
-                </h2>
-              </div>
-              {botPaused && (
-                <div className="flex items-center gap-1.5">
-                  <PauseCircle className="w-3.5 h-3.5 text-amber-500" />
-                  <span className="text-xs text-amber-500">
-                    bot pausado - respondiendo manualmente
-                  </span>
-                </div>
-              )}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-muted" />
+              <h2 className="font-medium text-sm text-foreground">
+                Historial de mensajes
+              </h2>
             </div>
+            {botPaused && (
+              <div className="flex items-center gap-1.5">
+                <PauseCircle className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-xs text-amber-500">
+                  bot pausado - respondiendo manualmente
+                </span>
+              </div>
+            )}
+          </div>
 
-            <div className="p-4 h-[400px] overflow-y-auto space-y-3 bg-background/50">
-              {messages.map((message) => (
+          <div className="h-[400px] overflow-y-auto space-y-3 border-t border-b border-border py-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.role === "assistant" ? "justify-start" : "justify-end"}`}
+              >
                 <div
-                  key={message.id}
-                  className={`flex ${message.role === "assistant" ? "justify-start" : "justify-end"}`}
-                >
-                  <div
-                    className={`
-                      max-w-[80%] rounded-2xl px-4 py-2.5 shadow-subtle
-                      ${message.role === "assistant"
-                        ? 'bg-surface-2 border border-border rounded-bl-sm'
-                        : 'bg-info text-white rounded-br-sm'
-                      }
-                    `}
-                  >
-                    <p className={`text-sm whitespace-pre-wrap ${
-                      message.role === "assistant"
-                        ? 'text-foreground'
-                        : 'text-white'
-                    }`}>
-                      {message.content}
-                    </p>
-                    <p className={`text-xs mt-1 ${
-                      message.role === "assistant"
-                        ? 'text-muted'
-                        : 'text-white/50'
-                    }`}>
-                      {formatTime(message.created_at)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-
-              {messages.length === 0 && (
-                <div className="text-center py-12 text-muted">
-                  <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No hay mensajes en esta conversacion</p>
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Reply Input */}
-            <div className="px-4 py-3 border-t border-border">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendReply();
+                  className={`
+                    max-w-[80%] rounded-2xl px-4 py-2.5
+                    ${message.role === "assistant"
+                      ? 'bg-surface-2 border border-border rounded-bl-sm'
+                      : 'bg-info text-white rounded-br-sm'
                     }
-                  }}
-                  placeholder="Escribe un mensaje..."
-                  disabled={sending}
-                  className="flex-1 px-4 py-2 rounded-xl text-sm outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted shadow-subtle focus:ring-2 focus:ring-info/30 focus:border-info/50 disabled:opacity-50"
-                />
-                <button
-                  onClick={handleSendReply}
-                  disabled={!replyText.trim() || sending}
-                  className="p-2 rounded-xl transition-colors bg-foreground text-background hover:bg-foreground/90 disabled:opacity-30 disabled:cursor-not-allowed"
+                  `}
                 >
-                  <Send className="w-4 h-4" />
-                </button>
+                  <p className={`text-sm whitespace-pre-wrap ${
+                    message.role === "assistant"
+                      ? 'text-foreground'
+                      : 'text-white'
+                  }`}>
+                    {message.content}
+                  </p>
+                  <p className={`text-xs mt-1 ${
+                    message.role === "assistant"
+                      ? 'text-muted'
+                      : 'text-white/50'
+                  }`}>
+                    {formatTime(message.created_at)}
+                  </p>
+                </div>
               </div>
-              <p className="text-xs mt-1.5 text-muted">
-                {botPaused
-                  ? 'Bot pausado. Tus mensajes se envian directo al WhatsApp del lead.'
-                  : 'Al enviar, el bot se pausa automaticamente.'
-                }
-              </p>
+            ))}
+
+            {messages.length === 0 && (
+              <div className="text-center py-12 text-muted">
+                <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No hay mensajes en esta conversacion</p>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Reply Input */}
+          <div className="pt-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendReply();
+                  }
+                }}
+                placeholder="Escribe un mensaje..."
+                disabled={sending}
+                className="flex-1 px-4 py-2 rounded-xl text-sm outline-none transition-colors bg-background border border-border text-foreground placeholder:text-muted focus:ring-2 focus:ring-info/30 focus:border-info/50 disabled:opacity-50"
+              />
+              <button
+                onClick={handleSendReply}
+                disabled={!replyText.trim() || sending}
+                className="p-2 rounded-xl transition-colors bg-foreground text-background hover:bg-foreground/90 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <Send className="w-4 h-4" />
+              </button>
             </div>
+            <p className="text-xs mt-1.5 text-muted">
+              {botPaused
+                ? 'Bot pausado. Tus mensajes se envian directo al WhatsApp del lead.'
+                : 'Al enviar, el bot se pausa automaticamente.'
+              }
+            </p>
           </div>
         </div>
 
         {/* Lead Info Sidebar */}
-        <div className="space-y-4">
-          {/* Contact Card */}
-          <div className="rounded-2xl p-5 bg-surface border border-border">
-            <div className="flex items-center gap-4 mb-5">
-              <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-medium bg-surface-2 text-muted">
-                {lead.name.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <h3 className="font-medium text-foreground">{lead.name}</h3>
-                <p className="text-sm text-muted">{lead.phone}</p>
-              </div>
+        <div>
+          {/* Contact */}
+          <div className="flex items-center gap-4 pb-5 mb-5 border-b border-border">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-base font-medium bg-surface-2 text-muted flex-shrink-0">
+              {lead.name.charAt(0).toUpperCase()}
             </div>
-
-            <dl className="space-y-4">
-              {lead.email && (
-                <div className="flex items-start gap-3">
-                  <Mail className="w-4 h-4 mt-0.5 text-muted" />
-                  <div>
-                    <dt className="text-xs uppercase tracking-wider text-muted">Email</dt>
-                    <dd className="text-sm mt-0.5 text-muted-foreground">{lead.email}</dd>
-                  </div>
-                </div>
-              )}
-              {lead.company && (
-                <div className="flex items-start gap-3">
-                  <Building className="w-4 h-4 mt-0.5 text-muted" />
-                  <div>
-                    <dt className="text-xs uppercase tracking-wider text-muted">Empresa</dt>
-                    <dd className="text-sm mt-0.5 text-muted-foreground">{lead.company}</dd>
-                  </div>
-                </div>
-              )}
-              {lead.industry && (
-                <div className="flex items-start gap-3">
-                  <Tag className="w-4 h-4 mt-0.5 text-muted" />
-                  <div>
-                    <dt className="text-xs uppercase tracking-wider text-muted">Industria</dt>
-                    <dd className="text-sm mt-0.5 text-muted-foreground">{lead.industry}</dd>
-                  </div>
-                </div>
-              )}
-            </dl>
+            <div>
+              <h3 className="font-medium text-foreground">{lead.name}</h3>
+              <p className="text-xs text-muted font-mono">{lead.phone}</p>
+            </div>
           </div>
 
-          {/* Summary Card */}
+          <dl className="space-y-3 pb-5 mb-5 border-b border-border">
+            {lead.email && (
+              <div className="flex items-center gap-3">
+                <Mail className="w-4 h-4 text-muted flex-shrink-0" />
+                <span className="text-sm text-muted">{lead.email}</span>
+              </div>
+            )}
+            {lead.company && (
+              <div className="flex items-center gap-3">
+                <Building className="w-4 h-4 text-muted flex-shrink-0" />
+                <span className="text-sm text-muted">{lead.company}</span>
+              </div>
+            )}
+            {lead.industry && (
+              <div className="flex items-center gap-3">
+                <Tag className="w-4 h-4 text-muted flex-shrink-0" />
+                <span className="text-sm text-muted">{lead.industry}</span>
+              </div>
+            )}
+          </dl>
+
+          {/* Summary */}
           {conversation.summary && (
-            <div className="rounded-2xl p-5 bg-surface-elevated border border-border shadow-card">
-              <h3 className="font-medium text-sm mb-3 text-foreground">
+            <div className="pb-5 mb-5 border-b border-border">
+              <h3 className="font-medium text-sm mb-2 text-foreground">
                 Resumen
               </h3>
               <p className="text-sm text-muted">
@@ -396,20 +383,13 @@ export default function ConversationDetailView({ conversation, lead, messages: i
           )}
 
           {/* Quick Actions */}
-          <div className="rounded-2xl p-5 bg-surface border border-border">
-            <h3 className="font-medium text-sm mb-3 text-foreground">
-              Acciones rapidas
-            </h3>
-            <div className="space-y-2">
-              <Link
-                href={`/dashboard/crm`}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors w-full text-muted hover:text-foreground hover:bg-surface-2"
-              >
-                <User className="w-4 h-4" />
-                Ver en Pipeline
-              </Link>
-            </div>
-          </div>
+          <Link
+            href={`/dashboard/crm`}
+            className="flex items-center gap-2 py-2 text-sm transition-colors text-muted hover:text-foreground"
+          >
+            <User className="w-4 h-4" />
+            Ver en Pipeline
+          </Link>
         </div>
       </div>
     </div>

@@ -169,17 +169,41 @@ interface AgentConfigOptions {
  * Build tenant analysis context from agent config, falling back to defaults
  */
 function buildTenantAnalysisContext(agentConfig?: AgentConfigOptions): TenantAnalysisContext {
+  const hasCustomPrompt = !!agentConfig?.systemPrompt;
+
+  if (!hasCustomPrompt) {
+    // Loomi default: comportamiento actual intacto
+    return {
+      productContext: agentConfig?.productContext || DEFAULT_PRODUCT_CONTEXT,
+      pricingContext: agentConfig?.pricingContext || DEFAULT_PRICING_CONTEXT,
+      salesProcessContext: agentConfig?.salesProcessContext || DEFAULT_SALES_PROCESS,
+      qualificationContext: agentConfig?.qualificationContext || DEFAULT_QUALIFICATION_CRITERIA,
+      competitorContext: agentConfig?.competitorContext || DEFAULT_COMPETITOR_CONTEXT,
+      objectionHandlers: (agentConfig?.objectionHandlers && Object.keys(agentConfig.objectionHandlers).length > 0)
+        ? agentConfig.objectionHandlers
+        : DEFAULT_OBJECTION_HANDLERS,
+      agentName: agentConfig?.agentName || DEFAULT_AGENT_NAME,
+      agentRole: agentConfig?.agentRole || DEFAULT_AGENT_ROLE,
+    };
+  }
+
+  // Custom tenant: solo usar lo que configuraron explícitamente
+  const agentName = agentConfig.agentName || agentConfig.businessName || 'Agente';
+  const agentRole = agentConfig.agentRole
+    || (agentConfig.businessName ? `representante de ${agentConfig.businessName}` : 'asistente de ventas');
+
   return {
-    productContext: agentConfig?.productContext || DEFAULT_PRODUCT_CONTEXT,
-    pricingContext: agentConfig?.pricingContext || DEFAULT_PRICING_CONTEXT,
-    salesProcessContext: agentConfig?.salesProcessContext || DEFAULT_SALES_PROCESS,
-    qualificationContext: agentConfig?.qualificationContext || DEFAULT_QUALIFICATION_CRITERIA,
-    competitorContext: agentConfig?.competitorContext || DEFAULT_COMPETITOR_CONTEXT,
-    objectionHandlers: (agentConfig?.objectionHandlers && Object.keys(agentConfig.objectionHandlers).length > 0)
+    productContext: agentConfig.productContext || '',
+    pricingContext: agentConfig.pricingContext || '',
+    salesProcessContext: agentConfig.salesProcessContext || '',
+    qualificationContext: agentConfig.qualificationContext || '',
+    competitorContext: agentConfig.competitorContext || '',
+    objectionHandlers: (agentConfig.objectionHandlers && Object.keys(agentConfig.objectionHandlers).length > 0)
       ? agentConfig.objectionHandlers
-      : DEFAULT_OBJECTION_HANDLERS,
-    agentName: agentConfig?.agentName || DEFAULT_AGENT_NAME,
-    agentRole: agentConfig?.agentRole || DEFAULT_AGENT_ROLE,
+      : {},
+    agentName,
+    agentRole,
+    systemPromptExcerpt: agentConfig.systemPrompt!.substring(0, 800),
   };
 }
 
@@ -207,10 +231,14 @@ export async function simpleAgent(
   // ============================================
   // STEP 0: Get Few-Shot Context (ejemplos relevantes)
   // ============================================
-  // Use tenant's custom few-shot examples if available, otherwise use default
-  const fewShotContext = agentConfig?.fewShotExamples?.length
-    ? getFewShotContextFromTenant(message, history, agentConfig.fewShotExamples)
-    : getFewShotContext(message, history);
+  // Use tenant's custom few-shot examples if available
+  // For custom prompt tenants (systemPrompt set), don't inject Loomi's default examples
+  let fewShotContext = '';
+  if (agentConfig?.fewShotExamples?.length) {
+    fewShotContext = getFewShotContextFromTenant(message, history, agentConfig.fewShotExamples);
+  } else if (!agentConfig?.systemPrompt) {
+    fewShotContext = getFewShotContext(message, history);
+  }
   if (fewShotContext) {
     console.log('=== FEW-SHOT CONTEXT ADDED ===');
   }
@@ -577,7 +605,7 @@ UNA pregunta a la vez.`
       messages: history,
       tools,
       temperature: agentConfig?.temperature ?? 0.7,
-      maxOutputTokens: agentConfig?.maxResponseTokens ?? 250,
+      maxOutputTokens: agentConfig?.maxResponseTokens ?? 500,
       onStepFinish: async (step) => {
         if (step.toolResults) {
           for (const toolResult of step.toolResults) {

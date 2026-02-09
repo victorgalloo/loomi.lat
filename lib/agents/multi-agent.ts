@@ -30,6 +30,7 @@ export interface TenantAnalysisContext {
   objectionHandlers: Record<string, string>;
   agentName: string;
   agentRole: string;
+  systemPromptExcerpt?: string;
 }
 
 const AnalysisSchema = z.object({
@@ -78,7 +79,7 @@ const AnalysisSchema = z.object({
   pregunta_a_hacer: z.string().describe('La pregunta exacta a hacer, o "ninguna"'),
 
   // Instrucción para el modelo de chat
-  instruccion_para_lu: z.string().describe('Instrucción detallada de cómo responder'),
+  instruccion_para_agente: z.string().describe('Instruccion detallada de como debe responder el agente'),
 });
 
 export type ConversationAnalysis = z.infer<typeof AnalysisSchema>;
@@ -113,25 +114,26 @@ export async function analyzeMessage(
   const clientName = leadContext?.name || 'desconocido';
   const clientCompany = leadContext?.company || 'desconocido';
 
+  // Build context sections conditionally - only include non-empty ones
+  const sections: string[] = [];
+  if (ctx.productContext) sections.push(`# SOBRE EL PRODUCTO/SERVICIO\n${ctx.productContext}`);
+  if (ctx.pricingContext) sections.push(`# PRECIOS\n${ctx.pricingContext}`);
+  if (ctx.salesProcessContext) sections.push(`# PROCESO DE VENTA\n${ctx.salesProcessContext}`);
+  if (ctx.qualificationContext) sections.push(`# CALIFICACIÓN\n${ctx.qualificationContext}`);
+  if (ctx.competitorContext) sections.push(`# COMPETENCIA\n${ctx.competitorContext}`);
+
+  const contextBlock = sections.length > 0
+    ? sections.join('\n\n')
+    : (ctx.systemPromptExcerpt
+      ? `# CONTEXTO DEL NEGOCIO (extracto del prompt del agente)\n${ctx.systemPromptExcerpt}`
+      : '# CONTEXTO\nAnaliza solo la conversacion.');
+
   const result = await generateObject({
     model: anthropic('claude-haiku-4-5-20251001'),
     schema: AnalysisSchema,
     prompt: `Eres un analista experto en ventas B2B. Analiza esta conversación y da instrucciones PRECISAS a ${ctx.agentName} (${ctx.agentRole}).
 
-# SOBRE EL PRODUCTO/SERVICIO
-${ctx.productContext}
-
-# PRECIOS
-${ctx.pricingContext}
-
-# PROCESO DE VENTA
-${ctx.salesProcessContext}
-
-# CALIFICACIÓN
-${ctx.qualificationContext}
-
-# COMPETENCIA
-${ctx.competitorContext}
+${contextBlock}
 
 # REGLAS CRÍTICAS
 1. **NUNCA REPETIR PREGUNTAS** - Si ya preguntamos algo, no volver a preguntar
@@ -214,7 +216,7 @@ ${analysis.siguiente_paso}
 ${analysis.pregunta_a_hacer !== 'ninguna' ? `## PREGUNTA A HACER:\n"${analysis.pregunta_a_hacer}"` : ''}
 
 ## INSTRUCCIÓN ESPECÍFICA:
-${analysis.instruccion_para_lu}
+${analysis.instruccion_para_agente}
 
 # REGLAS:
 1. NO repitas preguntas de la lista "YA preguntamos"

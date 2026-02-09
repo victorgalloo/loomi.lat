@@ -418,25 +418,21 @@ export default function BroadcastConversations({
 
   return (
     <>
-      <div className="rounded-2xl border border-border bg-surface overflow-hidden mt-6">
+      <div className="mt-8">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-terminal-red" />
-              <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
-              <div className="w-3 h-3 rounded-full bg-terminal-green" />
-            </div>
-            <span className="text-sm font-mono text-foreground ml-2">{t.title}</span>
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-medium font-mono text-foreground">{t.title}</h2>
           {!loading && (
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-mono text-muted">
-                {conversations.length} {t.responses} {t.of} {totalSent} {t.sent}
-              </span>
-              <span className="text-xs font-mono text-info">
-                {responseRate}% {t.responseRate}
-              </span>
+            <div className="flex items-center gap-6 text-sm">
+              <div>
+                <span className="text-muted">{t.responses}</span>
+                <span className="ml-2 font-mono text-foreground">{conversations.length}/{totalSent}</span>
+              </div>
+              <span className="text-border">·</span>
+              <div>
+                <span className="text-muted">{t.responseRate}</span>
+                <span className="ml-2 font-mono text-info">{responseRate}%</span>
+              </div>
             </div>
           )}
         </div>
@@ -564,7 +560,7 @@ export default function BroadcastConversations({
 
         {/* Footer */}
         {conversations.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-2 border-t border-border">
+          <div className="flex items-center justify-between pt-4 mt-4 border-t border-border">
             <Link href="/dashboard/conversations" className="text-xs font-mono text-muted hover:text-foreground transition-colors">
               {t.viewInbox} →
             </Link>

@@ -80,6 +80,24 @@ const AnalysisSchema = z.object({
 
   // Instrucción para el modelo de chat
   instruccion_para_agente: z.string().describe('Instruccion detallada de como debe responder el agente'),
+
+  // Sentimiento y tono
+  sentimiento: z.enum([
+    'neutral', 'frustrated', 'skeptical', 'enthusiastic', 'busy', 'curious'
+  ]).describe('Tono emocional del cliente'),
+
+  confianza_sentimiento: z.enum(['baja', 'media', 'alta'])
+    .describe('Que tan seguro estas del sentimiento'),
+
+  tono_recomendado: z.string()
+    .describe('Instruccion de tono para el agente, ej: "Se empatico y directo"'),
+
+  // Industria y urgencia
+  industria_detectada: z.string()
+    .describe('Industria del negocio del cliente, ej: ecommerce, salud, educacion, fintech, automotriz, legal, etc.'),
+
+  urgencia: z.enum(['baja', 'media', 'alta'])
+    .describe('Nivel de urgencia del cliente'),
 });
 
 export type ConversationAnalysis = z.infer<typeof AnalysisSchema>;
@@ -159,6 +177,9 @@ Analiza TODO y determina:
 3. ¿En qué fase estamos?
 4. ¿Hay alguna objeción que manejar?
 5. ¿Cuál es el siguiente paso lógico?
+6. ¿Cuál es el tono emocional del cliente? (frustrated, skeptical, enthusiastic, busy, curious, neutral)
+7. ¿En qué industria está el negocio del cliente?
+8. ¿Qué tan urgente es su necesidad? (baja, media, alta)
 
 Sé MUY específico en la instrucción. Ejemplo:
 - MAL: "Pregunta sobre su negocio"
@@ -205,6 +226,9 @@ ${analysis.ya_preguntamos.length > 0 ? analysis.ya_preguntamos.map(p => `- ${p}`
 - Usa competencia: ${analysis.ya_sabemos.usa_competencia}
 
 ## Nivel de interés: ${analysis.nivel_interes.toUpperCase()}
+## Sentimiento: ${analysis.sentimiento.toUpperCase()}${analysis.confianza_sentimiento !== 'baja' ? ` (confianza: ${analysis.confianza_sentimiento})` : ''}
+## Urgencia: ${analysis.urgencia.toUpperCase()}
+${analysis.industria_detectada !== 'generic' ? `## Industria: ${analysis.industria_detectada}` : ''}
 ${analysis.listo_para_demo ? '## LISTO PARA DEMO - Usa schedule_demo' : ''}
 ${analysis.listo_para_comprar ? '## LISTO PARA COMPRAR - Pide email y usa send_payment_link' : ''}
 
@@ -217,6 +241,8 @@ ${analysis.pregunta_a_hacer !== 'ninguna' ? `## PREGUNTA A HACER:\n"${analysis.p
 
 ## INSTRUCCIÓN ESPECÍFICA:
 ${analysis.instruccion_para_agente}
+
+${analysis.tono_recomendado ? `## TONO:\n${analysis.tono_recomendado}` : ''}
 
 # REGLAS:
 1. NO repitas preguntas de la lista "YA preguntamos"

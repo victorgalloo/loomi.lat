@@ -2,7 +2,11 @@
  * Few-Shot Dinámico - Venta de Loomi
  *
  * Selecciona ejemplos de conversaciones relevantes según el contexto actual.
+ * Supports semantic selection via embeddings with keyword fallback.
  */
+
+import { embedText, cosineSimilarity } from './embeddings';
+import EXAMPLE_EMBEDDINGS from './few-shot-embeddings.json';
 
 export interface ConversationExample {
   id: string;
@@ -376,24 +380,63 @@ ${formatted}
 }
 
 /**
- * Genera el contexto de few-shot basado en la conversación actual
+ * Select examples using cosine similarity with pre-computed embeddings
  */
-export function getFewShotContext(
+async function selectExamplesSemantic(
+  message: string,
+  recentMessages: string[],
+  max: number = 2
+): Promise<ConversationExample[]> {
+  const contextText = [message, ...recentMessages.slice(-2)].join(' ');
+  const msgEmbedding = await embedText(contextText);
+
+  const scored = EXAMPLE_EMBEDDINGS.map(({ id, embedding }) => ({
+    id,
+    score: cosineSimilarity(msgEmbedding, embedding),
+  }));
+
+  scored.sort((a, b) => b.score - a.score);
+
+  const topMatches = scored.filter(s => s.score >= 0.3).slice(0, max);
+  if (topMatches.length === 0) return [];
+
+  const matchIds = new Set(topMatches.map(s => s.id));
+  return EXAMPLES.filter(ex => matchIds.has(ex.id));
+}
+
+/**
+ * Genera el contexto de few-shot basado en la conversación actual
+ * Uses semantic matching via embeddings, with keyword fallback
+ */
+export async function getFewShotContext(
   currentMessage: string,
   recentMessages: Array<{ role: string; content: string }>
-): string {
+): Promise<string> {
   const userMessages = recentMessages
     .filter(m => m.role === 'user')
     .map(m => m.content)
     .slice(-5);
 
+  // Try semantic matching first
+  try {
+    const examples = await selectExamplesSemantic(currentMessage, userMessages, 2);
+    if (examples.length > 0) {
+      console.log(`[Few-Shot] Semantic match: ${examples.map(e => e.id).join(', ')}`);
+      return formatExamples(examples);
+    }
+  } catch (err) {
+    // Silent fallback to keywords
+    console.warn('[Few-Shot] Semantic matching failed, falling back to keywords:', err instanceof Error ? err.message : err);
+  }
+
+  // Keyword fallback
   const tags = detectTags(currentMessage, userMessages);
   if (tags.length === 0) return '';
 
   const examples = selectExamples(tags, 2);
   if (examples.length === 0) return '';
 
-  console.log(`[Few-Shot] Tags: ${tags.join(', ')}, Examples: ${examples.map(e => e.id).join(', ')}`);
+  console.log(`[Few-Shot] Keyword match: Tags: ${tags.join(', ')}, Examples: ${examples.map(e => e.id).join(', ')}`);
 
   return formatExamples(examples);
 }

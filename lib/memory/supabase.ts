@@ -352,12 +352,12 @@ export async function getRecentMessages(
     .from('messages')
     .select('*')
     .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: false })
     .limit(limit);
 
   if (error || !data) return [];
 
-  return data.map(m => ({
+  return data.reverse().map(m => ({
     id: m.id,
     role: m.role as 'user' | 'assistant',
     content: m.content,

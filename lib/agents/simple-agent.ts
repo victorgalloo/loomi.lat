@@ -23,7 +23,7 @@ import { createCheckoutSession } from '@/lib/stripe/checkout';
 import { createEvent } from '@/lib/tools/calendar';
 import { generateReasoningFast, formatReasoningForPrompt } from './reasoning';
 import { getSentimentInstruction } from './sentiment';
-import { getIndustryPromptSection } from './industry';
+import { getIndustryPromptSection, detectIndustry, Industry, INDUSTRY_CONTEXTS } from './industry';
 import { getFewShotContext, getFewShotContextFromTenant } from './few-shot';
 import { getSellerStrategy, TenantAnalysisContext } from './multi-agent';
 import {
@@ -245,7 +245,7 @@ export async function simpleAgent(
   if (agentConfig?.fewShotExamples?.length) {
     fewShotContext = getFewShotContextFromTenant(message, history, agentConfig.fewShotExamples);
   } else if (!agentConfig?.systemPrompt) {
-    fewShotContext = getFewShotContext(message, history);
+    fewShotContext = await getFewShotContext(message, history);
   }
   if (fewShotContext) {
     console.log('=== FEW-SHOT CONTEXT ADDED ===');
@@ -254,29 +254,29 @@ export async function simpleAgent(
   // ============================================
   // STEP 1: Multi-Agent Analysis (all tenants go through full pipeline)
   // ============================================
-  const analysisEnabled = agentConfig?.analysisEnabled !== false;
+  const skipAnalysis = isSimpleMessage(message, history.length);
+  const analysisEnabled = agentConfig?.analysisEnabled !== false && !skipAnalysis;
   let sellerAnalysis: Awaited<ReturnType<typeof getSellerStrategy>>['analysis'] | null = null;
   let sellerInstructions: string = '';
-  let reasoning: Awaited<ReturnType<typeof generateReasoningFast>>;
+  let reasoning: Awaited<ReturnType<typeof generateReasoningFast>> | null = null;
 
-  console.log('=== FULL ANALYSIS PATH ===');
-
-  if (!analysisEnabled) {
+  if (skipAnalysis) {
+    console.log('=== SIMPLE MESSAGE - SKIPPING MULTI-AGENT ===');
+  } else if (!analysisEnabled) {
     console.log('=== MULTI-AGENT DISABLED (tenant config) ===');
     reasoning = await generateReasoningFast(message, context);
   } else {
-    const [strategyResult, reasoningResult] = await Promise.all([
-      getSellerStrategy(message, history, {
-        name: context.lead.name,
-        company: context.lead.company,
-        industry: context.lead.industry,
-        previousInteractions: context.recentMessages.length,
-      }, tenantCtx).catch((err: Error) => {
-        console.error('[Multi-Agent] Analysis failed, continuing without:', err.message);
-        return null;
-      }),
-      generateReasoningFast(message, context)
-    ]);
+    console.log('=== FULL ANALYSIS PATH ===');
+
+    const strategyResult = await getSellerStrategy(message, history, {
+      name: context.lead.name,
+      company: context.lead.company,
+      industry: context.lead.industry,
+      previousInteractions: context.recentMessages.length,
+    }, tenantCtx).catch((err: Error) => {
+      console.error('[Multi-Agent] Analysis failed, continuing without:', err.message);
+      return null;
+    });
 
     if (strategyResult) {
       sellerAnalysis = strategyResult.analysis;
@@ -290,22 +290,33 @@ export async function simpleAgent(
       }
     } else {
       console.log('=== ANÁLISIS SKIPPED (error fallback) ===');
+      // Fallback to reasoning only if multi-agent failed
+      reasoning = await generateReasoningFast(message, context);
     }
-    reasoning = reasoningResult;
   }
-  console.log('=== REASONING ===');
-  console.log(reasoning.analysis);
+
+  if (reasoning) {
+    console.log('=== REASONING ===');
+    console.log(reasoning.analysis);
+  }
 
   // ============================================
   // STEP 2: Detect industry for personalization
   // ============================================
-  const industry = reasoning.industry;
+  const rawIndustry = sellerAnalysis?.industria_detectada
+    || reasoning?.industry
+    || detectIndustry(message, context.lead.industry);
+  // Multi-agent returns free string; only use industry prompt section if it matches a known template
+  const industry: Industry = (rawIndustry in INDUSTRY_CONTEXTS)
+    ? rawIndustry as Industry
+    : 'generic';
   const industrySection = getIndustryPromptSection(industry);
 
   // ============================================
   // STEP 3: Get sentiment instruction
   // ============================================
-  const sentimentInstruction = getSentimentInstruction(reasoning.sentiment);
+  const sentimentInstruction = sellerAnalysis?.tono_recomendado
+    || (reasoning ? getSentimentInstruction(reasoning.sentiment) : '');
 
   // Helper to check if text contains any keyword from a Set
   const containsAny = (text: string, keywords: Set<string>): boolean => {
@@ -364,11 +375,13 @@ export async function simpleAgent(
     systemWithContext += `\n\n${sellerInstructions}`;
   }
 
-  // Add reasoning analysis
-  systemWithContext += `\n\n# ANÁLISIS ADICIONAL\n${formatReasoningForPrompt(reasoning)}`;
+  // Add reasoning analysis only if multi-agent failed (avoid duplicate analysis)
+  if (!sellerInstructions && reasoning) {
+    systemWithContext += `\n\n# ANÁLISIS ADICIONAL\n${formatReasoningForPrompt(reasoning)}`;
+  }
 
-  // Add sentiment instruction if relevant
-  if (sentimentInstruction) {
+  // Add sentiment instruction only if multi-agent failed (it includes tono_recomendado)
+  if (!sellerInstructions && sentimentInstruction) {
     systemWithContext += `\n\n# INSTRUCCIÓN DE TONO\n${sentimentInstruction}`;
   }
 
@@ -703,7 +716,7 @@ UNA pregunta a la vez.`
       tokensUsed: result.usage?.totalTokens,
       escalatedToHuman,
       paymentLinkSent,
-      detectedIndustry: industry !== 'generic' ? industry : undefined,
+      detectedIndustry: rawIndustry !== 'generic' ? rawIndustry : undefined,
       saidLater,
       showScheduleList
     };

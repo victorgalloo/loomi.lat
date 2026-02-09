@@ -129,6 +129,36 @@ export async function createLead(
     .single();
 
   if (error) {
+    // Handle duplicate: same phone may exist for another tenant or without tenant_id
+    if (error.code === '23505' && options?.tenantId) {
+      // Try to find existing lead for this phone (without tenant_id) and assign it
+      const { data: existing } = await supabase
+        .from('leads')
+        .select()
+        .eq('phone', phone)
+        .is('tenant_id', null)
+        .single();
+
+      if (existing) {
+        // Assign orphaned lead to this tenant
+        await supabase
+          .from('leads')
+          .update({ tenant_id: options.tenantId })
+          .eq('id', existing.id);
+
+        return {
+          id: existing.id,
+          phone: existing.phone,
+          name: existing.name,
+          email: existing.email,
+          company: existing.company,
+          industry: existing.industry,
+          stage: existing.stage,
+          createdAt: new Date(existing.created_at),
+          lastInteraction: new Date(existing.last_interaction)
+        };
+      }
+    }
     console.error('Error creating lead:', error);
     throw error;
   }

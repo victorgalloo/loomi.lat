@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Users, MessageCircle, Flame, Thermometer } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 interface TenantDashboardProps {
@@ -127,51 +127,26 @@ export default function TenantDashboard({
         </span>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl p-4 shadow-card">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted">leads</p>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-info-muted">
-              <Users className="w-4 h-4 text-info" />
-            </div>
-          </div>
-          <p className="text-3xl font-mono text-foreground">
-            {stats.totalLeads}
-          </p>
+      {/* Stats */}
+      <div className="flex items-center gap-6 text-sm mb-12 pb-8 border-b border-border">
+        <div>
+          <span className="text-muted">leads</span>
+          <span className="ml-2 font-mono text-foreground">{stats.totalLeads}</span>
         </div>
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl p-4 shadow-card">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted">activas</p>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-info-muted">
-              <MessageCircle className="w-4 h-4 text-info" />
-            </div>
-          </div>
-          <p className="text-3xl font-mono text-foreground">
-            {stats.activeConversations}
-          </p>
+        <span className="text-border">·</span>
+        <div>
+          <span className="text-muted">activas</span>
+          <span className="ml-2 font-mono text-foreground">{stats.activeConversations}</span>
         </div>
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-terminal-yellow rounded-xl p-4 shadow-card">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted">tibios</p>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-terminal-yellow/10">
-              <Thermometer className="w-4 h-4 text-terminal-yellow" />
-            </div>
-          </div>
-          <p className="text-3xl font-mono text-foreground">
-            {stats.warmLeads}
-          </p>
+        <span className="text-border">·</span>
+        <div>
+          <span className="text-muted">tibios</span>
+          <span className="ml-2 font-mono text-terminal-yellow">{stats.warmLeads}</span>
         </div>
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-terminal-red rounded-xl p-4 shadow-card">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted">calientes</p>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-terminal-red/10">
-              <Flame className="w-4 h-4 text-terminal-red" />
-            </div>
-          </div>
-          <p className="text-3xl font-mono text-foreground">
-            {stats.hotLeads}
-          </p>
+        <span className="text-border">·</span>
+        <div>
+          <span className="text-muted">calientes</span>
+          <span className="ml-2 font-mono text-terminal-red">{stats.hotLeads}</span>
         </div>
       </div>
 

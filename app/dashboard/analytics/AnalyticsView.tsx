@@ -1,6 +1,7 @@
 'use client';
 
-import { Users, MessageCircle, Mail, Calendar, TrendingUp, Target, BarChart3 } from 'lucide-react';
+import { Fragment } from 'react';
+import { TrendingUp, Target, BarChart3 } from 'lucide-react';
 
 interface AnalyticsData {
   totalLeads: number;
@@ -24,23 +25,19 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
       value: data.totalLeads,
       change: data.newLeadsThisMonth,
       changeLabel: 'este mes',
-      icon: Users,
     },
     {
       label: 'conversaciones',
       value: data.totalConversations,
-      icon: MessageCircle,
     },
     {
       label: 'mensajes',
       value: data.messagesThisMonth,
       subLabel: 'este mes',
-      icon: Mail,
     },
     {
       label: 'citas',
       value: data.appointmentsBooked,
-      icon: Calendar,
     }
   ];
 
@@ -107,46 +104,33 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
         </div>
       </div>
 
-      {/* Main Metrics Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {mainMetrics.map((metric) => {
-          const Icon = metric.icon;
-          return (
-            <div
-              key={metric.label}
-              className="rounded-2xl p-5 transition-all bg-surface-elevated border border-border shadow-card hover:shadow-card-hover hover:-translate-y-0.5"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <p className="text-label text-muted">
-                  {metric.label}
-                </p>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-info-muted">
-                  <Icon className="w-4 h-4 text-info" />
-                </div>
-              </div>
-              <p className="text-2xl font-semibold font-mono text-foreground">
+      {/* Main Metrics */}
+      <div className="flex items-center gap-6 text-sm mb-6 pb-6 border-b border-border flex-wrap">
+        {mainMetrics.map((metric, i) => (
+          <Fragment key={metric.label}>
+            {i > 0 && <div className="w-px h-8 bg-border" />}
+            <div>
+              <p className="text-label uppercase tracking-wider text-muted">{metric.label}</p>
+              <p className="text-xl font-semibold font-mono mt-1 text-foreground">
                 {metric.value.toLocaleString()}
               </p>
               {metric.change !== undefined && (
-                <p className="text-xs mt-1 flex items-center gap-1 text-info">
-                  <TrendingUp className="w-3 h-3" />
-                  +{metric.change} {metric.changeLabel}
+                <p className="text-xs mt-0.5 flex items-center gap-1 text-info">
+                  <TrendingUp className="w-3 h-3" /> +{metric.change} {metric.changeLabel}
                 </p>
               )}
               {metric.subLabel && (
-                <p className="text-xs mt-1 text-muted">
-                  {metric.subLabel}
-                </p>
+                <p className="text-xs mt-0.5 text-muted">{metric.subLabel}</p>
               )}
             </div>
-          );
-        })}
+          </Fragment>
+        ))}
       </div>
 
       {/* Secondary Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Lead Quality */}
-        <div className="rounded-2xl p-5 bg-surface-elevated border border-border shadow-card">
+        <div>
           <h3 className="text-sm font-medium mb-5 flex items-center gap-2 text-foreground">
             <Target className="w-4 h-4 text-info" />
             calidad de leads
@@ -184,7 +168,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
         </div>
 
         {/* Stage Breakdown */}
-        <div className="rounded-2xl p-5 bg-surface-elevated border border-border shadow-card">
+        <div>
           <h3 className="text-sm font-medium mb-5 flex items-center gap-2 text-foreground">
             <BarChart3 className="w-4 h-4 text-muted" />
             leads por etapa
@@ -221,16 +205,8 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
       </div>
 
       {/* Coming Soon */}
-      <div className="mt-6 rounded-2xl p-8 text-center bg-surface border border-border">
-        <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-surface-2">
-          <BarChart3 className="w-5 h-5 text-muted" />
-        </div>
-        <h3 className="text-sm font-medium mb-1 text-foreground">
-          más analíticas próximamente
-        </h3>
-        <p className="text-xs max-w-sm mx-auto text-muted">
-          Gráficas de tendencias, análisis de sentimiento y reportes exportables
-        </p>
+      <div className="mt-6 pt-6 border-t border-border text-center">
+        <p className="text-sm text-muted">más analíticas próximamente — gráficas de tendencias, análisis de sentimiento y reportes exportables</p>
       </div>
     </div>
   );

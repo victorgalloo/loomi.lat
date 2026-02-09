@@ -241,7 +241,7 @@ export function OnboardingWizard({
         className="w-full max-w-xl"
       >
         {/* Terminal window */}
-        <div className="rounded-3xl border border-border bg-surface overflow-hidden shadow-elevated">
+        <div className="rounded-3xl border border-border bg-surface overflow-hidden">
           {/* Header */}
           <div className="px-5 py-3.5 border-b border-border flex items-center gap-2">
             <div className="flex items-center gap-1.5">
@@ -459,7 +459,7 @@ export function OnboardingWizard({
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={() => setConnectMode('new')}
-                      className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-border hover:border-border-hover bg-background shadow-subtle hover:shadow-card transition-all"
+                      className="flex flex-col items-center gap-3 p-5 rounded-xl border border-border hover:border-foreground/20 transition-colors"
                     >
                       <Plus className="w-6 h-6 text-info" />
                       <span className="text-sm font-medium text-foreground">número nuevo</span>
@@ -467,7 +467,7 @@ export function OnboardingWizard({
                     </button>
                     <button
                       onClick={() => setConnectMode('existing')}
-                      className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-border hover:border-border-hover bg-background shadow-subtle hover:shadow-card transition-all"
+                      className="flex flex-col items-center gap-3 p-5 rounded-xl border border-border hover:border-foreground/20 transition-colors"
                     >
                       <Phone className="w-6 h-6 text-foreground" />
                       <span className="text-sm font-medium text-foreground">ya tengo uno</span>
@@ -531,7 +531,7 @@ export function OnboardingWizard({
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                     placeholder="Escribe aquí..."
-                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-info/30"
+                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-foreground/30 focus:ring-2 focus:ring-info/30"
                     disabled={isLoading}
                     autoFocus
                   />
@@ -605,19 +605,19 @@ export function OnboardingWizard({
 
                       {/* Feature grid */}
                       <div className="grid grid-cols-2 gap-2 mb-6 w-full max-w-sm">
-                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-2xl shadow-subtle">
+                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-xl">
                           <Brain className="w-4 h-4 text-info" />
                           <span className="text-xs text-muted">Razonamiento o3</span>
                         </div>
-                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-2xl shadow-subtle">
+                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-xl">
                           <Heart className="w-4 h-4 text-info" />
                           <span className="text-xs text-muted">Detección emocional</span>
                         </div>
-                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-2xl shadow-subtle">
+                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-xl">
                           <Shield className="w-4 h-4 text-info" />
                           <span className="text-xs text-muted">Escalación inteligente</span>
                         </div>
-                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-2xl shadow-subtle">
+                        <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-xl">
                           <CreditCard className="w-4 h-4 text-info" />
                           <span className="text-xs text-muted">Links de pago</span>
                         </div>
@@ -757,7 +757,7 @@ export function OnboardingWizard({
                     onChange={(e) => setTestInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && sendTestMessage()}
                     placeholder="Escribe como cliente..."
-                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-info/30"
+                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-foreground/30 focus:ring-2 focus:ring-info/30"
                     disabled={isTestLoading}
                   />
                   <button

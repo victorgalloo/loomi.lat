@@ -208,83 +208,124 @@ export default function CampaignDetailView({
   const canSend = (campaign.status === 'draft' || campaign.status === 'failed') && pendingCount > 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-6 py-8">
       {/* Header */}
-      <div className="rounded-2xl border border-border bg-surface-elevated overflow-hidden shadow-elevated">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-terminal-red" />
-              <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
-              <div className="w-3 h-3 rounded-full bg-terminal-green" />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push('/broadcasts')}
+            className="p-1.5 rounded-xl hover:bg-surface-2 transition-colors text-muted hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <div>
+            <h1 className="text-xl font-medium font-mono text-foreground">{campaign.name}</h1>
+            <div className="flex items-center gap-3 mt-0.5">
+              <span className="text-xs font-mono text-muted">
+                template: {campaign.template_name}
+              </span>
+              <span className="text-xs font-mono text-muted">
+                lang: {campaign.template_language}
+              </span>
+              <span className={`text-xs font-mono px-2 py-0.5 rounded-full border ${campaignStatusColors[campaign.status] || 'bg-surface-2 text-muted border-border'}`}>
+                {campaignStatusLabel}
+              </span>
             </div>
-            <span className="text-sm font-mono text-foreground ml-2">./campaign-detail_</span>
           </div>
+        </div>
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
             className="text-xs font-mono text-muted hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
           >
             {lang === 'en' ? 'ES' : 'EN'}
           </button>
-        </div>
-
-        {/* Back + Title */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-border">
-          <div className="flex items-center gap-3">
+          <button
+            onClick={refreshData}
+            className="p-1.5 rounded-xl bg-surface border border-border text-muted hover:text-foreground transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+          {canSend && (
             <button
-              onClick={() => router.push('/broadcasts')}
-              className="p-1.5 rounded-xl hover:bg-surface-2 transition-colors text-muted hover:text-foreground"
+              onClick={() => setShowConfirm(true)}
+              disabled={sending}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <Send className="w-4 h-4" />
+              {sending ? t.sending : t.sendBroadcast}
             </button>
-            <div>
-              <h1 className="text-lg font-mono text-foreground">{campaign.name}</h1>
-              <div className="flex items-center gap-3 mt-0.5">
-                <span className="text-xs font-mono text-muted">
-                  template: {campaign.template_name}
-                </span>
-                <span className="text-xs font-mono text-muted">
-                  lang: {campaign.template_language}
-                </span>
-                <span className={`text-xs font-mono px-2 py-0.5 rounded-full border ${campaignStatusColors[campaign.status] || 'bg-surface-2 text-muted border-border'}`}>
-                  {campaignStatusLabel}
-                </span>
-              </div>
+          )}
+        </div>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="flex items-center gap-2 px-3 py-2 mb-6 rounded-2xl bg-terminal-red/10 border border-terminal-red/20">
+          <AlertTriangle className="w-4 h-4 text-terminal-red flex-shrink-0" />
+          <span className="text-sm text-terminal-red font-mono">{error}</span>
+        </div>
+      )}
+
+      {/* Stats Bar */}
+      <div className="flex items-center gap-6 text-sm pb-6 mb-6 border-b border-border flex-wrap">
+        <div>
+          <span className="text-muted">{t.total}</span>
+          <span className="ml-2 font-mono text-foreground">{totalCount.toLocaleString()}</span>
+        </div>
+        {readCount > 0 && (
+          <>
+            <span className="text-border">·</span>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-muted">{t.read}</span>
+              <span className="font-mono text-blue-500">{readCount.toLocaleString()}</span>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={refreshData}
-              className="p-1.5 rounded-xl bg-surface border border-border text-muted hover:text-foreground transition-colors"
-              title="Refresh"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-            {canSend && (
-              <button
-                onClick={() => setShowConfirm(true)}
-                disabled={sending}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-                {sending ? t.sending : t.sendBroadcast}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-terminal-red/5">
-            <AlertTriangle className="w-4 h-4 text-terminal-red flex-shrink-0" />
-            <span className="text-sm text-terminal-red font-mono">{error}</span>
-          </div>
+          </>
         )}
+        {deliveredCount > 0 && (
+          <>
+            <span className="text-border">·</span>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-terminal-green" />
+              <span className="text-muted">{t.delivered}</span>
+              <span className="font-mono text-terminal-green">{deliveredCount.toLocaleString()}</span>
+            </div>
+          </>
+        )}
+        <span className="text-border">·</span>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-terminal-yellow" />
+          <span className="text-muted">{t.sent}</span>
+          <span className="font-mono text-terminal-yellow">{sentCount.toLocaleString()}</span>
+        </div>
+        {failedCount > 0 && (
+          <>
+            <span className="text-border">·</span>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-terminal-red" />
+              <span className="text-muted">{t.failed}</span>
+              <span className="font-mono text-terminal-red">{failedCount.toLocaleString()}</span>
+            </div>
+          </>
+        )}
+        {pendingCount > 0 && (
+          <>
+            <span className="text-border">·</span>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-muted" />
+              <span className="text-muted">{t.pending}</span>
+              <span className="font-mono text-muted">{pendingCount.toLocaleString()}</span>
+            </div>
+          </>
+        )}
+      </div>
 
-        {/* Progress & Stats */}
-        <div className="px-4 py-4 border-b border-border space-y-3">
-          {/* Progress bar */}
-          <div className="w-full h-3 rounded-full bg-background overflow-hidden">
+      {/* Progress bar */}
+      {processedCount > 0 && (
+        <div className="mb-6 space-y-2">
+          <div className="w-full h-2 rounded-full bg-surface-2 overflow-hidden">
             <div className="h-full flex">
               {readCount > 0 && (
                 <div
@@ -312,48 +353,6 @@ export default function CampaignDetailView({
               )}
             </div>
           </div>
-
-          {/* Stats */}
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted font-mono">{t.total}:</span>
-              <span className="text-sm font-mono text-foreground">{totalCount.toLocaleString()}</span>
-            </div>
-            {readCount > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span className="text-xs text-muted font-mono">{t.read}:</span>
-                <span className="text-sm font-mono text-blue-500">{readCount.toLocaleString()}</span>
-              </div>
-            )}
-            {deliveredCount > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-terminal-green" />
-                <span className="text-xs text-muted font-mono">{t.delivered}:</span>
-                <span className="text-sm font-mono text-terminal-green">{deliveredCount.toLocaleString()}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-terminal-yellow" />
-              <span className="text-xs text-muted font-mono">{t.sent}:</span>
-              <span className="text-sm font-mono text-terminal-yellow">{sentCount.toLocaleString()}</span>
-            </div>
-            {failedCount > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-terminal-red" />
-                <span className="text-xs text-muted font-mono">{t.failed}:</span>
-                <span className="text-sm font-mono text-terminal-red">{failedCount.toLocaleString()}</span>
-              </div>
-            )}
-            {pendingCount > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-muted" />
-                <span className="text-xs text-muted font-mono">{t.pending}:</span>
-                <span className="text-sm font-mono text-muted">{pendingCount.toLocaleString()}</span>
-              </div>
-            )}
-          </div>
-
           {campaign.status === 'sending' && (
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 border-2 border-terminal-yellow border-t-transparent rounded-full animate-spin" />
@@ -363,52 +362,52 @@ export default function CampaignDetailView({
             </div>
           )}
         </div>
+      )}
 
-        {/* Recipients Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b-2 border-border bg-surface-2">
-                <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.phone}</th>
-                <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.name}</th>
-                <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.status}</th>
-                <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.sentAt}</th>
-                <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.error}</th>
+      {/* Recipients Table */}
+      <div className="overflow-x-auto border-t border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.phone}</th>
+              <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.name}</th>
+              <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.status}</th>
+              <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.sentAt}</th>
+              <th className="text-left px-4 py-2 text-label text-muted font-medium">{t.error}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {recipients.map((r) => (
+              <tr key={r.id} className="hover:bg-surface-2 transition-colors">
+                <td className="px-4 py-2 font-mono text-foreground">{r.phone}</td>
+                <td className="px-4 py-2 text-muted">{r.name || '-'}</td>
+                <td className="px-4 py-2">
+                  <span className={`text-xs px-2 py-0.5 rounded-full border ${recipientStatusColors[r.status] || 'bg-surface-2 text-muted border-border'}`}>
+                    {getRecipientStatus(r.status)}
+                  </span>
+                </td>
+                <td className="px-4 py-2 font-mono text-xs text-muted">
+                  {r.sent_at
+                    ? new Date(r.sent_at).toLocaleTimeString(lang === 'es' ? 'es-MX' : 'en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : '-'}
+                </td>
+                <td className="px-4 py-2 font-mono text-xs text-terminal-red truncate max-w-[200px]">
+                  {r.error_message || ''}
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {recipients.map((r) => (
-                <tr key={r.id} className="hover:bg-surface-2 even:bg-surface/30 transition-colors">
-                  <td className="px-4 py-2 font-mono text-foreground">{r.phone}</td>
-                  <td className="px-4 py-2 text-muted">{r.name || '-'}</td>
-                  <td className="px-4 py-2">
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${recipientStatusColors[r.status] || 'bg-surface-2 text-muted border-border'}`}>
-                      {getRecipientStatus(r.status)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 font-mono text-xs text-muted">
-                    {r.sent_at
-                      ? new Date(r.sent_at).toLocaleTimeString(lang === 'es' ? 'es-MX' : 'en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      : '-'}
-                  </td>
-                  <td className="px-4 py-2 font-mono text-xs text-terminal-red truncate max-w-[200px]">
-                    {r.error_message || ''}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {recipients.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12">
-            <span className="text-sm text-muted">{t.noRecipients}</span>
-          </div>
-        )}
+            ))}
+          </tbody>
+        </table>
       </div>
+
+      {recipients.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-12">
+          <span className="text-sm text-muted">{t.noRecipients}</span>
+        </div>
+      )}
 
       <BroadcastConversations
         campaignId={campaign.id}

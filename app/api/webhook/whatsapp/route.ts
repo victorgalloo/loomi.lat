@@ -302,7 +302,8 @@ function wantsOtherDays(text: string): boolean {
  */
 async function handleSlotSelection(
   message: ParsedWhatsAppMessage,
-  context: ConversationContext
+  context: ConversationContext,
+  tenantId?: string
 ): Promise<{ handled: boolean; response?: string; showMoreDays?: boolean }> {
   // Early exits
   if (message.interactiveType !== 'list_reply' || !message.interactiveId) {
@@ -327,7 +328,7 @@ async function handleSlotSelection(
     displayText: message.text,
     selectedAt: Date.now()
   };
-  await setPendingSlot(message.phone, pendingSlot);
+  await setPendingSlot(message.phone, pendingSlot, tenantId);
 
   return {
     handled: true,
@@ -339,14 +340,15 @@ async function handleSlotSelection(
  * Handle button reply
  */
 async function handleButtonReply(
-  message: ParsedWhatsAppMessage
+  message: ParsedWhatsAppMessage,
+  tenantId?: string
 ): Promise<{ handled: boolean; showScheduleList?: boolean }> {
   if (message.interactiveType !== 'button_reply' || !message.interactiveId) {
     return { handled: false };
   }
 
   if (message.interactiveId === 'change_time') {
-    await clearPendingSlot(message.phone);
+    await clearPendingSlot(message.phone, tenantId);
     return { handled: true, showScheduleList: true };
   }
 
@@ -357,7 +359,8 @@ async function handleButtonReply(
  * Handle plan selection from list
  */
 async function handlePlanSelection(
-  message: ParsedWhatsAppMessage
+  message: ParsedWhatsAppMessage,
+  tenantId?: string
 ): Promise<{ handled: boolean; response?: string }> {
   // Early exit if not a list reply
   if (message.interactiveType !== 'list_reply' || !message.interactiveId) {
@@ -382,7 +385,7 @@ async function handlePlanSelection(
     displayText: message.text,
     selectedAt: Date.now()
   };
-  await setPendingPlan(message.phone, pendingPlan);
+  await setPendingPlan(message.phone, pendingPlan, tenantId);
 
   const planName = getPlanDisplayName(plan);
   return {
@@ -395,14 +398,15 @@ async function handlePlanSelection(
  * Handle email for pending plan (Stripe checkout)
  */
 async function handleEmailForPendingPlan(
-  message: ParsedWhatsAppMessage
+  message: ParsedWhatsAppMessage,
+  tenantId?: string
 ): Promise<{
   handled: boolean;
   response?: string;
   paymentLinkSent?: boolean;
 }> {
   // Start pending plan lookup early
-  const pendingPlanPromise = getPendingPlan(message.phone);
+  const pendingPlanPromise = getPendingPlan(message.phone, tenantId);
 
   // Extract email while waiting
   const email = extractEmail(message.text);
@@ -427,7 +431,7 @@ async function handleEmailForPendingPlan(
     const sent = await sendPaymentLink(message.phone, shortUrl, planName);
 
     // Clear pending plan
-    await clearPendingPlan(message.phone);
+    await clearPendingPlan(message.phone, tenantId);
 
     if (!sent) {
       return {
@@ -444,7 +448,7 @@ async function handleEmailForPendingPlan(
 
   } catch (error) {
     console.error('[Webhook] Checkout error:', error);
-    await clearPendingPlan(message.phone);
+    await clearPendingPlan(message.phone, tenantId);
     return {
       handled: true,
       response: `Hubo un problema al generar el link de pago. ¿Podrías intentar de nuevo?`
@@ -457,7 +461,8 @@ async function handleEmailForPendingPlan(
  */
 async function handleEmailForPendingSlot(
   message: ParsedWhatsAppMessage,
-  context: ConversationContext
+  context: ConversationContext,
+  tenantId?: string
 ): Promise<{
   handled: boolean;
   response?: string;
@@ -470,7 +475,7 @@ async function handleEmailForPendingSlot(
   };
 }> {
   // Start pending slot lookup early (async-api-routes)
-  const pendingSlotPromise = getPendingSlot(message.phone);
+  const pendingSlotPromise = getPendingSlot(message.phone, tenantId);
 
   // Extract email while waiting
   const email = extractEmail(message.text);
@@ -494,7 +499,7 @@ async function handleEmailForPendingSlot(
   });
 
   // Clear pending slot
-  await clearPendingSlot(message.phone);
+  await clearPendingSlot(message.phone, tenantId);
 
   if (!result.success) {
     console.error(`[Webhook] Booking failed:`, result.error);
@@ -651,7 +656,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Acquire conversation lock to prevent duplicate responses from rapid messages
-      const lockAcquired = await acquireConversationLock(message.phone);
+      const lockAcquired = await acquireConversationLock(message.phone, 5000, tenantId);
       if (!lockAcquired) {
         console.log(`[Webhook] Could not acquire conversation lock for ${message.phone}, saving message only`);
         // Still mark as read and save message, but don't respond
@@ -719,7 +724,7 @@ export async function POST(request: NextRequest) {
       // ============================================
 
       // 1. Handle slot selection
-      const slotSelection = await handleSlotSelection(message, context);
+      const slotSelection = await handleSlotSelection(message, context, tenantId);
       if (slotSelection.handled) {
         if (slotSelection.showMoreDays) {
           console.log(`[Webhook] User wants more days`);
@@ -728,7 +733,7 @@ export async function POST(request: NextRequest) {
               const moreSlots = await getAvailableTimeSlots(2, 3);
               if (moreSlots.length > 0) {
                 await sendScheduleList(message.phone, moreSlots, 'Más horarios', 'Aquí tienes más opciones:', credentials);
-                await setScheduleListSent(message.phone);
+                await setScheduleListSent(message.phone, tenantId);
                 saveMessage(context.conversation.id, 'assistant', '[Lista de más horarios]', context.lead.id).catch(console.error);
               } else {
                 await sendWhatsAppMessage(message.phone, 'No hay más horarios disponibles esta semana. ¿Te escribo la próxima?', credentials);
@@ -741,7 +746,7 @@ export async function POST(request: NextRequest) {
         await sendWhatsAppMessage(message.phone, slotSelection.response!, credentials);
         await Promise.all([
           saveMessage(context.conversation.id, 'assistant', slotSelection.response!, context.lead.id),
-          clearScheduleListSent(message.phone)
+          clearScheduleListSent(message.phone, tenantId)
         ]);
         return NextResponse.json({ status: 'ok', flow: 'slot_selected' });
       }
@@ -755,7 +760,7 @@ export async function POST(request: NextRequest) {
             const moreSlots = await getAvailableTimeSlots(2, 3);
             if (moreSlots.length > 0) {
               await sendScheduleList(message.phone, moreSlots, 'Más horarios', 'Aquí tienes más opciones:', credentials);
-              await setScheduleListSent(message.phone);
+              await setScheduleListSent(message.phone, tenantId);
               saveMessage(context.conversation.id, 'assistant', '[Lista de más horarios]', context.lead.id).catch(console.error);
             } else {
               await sendWhatsAppMessage(message.phone, 'No hay más horarios disponibles esta semana. ¿Te escribo la próxima?', credentials);
@@ -766,13 +771,13 @@ export async function POST(request: NextRequest) {
       }
 
       // 2. Handle button reply
-      const buttonReply = await handleButtonReply(message);
+      const buttonReply = await handleButtonReply(message, tenantId);
       if (buttonReply.handled && buttonReply.showScheduleList) {
         console.log(`[Webhook] User wants to change time`);
         const slots = await getAvailableTimeSlots();
         if (slots.length > 0) {
           await sendScheduleList(message.phone, slots, 'Elige otro horario', 'Estos son los horarios disponibles:', credentials);
-          await setScheduleListSent(message.phone);
+          await setScheduleListSent(message.phone, tenantId);
           await saveMessage(context.conversation.id, 'assistant', '[Lista de horarios enviada]', context.lead.id);
         } else {
           await sendWhatsAppMessage(message.phone, 'No hay horarios disponibles en este momento. Te contactamos pronto.', credentials);
@@ -784,7 +789,7 @@ export async function POST(request: NextRequest) {
       // 2b. If schedule list was sent and user types free text (not an interactive reply),
       //     remind them to use the list instead of calling the agent
       if (!message.interactiveType && message.text && !extractEmail(message.text)) {
-        const scheduleListPending = await wasScheduleListSent(message.phone);
+        const scheduleListPending = await wasScheduleListSent(message.phone, tenantId);
         if (scheduleListPending) {
           console.log(`[Webhook] Schedule list pending for ${message.phone}, nudging to use list`);
           await saveMessage(context.conversation.id, 'user', message.text, context.lead.id);
@@ -796,7 +801,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 3. Handle email for pending slot
-      const emailResult = await handleEmailForPendingSlot(message, context);
+      const emailResult = await handleEmailForPendingSlot(message, context, tenantId);
       if (emailResult.handled) {
         await sendWhatsAppMessage(message.phone, emailResult.response!, credentials);
         await saveMessage(context.conversation.id, 'assistant', emailResult.response!, context.lead.id);
@@ -809,7 +814,7 @@ export async function POST(request: NextRequest) {
           waitUntil((async () => {
             try {
               const appointment = await createAppointment(context.lead.id, scheduledAt, eventId);
-              await updateLeadStage(context.lead.phone, 'Calificado');
+              await updateLeadStage(context.lead.id, 'Calificado');
 
               // Use Temporal for follow-ups if enabled, otherwise use legacy scheduler
               if (isTemporalEnabled('followups') && tenantContext) {
@@ -901,7 +906,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 4. Handle plan selection (Stripe)
-      const planSelection = await handlePlanSelection(message);
+      const planSelection = await handlePlanSelection(message, tenantId);
       if (planSelection.handled) {
         await sendWhatsAppMessage(message.phone, planSelection.response!, credentials);
         await saveMessage(context.conversation.id, 'assistant', planSelection.response!, context.lead.id);
@@ -909,7 +914,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 5. Handle email for pending plan (Stripe checkout)
-      const planEmailResult = await handleEmailForPendingPlan(message);
+      const planEmailResult = await handleEmailForPendingPlan(message, tenantId);
       if (planEmailResult.handled) {
         await sendWhatsAppMessage(message.phone, planEmailResult.response!, credentials);
         await saveMessage(context.conversation.id, 'assistant', planEmailResult.response!, context.lead.id);
@@ -918,7 +923,7 @@ export async function POST(request: NextRequest) {
           // Update lead stage to payment_pending
           waitUntil((async () => {
             try {
-              await updateLeadStage(context.lead.phone, 'Negociacion');
+              await updateLeadStage(context.lead.id, 'Negociacion');
             } catch (err) {
               console.error('[Webhook] Update stage error:', err);
             }
@@ -1023,7 +1028,7 @@ export async function POST(request: NextRequest) {
             await saveMessage(context.conversation.id, 'assistant', result.response, context.lead.id);
           }
           await sendScheduleList(message.phone, slots, 'Horarios disponibles', 'Elige el que te funcione:', credentials);
-          await setScheduleListSent(message.phone);
+          await setScheduleListSent(message.phone, tenantId);
           await saveMessage(context.conversation.id, 'assistant', '[Lista de horarios enviada]', context.lead.id);
           return NextResponse.json({ status: 'ok', flow: 'schedule_list_from_agent' });
         } else {
@@ -1059,7 +1064,7 @@ export async function POST(request: NextRequest) {
         try {
           // Update industry if detected
           if (result.detectedIndustry) {
-            await updateLeadIndustry(context.lead.phone, result.detectedIndustry);
+            await updateLeadIndustry(context.lead.id, result.detectedIndustry);
           }
 
           // Schedule "said later" follow-up
@@ -1194,7 +1199,7 @@ export async function POST(request: NextRequest) {
     } finally {
       await Promise.all([
         clearProcessing(message.messageId),
-        releaseConversationLock(message.phone)
+        releaseConversationLock(message.phone, tenantId)
       ]);
     }
   } catch (error) {

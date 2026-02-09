@@ -146,12 +146,12 @@ const CONVERSATION_LOCK_TTL = 30; // 30 seconds
  * Uses Redis NX (set-if-not-exists) for atomic locking.
  * Returns true if lock acquired, false if already locked.
  */
-export async function acquireConversationLock(phone: string, timeoutMs: number = 5000): Promise<boolean> {
+export async function acquireConversationLock(phone: string, timeoutMs: number = 5000, tenantId?: string): Promise<boolean> {
   if (!process.env.UPSTASH_REDIS_URL || !process.env.UPSTASH_REDIS_TOKEN) {
     return true; // No Redis = no lock needed
   }
 
-  const key = `conv_lock:${phone}`;
+  const key = tenantId ? `conv_lock:${tenantId}:${phone}` : `conv_lock:${phone}`;
   const startTime = Date.now();
 
   while (Date.now() - startTime < timeoutMs) {
@@ -177,9 +177,10 @@ export async function acquireConversationLock(phone: string, timeoutMs: number =
 /**
  * Release the conversation lock
  */
-export async function releaseConversationLock(phone: string): Promise<void> {
+export async function releaseConversationLock(phone: string, tenantId?: string): Promise<void> {
   try {
-    await redis.del(`conv_lock:${phone}`);
+    const key = tenantId ? `conv_lock:${tenantId}:${phone}` : `conv_lock:${phone}`;
+    await redis.del(key);
   } catch (error) {
     console.error('[ConversationLock] Release error:', error);
   }
@@ -201,9 +202,9 @@ const PENDING_SLOT_TTL = 3600; // 1 hour
 /**
  * Store a pending slot selection
  */
-export async function setPendingSlot(phone: string, slot: PendingSlot): Promise<void> {
+export async function setPendingSlot(phone: string, slot: PendingSlot, tenantId?: string): Promise<void> {
   try {
-    const key = `pending_slot:${phone}`;
+    const key = tenantId ? `pending_slot:${tenantId}:${phone}` : `pending_slot:${phone}`;
     await redis.set(key, JSON.stringify(slot), { ex: PENDING_SLOT_TTL });
   } catch (error) {
     console.error('[PendingSlot] Set error:', error);
@@ -213,9 +214,9 @@ export async function setPendingSlot(phone: string, slot: PendingSlot): Promise<
 /**
  * Get a pending slot selection
  */
-export async function getPendingSlot(phone: string): Promise<PendingSlot | null> {
+export async function getPendingSlot(phone: string, tenantId?: string): Promise<PendingSlot | null> {
   try {
-    const key = `pending_slot:${phone}`;
+    const key = tenantId ? `pending_slot:${tenantId}:${phone}` : `pending_slot:${phone}`;
     const data = await redis.get(key);
 
     if (!data) return null;
@@ -231,9 +232,10 @@ export async function getPendingSlot(phone: string): Promise<PendingSlot | null>
 /**
  * Clear a pending slot selection
  */
-export async function clearPendingSlot(phone: string): Promise<void> {
+export async function clearPendingSlot(phone: string, tenantId?: string): Promise<void> {
   try {
-    await redis.del(`pending_slot:${phone}`);
+    const key = tenantId ? `pending_slot:${tenantId}:${phone}` : `pending_slot:${phone}`;
+    await redis.del(key);
   } catch (error) {
     console.error('[PendingSlot] Clear error:', error);
   }
@@ -254,9 +256,9 @@ const PENDING_PLAN_TTL = 3600; // 1 hour
 /**
  * Store a pending plan selection
  */
-export async function setPendingPlan(phone: string, plan: PendingPlan): Promise<void> {
+export async function setPendingPlan(phone: string, plan: PendingPlan, tenantId?: string): Promise<void> {
   try {
-    const key = `pending_plan:${phone}`;
+    const key = tenantId ? `pending_plan:${tenantId}:${phone}` : `pending_plan:${phone}`;
     await redis.set(key, JSON.stringify(plan), { ex: PENDING_PLAN_TTL });
   } catch (error) {
     console.error('[PendingPlan] Set error:', error);
@@ -266,9 +268,9 @@ export async function setPendingPlan(phone: string, plan: PendingPlan): Promise<
 /**
  * Get a pending plan selection
  */
-export async function getPendingPlan(phone: string): Promise<PendingPlan | null> {
+export async function getPendingPlan(phone: string, tenantId?: string): Promise<PendingPlan | null> {
   try {
-    const key = `pending_plan:${phone}`;
+    const key = tenantId ? `pending_plan:${tenantId}:${phone}` : `pending_plan:${phone}`;
     const data = await redis.get(key);
 
     if (!data) return null;
@@ -284,9 +286,10 @@ export async function getPendingPlan(phone: string): Promise<PendingPlan | null>
 /**
  * Clear a pending plan selection
  */
-export async function clearPendingPlan(phone: string): Promise<void> {
+export async function clearPendingPlan(phone: string, tenantId?: string): Promise<void> {
   try {
-    await redis.del(`pending_plan:${phone}`);
+    const key = tenantId ? `pending_plan:${tenantId}:${phone}` : `pending_plan:${phone}`;
+    await redis.del(key);
   } catch (error) {
     console.error('[PendingPlan] Clear error:', error);
   }
@@ -301,9 +304,9 @@ const SCHEDULE_LIST_TTL = 1800; // 30 minutes
 /**
  * Mark that a schedule list was sent to this phone
  */
-export async function setScheduleListSent(phone: string): Promise<void> {
+export async function setScheduleListSent(phone: string, tenantId?: string): Promise<void> {
   try {
-    const key = `schedule_list_sent:${phone}`;
+    const key = tenantId ? `schedule_list_sent:${tenantId}:${phone}` : `schedule_list_sent:${phone}`;
     await redis.set(key, Date.now().toString(), { ex: SCHEDULE_LIST_TTL });
   } catch (error) {
     console.error('[ScheduleList] Set error:', error);
@@ -313,13 +316,13 @@ export async function setScheduleListSent(phone: string): Promise<void> {
 /**
  * Check if a schedule list was already sent to this phone
  */
-export async function wasScheduleListSent(phone: string): Promise<boolean> {
+export async function wasScheduleListSent(phone: string, tenantId?: string): Promise<boolean> {
   if (!process.env.UPSTASH_REDIS_URL || !process.env.UPSTASH_REDIS_TOKEN) {
     return false;
   }
 
   try {
-    const key = `schedule_list_sent:${phone}`;
+    const key = tenantId ? `schedule_list_sent:${tenantId}:${phone}` : `schedule_list_sent:${phone}`;
     const data = await redis.get(key);
     return !!data;
   } catch (error) {
@@ -331,9 +334,10 @@ export async function wasScheduleListSent(phone: string): Promise<boolean> {
 /**
  * Clear the schedule list sent flag (after slot is selected)
  */
-export async function clearScheduleListSent(phone: string): Promise<void> {
+export async function clearScheduleListSent(phone: string, tenantId?: string): Promise<void> {
   try {
-    await redis.del(`schedule_list_sent:${phone}`);
+    const key = tenantId ? `schedule_list_sent:${tenantId}:${phone}` : `schedule_list_sent:${phone}`;
+    await redis.del(key);
   } catch (error) {
     console.error('[ScheduleList] Clear error:', error);
   }

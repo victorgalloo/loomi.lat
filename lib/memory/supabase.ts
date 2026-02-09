@@ -177,7 +177,7 @@ export async function createLead(
 }
 
 export async function updateLead(
-  phone: string,
+  leadId: string,
   updates: Partial<Pick<Lead, 'name' | 'email' | 'company' | 'industry' | 'stage'>>
 ): Promise<void> {
   const supabase = getSupabase();
@@ -185,25 +185,26 @@ export async function updateLead(
   const { error } = await supabase
     .from('leads')
     .update(updates)
-    .eq('phone', phone);
+    .eq('id', leadId);
 
   if (error) {
     console.error('Error updating lead:', error);
   }
 }
 
-export async function updateLeadStage(phone: string, stage: string): Promise<void> {
-  await updateLead(phone, { stage });
+export async function updateLeadStage(leadId: string, stage: string): Promise<void> {
+  await updateLead(leadId, { stage });
 }
 
-export async function updateLeadIndustry(phone: string, industry: string): Promise<void> {
-  await updateLead(phone, { industry });
+export async function updateLeadIndustry(leadId: string, industry: string): Promise<void> {
+  await updateLead(leadId, { industry });
 }
 
 /**
  * Save lead qualification data from WhatsApp Flow
  */
 export async function saveLeadQualification(
+  leadId: string,
   phone: string,
   qualification: {
     challenge: string;
@@ -223,14 +224,14 @@ export async function saveLeadQualification(
       stage: 'Nuevo',
       last_interaction: new Date().toISOString(),
     })
-    .eq('phone', phone);
+    .eq('id', leadId);
 
   if (error) {
     console.error('[Supabase] Error saving qualification:', error.message);
     throw error;
   }
 
-  console.log(`[Supabase] Lead ${phone} qualified with:`, qualification);
+  console.log(`[Supabase] Lead ${leadId} qualified with:`, qualification);
 
   // Track conversion event for Meta (non-blocking)
   trackLeadQualified({ phone }).catch((err) => {

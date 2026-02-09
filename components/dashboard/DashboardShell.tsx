@@ -18,6 +18,7 @@ const navItems = [
   { href: '/dashboard/conversations', label: 'inbox' },
   { href: '/broadcasts', label: 'broadcasts' },
   { href: '/dashboard/agent', label: 'agente', subItems: [
+    { href: '/dashboard/agent/setup', label: 'setup' },
     { href: '/dashboard/agent', label: 'config' },
     { href: '/dashboard/agent/prompt', label: 'prompt' },
     { href: '/dashboard/agent/knowledge', label: 'knowledge' },

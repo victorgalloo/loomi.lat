@@ -105,15 +105,15 @@ function quickAnalysis(
   let suggestedAction: string;
 
   if (interestLevel === 'high' && !context.hasActiveAppointment) {
-    suggestedAction = 'proponer demo directamente';
+    suggestedAction = 'proponer siguiente paso (demo/reunión/cotización)';
   } else if (interestLevel === 'low') {
-    suggestedAction = 'generar interés con beneficio específico';
+    suggestedAction = 'generar interés con beneficio relevante';
   } else if (hiddenObjections.length > 0) {
     suggestedAction = 'abordar objeciones antes de avanzar';
   } else if (!context.lead.company && !context.lead.industry) {
     suggestedAction = 'preguntar tipo de negocio';
   } else if (context.lead.company && !context.hasActiveAppointment) {
-    suggestedAction = 'proponer demo con beneficio personalizado';
+    suggestedAction = 'proponer siguiente paso con beneficio personalizado';
   } else {
     suggestedAction = 'continuar discovery';
   }

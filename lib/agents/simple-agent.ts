@@ -1,6 +1,10 @@
 /**
  * Simple Agent - Main conversation handler
  *
+ * Now fully configurable per tenant. All tenants go through the full pipeline
+ * (multi-agent analysis + sentiment + industry + few-shot + reasoning)
+ * parametrized with their own context. Defaults to Loomi config when not set.
+ *
  * Optimized with:
  * - Set for O(1) keyword lookups (js-set-map-lookups)
  * - Hoisted RegExp (js-hoist-regexp)
@@ -21,7 +25,18 @@ import { generateReasoningFast, formatReasoningForPrompt } from './reasoning';
 import { getSentimentInstruction } from './sentiment';
 import { getIndustryPromptSection } from './industry';
 import { getFewShotContext, getFewShotContextFromTenant } from './few-shot';
-import { getSellerStrategy } from './multi-agent';
+import { getSellerStrategy, TenantAnalysisContext } from './multi-agent';
+import {
+  DEFAULT_SYSTEM_PROMPT,
+  DEFAULT_PRODUCT_CONTEXT,
+  DEFAULT_PRICING_CONTEXT,
+  DEFAULT_SALES_PROCESS,
+  DEFAULT_QUALIFICATION_CRITERIA,
+  DEFAULT_COMPETITOR_CONTEXT,
+  DEFAULT_OBJECTION_HANDLERS,
+  DEFAULT_AGENT_NAME,
+  DEFAULT_AGENT_ROLE,
+} from './defaults';
 
 // Keyword sets for state detection
 const HANDOFF_KEYWORDS = new Set([
@@ -80,234 +95,6 @@ function isSimpleMessage(message: string, historyLength: number): boolean {
   return false;
 }
 
-const SYSTEM_PROMPT = `Eres Lu, growth advisor de Loomi. Tienes experiencia en startups y marketing digital. Te apasiona ayudar a negocios a escalar sus ventas. Eres directa, inteligente y genuinamente curiosa.
-
-# SOBRE LOOMI
-
-Loomi es un agente de IA para WhatsApp que vende 24/7. No es un chatbot de flujos - es inteligencia artificial real que:
-
-- **Piensa antes de responder**: Análisis multi-agente con GPT-4o
-- **Lee emociones**: Detecta frustración, entusiasmo, escepticismo en tiempo real
-- **Agenda sin intervención**: Integración nativa con Cal.com
-- **Nunca pierde un lead**: Follow-ups automáticos y secuencias
-- **CRM integrado**: Pipeline Kanban con historial completo
-- **Optimiza campañas**: Meta CAPI para reportar conversiones
-
-**Resultados reales de clientes:**
-- María González (ModaLab MX): +340% demos sin contratar
-- Carlos Ruiz (TechConsulting): 85% leads calificados
-- Ana Martínez (ClinicaDent): -78% no-shows (35% → 8%)
-
-**Métricas de la plataforma:**
-- 0.8s tiempo de respuesta
-- 100% leads atendidos
-- 3x más demos agendadas
-- -32% CPL promedio con Meta CAPI
-
-# TU FILOSOFÍA
-
-"Loomi no es para todos. Pero si tu negocio vive de WhatsApp, probablemente estés dejando dinero en la mesa."
-
-Tu trabajo es entender si Loomi hace sentido para ellos. Si no, los sueltas con gracia.
-
-# CONTEXTO DE LOS LEADS
-
-Llegan de anuncios de Meta o el landing. Son:
-- Dueños de negocio o responsables de ventas
-- Frustrados porque no dan abasto con WhatsApp
-- Curiosos sobre IA pero escépticos
-- Comparando con Wati, ManyChat, Leadsales
-
-Tu rol: Entender su dolor, mostrar el valor, agendar demo.
-
-# TU TONO DE VOZ
-
-Tienes personalidad mexicana auténtica. Tu tono es:
-- Cercano y cálido (como hablar con un amigo que te quiere ayudar)
-- Directo y práctico (sin rodeos)
-- Entusiasta pero no exagerado
-- Usas expresiones coloquiales naturales como "órale", "está bien", "me late", "a darle", "la neta", "qué onda"
-- Celebras los avances del usuario ("¡Órale, muy bien!", "¡A huevo, eso!")
-- Ofreces apoyo cuando algo sale mal ("No pasa nada, así se aprende", "Tranqui, lo resolvemos")
-- Nunca usas groserías ni lenguaje inapropiado
-- No eres corporativo ni robótico - hablas como persona real
-
-Frases tuyas:
-- "¿Qué onda? Cuéntame, ¿cómo manejan WhatsApp hoy?"
-- "Órale, interesante. ¿Cuántos mensajes reciben al día más o menos?"
-- "La neta, si recibes menos de 20 mensajes diarios, puede no valerte la pena aún"
-- "Mira, te lo explico bien simple..."
-- "¿Qué es lo que más te quita tiempo? Ahí le entramos"
-- "Me late, ¿te muestro cómo funcionaría para tu negocio?"
-- "A darle, agendamos una demo y te enseño en chinga"
-- "No hay bronca, cualquier duda aquí andamos"
-
-# PROCESO DE CONVERSACIÓN
-
-## 1. CONECTAR (primeros mensajes)
-Si escriben "Hola" o "Vi su anuncio":
-→ "¡Hola [NOMBRE]! Qué bueno que escribes. ¿Qué te llamó la atención de Loomi?"
-
-IMPORTANTE: Si tienes el nombre, ÚSALO siempre.
-
-## 2. DESCUBRIR EL DOLOR
-- ¿Cuántos mensajes de WhatsApp reciben al día?
-- ¿Quién los atiende hoy? ¿Vendedores, tú, nadie?
-- ¿Qué pasa con los mensajes fuera de horario?
-- ¿Cuántos leads se les escapan?
-
-UNA pregunta a la vez. Escucha, comenta, luego pregunta.
-
-## 3. CALIFICAR
-Buenos fits para Loomi:
-- Reciben 50+ mensajes/día
-- Venden servicios o productos por WhatsApp
-- Tienen equipo de ventas (o quieren tenerlo virtual)
-- Invierten en Meta Ads
-
-No tan buenos fits:
-- Menos de 20 mensajes/día
-- Negocio muy local/personal
-- No usan WhatsApp para ventas
-
-Sé honesta: "Mira, con ese volumen, tal vez no te conviene aún."
-
-## 4. PRESENTAR LOOMI
-Adapta según su dolor:
-
-**Si les preocupa no dar abasto:**
-→ "Loomi atiende 100+ chats simultáneos, 24/7. Mientras duermes, está calificando leads."
-
-**Si les preocupa la calidad:**
-→ "No es un bot de flujos. Usa IA avanzada que realmente entiende contexto. Lee el tono del cliente."
-
-**Si les preocupa el costo:**
-→ "Un vendedor en LATAM cuesta $800-1,500/mes. Loomi desde $199, y nunca se enferma ni renuncia."
-
-**Si usan Wati/ManyChat:**
-→ "Esos son bots de flujos - el cliente escribe algo fuera del menú y se rompe. Loomi ENTIENDE."
-
-## 5. CERRAR CON DEMO
-Cuando hay interés claro:
-→ "¿Te late que te muestre cómo funcionaría para [su negocio]? Tengo espacio mañana."
-→ Usa schedule_demo para agendar directamente
-
-Si quieren comprar directo:
-→ "Perfecto. ¿Con qué plan quieres arrancar? Te mando el link de pago."
-→ Usa send_payment_link
-
-# PLANES Y PRECIOS
-
-| Plan | Precio | Mensajes/día | Incluye |
-|------|--------|--------------|---------|
-| **Starter** | $199/mes | 100 | 1 WhatsApp, Agente IA, Cal.com |
-| **Growth** | $349/mes | 300 | 3 WhatsApp, CRM, Meta CAPI, Analytics |
-| **Business** | $599/mes | 1,000 | 10 WhatsApp, API, Onboarding, SLA 99.9% |
-| **Enterprise** | Custom | Ilimitado | Self-hosted, Account manager |
-
-**ROI típico:**
-- Un vendedor humano: $800-1,500 USD/mes en LATAM
-- Loomi Starter: $199/mes, atiende 24/7, 100+ chats simultáneos
-- Con 2-3 cierres al mes, ya se pagó solo
-
-**Prueba gratis:** 14 días, sin tarjeta
-
-# MANEJO DE OBJECIONES
-
-## "Es muy caro" / "No tengo presupuesto"
-→ "Entiendo. ¿Cuánto pagas hoy por atender WhatsApp? ¿Tienes vendedor?"
-→ "Un vendedor cuesta $800-1,500/mes. Starter es $199 y trabaja 24/7."
-→ "Si cierras 2 ventas extra al mes, ¿de cuánto hablamos? El ROI es inmediato."
-
-## "Ya uso Wati / ManyChat / Leadsales"
-→ "Esos son bots de flujos - si el cliente pregunta algo fuera del menú, se rompe."
-→ "Loomi ENTIENDE. Usa IA real, no árboles de decisión."
-→ "¿Cuántos leads pierdes porque el bot no supo qué responder?"
-
-## "No confío en IA / bots"
-→ "Válido. La mayoría de bots son malos."
-→ "Loomi es diferente: multi-agente, analiza sentimiento, sabe cuándo escalar a humano."
-→ "¿Te muestro una demo? En 15 min ves la diferencia."
-
-## "Lo voy a pensar"
-→ "Va, sin presión. ¿Qué es lo que te hace dudar?"
-→ "¿Es el precio, la tecnología, o quieres ver más antes de decidir?"
-→ Agenda una demo para que vea el producto funcionando
-
-## "¿Y si no funciona?"
-→ "14 días de prueba gratis, sin tarjeta."
-→ "Si no te convence, cancelas y listo. Sin letra chiquita."
-
-## "No gracias" (definitivo)
-→ "Perfecto, gracias por tu tiempo. Si en algún momento WhatsApp se vuelve un dolor, aquí estamos."
-
-# DIFERENCIADORES CLAVE (vs competencia)
-
-| Característica | Loomi | Bots tradicionales |
-|----------------|-------|-------------------|
-| Conversación | Natural, contextual | Flujos rígidos |
-| Inteligencia | IA avanzada multi-agente | Reglas if/then |
-| Memoria | Recuerda todo el historial | Sin memoria |
-| Emociones | Detecta frustración/interés | Ignora tono |
-| Setup | 5 minutos | Horas de configuración |
-| Código | No necesita | Requiere programar |
-
-# HERRAMIENTAS DISPONIBLES
-
-## 1. schedule_demo
-Agenda una demo en Cal.com. Usa cuando:
-- El cliente muestra interés en ver Loomi
-- Quiere entender cómo funcionaría para su negocio
-- Dice "muéstrame", "quiero ver", "agendemos"
-- IMPORTANTE: NO llames schedule_demo si ya mostraste la lista de horarios. Espera a que el cliente elija de la lista
-
-## 2. send_payment_link
-Envía link de pago de Stripe. Usa cuando:
-- El cliente confirmó que quiere contratar
-- Ya sabes qué plan quiere (Starter, Growth, Business)
-- REQUIERE: email del cliente
-
-## 3. escalate_to_human
-Transfiere a un humano. Usa cuando:
-- El cliente pide hablar con una persona
-- Es un deal enterprise/custom
-- Tiene preguntas técnicas muy específicas
-- Está frustrado
-
-# MULTIMEDIA
-
-Si recibes [Archivo multimedia], [Sticker], [Ubicación] o [Contacto]:
-- Responde de forma natural como si lo hubieras recibido
-- "¡Gracias por compartirlo!" o "Recibido, déjame revisarlo"
-- NO digas "no puedo ver archivos" ni "no tengo capacidad de procesar"
-- Continúa la conversación normalmente
-
-Si recibes [Audio transcrito: ...]:
-- El audio ya fue transcrito automáticamente. Responde al contenido de la transcripción
-- Trata el mensaje como si te lo hubieran escrito directamente
-
-# REGLAS IMPORTANTES
-
-1. Mensajes CORTOS - máximo 2-3 líneas por mensaje
-2. UNA pregunta a la vez - no interrogatorios
-3. USA el nombre del cliente si lo tienes
-4. NO digas que eres IA/bot a menos que pregunten directamente
-5. Si dicen "no me interesa" o similar por PRIMERA vez → Haz UNA pregunta de sondeo: "Entiendo, ¿qué es lo que te detiene?" o "¿Qué necesitarías ver para que haga sentido?". Si vuelven a decir no → Respeta y cierra con gracia
-6. Si no es buen fit, dilo honestamente
-
-# ALUMNI / CLIENTES EXISTENTES
-
-Si el contexto indica [ALUMNO/CLIENTE EXISTENTE]:
-- NO intentes venderles nada
-- Salúdalos como a un viejo amigo: "¡Qué gusto saludarte de nuevo!"
-- Pregunta cómo les ha ido con Loomi o en qué les puedes ayudar
-- Si tienen problemas técnicos, escala a humano
-- Si quieren upgrade, guíalos al plan correcto
-
-# DATO FINAL
-
-Tú misma eres Loomi en acción. Esta conversación es la prueba de lo que puede hacer el producto. Si el cliente pregunta "¿esto es Loomi?", puedes decir: "Sí, estás hablando conmigo. ¿Qué te parece?"`;
-
 // Schedule demo tool will be added dynamically based on Cal.com integration
 
 export interface SimpleAgentResult {
@@ -364,6 +151,36 @@ interface AgentConfigOptions {
   customTools?: CustomToolDef[];
   // Model override per tenant
   model?: string | null;
+  // Configurable tenant context fields
+  productContext?: string | null;
+  pricingContext?: string | null;
+  salesProcessContext?: string | null;
+  qualificationContext?: string | null;
+  competitorContext?: string | null;
+  objectionHandlers?: Record<string, string>;
+  analysisEnabled?: boolean;
+  maxResponseTokens?: number;
+  temperature?: number;
+  agentName?: string | null;
+  agentRole?: string | null;
+}
+
+/**
+ * Build tenant analysis context from agent config, falling back to defaults
+ */
+function buildTenantAnalysisContext(agentConfig?: AgentConfigOptions): TenantAnalysisContext {
+  return {
+    productContext: agentConfig?.productContext || DEFAULT_PRODUCT_CONTEXT,
+    pricingContext: agentConfig?.pricingContext || DEFAULT_PRICING_CONTEXT,
+    salesProcessContext: agentConfig?.salesProcessContext || DEFAULT_SALES_PROCESS,
+    qualificationContext: agentConfig?.qualificationContext || DEFAULT_QUALIFICATION_CRITERIA,
+    competitorContext: agentConfig?.competitorContext || DEFAULT_COMPETITOR_CONTEXT,
+    objectionHandlers: (agentConfig?.objectionHandlers && Object.keys(agentConfig.objectionHandlers).length > 0)
+      ? agentConfig.objectionHandlers
+      : DEFAULT_OBJECTION_HANDLERS,
+    agentName: agentConfig?.agentName || DEFAULT_AGENT_NAME,
+    agentRole: agentConfig?.agentRole || DEFAULT_AGENT_ROLE,
+  };
 }
 
 export async function simpleAgent(
@@ -383,6 +200,10 @@ export async function simpleAgent(
   console.log('=== HISTORY ===');
   console.log(JSON.stringify(history, null, 2));
 
+  // Build tenant context for multi-agent analysis
+  const tenantCtx = buildTenantAnalysisContext(agentConfig);
+  const agentName = tenantCtx.agentName;
+
   // ============================================
   // STEP 0: Get Few-Shot Context (ejemplos relevantes)
   // ============================================
@@ -395,20 +216,17 @@ export async function simpleAgent(
   }
 
   // ============================================
-  // STEP 1: Multi-Agent Analysis (always run full path)
+  // STEP 1: Multi-Agent Analysis (all tenants go through full pipeline)
   // ============================================
-  const hasCustomPrompt = !!agentConfig?.systemPrompt;
+  const analysisEnabled = agentConfig?.analysisEnabled !== false;
   let sellerAnalysis: Awaited<ReturnType<typeof getSellerStrategy>>['analysis'] | null = null;
   let sellerInstructions: string = '';
   let reasoning: Awaited<ReturnType<typeof generateReasoningFast>>;
 
   console.log('=== FULL ANALYSIS PATH ===');
 
-  // Skip Loomi-specific multi-agent analysis for custom prompt tenants
-  // The seller strategy is hardcoded for Loomi sales (WhatsApp AI product)
-  // and would inject conflicting instructions for tenants like Growth Rockstar
-  if (hasCustomPrompt) {
-    console.log('=== MULTI-AGENT SKIPPED (custom prompt tenant) ===');
+  if (!analysisEnabled) {
+    console.log('=== MULTI-AGENT DISABLED (tenant config) ===');
     reasoning = await generateReasoningFast(message, context);
   } else {
     const [strategyResult, reasoningResult] = await Promise.all([
@@ -417,7 +235,7 @@ export async function simpleAgent(
         company: context.lead.company,
         industry: context.lead.industry,
         previousInteractions: context.recentMessages.length,
-      }).catch((err: Error) => {
+      }, tenantCtx).catch((err: Error) => {
         console.error('[Multi-Agent] Analysis failed, continuing without:', err.message);
         return null;
       }),
@@ -482,12 +300,12 @@ export async function simpleAgent(
     contextParts.push(`Info previa: ${context.memory}`);
   }
 
-  // Use tenant's custom system prompt if available, otherwise fall back to default Loomi prompt
-  const basePrompt = agentConfig?.systemPrompt || SYSTEM_PROMPT;
+  // Use tenant's custom system prompt if available, otherwise fall back to default
+  const basePrompt = agentConfig?.systemPrompt || DEFAULT_SYSTEM_PROMPT;
   let systemWithContext = basePrompt;
 
-  // Add industry-specific context (only if using default prompt)
-  if (!agentConfig?.systemPrompt && industrySection) {
+  // Add industry-specific context (for all tenants)
+  if (industrySection) {
     systemWithContext += `\n\n${industrySection}`;
   }
 
@@ -505,7 +323,7 @@ export async function simpleAgent(
     systemWithContext += `\n\n${fewShotContext}`;
   }
 
-  // Add multi-agent seller strategy (only if not on fast path)
+  // Add multi-agent seller strategy
   if (sellerInstructions) {
     systemWithContext += `\n\n${sellerInstructions}`;
   }
@@ -520,7 +338,7 @@ export async function simpleAgent(
 
   systemWithContext += `\n\n# ESTADO ACTUAL: ${state.toUpperCase()}`;
 
-  // Instrucciones específicas por estado
+  // Instrucciones específicas por estado (unified for all tenants)
   const stateInstructions: Record<string, string> = {
     'handoff_human_request': `
 ACCIÓN OBLIGATORIA: El usuario pidió hablar con un humano. USA escalate_to_human INMEDIATAMENTE.
@@ -532,27 +350,22 @@ ACCIÓN OBLIGATORIA: El usuario está frustrado. USA escalate_to_human con URGEN
 - Muestra empatía: "Perdón si no me expliqué bien."
 - Escala: "Deja te paso con alguien que te puede ayudar mejor."`,
 
-    'conversacion_activa': hasCustomPrompt
-      ? `Sigue las instrucciones del system prompt personalizado arriba.
-Sé directo, conversacional, mensajes cortos (2-3 líneas max).`
-      : `Sigue el análisis multi-agente de arriba.
-Tu objetivo: Entender su dolor con WhatsApp → Mostrar cómo Loomi lo resuelve → Agendar demo o cerrar.
-Sé directa, inteligente, mensajes cortos.`
+    'conversacion_activa': `Sigue el análisis multi-agente de arriba.
+Sé directo, conversacional, mensajes cortos (2-3 líneas max).
+UNA pregunta a la vez.`
   };
 
   if (stateInstructions[state]) {
     systemWithContext += stateInstructions[state];
   }
 
-  systemWithContext += hasCustomPrompt
-    ? `\n\n# INSTRUCCIÓN FINAL\nResponde en máximo 2-3 líneas. Sé directo y conversacional. UNA pregunta a la vez. Sigue ESTRICTAMENTE las instrucciones del prompt personalizado. NUNCA menciones productos o servicios que no estén en tu prompt.`
-    : `\n\n# INSTRUCCIÓN FINAL\nResponde en máximo 2-3 líneas. Sé directa y conversacional. UNA pregunta a la vez. Si quieren demo, usa schedule_demo. Si quieren comprar, pide email y usa send_payment_link.`;
+  systemWithContext += `\n\n# INSTRUCCIÓN FINAL\nResponde en máximo 2-3 líneas. Sé directo y conversacional. UNA pregunta a la vez. Si quieren demo/reunión, usa schedule_demo. Si quieren comprar, pide email y usa send_payment_link. NUNCA menciones productos o servicios que no estén en tu prompt.`;
 
   // Get client info
   const clientName = context.lead.name || 'Cliente';
   const clientPhone = context.lead.phone || '';
 
-  // Define tools for Loomi sales
+  // Define tools
   const tools = {
     escalate_to_human: tool({
       description: 'Transfiere la conversación a un humano. Usa cuando: el cliente pide hablar con una persona, es un deal enterprise, tiene preguntas técnicas muy específicas, o está frustrado.',
@@ -606,9 +419,7 @@ Sé directa, inteligente, mensajes cortos.`
     }),
 
     schedule_demo: tool({
-      description: hasCustomPrompt
-        ? 'Muestra horarios disponibles para agendar una reunión o demo. Usa SOLO para mostrar horarios inicialmente. Cuando el cliente ya eligió horario y dio nombre+email, usa book_demo en su lugar.'
-        : 'Muestra horarios disponibles para agendar una demo de Loomi. Usa SOLO para mostrar horarios inicialmente. Cuando el cliente ya eligió horario y dio nombre+email, usa book_demo en su lugar.',
+      description: `Muestra horarios disponibles para agendar una reunión o demo. Usa SOLO para mostrar horarios inicialmente. Cuando el cliente ya eligió horario y dio nombre+email, usa book_demo en su lugar.`,
       inputSchema: zodSchema(z.object({
         reason: z.string().optional().describe('Breve nota del contexto o interés del cliente')
       })),
@@ -663,9 +474,7 @@ Sé directa, inteligente, mensajes cortos.`
     }),
 
     send_payment_link: tool({
-      description: hasCustomPrompt
-        ? 'Envía un link de pago de Stripe. Usa SOLO cuando el cliente confirmó que quiere contratar y ya sabes qué plan quiere (starter=$199, growth=$349, business=$599).'
-        : 'Envía un link de pago de Stripe para suscribirse a Loomi. Usa SOLO cuando el cliente confirmó que quiere contratar y ya sabes qué plan quiere (starter=$199, growth=$349, business=$599).',
+      description: 'Envía un link de pago de Stripe. Usa SOLO cuando el cliente confirmó que quiere contratar y ya sabes qué plan quiere (starter=$199, growth=$349, business=$599).',
       inputSchema: zodSchema(z.object({
         email: z.string().describe('Email del cliente'),
         plan: z.enum(['starter', 'growth', 'business']).describe('Plan elegido: starter ($199), growth ($349), o business ($599)')
@@ -682,9 +491,7 @@ Sé directa, inteligente, mensajes cortos.`
             phone: clientPhone,
             plan
           });
-          const planLabel = hasCustomPrompt
-            ? `${plan.charAt(0).toUpperCase() + plan.slice(1)} - $${price}/mes`
-            : `Loomi ${plan.charAt(0).toUpperCase() + plan.slice(1)} - $${price}/mes`;
+          const planLabel = `${plan.charAt(0).toUpperCase() + plan.slice(1)} - $${price}/mes`;
           const sent = await sendPaymentLink(clientPhone, url, planLabel);
           return {
             success: sent,
@@ -769,8 +576,8 @@ Sé directa, inteligente, mensajes cortos.`
       system: systemWithContext,
       messages: history,
       tools,
-      temperature: 0.7,  // Tono conversacional
-      maxOutputTokens: 250,
+      temperature: agentConfig?.temperature ?? 0.7,
+      maxOutputTokens: agentConfig?.maxResponseTokens ?? 250,
       onStepFinish: async (step) => {
         if (step.toolResults) {
           for (const toolResult of step.toolResults) {

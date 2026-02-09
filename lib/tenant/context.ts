@@ -61,6 +61,18 @@ export interface AgentConfig {
   productsCatalog: Record<string, unknown>;
   // Model override per tenant (e.g. 'gpt-4o', 'gpt-5.2')
   model: string | null;
+  // Configurable tenant context fields
+  productContext: string | null;
+  pricingContext: string | null;
+  salesProcessContext: string | null;
+  qualificationContext: string | null;
+  competitorContext: string | null;
+  objectionHandlers: Record<string, string>;
+  analysisEnabled: boolean;
+  maxResponseTokens: number;
+  temperature: number;
+  agentName: string | null;
+  agentRole: string | null;
 }
 
 // Cache for tenant lookups (phone_number_id -> tenant_id)
@@ -184,7 +196,18 @@ export async function getAgentConfig(tenantId: string): Promise<AgentConfig | nu
       systemPrompt: null,
       fewShotExamples: [],
       productsCatalog: {},
-      model: null
+      model: null,
+      productContext: null,
+      pricingContext: null,
+      salesProcessContext: null,
+      qualificationContext: null,
+      competitorContext: null,
+      objectionHandlers: {},
+      analysisEnabled: true,
+      maxResponseTokens: 250,
+      temperature: 0.7,
+      agentName: null,
+      agentRole: null,
     };
   }
 
@@ -203,7 +226,18 @@ export async function getAgentConfig(tenantId: string): Promise<AgentConfig | nu
     systemPrompt: data.system_prompt || null,
     fewShotExamples: data.few_shot_examples || [],
     productsCatalog: data.products_catalog || {},
-    model: data.model || null
+    model: data.model || null,
+    productContext: data.product_context || null,
+    pricingContext: data.pricing_context || null,
+    salesProcessContext: data.sales_process_context || null,
+    qualificationContext: data.qualification_context || null,
+    competitorContext: data.competitor_context || null,
+    objectionHandlers: data.objection_handlers || {},
+    analysisEnabled: data.analysis_enabled ?? true,
+    maxResponseTokens: data.max_response_tokens ?? 250,
+    temperature: data.temperature != null ? Number(data.temperature) : 0.7,
+    agentName: data.agent_name || null,
+    agentRole: data.agent_role || null,
   };
 }
 
@@ -358,6 +392,17 @@ export async function updateAgentConfig(
   if (config.fewShotExamples !== undefined) updateData.few_shot_examples = config.fewShotExamples;
   if (config.productsCatalog !== undefined) updateData.products_catalog = config.productsCatalog;
   if (config.model !== undefined) updateData.model = config.model;
+  if (config.productContext !== undefined) updateData.product_context = config.productContext;
+  if (config.pricingContext !== undefined) updateData.pricing_context = config.pricingContext;
+  if (config.salesProcessContext !== undefined) updateData.sales_process_context = config.salesProcessContext;
+  if (config.qualificationContext !== undefined) updateData.qualification_context = config.qualificationContext;
+  if (config.competitorContext !== undefined) updateData.competitor_context = config.competitorContext;
+  if (config.objectionHandlers !== undefined) updateData.objection_handlers = config.objectionHandlers;
+  if (config.analysisEnabled !== undefined) updateData.analysis_enabled = config.analysisEnabled;
+  if (config.maxResponseTokens !== undefined) updateData.max_response_tokens = config.maxResponseTokens;
+  if (config.temperature !== undefined) updateData.temperature = config.temperature;
+  if (config.agentName !== undefined) updateData.agent_name = config.agentName;
+  if (config.agentRole !== undefined) updateData.agent_role = config.agentRole;
 
   // Upsert: create if not exists, update if exists
   const { data, error } = await supabase
@@ -391,7 +436,18 @@ export async function updateAgentConfig(
     systemPrompt: data.system_prompt || null,
     fewShotExamples: data.few_shot_examples || [],
     productsCatalog: data.products_catalog || {},
-    model: data.model || null
+    model: data.model || null,
+    productContext: data.product_context || null,
+    pricingContext: data.pricing_context || null,
+    salesProcessContext: data.sales_process_context || null,
+    qualificationContext: data.qualification_context || null,
+    competitorContext: data.competitor_context || null,
+    objectionHandlers: data.objection_handlers || {},
+    analysisEnabled: data.analysis_enabled ?? true,
+    maxResponseTokens: data.max_response_tokens ?? 250,
+    temperature: data.temperature != null ? Number(data.temperature) : 0.7,
+    agentName: data.agent_name || null,
+    agentRole: data.agent_role || null,
   };
 }
 

@@ -1,25 +1,46 @@
 /**
- * Multi-Agent System - Venta de Loomi
+ * Multi-Agent System - Configurable per Tenant
  *
- * Agente 1 (Análisis - gpt-4o-mini): Analiza contexto completo, decide estrategia
- * Agente 2 (Chat - gpt-4o-mini): Ejecuta la estrategia con personalidad de Lu
+ * Agente 1 (Análisis - claude-haiku): Analiza contexto completo, decide estrategia
+ * Agente 2 (Chat - main model): Ejecuta la estrategia con la personalidad del agente
  *
- * Optimizado para velocidad: ~2-4s total vs ~15-25s con modelos reasoning
+ * Now parametrized with TenantAnalysisContext instead of hardcoded Loomi content.
  */
 
 import { generateObject } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
+import {
+  DEFAULT_PRODUCT_CONTEXT,
+  DEFAULT_PRICING_CONTEXT,
+  DEFAULT_SALES_PROCESS,
+  DEFAULT_QUALIFICATION_CRITERIA,
+  DEFAULT_COMPETITOR_CONTEXT,
+  DEFAULT_OBJECTION_HANDLERS,
+  DEFAULT_AGENT_NAME,
+  DEFAULT_AGENT_ROLE,
+} from './defaults';
+
+export interface TenantAnalysisContext {
+  productContext: string;
+  pricingContext: string;
+  salesProcessContext: string;
+  qualificationContext: string;
+  competitorContext: string;
+  objectionHandlers: Record<string, string>;
+  agentName: string;
+  agentRole: string;
+}
 
 const AnalysisSchema = z.object({
   // Análisis de la conversación
   fase_actual: z.enum([
     'primer_contacto',      // Acaba de escribir, necesita saludo
-    'descubriendo_dolor',   // Entendiendo su problema con WhatsApp
-    'calificando',          // Verificando si es buen fit (volumen, tipo de negocio)
-    'presentando_valor',    // Mostrando cómo Loomi resuelve su problema
+    'descubriendo_dolor',   // Entendiendo su problema
+    'calificando',          // Verificando si es buen fit
+    'presentando_valor',    // Mostrando cómo el producto resuelve su problema
     'manejando_objecion',   // Resolviendo dudas/objeciones
-    'cerrando_demo',        // Invitando a agendar demo
+    'cerrando_demo',        // Invitando a agendar demo/reunión
     'cerrando_venta',       // Listo para comprar
     'seguimiento'           // Ya habíamos hablado antes
   ]).describe('Fase actual de la conversación'),
@@ -31,9 +52,9 @@ const AnalysisSchema = z.object({
     nombre: z.string().describe('Nombre del cliente o "desconocido"'),
     negocio: z.string().describe('Tipo de negocio o "desconocido"'),
     volumen_mensajes: z.string().describe('Cantidad de mensajes/día o "desconocido"'),
-    solucion_actual: z.string().describe('Cómo atienden WhatsApp hoy o "desconocido"'),
+    solucion_actual: z.string().describe('Cómo atienden hoy o "desconocido"'),
     dolor_principal: z.string().describe('Su mayor frustración o "desconocido"'),
-    usa_competencia: z.string().describe('Si usa Wati/ManyChat/otro o "desconocido"'),
+    usa_competencia: z.string().describe('Si usa alguna alternativa o "desconocido"'),
   }).describe('Información que ya tenemos del cliente'),
 
   // Detección de objeciones
@@ -41,7 +62,7 @@ const AnalysisSchema = z.object({
   tipo_objecion: z.enum([
     'precio',           // "Es caro", "No tengo presupuesto"
     'no_confio_ia',     // "Los bots no sirven", "No confío en IA"
-    'ya_tengo',         // "Ya uso Wati/ManyChat"
+    'ya_tengo',         // "Ya uso otra solución"
     'timing',           // "Ahorita no", "Después"
     'no_necesito',      // "No recibo tantos mensajes"
     'ninguna'
@@ -49,11 +70,11 @@ const AnalysisSchema = z.object({
 
   // Señales de interés
   nivel_interes: z.enum(['bajo', 'medio', 'alto']).describe('Qué tan interesado parece'),
-  listo_para_demo: z.boolean().describe('¿Está listo para agendar demo?'),
+  listo_para_demo: z.boolean().describe('¿Está listo para agendar demo/reunión?'),
   listo_para_comprar: z.boolean().describe('¿Quiere comprar directamente?'),
 
   // Decisión estratégica
-  siguiente_paso: z.string().describe('Qué debe hacer Lu ahora (ser específico)'),
+  siguiente_paso: z.string().describe('Qué debe hacer el agente ahora (ser específico)'),
   pregunta_a_hacer: z.string().describe('La pregunta exacta a hacer, o "ninguna"'),
 
   // Instrucción para el modelo de chat
@@ -70,10 +91,22 @@ export async function analyzeMessage(
     company?: string;
     industry?: string;
     previousInteractions?: number;
-  }
+  },
+  tenantContext?: TenantAnalysisContext
 ): Promise<ConversationAnalysis> {
+  const ctx = tenantContext || {
+    productContext: DEFAULT_PRODUCT_CONTEXT,
+    pricingContext: DEFAULT_PRICING_CONTEXT,
+    salesProcessContext: DEFAULT_SALES_PROCESS,
+    qualificationContext: DEFAULT_QUALIFICATION_CRITERIA,
+    competitorContext: DEFAULT_COMPETITOR_CONTEXT,
+    objectionHandlers: DEFAULT_OBJECTION_HANDLERS,
+    agentName: DEFAULT_AGENT_NAME,
+    agentRole: DEFAULT_AGENT_ROLE,
+  };
+
   const historyText = history
-    .map((m, i) => `[${i + 1}] ${m.role === 'user' ? 'CLIENTE' : 'LU'}: ${m.content}`)
+    .map((m, i) => `[${i + 1}] ${m.role === 'user' ? 'CLIENTE' : ctx.agentName.toUpperCase()}: ${m.content}`)
     .join('\n');
 
   const messageCount = history.filter(m => m.role === 'user').length;
@@ -83,51 +116,28 @@ export async function analyzeMessage(
   const result = await generateObject({
     model: anthropic('claude-haiku-4-5-20251001'),
     schema: AnalysisSchema,
-    prompt: `Eres un analista experto en ventas de SaaS B2B. Analiza esta conversación y da instrucciones PRECISAS a Lu (la vendedora de Loomi).
+    prompt: `Eres un analista experto en ventas B2B. Analiza esta conversación y da instrucciones PRECISAS a ${ctx.agentName} (${ctx.agentRole}).
 
-# SOBRE LOOMI
-Loomi es un agente de IA para WhatsApp que vende 24/7. No es un chatbot de flujos - es IA real.
+# SOBRE EL PRODUCTO/SERVICIO
+${ctx.productContext}
 
-**Diferenciadores clave:**
-- IA real (GPT-4o) que ENTIENDE, no flujos predefinidos
-- Detecta emociones y adapta el tono
-- Agenda demos automáticamente (Cal.com)
-- CRM integrado con pipeline Kanban
-- Meta CAPI para optimizar campañas
+# PRECIOS
+${ctx.pricingContext}
 
-**Precios:**
-- Starter: $199/mes (100 msg/día, 1 WhatsApp)
-- Growth: $349/mes (300 msg/día, 3 WhatsApp, CRM, Meta CAPI)
-- Business: $599/mes (1000 msg/día, 10 WhatsApp, API, SLA)
-- 14 días gratis, sin tarjeta
+# PROCESO DE VENTA
+${ctx.salesProcessContext}
 
-**Buenos fits:**
-- Reciben 50+ mensajes/día en WhatsApp
-- Venden productos/servicios por WhatsApp
-- Invierten en Meta Ads
-- Tienen equipo de ventas saturado
+# CALIFICACIÓN
+${ctx.qualificationContext}
 
-**Malos fits:**
-- Menos de 20 mensajes/día
-- No usan WhatsApp para ventas
-
-# PROCESO DE VENTA LOOMI
-
-1. **PRIMER CONTACTO**: Saludo + preguntar qué le llamó la atención
-2. **DESCUBRIR DOLOR**:
-   - ¿Cuántos mensajes reciben al día?
-   - ¿Quién los atiende? ¿Dan abasto?
-   - ¿Qué pasa con mensajes fuera de horario?
-3. **CALIFICAR**: Verificar volumen y tipo de negocio
-4. **PRESENTAR VALOR**: Adaptar pitch según su dolor específico
-5. **MANEJAR OBJECIONES**: Resolver dudas con honestidad
-6. **CERRAR**: Demo o compra directa
+# COMPETENCIA
+${ctx.competitorContext}
 
 # REGLAS CRÍTICAS
 1. **NUNCA REPETIR PREGUNTAS** - Si ya preguntamos algo, no volver a preguntar
 2. **UNA PREGUNTA A LA VEZ** - No bombardear
 3. **MENSAJES CORTOS** - 2-3 líneas máximo
-4. **SER HONESTA** - Si no es buen fit, decirlo
+4. **SER HONESTO** - Si no es buen fit, decirlo
 
 # INFORMACIÓN DEL CLIENTE
 - Nombre: ${clientName}
@@ -150,7 +160,7 @@ Analiza TODO y determina:
 
 Sé MUY específico en la instrucción. Ejemplo:
 - MAL: "Pregunta sobre su negocio"
-- BIEN: "Ya sabemos que tiene una tienda online. Pregunta: '¿Cuántos mensajes de WhatsApp reciben al día más o menos?'"`,
+- BIEN: "Ya sabemos que tiene una tienda online. Pregunta: '¿Cuántos mensajes reciben al día más o menos?'"`,
     temperature: 0.3,
   });
 
@@ -161,7 +171,21 @@ Sé MUY específico en la instrucción. Ejemplo:
   return result.object;
 }
 
-export function generateSellerInstructions(analysis: ConversationAnalysis): string {
+export function generateSellerInstructions(
+  analysis: ConversationAnalysis,
+  tenantContext?: TenantAnalysisContext
+): string {
+  const ctx = tenantContext || {
+    productContext: DEFAULT_PRODUCT_CONTEXT,
+    pricingContext: DEFAULT_PRICING_CONTEXT,
+    salesProcessContext: DEFAULT_SALES_PROCESS,
+    qualificationContext: DEFAULT_QUALIFICATION_CRITERIA,
+    competitorContext: DEFAULT_COMPETITOR_CONTEXT,
+    objectionHandlers: DEFAULT_OBJECTION_HANDLERS,
+    agentName: DEFAULT_AGENT_NAME,
+    agentRole: DEFAULT_AGENT_ROLE,
+  };
+
   let instructions = `
 # ANÁLISIS DE LA CONVERSACIÓN
 
@@ -179,10 +203,10 @@ ${analysis.ya_preguntamos.length > 0 ? analysis.ya_preguntamos.map(p => `- ${p}`
 - Usa competencia: ${analysis.ya_sabemos.usa_competencia}
 
 ## Nivel de interés: ${analysis.nivel_interes.toUpperCase()}
-${analysis.listo_para_demo ? '## ✅ LISTO PARA DEMO - Usa schedule_demo' : ''}
-${analysis.listo_para_comprar ? '## ✅ LISTO PARA COMPRAR - Pide email y usa send_payment_link' : ''}
+${analysis.listo_para_demo ? '## LISTO PARA DEMO - Usa schedule_demo' : ''}
+${analysis.listo_para_comprar ? '## LISTO PARA COMPRAR - Pide email y usa send_payment_link' : ''}
 
-${analysis.hay_objecion ? `## ⚠️ OBJECIÓN DETECTADA: ${analysis.tipo_objecion}` : ''}
+${analysis.hay_objecion ? `## OBJECIÓN DETECTADA: ${analysis.tipo_objecion}` : ''}
 
 ## SIGUIENTE PASO:
 ${analysis.siguiente_paso}
@@ -200,46 +224,12 @@ ${analysis.instruccion_para_lu}
 5. Tono directo pero amigable
 `;
 
-  // Agregar manejo de objeciones
+  // Agregar manejo de objeciones from tenant context
   if (analysis.hay_objecion && analysis.tipo_objecion !== 'ninguna') {
-    const handlers: Record<string, string> = {
-      'precio': `
-# MANEJO DE OBJECIÓN - PRECIO:
-- "¿Cuánto pagas hoy por atender WhatsApp? ¿Tienes vendedor?"
-- "Un vendedor cuesta $800-1,500/mes. Loomi desde $199, 24/7"
-- "Si cierras 2-3 ventas extra al mes, ya se pagó solo"
-- Ofrecer Starter ($199) como entrada`,
-
-      'no_confio_ia': `
-# MANEJO DE OBJECIÓN - NO CONFÍA EN IA:
-- "Válido, la mayoría de bots son malos"
-- "Loomi no es un bot de flujos - es IA real que ENTIENDE"
-- "Detecta cuando alguien está frustrado y escala a humano"
-- "¿Te muestro una demo? En 15 min ves la diferencia"`,
-
-      'ya_tengo': `
-# MANEJO DE OBJECIÓN - YA USA COMPETENCIA:
-- "¿Y cómo te va? ¿El bot responde bien cuando preguntan algo fuera del menú?"
-- "Wati/ManyChat son flujos - si el cliente sale del script, se rompe"
-- "Loomi ENTIENDE contexto, no sigue árboles de decisión"
-- "¿Cuántos leads pierdes porque el bot no supo qué responder?"`,
-
-      'timing': `
-# MANEJO DE OBJECIÓN - TIMING:
-- "Va, sin presión. ¿Qué te hace dudar?"
-- "¿Es el precio, la tecnología, o quieres ver más?"
-- Si insiste: "Perfecto, si en algún momento WhatsApp se vuelve un dolor, aquí estamos"
-- Ofrecer demo para ver el producto sin compromiso`,
-
-      'no_necesito': `
-# MANEJO DE OBJECIÓN - NO NECESITA:
-- "Entiendo. ¿Cuántos mensajes reciben al día más o menos?"
-- Si <20/día: "La neta, con ese volumen puede no valer la pena aún"
-- Si >50/día: "¿Y quién los atiende? ¿Dan abasto?"
-- Ser honesta si no es buen fit`,
-    };
-
-    instructions += handlers[analysis.tipo_objecion] || '';
+    const handler = ctx.objectionHandlers[analysis.tipo_objecion];
+    if (handler) {
+      instructions += `\n# MANEJO DE OBJECIÓN - ${analysis.tipo_objecion.toUpperCase()}:\n${handler}`;
+    }
   }
 
   return instructions;
@@ -253,13 +243,14 @@ export async function getSellerStrategy(
     company?: string;
     industry?: string;
     previousInteractions?: number;
-  }
+  },
+  tenantContext?: TenantAnalysisContext
 ): Promise<{
   analysis: ConversationAnalysis;
   instructions: string;
 }> {
-  const analysis = await analyzeMessage(message, history, leadContext);
-  const instructions = generateSellerInstructions(analysis);
+  const analysis = await analyzeMessage(message, history, leadContext, tenantContext);
+  const instructions = generateSellerInstructions(analysis, tenantContext);
 
   return { analysis, instructions };
 }

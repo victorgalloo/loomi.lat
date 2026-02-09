@@ -230,32 +230,20 @@ export default function ConversationsView({ conversations: initialConversations,
       </div>
 
       {/* Stats Bar */}
-      <div className="flex items-center gap-4 pb-6 mb-6 border-b border-border">
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl px-4 py-3 shadow-subtle">
-          <p className="text-label tracking-wider text-muted">
-            total chats
-          </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-foreground">
-            {totalConversations}
-          </p>
+      <div className="flex items-center gap-6 text-sm pb-6 mb-6 border-b border-border">
+        <div>
+          <span className="text-muted">total chats</span>
+          <span className="ml-2 font-mono text-foreground">{totalConversations}</span>
         </div>
-
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl px-4 py-3 shadow-subtle">
-          <p className="text-label tracking-wider text-muted">
-            activas hoy
-          </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-info">
-            {activeToday}
-          </p>
+        <span className="text-border">·</span>
+        <div>
+          <span className="text-muted">activas hoy</span>
+          <span className="ml-2 font-mono text-info">{activeToday}</span>
         </div>
-
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl px-4 py-3 shadow-subtle">
-          <p className="text-label tracking-wider text-muted">
-            mensajes
-          </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-foreground">
-            {totalMessages}
-          </p>
+        <span className="text-border">·</span>
+        <div>
+          <span className="text-muted">mensajes</span>
+          <span className="ml-2 font-mono text-foreground">{totalMessages}</span>
         </div>
       </div>
 

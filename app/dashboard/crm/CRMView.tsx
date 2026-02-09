@@ -328,32 +328,20 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
       </div>
 
       {/* Stats Bar */}
-      <div className="flex items-center gap-4 pb-6 mb-6 border-b border-border">
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl px-4 py-3 shadow-subtle">
-          <p className="text-label tracking-wider text-muted">
-            pipeline total
-          </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-foreground">
-            {formatCurrency(totalValue)}
-          </p>
+      <div className="flex items-center gap-6 text-sm pb-6 mb-6 border-b border-border">
+        <div>
+          <span className="text-muted">pipeline total</span>
+          <span className="ml-2 font-mono text-foreground">{formatCurrency(totalValue)}</span>
         </div>
-
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl px-4 py-3 shadow-subtle">
-          <p className="text-label tracking-wider text-muted">
-            cerrados
-          </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-info">
-            {formatCurrency(wonValue)}
-          </p>
+        <span className="text-border">·</span>
+        <div>
+          <span className="text-muted">cerrados</span>
+          <span className="ml-2 font-mono text-info">{formatCurrency(wonValue)}</span>
         </div>
-
-        <div className="bg-surface-elevated border border-border border-l-[3px] border-l-info rounded-xl px-4 py-3 shadow-subtle">
-          <p className="text-label tracking-wider text-muted">
-            conversión
-          </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-foreground">
-            {totalLeads > 0 ? Math.round((wonDeals.length / totalLeads) * 100) : 0}%
-          </p>
+        <span className="text-border">·</span>
+        <div>
+          <span className="text-muted">conversión</span>
+          <span className="ml-2 font-mono text-foreground">{totalLeads > 0 ? Math.round((wonDeals.length / totalLeads) * 100) : 0}%</span>
         </div>
       </div>
 

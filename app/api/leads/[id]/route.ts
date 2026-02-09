@@ -84,6 +84,59 @@ export async function PATCH(
   }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !user.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const tenantId = await getTenantIdForUser(user.email);
+    if (!tenantId) {
+      return NextResponse.json({ error: 'No tenant found' }, { status: 403 });
+    }
+
+    // Delete related messages first
+    const { data: conversations } = await supabase
+      .from('conversations')
+      .select('id')
+      .eq('lead_id', id)
+      .eq('tenant_id', tenantId);
+
+    if (conversations && conversations.length > 0) {
+      const convIds = conversations.map(c => c.id);
+      await supabase.from('messages').delete().in('conversation_id', convIds);
+      await supabase.from('conversations').delete().in('id', convIds);
+    }
+
+    // Delete appointments
+    await supabase.from('appointments').delete().eq('lead_id', id);
+
+    // Delete the lead (verify tenant ownership)
+    const { error } = await supabase
+      .from('leads')
+      .delete()
+      .eq('id', id)
+      .eq('tenant_id', tenantId);
+
+    if (error) {
+      console.error('Error deleting lead:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error in DELETE /api/leads/[id]:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

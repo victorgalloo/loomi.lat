@@ -216,6 +216,17 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
     URL.revokeObjectURL(url);
   }, []);
 
+  const handleLeadDelete = async (leadId: string) => {
+    try {
+      const response = await fetch(`/api/leads/${leadId}`, { method: 'DELETE' });
+      if (response.ok) {
+        setLeads(prevLeads => prevLeads.filter(lead => lead.id !== leadId));
+      }
+    } catch (error) {
+      console.error('Error deleting lead:', error);
+    }
+  };
+
   const handleLeadMove = async (leadId: string, newStage: string) => {
     try {
       const response = await fetch(`/api/leads/${leadId}`, {
@@ -354,6 +365,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
             initialLeads={filteredLeads}
             onAddLead={() => setShowModal(true)}
             onLeadMove={handleLeadMove}
+            onLeadDelete={handleLeadDelete}
             onExportColumn={handleExportColumn}
           />
         ) : (

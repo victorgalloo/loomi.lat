@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, memo } from 'react';
-import { X, MessageCircle, Pencil, ArrowLeft } from 'lucide-react';
+import { X, MessageCircle, Pencil, ArrowLeft, Trash2 } from 'lucide-react';
 import { Lead } from './LeadCard';
 import { PipelineStage } from './KanbanColumn';
 
@@ -17,9 +17,10 @@ interface LeadDetailModalProps {
   stages: PipelineStage[];
   onClose: () => void;
   onSave: (leadId: string, data: Partial<Lead>) => Promise<void>;
+  onDelete?: (leadId: string) => Promise<void>;
 }
 
-function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps) {
+function LeadDetailModal({ lead, stages, onClose, onSave, onDelete }: LeadDetailModalProps) {
   const [formData, setFormData] = useState({
     name: lead.name,
     companyName: lead.companyName || '',
@@ -30,6 +31,8 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
   });
   const [isSaving, setIsSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -58,7 +61,18 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
     }
   };
 
-  const inputClasses = 'w-full px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 outline-none bg-background border border-border text-foreground placeholder:text-muted shadow-subtle focus:ring-2 focus:ring-info/30 focus:border-info/50';
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(lead.id);
+      onClose();
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const inputClasses ='w-full px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 outline-none bg-background border border-border text-foreground placeholder:text-muted shadow-subtle focus:ring-2 focus:ring-info/30 focus:border-info/50';
 
   const labelClasses = 'block text-label font-medium mb-2.5 text-muted';
 
@@ -101,6 +115,15 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
                     title="Editar lead"
                   >
                     <Pencil className="w-4 h-4" />
+                  </button>
+                )}
+                {!editing && onDelete && (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    className="p-1.5 rounded-xl transition-colors text-muted hover:text-terminal-red hover:bg-terminal-red/10"
+                    title="Eliminar lead"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 )}
                 <button
@@ -161,8 +184,33 @@ function LeadDetailModal({ lead, stages, onClose, onSave }: LeadDetailModalProps
             </form>
           )}
 
+          {/* Delete confirmation */}
+          {confirmDelete && (
+            <div className="px-5 py-4 border-b border-border bg-terminal-red/5">
+              <p className="text-sm text-foreground mb-3">
+                ¿Eliminar a <strong>{lead.name}</strong>? Se borrarán sus conversaciones y mensajes. Esta acción no se puede deshacer.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={isDeleting}
+                  className="flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-colors text-muted hover:text-foreground hover:bg-surface-2"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-colors bg-terminal-red text-white hover:bg-terminal-red/90 disabled:opacity-50"
+                >
+                  {isDeleting ? 'Eliminando...' : 'Eliminar'}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Conversation (default view) */}
-          {!editing && (
+          {!editing && !confirmDelete && (
             <div className="flex flex-col" style={{ height: '420px' }}>
               <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                 {loadingMessages ? (

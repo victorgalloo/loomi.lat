@@ -22,6 +22,7 @@ interface KanbanBoardProps {
   initialLeads: Lead[];
   onLeadMove?: (leadId: string, newStage: string) => Promise<void>;
   onLeadUpdate?: (leadId: string, data: Partial<Lead>) => Promise<void>;
+  onLeadDelete?: (leadId: string) => Promise<void>;
   onAddLead?: () => void;
   onExportColumn?: (stage: PipelineStage, leads: Lead[]) => void;
 }
@@ -31,6 +32,7 @@ function KanbanBoard({
   initialLeads,
   onLeadMove,
   onLeadUpdate,
+  onLeadDelete,
   onAddLead,
   onExportColumn,
 }: KanbanBoardProps) {
@@ -113,6 +115,12 @@ function KanbanBoard({
     await onLeadUpdate?.(leadId, data);
   };
 
+  const handleLeadDelete = async (leadId: string) => {
+    setLeads(prevLeads => prevLeads.filter(lead => lead.id !== leadId));
+    setSelectedLead(null);
+    await onLeadDelete?.(leadId);
+  };
+
   const activeLead = activeId ? leads.find(l => l.id === activeId) : null;
 
   return (
@@ -162,6 +170,7 @@ function KanbanBoard({
           stages={stages}
           onClose={() => setSelectedLead(null)}
           onSave={handleLeadSave}
+          onDelete={handleLeadDelete}
         />
       )}
     </>

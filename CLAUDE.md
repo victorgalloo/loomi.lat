@@ -87,7 +87,7 @@ components/
 - **Botones primary**: `bg-foreground text-background`
 - **Botones secondary**: `bg-surface border-border`
 - **Inputs**: `bg-background border-border font-mono`
-- **Cards**: `bg-surface border border-border rounded-xl`
+- **No Cards para métricas**: No usar tarjetas/cards para mostrar stats, métricas o KPIs. Usar layouts inline compactos (stat bars, rows con separadores `·` o `|`) siguiendo la estética terminal. Las cards de Kanban (LeadCard) son items arrastrables y se mantienen.
 - **Status**: `text-terminal-green` (ok), `text-terminal-yellow` (warn), `text-terminal-red` (error)
 
 ## Agentes de IA

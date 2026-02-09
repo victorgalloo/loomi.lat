@@ -395,25 +395,22 @@ export async function simpleAgent(
   }
 
   // ============================================
-  // STEP 1: Multi-Agent Analysis (skip for simple messages OR custom prompts)
+  // STEP 1: Multi-Agent Analysis (always run full path)
   // ============================================
-  // Skip multi-agent if:
-  // 1. Message is simple (greetings, price questions)
-  // 2. Tenant has custom systemPrompt (multi-agent is Loomi-specific)
   const hasCustomPrompt = !!agentConfig?.systemPrompt;
-  const useSimplePath = isSimpleMessage(message, history.length) || hasCustomPrompt;
-
   let sellerAnalysis: Awaited<ReturnType<typeof getSellerStrategy>>['analysis'] | null = null;
   let sellerInstructions: string = '';
   let reasoning: Awaited<ReturnType<typeof generateReasoningFast>>;
 
-  if (useSimplePath) {
-    // Fast path: skip multi-agent, only do quick reasoning
-    console.log(hasCustomPrompt ? '=== FAST PATH (custom prompt) ===' : '=== FAST PATH (skipping multi-agent) ===');
+  console.log('=== FULL ANALYSIS PATH ===');
+
+  // Skip Loomi-specific multi-agent analysis for custom prompt tenants
+  // The seller strategy is hardcoded for Loomi sales (WhatsApp AI product)
+  // and would inject conflicting instructions for tenants like Growth Rockstar
+  if (hasCustomPrompt) {
+    console.log('=== MULTI-AGENT SKIPPED (custom prompt tenant) ===');
     reasoning = await generateReasoningFast(message, context);
   } else {
-    // Full path: run multi-agent and reasoning in parallel
-    console.log('=== FULL ANALYSIS PATH ===');
     const [strategyResult, reasoningResult] = await Promise.all([
       getSellerStrategy(message, history, {
         name: context.lead.name,
@@ -421,7 +418,7 @@ export async function simpleAgent(
         industry: context.lead.industry,
         previousInteractions: context.recentMessages.length,
       }).catch((err: Error) => {
-        console.error('[Multi-Agent] Analysis failed, falling back to simple path:', err.message);
+        console.error('[Multi-Agent] Analysis failed, continuing without:', err.message);
         return null;
       }),
       generateReasoningFast(message, context)
@@ -438,7 +435,7 @@ export async function simpleAgent(
         console.log(`Objeción detectada: ${sellerAnalysis.tipo_objecion}`);
       }
     } else {
-      console.log('=== ANÁLISIS SKIPPED (fallback to fast path) ===');
+      console.log('=== ANÁLISIS SKIPPED (error fallback) ===');
     }
     reasoning = reasoningResult;
   }
@@ -547,7 +544,9 @@ Sé directa, inteligente, mensajes cortos.`
     systemWithContext += stateInstructions[state];
   }
 
-  systemWithContext += `\n\n# INSTRUCCIÓN FINAL\nResponde en máximo 2-3 líneas. Sé directa y conversacional. UNA pregunta a la vez. Si quieren demo, usa schedule_demo. Si quieren comprar, pide email y usa send_payment_link.`;
+  systemWithContext += hasCustomPrompt
+    ? `\n\n# INSTRUCCIÓN FINAL\nResponde en máximo 2-3 líneas. Sé directo y conversacional. UNA pregunta a la vez. Sigue ESTRICTAMENTE las instrucciones del prompt personalizado. NUNCA menciones productos o servicios que no estén en tu prompt.`
+    : `\n\n# INSTRUCCIÓN FINAL\nResponde en máximo 2-3 líneas. Sé directa y conversacional. UNA pregunta a la vez. Si quieren demo, usa schedule_demo. Si quieren comprar, pide email y usa send_payment_link.`;
 
   // Get client info
   const clientName = context.lead.name || 'Cliente';
@@ -607,7 +606,9 @@ Sé directa, inteligente, mensajes cortos.`
     }),
 
     schedule_demo: tool({
-      description: 'Muestra horarios disponibles para agendar una demo de Loomi. Usa SOLO para mostrar horarios inicialmente. Cuando el cliente ya eligió horario y dio nombre+email, usa book_demo en su lugar.',
+      description: hasCustomPrompt
+        ? 'Muestra horarios disponibles para agendar una reunión o demo. Usa SOLO para mostrar horarios inicialmente. Cuando el cliente ya eligió horario y dio nombre+email, usa book_demo en su lugar.'
+        : 'Muestra horarios disponibles para agendar una demo de Loomi. Usa SOLO para mostrar horarios inicialmente. Cuando el cliente ya eligió horario y dio nombre+email, usa book_demo en su lugar.',
       inputSchema: zodSchema(z.object({
         reason: z.string().optional().describe('Breve nota del contexto o interés del cliente')
       })),
@@ -662,7 +663,9 @@ Sé directa, inteligente, mensajes cortos.`
     }),
 
     send_payment_link: tool({
-      description: 'Envía un link de pago de Stripe para suscribirse a Loomi. Usa SOLO cuando el cliente confirmó que quiere contratar y ya sabes qué plan quiere (starter=$199, growth=$349, business=$599).',
+      description: hasCustomPrompt
+        ? 'Envía un link de pago de Stripe. Usa SOLO cuando el cliente confirmó que quiere contratar y ya sabes qué plan quiere (starter=$199, growth=$349, business=$599).'
+        : 'Envía un link de pago de Stripe para suscribirse a Loomi. Usa SOLO cuando el cliente confirmó que quiere contratar y ya sabes qué plan quiere (starter=$199, growth=$349, business=$599).',
       inputSchema: zodSchema(z.object({
         email: z.string().describe('Email del cliente'),
         plan: z.enum(['starter', 'growth', 'business']).describe('Plan elegido: starter ($199), growth ($349), o business ($599)')
@@ -679,7 +682,10 @@ Sé directa, inteligente, mensajes cortos.`
             phone: clientPhone,
             plan
           });
-          const sent = await sendPaymentLink(clientPhone, url, `Loomi ${plan.charAt(0).toUpperCase() + plan.slice(1)} - $${price}/mes`);
+          const planLabel = hasCustomPrompt
+            ? `${plan.charAt(0).toUpperCase() + plan.slice(1)} - $${price}/mes`
+            : `Loomi ${plan.charAt(0).toUpperCase() + plan.slice(1)} - $${price}/mes`;
+          const sent = await sendPaymentLink(clientPhone, url, planLabel);
           return {
             success: sent,
             checkoutUrl: url,

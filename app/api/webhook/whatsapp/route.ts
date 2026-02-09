@@ -549,8 +549,42 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const message = parseWhatsAppWebhook(body);
 
-    // Early exit: Not a message event
+    // Handle message status updates (delivery receipts for broadcasts)
     if (!message) {
+      try {
+        const entry = (body as Record<string, unknown[]>)?.entry?.[0] as Record<string, unknown[]> | undefined;
+        const change = (entry?.changes?.[0] as Record<string, Record<string, unknown[]>> | undefined);
+        const statuses = change?.value?.statuses as Array<{ id: string; status: string; timestamp: string; errors?: Array<{ code: number; title: string }> }> | undefined;
+        if (statuses && statuses.length > 0) {
+          const { getSupabase } = await import('@/lib/memory/supabase');
+          const supabase = getSupabase();
+          for (const s of statuses) {
+            if (s.status === 'failed') {
+              const errorMsg = s.errors?.[0]?.title || 'Unknown delivery error';
+              await supabase
+                .from('broadcast_recipients')
+                .update({ status: 'failed', error_message: errorMsg })
+                .eq('wa_message_id', s.id);
+              console.log(`[Webhook] Message ${s.id} FAILED: ${errorMsg}`);
+            } else if (s.status === 'delivered') {
+              await supabase
+                .from('broadcast_recipients')
+                .update({ status: 'delivered' })
+                .eq('wa_message_id', s.id)
+                .eq('status', 'sent');
+            } else if (s.status === 'read') {
+              await supabase
+                .from('broadcast_recipients')
+                .update({ status: 'read' })
+                .eq('wa_message_id', s.id)
+                .in('status', ['sent', 'delivered']);
+            }
+          }
+        }
+      } catch (e) {
+        // Don't fail the webhook on status processing errors
+        console.warn('[Webhook] Status update processing error:', e);
+      }
       return NextResponse.json({ status: 'ok' });
     }
 
@@ -999,6 +1033,21 @@ export async function POST(request: NextRequest) {
           await saveMessage(context.conversation.id, 'assistant', fallbackMsg, context.lead.id);
           return NextResponse.json({ status: 'ok', flow: 'schedule_fallback' });
         }
+      }
+
+      // Guard against empty responses (bug: model sometimes returns empty text)
+      if (!result.response || !result.response.trim()) {
+        const firstName = context.lead.name?.split(' ')[0];
+        const hasCustom = !!agentConfig?.systemPrompt;
+        const businessName = agentConfig?.businessName || 'nuestro equipo';
+        result.response = firstName && firstName !== 'Usuario'
+          ? (hasCustom
+            ? `Hola ${firstName}! ¿En qué te puedo ayudar?`
+            : `Hola ${firstName}! Soy del equipo de ${businessName}. ¿En qué te puedo ayudar?`)
+          : (hasCustom
+            ? 'Hola! ¿En qué te puedo ayudar?'
+            : `Hola! Soy del equipo de ${businessName}. ¿En qué te puedo ayudar?`);
+        console.warn(`[Webhook] Empty response from agent, using fallback for ${message.phone}`);
       }
 
       // Send response

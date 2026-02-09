@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { LogOut, Sun, Moon, FileText, Code, Database, Layers, Zap } from 'lucide-react';
@@ -306,14 +306,17 @@ function TechStackSection() {
       </div>
 
       {/* Metrics */}
-      <div className="space-y-3 pt-4 border-t border-border">
-        <h3 className="text-foreground font-medium">Metricas</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="pt-4 border-t border-border">
+        <h3 className="text-foreground font-medium mb-3">Metricas</h3>
+        <div className="flex items-center gap-5 flex-wrap">
           {metrics.map((item, i) => (
-            <div key={i} className="bg-background/50 p-3 rounded-lg border border-border shadow-subtle text-center">
-              <p className="text-lg text-foreground font-bold">{item.value}</p>
-              <p className="text-xs text-muted">{item.metric}</p>
-            </div>
+            <Fragment key={i}>
+              {i > 0 && <span className="text-border">·</span>}
+              <div>
+                <span className="text-muted text-xs">{item.metric}</span>
+                <span className="ml-2 font-mono text-foreground font-bold">{item.value}</span>
+              </div>
+            </Fragment>
           ))}
         </div>
       </div>

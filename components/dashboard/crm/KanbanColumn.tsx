@@ -4,7 +4,7 @@ import { memo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import LeadCard, { Lead } from './LeadCard';
-import { Plus } from 'lucide-react';
+import { Download, Plus } from 'lucide-react';
 
 export interface PipelineStage {
   id: string;
@@ -20,9 +20,10 @@ interface KanbanColumnProps {
   leads: Lead[];
   onLeadClick?: (lead: Lead) => void;
   onAddLead?: () => void;
+  onExport?: (stage: PipelineStage, leads: Lead[]) => void;
 }
 
-function KanbanColumn({ stage, leads, onLeadClick, onAddLead }: KanbanColumnProps) {
+function KanbanColumn({ stage, leads, onLeadClick, onAddLead, onExport }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.name });
 
   const totalValue = leads.reduce((sum, lead) => sum + (lead.dealValue || 0), 0);
@@ -71,11 +72,22 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead }: KanbanColumnProp
             {leads.length}
           </span>
         </div>
-        {totalValue > 0 && (
-          <span className="text-sm font-mono text-muted">
-            {formatCurrency(totalValue)}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {totalValue > 0 && (
+            <span className="text-sm font-mono text-muted">
+              {formatCurrency(totalValue)}
+            </span>
+          )}
+          {leads.length > 0 && onExport && (
+            <button
+              onClick={() => onExport(stage, leads)}
+              className="p-1 rounded-lg transition-colors text-muted hover:text-foreground hover:bg-surface-2"
+              title={`Exportar ${stage.name}`}
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Cards Container */}

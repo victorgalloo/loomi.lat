@@ -23,6 +23,7 @@ interface KanbanBoardProps {
   onLeadMove?: (leadId: string, newStage: string) => Promise<void>;
   onLeadUpdate?: (leadId: string, data: Partial<Lead>) => Promise<void>;
   onAddLead?: () => void;
+  onExportColumn?: (stage: PipelineStage, leads: Lead[]) => void;
 }
 
 function KanbanBoard({
@@ -31,6 +32,7 @@ function KanbanBoard({
   onLeadMove,
   onLeadUpdate,
   onAddLead,
+  onExportColumn,
 }: KanbanBoardProps) {
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -140,6 +142,7 @@ function KanbanBoard({
                 leads={getLeadsByStage(stage.name)}
                 onLeadClick={handleLeadClick}
                 onAddLead={onAddLead}
+                onExport={onExportColumn}
               />
             ))}
         </div>

@@ -33,7 +33,7 @@ export default async function ConversationsPage() {
       lead_id,
       started_at,
       ended_at,
-      leads!inner(id, name, phone, stage, tenant_id)
+      leads!inner(id, name, phone, stage, broadcast_classification, tenant_id)
     `)
     .eq("leads.tenant_id", tenantId)
     .order("started_at", { ascending: false })
@@ -42,7 +42,7 @@ export default async function ConversationsPage() {
   // Get message counts and last messages
   const conversations = await Promise.all(
     (conversationsData || []).map(async (conv) => {
-      const lead = conv.leads as unknown as { id: string; name: string; phone: string; stage: string };
+      const lead = conv.leads as unknown as { id: string; name: string; phone: string; stage: string; broadcast_classification: string | null };
 
       const { data: messages, count } = await supabase
         .from("messages")
@@ -62,6 +62,7 @@ export default async function ConversationsPage() {
         lastMessageTime: lastMessage?.created_at || conv.started_at,
         messageCount: count || 0,
         stage: lead.stage || "initial",
+        broadcastClassification: lead.broadcast_classification || undefined,
       };
     })
   );

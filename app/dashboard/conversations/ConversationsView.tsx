@@ -14,6 +14,7 @@ interface Conversation {
   lastMessageTime: string;
   messageCount: number;
   stage: string;
+  broadcastClassification?: string;
 }
 
 interface ConversationsViewProps {
@@ -65,7 +66,7 @@ interface HandoffAlert {
 
 export default function ConversationsView({ conversations: initialConversations, tenantId }: ConversationsViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [filter, setFilter] = useState<'all' | 'hot' | 'warm' | 'cold'>('all');
   const [conversations, setConversations] = useState(initialConversations);
   const [handoffAlerts, setHandoffAlerts] = useState<HandoffAlert[]>([]);
 
@@ -113,7 +114,7 @@ export default function ConversationsView({ conversations: initialConversations,
 
           const { data: lead } = await supabase
             .from('leads')
-            .select('id, name, phone, stage, tenant_id')
+            .select('id, name, phone, stage, broadcast_classification, tenant_id')
             .eq('id', newConv.lead_id)
             .single();
 
@@ -127,6 +128,7 @@ export default function ConversationsView({ conversations: initialConversations,
               lastMessageTime: newConv.started_at,
               messageCount: 0,
               stage: lead.stage || 'Nuevo',
+              broadcastClassification: lead.broadcast_classification || undefined,
             }, ...prev]);
           }
         }
@@ -172,13 +174,22 @@ export default function ConversationsView({ conversations: initialConversations,
     };
   }, [tenantId]);
 
+  const CLASSIFICATION_ORDER: Record<string, number> = { hot: 0, warm: 1, cold: 2, bot_autoresponse: 3 };
+
   const filteredConversations = conversations.filter(conv => {
     const matchesSearch = !searchQuery ||
       conv.leadName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       conv.leadPhone.includes(searchQuery) ||
       conv.lastMessage.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return matchesSearch;
+    const matchesFilter = filter === 'all' || conv.broadcastClassification === filter;
+
+    return matchesSearch && matchesFilter;
+  }).sort((a, b) => {
+    const orderA = a.broadcastClassification ? (CLASSIFICATION_ORDER[a.broadcastClassification] ?? 4) : 4;
+    const orderB = b.broadcastClassification ? (CLASSIFICATION_ORDER[b.broadcastClassification] ?? 4) : 4;
+    if (orderA !== orderB) return orderA - orderB;
+    return new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime();
   });
 
   // Stats
@@ -252,8 +263,9 @@ export default function ConversationsView({ conversations: initialConversations,
       <div className="flex items-center gap-1 p-1 rounded-xl mb-6 w-fit bg-surface border border-border">
         {[
           { key: 'all', label: 'todas' },
-          { key: 'active', label: 'activas' },
-          { key: 'archived', label: 'archivadas' },
+          { key: 'hot', label: '🔥 hot' },
+          { key: 'warm', label: '🟡 warm' },
+          { key: 'cold', label: '🥶 cold' },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -342,6 +354,22 @@ export default function ConversationsView({ conversations: initialConversations,
                               <span className="px-2.5 py-1 rounded-full text-label font-medium bg-surface-2 text-muted">
                                 {getStageLabel(conversation.stage)}
                               </span>
+                              {conversation.broadcastClassification && conversation.broadcastClassification !== 'bot_autoresponse' && (
+                                <span className={`px-2 py-0.5 rounded-full text-label font-medium ${
+                                  conversation.broadcastClassification === 'hot'
+                                    ? 'bg-orange-500/15 text-orange-500'
+                                    : conversation.broadcastClassification === 'warm'
+                                      ? 'bg-yellow-500/15 text-yellow-500'
+                                      : 'bg-blue-400/15 text-blue-400'
+                                }`}>
+                                  {conversation.broadcastClassification === 'hot' ? '🔥 hot' : conversation.broadcastClassification === 'warm' ? '🟡 warm' : '🥶 cold'}
+                                </span>
+                              )}
+                              {conversation.broadcastClassification === 'bot_autoresponse' && (
+                                <span className="px-2 py-0.5 rounded-full text-label font-medium bg-zinc-500/15 text-zinc-400">
+                                  🤖 bot
+                                </span>
+                              )}
                             </div>
                             <p className="text-xs mt-0.5 text-muted font-mono">
                               {conversation.leadPhone}

@@ -104,10 +104,10 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
 
       {isConnected ? (
         /* Connected State */
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Connected Numbers List */}
           {whatsappAccounts.map((account) => (
-            <div key={account.phoneNumberId} className="rounded-2xl p-5 bg-surface-elevated border border-border shadow-card">
+            <div key={account.phoneNumberId} className="pb-6 border-b border-border">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-medium flex items-center gap-2 text-foreground">
                   <CheckCircle className="w-4 h-4 text-terminal-green" />
@@ -170,25 +170,23 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
 
           {/* Pending Twilio Numbers */}
           {pendingTwilioNumbers.filter(n => n.status === 'active').map((num) => (
-            <div key={num.id} className="rounded-2xl p-5 bg-surface border border-terminal-yellow/30">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-terminal-yellow" />
-                  <span className="text-sm font-mono text-foreground">{num.phoneNumber}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-terminal-yellow/10 text-terminal-yellow">
-                    pendiente
-                  </span>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowAddNumber(true);
-                    setAddNumberMode('existing');
-                  }}
-                  className="text-xs text-foreground bg-foreground/10 hover:bg-foreground/20 px-3 py-1.5 rounded-xl transition-colors"
-                >
-                  conectar a WhatsApp
-                </button>
+            <div key={num.id} className="flex items-center justify-between pb-6 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-terminal-yellow" />
+                <span className="text-sm font-mono text-foreground">{num.phoneNumber}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-terminal-yellow/10 text-terminal-yellow">
+                  pendiente
+                </span>
               </div>
+              <button
+                onClick={() => {
+                  setShowAddNumber(true);
+                  setAddNumberMode('existing');
+                }}
+                className="text-xs text-foreground bg-foreground/10 hover:bg-foreground/20 px-3 py-1.5 rounded-xl transition-colors"
+              >
+                conectar a WhatsApp
+              </button>
             </div>
           ))}
 
@@ -201,21 +199,19 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
                 onNumberPurchased={() => {}}
               />
             ) : addNumberMode === 'existing' ? (
-              <div className="rounded-2xl bg-surface border border-border overflow-hidden">
-                <WhatsAppConnectFlow
-                  onSuccess={() => {
-                    window.location.reload();
-                  }}
-                />
-              </div>
+              <WhatsAppConnectFlow
+                onSuccess={() => {
+                  window.location.reload();
+                }}
+              />
             ) : (
               /* Choose mode */
-              <div className="rounded-2xl bg-surface border border-border p-5 space-y-3">
+              <div className="space-y-3">
                 <h3 className="text-sm font-medium text-foreground">agregar número</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => setAddNumberMode('new')}
-                    className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border hover:border-border-hover bg-background shadow-subtle hover:shadow-card transition-all"
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border hover:border-foreground/20 transition-colors"
                   >
                     <Plus className="w-5 h-5 text-muted" />
                     <span className="text-sm text-foreground">obtener número nuevo</span>
@@ -223,7 +219,7 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
                   </button>
                   <button
                     onClick={() => setAddNumberMode('existing')}
-                    className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border hover:border-border-hover bg-background shadow-subtle hover:shadow-card transition-all"
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border hover:border-foreground/20 transition-colors"
                   >
                     <Phone className="w-5 h-5 text-muted" />
                     <span className="text-sm text-foreground">ya tengo un número</span>
@@ -239,20 +235,18 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
               </div>
             )
           ) : (
-            <div className="rounded-2xl p-5 bg-surface border border-border border-dashed">
-              <button
-                onClick={() => { setShowAddNumber(true); setAddNumberMode('choose'); }}
-                className="flex items-center justify-center gap-2 py-2 w-full text-sm font-medium text-muted hover:text-foreground transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                agregar otro número
-              </button>
-            </div>
+            <button
+              onClick={() => { setShowAddNumber(true); setAddNumberMode('choose'); }}
+              className="flex items-center justify-center gap-2 py-3 w-full text-sm text-muted hover:text-foreground transition-colors border-t border-dashed border-border"
+            >
+              <Plus className="w-4 h-4" />
+              agregar otro número
+            </button>
           )}
         </div>
       ) : (
         /* Disconnected State - Choose how to connect */
-        <div className="space-y-4">
+        <div className="space-y-6">
           {addNumberMode === 'new' ? (
             <TwilioNumberProvisioning
               onBack={() => setAddNumberMode(null)}
@@ -267,13 +261,11 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
               >
                 <span>&larr;</span> volver
               </button>
-              <div className="rounded-2xl bg-surface border border-border overflow-hidden">
-                <WhatsAppConnectFlow
-                  onSuccess={() => {
-                    window.location.reload();
-                  }}
-                />
-              </div>
+              <WhatsAppConnectFlow
+                onSuccess={() => {
+                  window.location.reload();
+                }}
+              />
             </>
           ) : (
             <>
@@ -281,7 +273,7 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => setAddNumberMode('new')}
-                  className="flex flex-col items-center gap-3 p-6 rounded-2xl border border-border hover:border-border-hover bg-surface-elevated shadow-subtle hover:shadow-card transition-all"
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl border border-border hover:border-foreground/20 transition-colors"
                 >
                   <Plus className="w-6 h-6 text-terminal-green" />
                   <span className="text-sm font-medium text-foreground">obtener número nuevo</span>
@@ -289,7 +281,7 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
                 </button>
                 <button
                   onClick={() => setAddNumberMode('existing')}
-                  className="flex flex-col items-center gap-3 p-6 rounded-2xl border border-border hover:border-border-hover bg-surface-elevated shadow-subtle hover:shadow-card transition-all"
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl border border-border hover:border-foreground/20 transition-colors"
                 >
                   <Phone className="w-6 h-6 text-foreground" />
                   <span className="text-sm font-medium text-foreground">ya tengo un número</span>
@@ -299,27 +291,25 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
 
               {/* Pending Twilio numbers */}
               {pendingTwilioNumbers.filter(n => n.status === 'active').map((num) => (
-                <div key={num.id} className="rounded-2xl p-5 bg-surface border border-terminal-yellow/30">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-terminal-yellow" />
-                      <span className="text-sm font-mono text-foreground">{num.phoneNumber}</span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-terminal-yellow/10 text-terminal-yellow">
-                        pendiente de WhatsApp
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setAddNumberMode('existing')}
-                      className="text-xs text-background bg-foreground hover:opacity-90 px-3 py-1.5 rounded-xl transition-colors"
-                    >
-                      conectar
-                    </button>
+                <div key={num.id} className="flex items-center justify-between py-4 border-t border-border">
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-terminal-yellow" />
+                    <span className="text-sm font-mono text-foreground">{num.phoneNumber}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-terminal-yellow/10 text-terminal-yellow">
+                      pendiente de WhatsApp
+                    </span>
                   </div>
+                  <button
+                    onClick={() => setAddNumberMode('existing')}
+                    className="text-xs text-background bg-foreground hover:opacity-90 px-3 py-1.5 rounded-xl transition-colors"
+                  >
+                    conectar
+                  </button>
                 </div>
               ))}
 
               {/* Requirements */}
-              <div className="rounded-2xl p-5 bg-surface border border-border">
+              <div className="pt-6 border-t border-border">
                 <h3 className="text-sm font-medium mb-4 flex items-center gap-2 text-foreground">
                   <HelpCircle className="w-4 h-4 text-muted" />
                   requisitos

@@ -542,39 +542,42 @@ export async function getFirstInteractionDate(leadId: string): Promise<Date | nu
  * Reset test data for a specific phone number
  * Deletes lead, conversations, and messages
  */
-export async function resetTestLead(phone: string): Promise<{ success: boolean; error?: string }> {
+export async function resetTestLead(phone: string, tenantId?: string): Promise<{ success: boolean; error?: string }> {
   const supabase = getSupabase();
 
   try {
-    // Get the lead
-    const { data: lead } = await supabase
-      .from('leads')
-      .select('id')
-      .eq('phone', phone)
-      .eq('is_test', true)
-      .single();
+    // Find all leads matching this phone (optionally scoped to tenant)
+    let query = supabase.from('leads').select('id').eq('phone', phone);
+    if (tenantId) query = query.eq('tenant_id', tenantId);
+    const { data: leads } = await query;
 
-    if (!lead) {
-      return { success: false, error: 'Test lead not found' };
+    if (!leads || leads.length === 0) {
+      return { success: true }; // Nothing to reset
     }
 
-    // Delete messages from all conversations
-    const { data: conversations } = await supabase
-      .from('conversations')
-      .select('id')
-      .eq('lead_id', lead.id);
+    for (const lead of leads) {
+      const id = lead.id;
 
-    if (conversations && conversations.length > 0) {
-      const convIds = conversations.map(c => c.id);
-      await supabase.from('messages').delete().in('conversation_id', convIds);
-      await supabase.from('conversations').delete().eq('lead_id', lead.id);
+      // Get conversation IDs
+      const { data: convs } = await supabase.from('conversations').select('id').eq('lead_id', id);
+      const convIds = (convs || []).map(c => c.id);
+
+      if (convIds.length > 0) {
+        await supabase.from('messages').delete().in('conversation_id', convIds);
+        await supabase.from('handoffs').delete().in('conversation_id', convIds);
+      }
+
+      // Delete related data
+      await Promise.all([
+        supabase.from('conversations').delete().eq('lead_id', id),
+        supabase.from('appointments').delete().eq('lead_id', id),
+        supabase.from('lead_memory').delete().eq('lead_id', id),
+        supabase.from('conversion_events_queue').delete().eq('lead_id', id),
+      ]);
+
+      // Delete the lead
+      await supabase.from('leads').delete().eq('id', id);
     }
-
-    // Delete lead memory
-    await supabase.from('lead_memory').delete().eq('lead_id', lead.id);
-
-    // Delete the lead
-    await supabase.from('leads').delete().eq('id', lead.id);
 
     console.log(`[DB] Reset test lead: ${phone}`);
     return { success: true };

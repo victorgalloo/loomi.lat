@@ -20,11 +20,13 @@ import {
   getActiveAppointment,
   getConversationCount,
   getFirstInteractionDate,
-  getSupabase
+  getSupabase,
+  resetTestLead
 } from './supabase';
 
-// Números de prueba - se guardan con is_test=true para poder resetear
+// Números de prueba - se auto-resetean en cada mensaje para siempre empezar como contacto nuevo
 const TEST_PHONE_NUMBERS = new Set<string>([
+  '5214779083304',
 ]);
 
 /**
@@ -48,7 +50,8 @@ export async function getConversationContext(
   const isTest = isTestNumber(message.phone);
 
   if (isTest) {
-    console.log(`[Context] Test number detected: ${message.phone} - persisting with is_test=true`);
+    console.log(`[Context] Test number detected: ${message.phone} - auto-resetting for fresh start`);
+    await resetTestLead(message.phone, tenantId);
   }
 
   // Start lead lookup immediately (async-api-routes)

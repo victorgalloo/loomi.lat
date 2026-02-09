@@ -375,127 +375,120 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-6 py-8">
       {/* Header */}
-      <div className="rounded-2xl border border-border bg-surface-elevated overflow-hidden shadow-elevated">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-          <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-terminal-red" />
-            <div className="w-3 h-3 rounded-full bg-terminal-yellow" />
-            <div className="w-3 h-3 rounded-full bg-terminal-green" />
-          </div>
-          <span className="text-sm font-mono text-foreground ml-2">./broadcasts_</span>
-        </div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-xl font-medium text-foreground font-mono">./broadcasts_</h1>
+        <button
+          onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
+          className="text-xs font-mono text-muted hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
+        >
+          {lang === 'en' ? 'ES' : 'EN'}
+        </button>
+      </div>
 
-        {/* Stats Bar */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <span className="text-label text-muted">{t.campaigns}:</span>
-              <span className="text-sm font-mono text-foreground">{totalCampaigns}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-label text-muted">{t.sent}:</span>
-              <span className="text-sm font-mono text-terminal-green">{totalSent.toLocaleString()}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-label text-muted">{t.failed}:</span>
-              <span className="text-sm font-mono text-terminal-red">{totalFailed.toLocaleString()}</span>
-            </div>
-          </div>
+      {/* Stats Bar */}
+      <div className="flex items-center gap-6 text-sm pb-6 mb-6 border-b border-border">
+        <div>
+          <span className="text-muted">{t.campaigns}</span>
+          <span className="ml-2 font-mono text-foreground">{totalCampaigns}</span>
+        </div>
+        <span className="text-border">·</span>
+        <div>
+          <span className="text-muted">{t.sent}</span>
+          <span className="ml-2 font-mono text-terminal-green">{totalSent.toLocaleString()}</span>
+        </div>
+        <span className="text-border">·</span>
+        <div>
+          <span className="text-muted">{t.failed}</span>
+          <span className="ml-2 font-mono text-terminal-red">{totalFailed.toLocaleString()}</span>
+        </div>
+      </div>
+
+      {/* Actions Bar */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
-            className="text-xs font-mono text-muted hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
           >
-            {lang === 'en' ? 'ES' : 'EN'}
+            <Plus className="w-4 h-4" />
+            {t.newCampaign}
           </button>
+          <a
+            href="https://business.facebook.com/latest/whatsapp_manager/message_templates"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-sm text-muted hover:text-foreground hover:border-foreground/30 transition-colors"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span className="font-mono">templates</span>
+          </a>
         </div>
-
-        {/* Actions Bar */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
-            >
-              <Plus className="w-4 h-4" />
-              {t.newCampaign}
-            </button>
-            <a
-              href="https://business.facebook.com/latest/whatsapp_manager/message_templates"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-sm text-muted hover:text-foreground hover:border-foreground/30 transition-colors"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span className="font-mono">templates</span>
-            </a>
-          </div>
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-            <input
-              type="text"
-              placeholder={t.search}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-3 py-1.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-info/30"
-            />
-          </div>
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+          <input
+            type="text"
+            placeholder={t.search}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-3 py-1.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30 shadow-subtle focus:ring-2 focus:ring-info/30"
+          />
         </div>
+      </div>
 
-        {/* Campaign List */}
-        <div className="divide-y divide-border">
-          {filteredCampaigns.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-4">
-              <Send className="w-10 h-10 text-muted mb-4" />
-              <p className="text-sm text-muted mb-4">
-                {searchQuery ? t.noResults : t.noCampaigns}
-              </p>
-              {!searchQuery && (
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
-                >
-                  <Plus className="w-4 h-4" />
-                  {t.createFirst}
-                </button>
-              )}
-            </div>
-          ) : (
-            filteredCampaigns.map((campaign) => (
+      {/* Campaign List */}
+      <div className="divide-y divide-border border-t border-border">
+        {filteredCampaigns.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <Send className="w-10 h-10 text-muted mb-4" />
+            <p className="text-sm text-muted mb-4">
+              {searchQuery ? t.noResults : t.noCampaigns}
+            </p>
+            {!searchQuery && (
               <button
-                key={campaign.id}
-                onClick={() => router.push(`/broadcasts/${campaign.id}`)}
-                className="w-full flex items-center justify-between px-4 py-4 hover:bg-surface-2 even:bg-surface/30 transition-colors text-left"
+                onClick={() => setShowModal(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
               >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-sm text-foreground truncate">
-                      {campaign.name}
-                    </span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${statusColors[campaign.status] || 'bg-surface-2 text-muted border-border'}`}>
-                      {({draft: t.draft, sending: t.sending, completed: t.completed, failed: t.failedStatus})[campaign.status] || campaign.status}
-                    </span>
-                    {campaign.total_recipients > 0 && (
-                      <span className="text-xs font-mono text-muted">
-                        {campaign.sent_count.toLocaleString()}/{campaign.total_recipients.toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-muted">
-                    <span>template: {campaign.template_name}</span>
-                    <span>{new Date(campaign.created_at).toLocaleDateString('es-MX', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}</span>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted flex-shrink-0" />
+                <Plus className="w-4 h-4" />
+                {t.createFirst}
               </button>
-            ))
-          )}
-        </div>
+            )}
+          </div>
+        ) : (
+          filteredCampaigns.map((campaign) => (
+            <button
+              key={campaign.id}
+              onClick={() => router.push(`/broadcasts/${campaign.id}`)}
+              className="w-full flex items-center justify-between py-3 -mx-3 px-3 rounded-xl hover:bg-surface-2 transition-colors text-left"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-sm text-foreground truncate">
+                    {campaign.name}
+                  </span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full border ${statusColors[campaign.status] || 'bg-surface-2 text-muted border-border'}`}>
+                    {({draft: t.draft, sending: t.sending, completed: t.completed, failed: t.failedStatus})[campaign.status] || campaign.status}
+                  </span>
+                  {campaign.total_recipients > 0 && (
+                    <span className="text-xs font-mono text-muted">
+                      {campaign.sent_count.toLocaleString()}/{campaign.total_recipients.toLocaleString()}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 text-xs text-muted">
+                  <span>template: {campaign.template_name}</span>
+                  <span>{new Date(campaign.created_at).toLocaleDateString('es-MX', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}</span>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted flex-shrink-0" />
+            </button>
+          ))
+        )}
       </div>
 
       {/* Creation Modal */}

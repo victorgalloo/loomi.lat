@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, DragEvent, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Send, Upload, ChevronRight, X, FileText, AlertTriangle, Loader2 } from 'lucide-react';
+import { Plus, Search, Send, Upload, ChevronRight, X, FileText, AlertTriangle, Loader2, ExternalLink } from 'lucide-react';
 
 interface MetaTemplate {
   name: string;
@@ -413,13 +413,24 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
 
         {/* Actions Bar */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
-          >
-            <Plus className="w-4 h-4" />
-            {t.newCampaign}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
+            >
+              <Plus className="w-4 h-4" />
+              {t.newCampaign}
+            </button>
+            <a
+              href="https://business.facebook.com/latest/whatsapp_manager/message_templates"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-sm text-muted hover:text-foreground hover:border-foreground/30 transition-colors"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span className="font-mono">templates</span>
+            </a>
+          </div>
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input
@@ -541,8 +552,17 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                         <span className="text-xs font-mono text-muted">{t.loadingTemplates}</span>
                       </div>
                     ) : templates.length === 0 ? (
-                      <div className="px-3 py-3 rounded-2xl bg-background border border-border">
-                        <span className="text-xs font-mono text-muted">{t.noTemplates}</span>
+                      <div className="px-3 py-3 rounded-2xl bg-background border border-border space-y-2">
+                        <span className="text-xs font-mono text-muted block">{t.noTemplates}</span>
+                        <a
+                          href="https://business.facebook.com/latest/whatsapp_manager/message_templates"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-mono text-info hover:underline"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          {lang === 'es' ? 'Crear templates en Meta' : 'Create templates on Meta'}
+                        </a>
                       </div>
                     ) : (
                       <div className="space-y-2 max-h-52 overflow-y-auto rounded-2xl border border-border">

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, Search, Users, X } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Loader2, Plus, Search, Users, X, Zap } from 'lucide-react';
 import { KanbanBoard } from '@/components/dashboard/crm';
 import { Lead } from '@/components/dashboard/crm/LeadCard';
 import { PipelineStage } from '@/components/dashboard/crm/KanbanColumn';
@@ -81,6 +81,37 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
     };
   }, [tenantId]);
 
+  const [classifying, setClassifying] = useState(false);
+  const [classifyResult, setClassifyResult] = useState<{
+    total: number;
+    classified: number;
+    skipped: number;
+    results: { hot: number; warm: number; cold: number; bot_autoresponse: number };
+  } | null>(null);
+
+  // Auto-hide classify result banner after 8s
+  useEffect(() => {
+    if (!classifyResult) return;
+    const timer = setTimeout(() => setClassifyResult(null), 8000);
+    return () => clearTimeout(timer);
+  }, [classifyResult]);
+
+  const handleClassifyLeads = async () => {
+    setClassifying(true);
+    setClassifyResult(null);
+    try {
+      const response = await fetch('/api/leads/classify', { method: 'POST' });
+      if (response.ok) {
+        const data = await response.json();
+        setClassifyResult(data);
+      }
+    } catch (error) {
+      console.error('Error classifying leads:', error);
+    } finally {
+      setClassifying(false);
+    }
+  };
+
   const [showModal, setShowModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newLead, setNewLead] = useState({
@@ -153,6 +184,38 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
     }
   };
 
+  const handleExportColumn = useCallback((stage: PipelineStage, columnLeads: Lead[]) => {
+    const escapeCSV = (value: string | null | undefined) => {
+      if (value == null) return '';
+      const str = String(value);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const headers = ['Nombre', 'Teléfono', 'Empresa', 'Email', 'Valor', 'Prioridad', 'Clasificación'];
+    const rows = columnLeads.map(lead => [
+      escapeCSV(lead.name),
+      escapeCSV(lead.phone),
+      escapeCSV(lead.companyName),
+      escapeCSV(lead.contactEmail),
+      lead.dealValue != null ? String(lead.dealValue) : '',
+      escapeCSV(lead.priority),
+      escapeCSV(lead.broadcastClassification),
+    ].join(','));
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${stage.name.toLowerCase().replace(/\s+/g, '-')}-leads.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, []);
+
   const handleLeadMove = async (leadId: string, newStage: string) => {
     try {
       const response = await fetch(`/api/leads/${leadId}`, {
@@ -175,6 +238,33 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
 
   return (
     <div className="px-6 py-8">
+      {/* Classify Result Banner */}
+      {classifyResult && (
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-elevated bg-surface-elevated border border-border animate-in fade-in slide-in-from-top-2">
+          <span className="text-terminal-green">&#10003;</span>
+          <span className="text-sm text-foreground">
+            {classifyResult.classified > 0 ? (
+              <>
+                <span className="font-medium">{classifyResult.classified} leads analizados</span>
+                {' — '}
+                {classifyResult.results.hot > 0 && <>{classifyResult.results.hot} hot &middot; </>}
+                {classifyResult.results.warm > 0 && <>{classifyResult.results.warm} warm &middot; </>}
+                {classifyResult.results.cold > 0 && <>{classifyResult.results.cold} cold &middot; </>}
+                {classifyResult.results.bot_autoresponse > 0 && <>{classifyResult.results.bot_autoresponse} bot</>}
+              </>
+            ) : (
+              <span className="font-medium">0 leads por analizar</span>
+            )}
+          </span>
+          <button
+            onClick={() => setClassifyResult(null)}
+            className="p-0.5 rounded-lg hover:bg-surface-2 text-muted"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -198,6 +288,22 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
               className="w-48 pl-9 pr-3 py-1.5 rounded-xl text-sm outline-none transition-colors duration-150 bg-surface border border-border text-foreground placeholder:text-muted shadow-subtle focus:ring-2 focus:ring-info/30 focus:border-info/50"
             />
           </div>
+
+          {/* Classify Leads */}
+          <button
+            onClick={handleClassifyLeads}
+            disabled={classifying}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-colors duration-150 bg-surface border border-border text-foreground hover:bg-surface-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {classifying ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Zap className="w-4 h-4" />
+            )}
+            <span className="hidden sm:inline">
+              {classifying ? 'analizando...' : 'analizar'}
+            </span>
+          </button>
 
           {/* Add Lead */}
           <button
@@ -248,6 +354,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
             initialLeads={filteredLeads}
             onAddLead={() => setShowModal(true)}
             onLeadMove={handleLeadMove}
+            onExportColumn={handleExportColumn}
           />
         ) : (
           <div className="text-center py-12">

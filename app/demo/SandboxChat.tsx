@@ -292,7 +292,7 @@ export function SandboxChat() {
                     {tenant.businessName || tenant.name}
                   </span>
                   {tenant.hasCustomPrompt && (
-                    <span className="px-1.5 py-0.5 text-[10px] font-mono bg-terminal-green/10 text-terminal-green rounded">
+                    <span className="px-1.5 py-0.5 text-[10px] font-mono bg-info/10 text-info rounded">
                       custom
                     </span>
                   )}
@@ -327,7 +327,7 @@ export function SandboxChat() {
               className={cn(
                 'flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all',
                 useCustomPrompt
-                  ? 'bg-terminal-green text-background'
+                  ? 'bg-info text-background'
                   : 'text-muted hover:text-foreground'
               )}
             >
@@ -366,7 +366,7 @@ export function SandboxChat() {
                 {selectedTenant?.hasCustomPrompt && (
                   <p className="text-xs font-mono text-muted">
                     prompt: {useCustomPrompt ? (
-                      <span className="text-terminal-green">custom</span>
+                      <span className="text-info">custom</span>
                     ) : (
                       <span className="text-foreground">default</span>
                     )}
@@ -434,7 +434,7 @@ export function SandboxChat() {
                 <Bot className="h-4 w-4 text-muted" />
               </div>
               <div className="flex items-center gap-2 rounded-2xl bg-surface border border-border px-4 py-3 text-sm text-muted">
-                <Loader2 className="h-4 w-4 animate-spin text-terminal-green" />
+                <Loader2 className="h-4 w-4 animate-spin text-info" />
                 <span className="font-mono text-xs">thinking...</span>
               </div>
             </div>
@@ -457,7 +457,7 @@ export function SandboxChat() {
         className="border-t border-border bg-surface p-4"
       >
         <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-2">
-          <span className="text-terminal-green font-mono text-sm">$</span>
+          <span className="text-info font-mono text-sm">$</span>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}

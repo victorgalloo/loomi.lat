@@ -628,7 +628,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                                       onClick={() => setFormVariableSource(prev => ({ ...prev, [key]: 'csv_name' }))}
                                       className={`text-xs px-3 py-1.5 rounded transition-colors ${
                                         source === 'csv_name'
-                                          ? 'bg-terminal-green text-background'
+                                          ? 'bg-info text-background'
                                           : 'bg-surface-2 text-muted hover:text-foreground'
                                       }`}
                                     >
@@ -645,7 +645,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                                     className="w-full px-3 py-1.5 rounded-xl bg-surface border border-border text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30"
                                   />
                                 ) : (
-                                  <div className="px-3 py-1.5 rounded-xl bg-terminal-green/10 border border-terminal-green/20 text-sm font-mono text-terminal-green">
+                                  <div className="px-3 py-1.5 rounded-xl bg-info/10 border border-info/20 text-sm font-mono text-info">
                                     → recipient.name
                                   </div>
                                 )}
@@ -673,7 +673,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                       isDragging
                         ? 'border-foreground/50 bg-foreground/5'
                         : csvFile
-                          ? 'border-terminal-green/30 bg-terminal-green/5'
+                          ? 'border-info/30 bg-info/5'
                           : 'border-border hover:border-foreground/30'
                     }`}
                   >
@@ -689,9 +689,9 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     />
                     {csvFile ? (
                       <>
-                        <FileText className="w-8 h-8 text-terminal-green mb-2" />
+                        <FileText className="w-8 h-8 text-info mb-2" />
                         <span className="text-sm text-foreground">{csvFile.name}</span>
-                        <span className="text-xs text-terminal-green mt-1">
+                        <span className="text-xs text-info mt-1">
                           {csvTotal.toLocaleString()} {t.contactsDetected}
                         </span>
                       </>
@@ -752,7 +752,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-label text-muted">{t.recipients}</span>
-                      <span className="text-sm font-mono text-terminal-green">{csvTotal.toLocaleString()}</span>
+                      <span className="text-sm font-mono text-info">{csvTotal.toLocaleString()}</span>
                     </div>
                     {templateVariables.length > 0 && (
                       <div className="pt-2 border-t border-border/50">
@@ -764,7 +764,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                             <div key={key} className="flex items-center justify-between text-xs mb-1">
                               <span className="text-muted">{v.placeholder}</span>
                               {source === 'csv_name' ? (
-                                <span className="font-mono text-terminal-green">recipient.name {t.fromCsv}</span>
+                                <span className="font-mono text-info">recipient.name {t.fromCsv}</span>
                               ) : (
                                 <span className="font-mono text-foreground">{formVariables[key]}</span>
                               )}

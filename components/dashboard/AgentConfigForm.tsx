@@ -21,10 +21,10 @@ interface AgentConfigFormProps {
 }
 
 const toneOptions = [
-  { value: 'professional', label: 'Profesional', description: 'Formal pero accesible', color: 'purple' },
-  { value: 'friendly', label: 'Amigable', description: 'Cercano y conversacional', color: 'emerald' },
-  { value: 'casual', label: 'Casual', description: 'Relajado e informal', color: 'cyan' },
-  { value: 'formal', label: 'Formal', description: 'Muy profesional y serio', color: 'amber' },
+  { value: 'professional', label: 'Profesional', description: 'Formal pero accesible', color: 'info' },
+  { value: 'friendly', label: 'Amigable', description: 'Cercano y conversacional', color: 'info' },
+  { value: 'casual', label: 'Casual', description: 'Relajado e informal', color: 'info' },
+  { value: 'formal', label: 'Formal', description: 'Muy profesional y serio', color: 'info' },
 ];
 
 export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFormProps) {
@@ -52,9 +52,9 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
   };
 
   const inputClasses = `
-    w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl
-    text-gray-900 placeholder:text-gray-400
-    focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500
+    w-full px-4 py-3 bg-background border border-border rounded-xl
+    text-foreground placeholder:text-muted
+    focus:outline-none focus:ring-2 focus:ring-info/20 focus:border-info
     transition-all duration-200
   `;
 
@@ -64,21 +64,21 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm relative overflow-hidden"
+        className="bg-surface-elevated rounded-2xl border border-border p-6 shadow-sm relative overflow-hidden"
       >
-        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 blur-[60px] rounded-full pointer-events-none" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-info/5 blur-[60px] rounded-full pointer-events-none" />
 
-        <h2 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-purple-600" />
+        <h2 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+          <Building2 className="w-5 h-5 text-info" />
           Informacion del negocio
         </h2>
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="text-sm text-muted mb-6">
           Esta informacion ayuda al agente a entender tu negocio y responder mejor a los clientes.
         </p>
 
         <div className="space-y-4 relative z-10">
           <div>
-            <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="businessName" className="block text-sm font-medium text-foreground mb-2">
               Nombre del negocio
             </label>
             <input
@@ -92,7 +92,7 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
           </div>
 
           <div>
-            <label htmlFor="businessDescription" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="businessDescription" className="block text-sm font-medium text-foreground mb-2">
               Descripcion del negocio
             </label>
             <textarea
@@ -106,7 +106,7 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
           </div>
 
           <div>
-            <label htmlFor="productsServices" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="productsServices" className="block text-sm font-medium text-foreground mb-2">
               Productos o servicios principales
             </label>
             <textarea
@@ -126,13 +126,13 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+        className="bg-surface-elevated rounded-2xl border border-border p-6 shadow-sm"
       >
-        <h2 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
-          <Sliders className="w-5 h-5 text-cyan-600" />
+        <h2 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+          <Sliders className="w-5 h-5 text-info" />
           Tono de comunicacion
         </h2>
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="text-sm text-muted mb-6">
           Elige como quieres que el agente se comunique con tus clientes.
         </p>
 
@@ -140,22 +140,13 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
           {toneOptions.map((option) => {
             const isSelected = config.tone === option.value;
             const colorClasses: Record<string, string> = {
-              purple: isSelected ? 'border-purple-400 bg-purple-50' : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50',
-              emerald: isSelected ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50',
-              cyan: isSelected ? 'border-cyan-400 bg-cyan-50' : 'border-gray-200 hover:border-cyan-300 hover:bg-cyan-50/50',
-              amber: isSelected ? 'border-amber-400 bg-amber-50' : 'border-gray-200 hover:border-amber-300 hover:bg-amber-50/50',
+              info: isSelected ? 'border-info bg-info/10' : 'border-border hover:border-info/50 hover:bg-info/5',
             };
             const textColors: Record<string, string> = {
-              purple: 'text-purple-700',
-              emerald: 'text-emerald-700',
-              cyan: 'text-cyan-700',
-              amber: 'text-amber-700',
+              info: 'text-info',
             };
             const dotColors: Record<string, string> = {
-              purple: 'bg-purple-500',
-              emerald: 'bg-emerald-500',
-              cyan: 'bg-cyan-500',
-              amber: 'bg-amber-500',
+              info: 'bg-info',
             };
 
             return (
@@ -178,7 +169,7 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
                 />
                 <div className={`
                   w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 flex-shrink-0
-                  ${isSelected ? `border-${option.color}-500` : 'border-gray-300'}
+                  ${isSelected ? 'border-info' : 'border-muted'}
                 `}>
                   {isSelected && (
                     <motion.div
@@ -189,10 +180,10 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
                   )}
                 </div>
                 <div>
-                  <span className={`font-medium ${isSelected ? textColors[option.color] : 'text-gray-900'}`}>
+                  <span className={`font-medium ${isSelected ? textColors[option.color] : 'text-foreground'}`}>
                     {option.label}
                   </span>
-                  <p className="text-sm text-gray-600">{option.description}</p>
+                  <p className="text-sm text-muted">{option.description}</p>
                 </div>
                 {isSelected && (
                   <Check className={`absolute top-4 right-4 w-4 h-4 ${textColors[option.color]}`} />
@@ -208,15 +199,15 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm relative overflow-hidden"
+        className="bg-surface-elevated rounded-2xl border border-border p-6 shadow-sm relative overflow-hidden"
       >
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/5 blur-[60px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-info/5 blur-[60px] rounded-full pointer-events-none" />
 
-        <h2 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-emerald-600" />
+        <h2 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-info" />
           Instrucciones personalizadas
         </h2>
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="text-sm text-muted mb-6">
           Agrega instrucciones especificas para que el agente siga al responder.
         </p>
 
@@ -235,16 +226,16 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+        className="bg-surface-elevated rounded-2xl border border-border p-6 shadow-sm"
       >
-        <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-amber-600" />
+        <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-info" />
           Mensajes predeterminados
         </h2>
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="greetingMessage" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="greetingMessage" className="block text-sm font-medium text-foreground mb-2">
               Mensaje de saludo (opcional)
             </label>
             <textarea
@@ -258,7 +249,7 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
           </div>
 
           <div>
-            <label htmlFor="fallbackMessage" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="fallbackMessage" className="block text-sm font-medium text-foreground mb-2">
               Mensaje de fallback (opcional)
             </label>
             <textarea
@@ -278,12 +269,12 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+        className="bg-surface-elevated rounded-2xl border border-border p-6 shadow-sm"
       >
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Respuestas automaticas</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <h2 className="text-lg font-semibold text-foreground">Respuestas automaticas</h2>
+            <p className="text-sm text-muted mt-1">
               Cuando esta activo, el agente responde automaticamente a todos los mensajes.
             </p>
           </div>
@@ -294,8 +285,8 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
             onClick={() => handleChange('autoReplyEnabled', !config.autoReplyEnabled)}
             className={`
               relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
-              transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:ring-offset-2
-              ${config.autoReplyEnabled ? 'bg-emerald-500' : 'bg-gray-200'}
+              transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-info/20 focus:ring-offset-2
+              ${config.autoReplyEnabled ? 'bg-info' : 'bg-surface-2'}
             `}
           >
             <span
@@ -319,7 +310,7 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
           <motion.p
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            className={`text-sm flex items-center gap-1 ${saveMessage.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}
+            className={`text-sm flex items-center gap-1 ${saveMessage.type === 'success' ? 'text-info' : 'text-red-600'}`}
           >
             {saveMessage.type === 'success' && <Check className="w-4 h-4" />}
             {saveMessage.text}
@@ -333,8 +324,8 @@ export default function AgentConfigForm({ initialConfig, onSave }: AgentConfigFo
           className={`
             ml-auto px-6 py-3 rounded-xl font-medium transition-all duration-300
             ${isSaving
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/20'
+              ? 'bg-surface-2 text-muted cursor-not-allowed'
+              : 'bg-info text-white hover:bg-info/90 shadow-lg shadow-info/20'
             }
           `}
         >

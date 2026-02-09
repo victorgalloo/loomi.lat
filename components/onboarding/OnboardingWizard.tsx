@@ -61,10 +61,10 @@ Empecemos: **¿Cómo se llama tu negocio?**`;
 
 // Analysis steps shown during processing
 const ANALYSIS_STEPS = [
-  { icon: Brain, text: 'Analizando contexto...', color: 'text-blue-400' },
-  { icon: Heart, text: 'Detectando sentimiento...', color: 'text-pink-400' },
-  { icon: TrendingUp, text: 'Evaluando intención...', color: 'text-green-400' },
-  { icon: Sparkles, text: 'Generando respuesta...', color: 'text-yellow-400' },
+  { icon: Brain, text: 'Analizando contexto...', color: 'text-info' },
+  { icon: Heart, text: 'Detectando sentimiento...', color: 'text-info' },
+  { icon: TrendingUp, text: 'Evaluando intención...', color: 'text-info' },
+  { icon: Sparkles, text: 'Generando respuesta...', color: 'text-info' },
 ];
 
 export function OnboardingWizard({
@@ -254,7 +254,7 @@ export function OnboardingWizard({
             </span>
             {step === 'test' && (
               <div className="ml-auto flex items-center gap-2">
-                <span className="flex items-center gap-1 px-2 py-0.5 bg-terminal-green/10 border border-terminal-green/20 rounded text-xs font-mono text-terminal-green">
+                <span className="flex items-center gap-1 px-2 py-0.5 bg-info/10 border border-info/20 rounded text-xs font-mono text-info">
                   <Zap className="w-3 h-3" />
                   GPT-5.2 + o3
                 </span>
@@ -321,8 +321,8 @@ export function OnboardingWizard({
               <div className="space-y-3">
                 {/* Item 1: Meta account */}
                 <div className="flex items-start gap-3 p-3 bg-background border border-border rounded-2xl">
-                  <div className="w-5 h-5 rounded-full bg-terminal-green/10 border border-terminal-green/20 flex items-center justify-center mt-0.5 shrink-0">
-                    <span className="text-xs font-mono text-terminal-green font-bold">1</span>
+                  <div className="w-5 h-5 rounded-full bg-info/10 border border-info/20 flex items-center justify-center mt-0.5 shrink-0">
+                    <span className="text-xs font-mono text-info font-bold">1</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">Cuenta de Meta (Facebook)</p>
@@ -331,7 +331,7 @@ export function OnboardingWizard({
                       href="https://www.facebook.com/signup"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-terminal-green hover:underline mt-1.5 font-mono"
+                      className="inline-flex items-center gap-1 text-xs text-info hover:underline mt-1.5 font-mono"
                     >
                       Crear cuenta <ExternalLink className="w-3 h-3" />
                     </a>
@@ -340,8 +340,8 @@ export function OnboardingWizard({
 
                 {/* Item 2: Meta Business Portfolio */}
                 <div className="flex items-start gap-3 p-3 bg-background border border-border rounded-2xl">
-                  <div className="w-5 h-5 rounded-full bg-terminal-green/10 border border-terminal-green/20 flex items-center justify-center mt-0.5 shrink-0">
-                    <span className="text-xs font-mono text-terminal-green font-bold">2</span>
+                  <div className="w-5 h-5 rounded-full bg-info/10 border border-info/20 flex items-center justify-center mt-0.5 shrink-0">
+                    <span className="text-xs font-mono text-info font-bold">2</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">Meta Business Portfolio</p>
@@ -350,7 +350,7 @@ export function OnboardingWizard({
                       href="https://business.facebook.com/overview"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-terminal-green hover:underline mt-1.5 font-mono"
+                      className="inline-flex items-center gap-1 text-xs text-info hover:underline mt-1.5 font-mono"
                     >
                       Crear Business Portfolio <ExternalLink className="w-3 h-3" />
                     </a>
@@ -376,8 +376,8 @@ export function OnboardingWizard({
               </div>
 
               {/* Tip */}
-              <div className="px-3 py-2.5 bg-terminal-green/5 border border-terminal-green/10 rounded-2xl">
-                <p className="text-xs text-terminal-green font-mono">
+              <div className="px-3 py-2.5 bg-info/5 border border-info/10 rounded-2xl">
+                <p className="text-xs text-info font-mono">
                   <span className="font-semibold">Tip:</span> Si ya tienes una cuenta de Meta Business, el proceso toma menos de 1 minuto
                 </p>
               </div>
@@ -409,7 +409,7 @@ export function OnboardingWizard({
                 /* Already connected during this step */
                 <div className="space-y-5">
                   <div className="text-center space-y-2">
-                    <CheckCircle className="w-10 h-10 text-terminal-green mx-auto" />
+                    <CheckCircle className="w-10 h-10 text-info mx-auto" />
                     <h2 className="text-lg font-semibold text-foreground font-mono">
                       WhatsApp conectado
                     </h2>
@@ -419,7 +419,7 @@ export function OnboardingWizard({
                   </div>
                   <button
                     onClick={() => saveAndFinish()}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terminal-green text-background rounded-xl font-mono text-sm hover:opacity-90 transition-opacity"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-info text-background rounded-xl font-mono text-sm hover:opacity-90 transition-opacity"
                   >
                     <Check className="w-4 h-4" />
                     Activar agente
@@ -461,7 +461,7 @@ export function OnboardingWizard({
                       onClick={() => setConnectMode('new')}
                       className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-border hover:border-border-hover bg-background shadow-subtle hover:shadow-card transition-all"
                     >
-                      <Plus className="w-6 h-6 text-terminal-green" />
+                      <Plus className="w-6 h-6 text-info" />
                       <span className="text-sm font-medium text-foreground">número nuevo</span>
                       <span className="text-xs text-muted text-center">Compra via Twilio</span>
                     </button>
@@ -513,9 +513,9 @@ export function OnboardingWizard({
                   <div className="flex justify-start">
                     <div className="bg-surface-2 border border-border px-3 py-2 rounded-2xl">
                       <span className="flex gap-1">
-                        <span className="w-1.5 h-1.5 bg-terminal-green rounded-full animate-pulse" />
-                        <span className="w-1.5 h-1.5 bg-terminal-green rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
-                        <span className="w-1.5 h-1.5 bg-terminal-green rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+                        <span className="w-1.5 h-1.5 bg-info rounded-full animate-pulse" />
+                        <span className="w-1.5 h-1.5 bg-info rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 bg-info rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
                       </span>
                     </div>
                   </div>
@@ -565,11 +565,11 @@ export function OnboardingWizard({
           {step === 'test' && extractedConfig && (
             <div className="flex flex-col h-[520px]">
               {/* Config summary with features */}
-              <div className="px-4 py-3 border-b border-border bg-gradient-to-r from-terminal-green/5 to-blue-500/5">
+              <div className="px-4 py-3 border-b border-border bg-gradient-to-r from-info/5 to-info/3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-mono">
-                    <Check className="w-3.5 h-3.5 text-terminal-green" />
-                    <span className="text-terminal-green font-medium">{extractedConfig.businessName}</span>
+                    <Check className="w-3.5 h-3.5 text-info" />
+                    <span className="text-info font-medium">{extractedConfig.businessName}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="px-1.5 py-0.5 bg-surface-2 border border-border rounded text-xs text-muted">
@@ -594,9 +594,9 @@ export function OnboardingWizard({
                     >
                       {/* Capabilities showcase */}
                       <div className="mb-6">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full mb-3">
-                          <Sparkles className="w-4 h-4 text-blue-400" />
-                          <span className="text-xs font-medium text-blue-400">Multi-Agent AI</span>
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-info/10 border border-info/20 rounded-full mb-3">
+                          <Sparkles className="w-4 h-4 text-info" />
+                          <span className="text-xs font-medium text-info">Multi-Agent AI</span>
                         </div>
                         <p className="text-sm text-muted">
                           Tu agente usa análisis multi-modelo para respuestas inteligentes
@@ -606,19 +606,19 @@ export function OnboardingWizard({
                       {/* Feature grid */}
                       <div className="grid grid-cols-2 gap-2 mb-6 w-full max-w-sm">
                         <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-2xl shadow-subtle">
-                          <Brain className="w-4 h-4 text-blue-400" />
+                          <Brain className="w-4 h-4 text-info" />
                           <span className="text-xs text-muted">Razonamiento o3</span>
                         </div>
                         <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-2xl shadow-subtle">
-                          <Heart className="w-4 h-4 text-pink-400" />
+                          <Heart className="w-4 h-4 text-info" />
                           <span className="text-xs text-muted">Detección emocional</span>
                         </div>
                         <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-2xl shadow-subtle">
-                          <Shield className="w-4 h-4 text-green-400" />
+                          <Shield className="w-4 h-4 text-info" />
                           <span className="text-xs text-muted">Escalación inteligente</span>
                         </div>
                         <div className="flex items-center gap-2 p-2 bg-surface-2 border border-border rounded-2xl shadow-subtle">
-                          <CreditCard className="w-4 h-4 text-yellow-400" />
+                          <CreditCard className="w-4 h-4 text-info" />
                           <span className="text-xs text-muted">Links de pago</span>
                         </div>
                       </div>
@@ -667,7 +667,7 @@ export function OnboardingWizard({
                               className="flex gap-1.5 mt-1.5 ml-1"
                             >
                               {msg.agentInfo.detectedIndustry && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded text-xs text-blue-400">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-info/10 border border-info/20 rounded text-xs text-info">
                                   <TrendingUp className="w-2.5 h-2.5" />
                                   {msg.agentInfo.detectedIndustry}
                                 </span>
@@ -679,13 +679,13 @@ export function OnboardingWizard({
                                 </span>
                               )}
                               {msg.agentInfo.paymentLinkSent && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-500/10 border border-green-500/20 rounded text-xs text-green-400">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-info/10 border border-info/20 rounded text-xs text-info">
                                   <CreditCard className="w-2.5 h-2.5" />
                                   Pago enviado
                                 </span>
                               )}
                               {msg.agentInfo.saidLater && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded text-xs text-purple-400">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-info/10 border border-info/20 rounded text-xs text-info">
                                   <Zap className="w-2.5 h-2.5" />
                                   Follow-up
                                 </span>
@@ -708,8 +708,8 @@ export function OnboardingWizard({
                     <div className="bg-surface-2 border border-border px-4 py-3 rounded-2xl">
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <div className="w-8 h-8 border-2 border-terminal-green/30 rounded-full" />
-                          <div className="absolute inset-0 w-8 h-8 border-2 border-terminal-green border-t-transparent rounded-full animate-spin" />
+                          <div className="w-8 h-8 border-2 border-info/30 rounded-full" />
+                          <div className="absolute inset-0 w-8 h-8 border-2 border-info border-t-transparent rounded-full animate-spin" />
                         </div>
                         <div className="space-y-1">
                           <AnimatePresence mode="wait">
@@ -735,7 +735,7 @@ export function OnboardingWizard({
                               <div
                                 key={i}
                                 className={`w-1 h-1 rounded-full transition-colors ${
-                                  i <= analysisStep ? 'bg-terminal-green' : 'bg-border'
+                                  i <= analysisStep ? 'bg-info' : 'bg-border'
                                 }`}
                               />
                             ))}
@@ -776,7 +776,7 @@ export function OnboardingWizard({
                       setStep('prerequisites');
                     }
                   }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terminal-green text-background rounded-xl font-mono text-sm hover:opacity-90 transition-opacity"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-info text-background rounded-xl font-mono text-sm hover:opacity-90 transition-opacity"
                 >
                   {whatsappConnected ? (
                     <>
@@ -797,7 +797,7 @@ export function OnboardingWizard({
           {/* Saving phase */}
           {step === 'saving' && (
             <div className="h-[200px] flex flex-col items-center justify-center">
-              <Loader2 className="w-8 h-8 text-terminal-green animate-spin mb-4" />
+              <Loader2 className="w-8 h-8 text-info animate-spin mb-4" />
               <p className="text-sm text-muted font-mono">Activando tu agente...</p>
             </div>
           )}

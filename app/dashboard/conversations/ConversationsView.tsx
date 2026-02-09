@@ -281,7 +281,7 @@ export default function ConversationsView({ conversations: initialConversations,
                   ? 'bg-red-500/10 border-red-500/20 text-red-400'
                   : alert.priority === 'urgent'
                     ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                    : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                    : 'bg-info/10 border-info/20 text-info'
                 }
               `}
             >

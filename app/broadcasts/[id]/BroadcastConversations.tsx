@@ -105,13 +105,13 @@ const handoffReasonLabels: Record<string, Record<'en' | 'es', string>> = {
 
 const stageColors: Record<string, string> = {
   initial: 'text-muted', lead: 'text-muted', nuevo: 'text-muted',
-  contactado: 'text-terminal-yellow', contacted: 'text-terminal-yellow',
-  calificado: 'text-terminal-green', qualified: 'text-terminal-green',
-  propuesta: 'text-blue-400', proposal: 'text-blue-400',
-  negociacion: 'text-orange-400', negotiation: 'text-orange-400',
-  ganado: 'text-terminal-green', won: 'text-terminal-green',
+  contactado: 'text-muted', contacted: 'text-muted',
+  calificado: 'text-muted', qualified: 'text-muted',
+  propuesta: 'text-muted', proposal: 'text-muted',
+  negociacion: 'text-muted', negotiation: 'text-muted',
+  ganado: 'text-muted', won: 'text-muted',
   perdido: 'text-terminal-red', lost: 'text-terminal-red',
-  demo_scheduled: 'text-terminal-green', closed: 'text-terminal-green',
+  demo_scheduled: 'text-muted', closed: 'text-muted',
 };
 
 function timeAgo(dateStr: string, lang: 'en' | 'es'): string {
@@ -243,7 +243,7 @@ function ChatPanel({ conv, lang, t, onClose }: {
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] rounded-2xl px-3 py-2 ${
                   msg.role === 'user'
-                    ? 'bg-terminal-green/20 text-foreground rounded-br-sm'
+                    ? 'bg-info/15 text-foreground rounded-br-sm'
                     : 'bg-background border border-border rounded-bl-sm'
                 }`}>
                   <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -434,7 +434,7 @@ export default function BroadcastConversations({
               <span className="text-xs font-mono text-muted">
                 {conversations.length} {t.responses} {t.of} {totalSent} {t.sent}
               </span>
-              <span className="text-xs font-mono text-terminal-green">
+              <span className="text-xs font-mono text-info">
                 {responseRate}% {t.responseRate}
               </span>
             </div>

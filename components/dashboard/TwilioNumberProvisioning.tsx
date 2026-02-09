@@ -302,7 +302,7 @@ export default function TwilioNumberProvisioning({
         {step === 'confirming' && selectedNumber && (
           <div className="space-y-4">
             <div className="text-center space-y-2">
-              <Phone className="w-8 h-8 text-terminal-green mx-auto" />
+              <Phone className="w-8 h-8 text-info mx-auto" />
               <h3 className="text-sm font-medium text-foreground font-mono">
                 confirmar compra
               </h3>
@@ -382,7 +382,7 @@ export default function TwilioNumberProvisioning({
         {/* Step: Purchasing */}
         {step === 'purchasing' && (
           <div className="flex flex-col items-center gap-3 py-8">
-            <Loader2 className="w-6 h-6 text-terminal-green animate-spin" />
+            <Loader2 className="w-6 h-6 text-info animate-spin" />
             <p className="text-sm text-muted font-mono">comprando número...</p>
             <p className="text-xs text-muted">Esto puede tomar unos segundos</p>
           </div>
@@ -392,7 +392,7 @@ export default function TwilioNumberProvisioning({
         {step === 'purchased' && purchasedNumber && (
           <div className="space-y-4">
             <div className="text-center space-y-2">
-              <CheckCircle className="w-8 h-8 text-terminal-green mx-auto" />
+              <CheckCircle className="w-8 h-8 text-info mx-auto" />
               <h3 className="text-sm font-medium text-foreground font-mono">
                 número activo
               </h3>
@@ -401,10 +401,10 @@ export default function TwilioNumberProvisioning({
 
             {/* Verification Code Panel */}
             {verificationCode ? (
-              <div className="rounded-xl border border-terminal-green/30 bg-terminal-green/5 p-4 text-center space-y-2">
+              <div className="rounded-xl border border-info/30 bg-info/5 p-4 text-center space-y-2">
                 <p className="text-xs text-muted font-mono">código de verificación</p>
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-2xl font-mono font-bold text-terminal-green tracking-widest">
+                  <span className="text-2xl font-mono font-bold text-info tracking-widest">
                     {verificationCode}
                   </span>
                   <button

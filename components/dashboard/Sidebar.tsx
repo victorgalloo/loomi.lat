@@ -89,29 +89,29 @@ export default function Sidebar({ userName, isConnected }: SidebarProps) {
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-100 min-h-screen flex flex-col relative overflow-hidden shadow-sm">
+    <aside className="w-64 bg-surface-elevated border-r border-border min-h-screen flex flex-col relative overflow-hidden shadow-sm">
       {/* Background glow effect */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute top-0 left-0 w-64 h-64 bg-info/5 blur-[100px] rounded-full pointer-events-none" />
 
       {/* Logo */}
-      <div className="p-6 border-b border-gray-100 relative z-10">
+      <div className="p-6 border-b border-border relative z-10">
         <div className="flex items-center gap-3">
           <motion.div
-            className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20"
+            className="w-10 h-10 bg-info rounded-xl flex items-center justify-center shadow-lg shadow-info/20"
             whileHover={{ scale: 1.05 }}
             transition={{ type: 'spring', stiffness: 400 }}
           >
             <span className="text-xl font-black text-white">L</span>
           </motion.div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">LOOMI</h1>
-            <p className="text-xs text-gray-500 font-medium">Dashboard</p>
+            <h1 className="text-xl font-bold text-foreground">LOOMI</h1>
+            <p className="text-xs text-muted font-medium">Dashboard</p>
           </div>
         </div>
       </div>
 
       {/* Connection Status */}
-      <div className="px-4 py-3 border-b border-gray-100 relative z-10">
+      <div className="px-4 py-3 border-b border-border relative z-10">
         <div className="flex items-center gap-2">
           <motion.div
             className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}`}
@@ -120,7 +120,7 @@ export default function Sidebar({ userName, isConnected }: SidebarProps) {
             } : {}}
             transition={{ duration: 2, repeat: Infinity }}
           />
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-muted">
             {isConnected ? 'WhatsApp conectado' : 'Sin conexion'}
           </span>
         </div>
@@ -144,25 +144,25 @@ export default function Sidebar({ userName, isConnected }: SidebarProps) {
                     relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
                     transition-all duration-300
                     ${isActive
-                      ? 'text-emerald-700'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      ? 'text-info'
+                      : 'text-muted hover:text-foreground hover:bg-surface'
                     }
                   `}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="sidebar-active"
-                      className="absolute inset-0 bg-emerald-50 border border-emerald-100 rounded-xl"
+                      className="absolute inset-0 bg-info/10 border border-info/20 rounded-xl"
                       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     />
                   )}
-                  <span className={`relative z-10 ${isActive ? 'text-emerald-600' : 'text-gray-400'}`}>
+                  <span className={`relative z-10 ${isActive ? 'text-info' : 'text-muted'}`}>
                     {item.icon}
                   </span>
                   <span className="relative z-10">{item.label}</span>
                   {isActive && (
                     <motion.div
-                      className="absolute right-3 w-1.5 h-1.5 rounded-full bg-emerald-500"
+                      className="absolute right-3 w-1.5 h-1.5 rounded-full bg-info"
                       layoutId="sidebar-dot"
                     />
                   )}
@@ -174,15 +174,15 @@ export default function Sidebar({ userName, isConnected }: SidebarProps) {
       </nav>
 
       {/* User Info */}
-      <div className="p-4 border-t border-gray-100 relative z-10">
+      <div className="p-4 border-t border-border relative z-10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center shadow-sm">
+          <div className="w-8 h-8 bg-info rounded-full flex items-center justify-center shadow-sm">
             <span className="text-sm font-medium text-white">
               {userName?.charAt(0).toUpperCase() || 'U'}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
+            <p className="text-sm font-medium text-foreground truncate">
               {userName || 'Usuario'}
             </p>
           </div>
@@ -190,7 +190,7 @@ export default function Sidebar({ userName, isConnected }: SidebarProps) {
             onClick={handleLogout}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-xl hover:bg-red-50"
+            className="p-2 text-muted hover:text-red-500 transition-colors rounded-xl hover:bg-red-50"
             title="Cerrar sesion"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

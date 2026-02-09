@@ -323,8 +323,8 @@ export default function ToolsView({ tenantId }: ToolsViewProps) {
                     </span>
                     <span className={`px-2 py-0.5 text-xs rounded font-mono flex-shrink-0 ${
                       tool.executionType === 'webhook'
-                        ? 'bg-terminal-green/10 text-terminal-green'
-                        : 'bg-terminal-yellow/10 text-terminal-yellow'
+                        ? 'bg-info/10 text-info'
+                        : 'bg-surface-2 text-muted'
                     }`}>
                       {executionTypeLabel(tool.executionType)}
                     </span>

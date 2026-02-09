@@ -22,7 +22,7 @@ export default function ConnectionStatus({
       className={`
         relative p-6 rounded-2xl border overflow-hidden shadow-sm
         ${connected
-          ? 'bg-emerald-50 border-emerald-200'
+          ? 'bg-info/10 border-info/20'
           : 'bg-amber-50 border-amber-200'
         }
       `}
@@ -30,7 +30,7 @@ export default function ConnectionStatus({
       {/* Background glow */}
       <div
         className={`absolute -top-10 -right-10 w-32 h-32 blur-[60px] rounded-full pointer-events-none
-          ${connected ? 'bg-emerald-400/30' : 'bg-amber-400/30'}
+          ${connected ? 'bg-info/30' : 'bg-amber-400/30'}
         `}
       />
 
@@ -39,21 +39,21 @@ export default function ConnectionStatus({
           className={`
             w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm
             ${connected
-              ? 'bg-emerald-100 border border-emerald-200'
+              ? 'bg-info/10 border border-info/20'
               : 'bg-amber-100 border border-amber-200'
             }
           `}
           animate={connected ? {
             boxShadow: [
-              '0 0 0px rgba(16,185,129,0.2)',
-              '0 0 15px rgba(16,185,129,0.3)',
-              '0 0 0px rgba(16,185,129,0.2)'
+              '0 0 0px rgba(0,122,255,0.2)',
+              '0 0 15px rgba(0,122,255,0.3)',
+              '0 0 0px rgba(0,122,255,0.2)'
             ]
           } : {}}
           transition={{ duration: 2, repeat: Infinity }}
         >
           <svg
-            className={`w-7 h-7 ${connected ? 'text-emerald-600' : 'text-amber-600'}`}
+            className={`w-7 h-7 ${connected ? 'text-info' : 'text-amber-600'}`}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
@@ -62,16 +62,16 @@ export default function ConnectionStatus({
         </motion.div>
 
         <div className="flex-1">
-          <h3 className={`text-lg font-semibold ${connected ? 'text-emerald-800' : 'text-amber-800'}`}>
+          <h3 className={`text-lg font-semibold ${connected ? 'text-info' : 'text-amber-800'}`}>
             {connected ? 'WhatsApp Conectado' : 'WhatsApp No Conectado'}
           </h3>
           {connected ? (
             <div className="mt-1 space-y-0.5">
               {businessName && (
-                <p className="text-gray-800 font-medium">{businessName}</p>
+                <p className="text-foreground font-medium">{businessName}</p>
               )}
               {phoneNumber && (
-                <p className="text-gray-600 text-sm font-mono">{phoneNumber}</p>
+                <p className="text-muted text-sm font-mono">{phoneNumber}</p>
               )}
             </div>
           ) : (
@@ -90,15 +90,15 @@ export default function ConnectionStatus({
               }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40 animate-ping" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-info/40 opacity-40 animate-ping" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-info" />
             </motion.span>
-            <span className="text-sm text-emerald-700 font-medium">Activo</span>
+            <span className="text-sm text-info font-medium">Activo</span>
           </div>
         ) : (
           <Link
             href="/dashboard/connect"
-            className="group flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-colors"
+            className="group flex items-center gap-2 px-4 py-2 bg-info text-white font-medium rounded-xl hover:bg-info/90 shadow-lg shadow-info/20 transition-colors"
           >
             Conectar
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />

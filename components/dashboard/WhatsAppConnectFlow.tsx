@@ -265,29 +265,29 @@ export default function WhatsAppConnectFlow({ onSuccess, onError, twilioPhoneNum
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center relative overflow-hidden"
+        className="bg-info/10 border border-info/20 rounded-2xl p-8 text-center relative overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/50 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-info/10 to-transparent pointer-events-none" />
 
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 300, delay: 0.2 }}
-          className="w-16 h-16 bg-emerald-100 border border-emerald-200 rounded-full flex items-center justify-center mx-auto mb-4 relative z-10 shadow-lg shadow-emerald-500/20"
+          className="w-16 h-16 bg-info/10 border border-info/20 rounded-full flex items-center justify-center mx-auto mb-4 relative z-10 shadow-lg shadow-info/20"
         >
-          <Check className="w-8 h-8 text-emerald-600" />
+          <Check className="w-8 h-8 text-info" />
         </motion.div>
-        <h3 className="text-xl font-semibold text-emerald-700 mb-2 relative z-10">
+        <h3 className="text-xl font-semibold text-info mb-2 relative z-10">
           WhatsApp Conectado
         </h3>
         {success.businessName && (
-          <p className="text-gray-900 font-medium relative z-10">{success.businessName}</p>
+          <p className="text-foreground font-medium relative z-10">{success.businessName}</p>
         )}
         {success.phoneNumber && (
-          <p className="text-gray-600 font-mono relative z-10">{success.phoneNumber}</p>
+          <p className="text-muted font-mono relative z-10">{success.phoneNumber}</p>
         )}
-        <p className="text-gray-600 mt-4 relative z-10 flex items-center justify-center gap-2">
-          <Sparkles className="w-4 h-4 text-emerald-600" />
+        <p className="text-muted mt-4 relative z-10 flex items-center justify-center gap-2">
+          <Sparkles className="w-4 h-4 text-info" />
           Tu agente AI esta listo para responder mensajes.
         </p>
       </motion.div>
@@ -297,22 +297,22 @@ export default function WhatsAppConnectFlow({ onSuccess, onError, twilioPhoneNum
   return (
     <div className="flex flex-col items-center gap-8 p-8 relative">
       {/* Background glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-info/10 blur-[100px] rounded-full pointer-events-none" />
 
       <div className="text-center relative z-10">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-bold text-foreground mb-2">
           Conectar WhatsApp Business
         </h2>
-        <p className="text-gray-600 max-w-md">
+        <p className="text-muted max-w-md">
           Conecta tu cuenta de WhatsApp Business para que tu agente AI pueda responder mensajes automaticamente.
         </p>
       </div>
 
       {/* Twilio Number Banner */}
       {twilioPhoneNumber && (
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 relative z-10">
-          <Phone className="w-4 h-4 text-emerald-600" />
-          <span className="text-sm text-emerald-700">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-info/10 border border-info/20 relative z-10">
+          <Phone className="w-4 h-4 text-info" />
+          <span className="text-sm text-info">
             Registrando <span className="font-mono font-medium">{twilioPhoneNumber}</span> con WhatsApp Business
           </span>
         </div>
@@ -325,11 +325,11 @@ export default function WhatsAppConnectFlow({ onSuccess, onError, twilioPhoneNum
         className="flex items-center gap-2 text-sm relative z-10"
       >
         <motion.div
-          className={`w-2 h-2 rounded-full ${isSDKLoaded ? 'bg-emerald-500' : 'bg-amber-500'}`}
+          className={`w-2 h-2 rounded-full ${isSDKLoaded ? 'bg-info' : 'bg-amber-500'}`}
           animate={isSDKLoaded ? {} : { scale: [1, 1.2, 1] }}
           transition={{ duration: 1, repeat: Infinity }}
         />
-        <span className="text-gray-600">
+        <span className="text-muted">
           {isSDKLoaded ? 'Listo para conectar' : 'Cargando...'}
         </span>
       </motion.div>
@@ -345,8 +345,8 @@ export default function WhatsAppConnectFlow({ onSuccess, onError, twilioPhoneNum
           transition-all duration-300 z-10
           ${
             isSDKLoaded && !isLoading && !isConnecting
-              ? 'bg-emerald-600 text-white cursor-pointer shadow-lg shadow-emerald-500/30 hover:bg-emerald-700'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+              ? 'bg-info text-white cursor-pointer shadow-lg shadow-info/30 hover:bg-info/90'
+              : 'bg-surface-2 text-muted cursor-not-allowed border border-border'
           }
         `}
       >
@@ -379,19 +379,19 @@ export default function WhatsAppConnectFlow({ onSuccess, onError, twilioPhoneNum
       )}
 
       {/* Instructions */}
-      <div className="max-w-md text-center text-sm text-gray-600 space-y-3 relative z-10">
+      <div className="max-w-md text-center text-sm text-muted space-y-3 relative z-10">
         <p>Al hacer clic, se abrira una ventana de Meta donde podras:</p>
         <ul className="text-left space-y-2">
           <li className="flex items-start gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full bg-info mt-2 flex-shrink-0" />
             Crear una cuenta de WhatsApp Business API
           </li>
           <li className="flex items-start gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full bg-info mt-2 flex-shrink-0" />
             Verificar tu numero de telefono
           </li>
           <li className="flex items-start gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full bg-info mt-2 flex-shrink-0" />
             Autorizar a Loomi para enviar mensajes
           </li>
         </ul>

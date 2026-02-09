@@ -39,15 +39,15 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead }: KanbanColumnProp
 
   // Minimal color accents (stage dots keep accent colors)
   const stageColors: Record<string, string> = {
-    cyan: 'bg-cyan-500',
-    amber: 'bg-amber-500',
-    purple: 'bg-purple-500',
-    blue: 'bg-blue-500',
-    orange: 'bg-orange-500',
-    emerald: 'bg-emerald-500',
-    red: 'bg-red-500',
-    gray: 'bg-zinc-500',
-    indigo: 'bg-indigo-500',
+    cyan: 'bg-info',
+    amber: 'bg-info',
+    purple: 'bg-info',
+    blue: 'bg-info',
+    orange: 'bg-info',
+    emerald: 'bg-info',
+    red: 'bg-info',
+    gray: 'bg-info',
+    indigo: 'bg-info',
   };
 
   return (

@@ -327,7 +327,7 @@ interface BuildPromptParams {
   progressInstruction?: string;
 }
 
-export function buildSystemPrompt(params: BuildPromptParams): string {
+export async function buildSystemPrompt(params: BuildPromptParams): Promise<string> {
   const {
     message,
     context,
@@ -401,7 +401,7 @@ export function buildSystemPrompt(params: BuildPromptParams): string {
   if (agentConfig?.fewShotExamples?.length) {
     fewShotSection = getFewShotContextFromTenant(message, history, agentConfig.fewShotExamples);
   } else if (!agentConfig?.systemPrompt) {
-    fewShotSection = getFewShotContext(message, history);
+    fewShotSection = await getFewShotContext(message, history);
   }
   if (fewShotSection) {
     parts.push(fewShotSection);

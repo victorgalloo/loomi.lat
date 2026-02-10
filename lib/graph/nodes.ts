@@ -490,7 +490,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
   }
 
   // Build system prompt
-  const systemPrompt = buildSystemPrompt({
+  const systemPrompt = await buildSystemPrompt({
     message,
     context,
     history,

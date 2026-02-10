@@ -788,15 +788,17 @@ export async function POST(request: NextRequest) {
       }
 
       // 2b. If schedule list was sent and user types free text (not an interactive reply),
-      //     remind them to use the list instead of calling the agent
+      //     nudge once then clear the flag so next message reaches the agent
       if (!message.interactiveType && message.text && !extractEmail(message.text)) {
         const scheduleListPending = await wasScheduleListSent(message.phone, tenantId);
         if (scheduleListPending) {
-          console.log(`[Webhook] Schedule list pending for ${message.phone}, nudging to use list`);
+          console.log(`[Webhook] Schedule list pending for ${message.phone}, nudging once and clearing flag`);
           await saveMessage(context.conversation.id, 'user', message.text, context.lead.id);
           const nudgeMsg = 'Tienes una lista de horarios arriba ☝️ Elige el que te funcione, o dime si necesitas ver más días.';
           await sendWhatsAppMessage(message.phone, nudgeMsg, credentials);
           await saveMessage(context.conversation.id, 'assistant', nudgeMsg, context.lead.id);
+          // Clear the flag so subsequent messages reach the agent normally
+          await clearScheduleListSent(message.phone, tenantId);
           return NextResponse.json({ status: 'ok', flow: 'schedule_list_nudge' });
         }
       }

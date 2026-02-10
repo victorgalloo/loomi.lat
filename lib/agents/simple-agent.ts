@@ -216,12 +216,34 @@ export async function simpleAgent(
   context: ConversationContext,
   agentConfig?: AgentConfigOptions
 ): Promise<SimpleAgentResult> {
-  const history = context.recentMessages
-    .slice(-20)
-    .map(m => ({
+  // Build history with time gap awareness
+  const recentSlice = context.recentMessages.slice(-20);
+  const history: { role: 'user' | 'assistant'; content: string }[] = [];
+
+  for (let i = 0; i < recentSlice.length; i++) {
+    const m = recentSlice[i];
+    // Detect large time gaps (>2 hours) between messages and inject a system note
+    if (i > 0 && m.timestamp) {
+      const prev = recentSlice[i - 1];
+      if (prev.timestamp) {
+        const gapMs = m.timestamp.getTime() - prev.timestamp.getTime();
+        const gapHours = gapMs / (1000 * 60 * 60);
+        if (gapHours >= 2) {
+          const gapText = gapHours >= 24
+            ? `${Math.round(gapHours / 24)} día(s)`
+            : `${Math.round(gapHours)} hora(s)`;
+          history.push({
+            role: 'assistant',
+            content: `[Han pasado ${gapText} desde el último mensaje. Si el usuario saluda o cambia de tema, trátalo como una conversación nueva.]`
+          });
+        }
+      }
+    }
+    history.push({
       role: m.role as 'user' | 'assistant',
       content: m.content
-    }));
+    });
+  }
 
   history.push({ role: 'user', content: message });
 

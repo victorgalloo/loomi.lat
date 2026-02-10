@@ -6,7 +6,7 @@
  */
 
 import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 
 const DEMO_PROMPT = `Eres Loomi, un agente de ventas por WhatsApp. Eres rápido, amigable y directo.
 
@@ -48,7 +48,7 @@ export async function demoAgent(
     ];
 
     const result = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: anthropic('claude-haiku-4-5-20251001'),
       system: DEMO_PROMPT,
       messages,
       maxOutputTokens: 150,

@@ -994,9 +994,7 @@ export async function POST(request: NextRequest) {
 
       let result;
       try {
-        console.log(`[Webhook] USE_LANGGRAPH=${process.env.USE_LANGGRAPH}`);
         if (process.env.USE_LANGGRAPH === 'true') {
-          console.log('[Webhook] Using LangGraph agent');
           result = await processMessageGraph(message.text, context);
         } else {
           // Pass agent config for tenant-specific behavior

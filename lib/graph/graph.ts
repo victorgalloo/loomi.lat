@@ -10,6 +10,7 @@
 import { StateGraph, END } from '@langchain/langgraph';
 import { ConversationContext } from '@/types';
 import { SimpleAgentResult } from '@/lib/agents/simple-agent';
+import { GraphAgentConfig } from './state';
 import { GraphState, DEFAULT_PERSISTED_STATE } from './state';
 import { loadConversationState } from './memory';
 import { analyzeNode, routeNode, summarizeNode, generateNode, persistNode } from './nodes';
@@ -52,7 +53,8 @@ function getCompiledGraph() {
  */
 export async function processMessageGraph(
   message: string,
-  context: ConversationContext
+  context: ConversationContext,
+  agentConfig?: GraphAgentConfig
 ): Promise<SimpleAgentResult> {
   // Load persisted state from Supabase
   const conversationState = await loadConversationState(
@@ -78,6 +80,7 @@ export async function processMessageGraph(
     message,
     context,
     history,
+    agentConfig,
     conversationState,
     reasoning: null,
     sentiment: null,

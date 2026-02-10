@@ -7,6 +7,13 @@ import { Annotation } from '@langchain/langgraph';
 import { ConversationContext } from '@/types';
 import { SimpleAgentResult } from '@/lib/agents/simple-agent';
 import { ReasoningResult } from '@/lib/agents/reasoning';
+import { AgentConfig } from '@/lib/tenant/context';
+
+// Extended type matching what the webhook attaches (knowledgeContext + customTools)
+export type GraphAgentConfig = AgentConfig & {
+  knowledgeContext?: string;
+  customTools?: Array<{ name: string; description: string; displayName: string; mockResponse?: unknown }>;
+};
 
 // The 11 sales phases matching simple-agent.ts state machine
 export type SalesPhase =
@@ -89,6 +96,7 @@ export const GraphState = Annotation.Root({
   message: Annotation<string>,
   context: Annotation<ConversationContext>,
   history: Annotation<Array<{ role: 'user' | 'assistant'; content: string }>>,
+  agentConfig: Annotation<GraphAgentConfig | undefined>,
 
   // Persisted state (loaded from / saved to Supabase)
   conversationState: Annotation<PersistedConversationState>,

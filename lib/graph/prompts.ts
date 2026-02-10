@@ -15,6 +15,7 @@ import { getSentimentInstruction } from '@/lib/agents/sentiment';
 import { getIndustryPromptSection } from '@/lib/agents/industry';
 import { getKnowledgeContextForSystemPrompt } from '@/lib/knowledge';
 import { ConversationContext } from '@/types';
+import { GraphAgentConfig } from './state';
 
 // ============================================
 // SECTION 1: IDENTIDAD
@@ -319,6 +320,7 @@ interface BuildPromptParams {
   topicChanged: boolean;
   currentTopic: string;
   resolvedPhase: SalesPhase;
+  agentConfig?: GraphAgentConfig;
 }
 
 export function buildSystemPrompt(params: BuildPromptParams): string {
@@ -330,20 +332,30 @@ export function buildSystemPrompt(params: BuildPromptParams): string {
     topicChanged,
     currentTopic,
     resolvedPhase,
+    agentConfig,
   } = params;
 
   const parts: string[] = [];
 
-  // 1. IDENTIDAD (highest primary attention)
-  parts.push(IDENTITY);
-
-  // 2. REGLAS
-  parts.push(RULES);
+  // 1. IDENTIDAD + 2. REGLAS
+  // If tenant has a custom systemPrompt, use it as the base (replaces IDENTITY + RULES).
+  // Otherwise keep Loomi defaults.
+  if (agentConfig?.systemPrompt) {
+    parts.push(agentConfig.systemPrompt);
+  } else {
+    parts.push(IDENTITY);
+    parts.push(RULES);
+  }
 
   // 3. CONOCIMIENTO (knowledge base + industry)
-  const knowledgeContext = getKnowledgeContextForSystemPrompt(message);
-  if (knowledgeContext) {
-    parts.push(knowledgeContext);
+  // Tenant knowledge context takes priority over default knowledge lookup
+  if (agentConfig?.knowledgeContext) {
+    parts.push(agentConfig.knowledgeContext);
+  } else {
+    const knowledgeContext = getKnowledgeContextForSystemPrompt(message);
+    if (knowledgeContext) {
+      parts.push(knowledgeContext);
+    }
   }
 
   const industrySection = getIndustryPromptSection(reasoning.industry);

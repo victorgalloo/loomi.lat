@@ -995,7 +995,7 @@ export async function POST(request: NextRequest) {
       let result;
       try {
         if (process.env.USE_LANGGRAPH === 'true') {
-          result = await processMessageGraph(message.text, context);
+          result = await processMessageGraph(message.text, context, agentConfig);
         } else {
           // Pass agent config for tenant-specific behavior
           result = await simpleAgent(message.text, context, agentConfig);

@@ -452,7 +452,7 @@ function getNextBusinessDays(count: number): string[] {
 }
 
 export async function generateNode(state: GraphStateType): Promise<Partial<GraphStateType>> {
-  const { resolvedPhase, context, reasoning, conversationState, message, history, topicChanged, currentTopic } = state;
+  const { resolvedPhase, context, reasoning, conversationState, message, history, topicChanged, currentTopic, agentConfig } = state;
 
   // Deterministic path: show schedule list
   if (resolvedPhase === 'dar_horarios') {
@@ -475,6 +475,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
     topicChanged,
     currentTopic,
     resolvedPhase,
+    agentConfig,
   });
 
   // Client info for tools
@@ -608,6 +609,21 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
     ...createKnowledgeTools()
   };
 
+  // Add custom tools from tenant config (same pattern as simple-agent.ts)
+  if (agentConfig?.customTools && agentConfig.customTools.length > 0) {
+    for (const customTool of agentConfig.customTools) {
+      (tools as Record<string, unknown>)[customTool.name] = tool({
+        description: customTool.description,
+        inputSchema: zodSchema(z.object({})),
+        execute: async () => {
+          console.log(`[Tool] Custom tool called: ${customTool.name}`);
+          return customTool.mockResponse || { success: true, message: `${customTool.displayName} executed` };
+        }
+      });
+    }
+    console.log(`[GraphGenerate] Added ${agentConfig.customTools.length} custom tools`);
+  }
+
   // Track tool results
   let appointmentBooked: SimpleAgentResult['appointmentBooked'] = undefined;
   let brochureSent = false;
@@ -619,7 +635,8 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
       system: systemPrompt,
       messages: history,
       tools,
-      maxOutputTokens: 250,
+      maxOutputTokens: agentConfig?.maxResponseTokens || 250,
+      temperature: agentConfig?.temperature,
       onStepFinish: async (step) => {
         if (step.toolResults) {
           for (const toolResult of step.toolResults) {

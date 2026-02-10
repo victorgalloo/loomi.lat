@@ -12,6 +12,7 @@ export interface Tenant {
   name: string;
   email: string;
   companyName: string | null;
+  metaBusinessId: string | null;
   subscriptionTier: 'starter' | 'growth' | 'pro' | 'enterprise';
   subscriptionStatus: 'pending' | 'active' | 'past_due' | 'canceled';
   settings: Record<string, unknown>;
@@ -262,6 +263,7 @@ export async function getTenantById(tenantId: string): Promise<Tenant | null> {
     name: data.name,
     email: data.email,
     companyName: data.company_name,
+    metaBusinessId: data.meta_business_id || null,
     subscriptionTier: data.subscription_tier,
     subscriptionStatus: data.subscription_status,
     settings: data.settings,
@@ -290,6 +292,7 @@ export async function getTenantByEmail(email: string): Promise<Tenant | null> {
     name: data.name,
     email: data.email,
     companyName: data.company_name,
+    metaBusinessId: data.meta_business_id || null,
     subscriptionTier: data.subscription_tier,
     subscriptionStatus: data.subscription_status,
     settings: data.settings,
@@ -334,6 +337,7 @@ export async function getOrCreateTenant(
     name: data.name,
     email: data.email,
     companyName: data.company_name,
+    metaBusinessId: data.meta_business_id || null,
     subscriptionTier: data.subscription_tier,
     subscriptionStatus: data.subscription_status,
     settings: data.settings,

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { CheckCircle, Phone, Building, Calendar, Shield, HelpCircle, Plus, Trash2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { CheckCircle, Phone, Building, Calendar, Shield, HelpCircle, Plus, Trash2, RefreshCw, Loader2, Globe } from 'lucide-react';
 import WhatsAppConnectFlow from '@/components/dashboard/WhatsAppConnectFlow';
 import TwilioNumberProvisioning from '@/components/dashboard/TwilioNumberProvisioning';
 
@@ -19,16 +19,93 @@ interface PendingTwilioNumber {
   status: string;
 }
 
+interface MetaWABAInfo {
+  id: string;
+  name: string;
+  account_review_status?: string;
+}
+
 interface ConnectViewProps {
   isConnected: boolean;
   whatsappAccounts: WhatsAppAccountInfo[];
   pendingTwilioNumbers?: PendingTwilioNumber[];
+  metaBusinessId?: string | null;
+  tenantId?: string;
 }
 
-export default function ConnectView({ isConnected, whatsappAccounts, pendingTwilioNumbers = [] }: ConnectViewProps) {
+export default function ConnectView({ isConnected, whatsappAccounts, pendingTwilioNumbers = [], metaBusinessId, tenantId }: ConnectViewProps) {
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [showAddNumber, setShowAddNumber] = useState(false);
   const [addNumberMode, setAddNumberMode] = useState<'choose' | 'new' | 'existing' | null>(null);
+
+  // WABA management state
+  const [clientWABAs, setClientWABAs] = useState<MetaWABAInfo[]>([]);
+  const [wabaLoading, setWabaLoading] = useState(false);
+  const [wabaError, setWabaError] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [addingNumber, setAddingNumber] = useState(false);
+  const [newPhoneNumber, setNewPhoneNumber] = useState('');
+
+  const fetchWABAs = useCallback(async () => {
+    if (!metaBusinessId) return;
+    setWabaLoading(true);
+    setWabaError(null);
+    try {
+      const res = await fetch('/api/whatsapp/waba');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al obtener WABAs');
+      setClientWABAs(data.wabas || []);
+    } catch (err) {
+      setWabaError(err instanceof Error ? err.message : 'Error desconocido');
+    } finally {
+      setWabaLoading(false);
+    }
+  }, [metaBusinessId]);
+
+  useEffect(() => {
+    if (metaBusinessId) {
+      fetchWABAs();
+    }
+  }, [metaBusinessId, fetchWABAs]);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await fetch('/api/whatsapp/waba', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'sync' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al sincronizar');
+      setClientWABAs(data.wabas || []);
+    } catch (err) {
+      setWabaError(err instanceof Error ? err.message : 'Error al sincronizar');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleAddPreverifiedNumber = async () => {
+    if (!newPhoneNumber.trim()) return;
+    setAddingNumber(true);
+    setWabaError(null);
+    try {
+      const res = await fetch('/api/whatsapp/waba', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_number', phone_number: newPhoneNumber.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al registrar número');
+      setNewPhoneNumber('');
+      await fetchWABAs();
+    } catch (err) {
+      setWabaError(err instanceof Error ? err.message : 'Error al registrar número');
+    } finally {
+      setAddingNumber(false);
+    }
+  };
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('es-MX', {
@@ -242,6 +319,98 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
               <Plus className="w-4 h-4" />
               agregar otro número
             </button>
+          )}
+
+          {/* WABA Management (Tech Provider) */}
+          {metaBusinessId && (
+            <div className="pt-6 border-t border-border space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-medium flex items-center gap-2 text-foreground">
+                  <Globe className="w-4 h-4 text-muted" />
+                  gestión WABA
+                </h2>
+                <button
+                  onClick={handleSync}
+                  disabled={syncing}
+                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-xl transition-colors text-foreground bg-foreground/10 hover:bg-foreground/20 disabled:opacity-50"
+                >
+                  {syncing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                  sincronizar
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between py-2">
+                <span className="text-xs text-muted">Meta Business ID</span>
+                <span className="text-xs font-mono text-foreground">{metaBusinessId}</span>
+              </div>
+
+              {wabaError && (
+                <div className="text-xs text-terminal-red bg-terminal-red/10 px-3 py-2 rounded-xl">
+                  {wabaError}
+                </div>
+              )}
+
+              {wabaLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-4 h-4 animate-spin text-muted" />
+                </div>
+              ) : clientWABAs.length > 0 ? (
+                <div className="space-y-3">
+                  {clientWABAs.map((waba) => (
+                    <div key={waba.id} className="pb-3 border-b border-border">
+                      <dl className="space-y-0">
+                        <div className="flex items-center justify-between py-2">
+                          <dt className="text-xs text-muted">WABA</dt>
+                          <dd className="text-xs text-foreground">{waba.name}</dd>
+                        </div>
+                        <div className="flex items-center justify-between py-2">
+                          <dt className="text-xs text-muted">ID</dt>
+                          <dd className="text-xs font-mono text-muted">{waba.id}</dd>
+                        </div>
+                        {waba.account_review_status && (
+                          <div className="flex items-center justify-between py-2">
+                            <dt className="text-xs text-muted">estado de revisión</dt>
+                            <dd className={`text-xs font-medium ${
+                              waba.account_review_status === 'APPROVED'
+                                ? 'text-terminal-green'
+                                : waba.account_review_status === 'PENDING'
+                                  ? 'text-terminal-yellow'
+                                  : 'text-terminal-red'
+                            }`}>
+                              {waba.account_review_status.toLowerCase()}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted py-2">No se encontraron WABAs para este negocio.</p>
+              )}
+
+              {/* Add pre-verified number */}
+              <div className="space-y-2">
+                <label className="text-xs text-muted">registrar número pre-verificado</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newPhoneNumber}
+                    onChange={(e) => setNewPhoneNumber(e.target.value)}
+                    placeholder="+521234567890"
+                    className="flex-1 px-3 py-1.5 text-sm font-mono bg-background border border-border rounded-xl focus:outline-none focus:border-foreground/30 transition-colors"
+                  />
+                  <button
+                    onClick={handleAddPreverifiedNumber}
+                    disabled={addingNumber || !newPhoneNumber.trim()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl transition-colors bg-foreground text-background hover:opacity-90 disabled:opacity-50"
+                  >
+                    {addingNumber ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                    registrar
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       ) : (

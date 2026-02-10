@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
-import { getWhatsAppAccounts } from "@/lib/tenant/context";
+import { getWhatsAppAccounts, getTenantById } from "@/lib/tenant/context";
 import { getProvisionedNumbers } from "@/lib/twilio/numbers";
 import ConnectView from "./ConnectView";
 
@@ -27,9 +27,10 @@ export default async function ConnectPage() {
     redirect("/login");
   }
 
-  const [whatsappAccounts, twilioNumbers] = await Promise.all([
+  const [whatsappAccounts, twilioNumbers, tenant] = await Promise.all([
     getWhatsAppAccounts(tenantId),
     getProvisionedNumbers(tenantId).catch(() => []),
+    getTenantById(tenantId),
   ]);
   const activeAccounts = whatsappAccounts.filter(a => a.status === 'active');
 
@@ -49,6 +50,8 @@ export default async function ConnectPage() {
         connectedAt: a.connectedAt?.toISOString() || null,
       }))}
       pendingTwilioNumbers={pendingTwilioNumbers}
+      metaBusinessId={tenant?.metaBusinessId || null}
+      tenantId={tenantId}
     />
   );
 }

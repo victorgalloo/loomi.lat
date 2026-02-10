@@ -48,6 +48,7 @@ interface EmbeddedSignupEvent {
   data: {
     phone_number_id?: string;
     waba_id?: string;
+    business_id?: string;
     current_step?: string;
     error_message?: string;
   };
@@ -152,7 +153,7 @@ export default function WhatsAppConnectFlow({ onSuccess, onError, twilioPhoneNum
   }, [handleMessage]);
 
   // Send signup data to backend
-  const completeConnection = async (code: string, wabaId: string, phoneNumberId: string) => {
+  const completeConnection = async (code: string, wabaId: string, phoneNumberId: string, businessId?: string) => {
     setIsConnecting(true);
     setError(null);
 
@@ -166,6 +167,7 @@ export default function WhatsAppConnectFlow({ onSuccess, onError, twilioPhoneNum
           code,
           waba_id: wabaId,
           phone_number_id: phoneNumberId,
+          ...(businessId && { business_id: businessId }),
         }),
       });
 
@@ -206,7 +208,7 @@ export default function WhatsAppConnectFlow({ onSuccess, onError, twilioPhoneNum
     setIsLoading(true);
     setError(null);
 
-    let pendingSignup: { waba_id?: string; phone_number_id?: string } = {};
+    let pendingSignup: { waba_id?: string; phone_number_id?: string; business_id?: string } = {};
 
     const messageHandler = (event: MessageEvent) => {
       if (event.origin !== 'https://www.facebook.com' && event.origin !== 'https://web.facebook.com') {
@@ -219,6 +221,7 @@ export default function WhatsAppConnectFlow({ onSuccess, onError, twilioPhoneNum
           pendingSignup = {
             waba_id: data.data.waba_id,
             phone_number_id: data.data.phone_number_id,
+            business_id: data.data.business_id,
           };
         }
       } catch {
@@ -239,7 +242,8 @@ export default function WhatsAppConnectFlow({ onSuccess, onError, twilioPhoneNum
           completeConnection(
             response.authResponse.code,
             pendingSignup.waba_id,
-            pendingSignup.phone_number_id
+            pendingSignup.phone_number_id,
+            pendingSignup.business_id
           );
         } else if (response.status !== 'connected') {
           setError('Proceso cancelado o fallido. Por favor intenta de nuevo.');

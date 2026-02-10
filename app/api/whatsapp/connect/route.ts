@@ -13,11 +13,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getOrCreateTenant } from '@/lib/tenant/context';
 import { completeOnboarding, disconnectWhatsApp } from '@/lib/whatsapp/onboarding';
+import { getSupabase } from '@/lib/memory/supabase';
 
 interface ConnectRequestBody {
   code: string;
   waba_id: string;
   phone_number_id: string;
+  business_id?: string;
 }
 
 interface DisconnectRequestBody {
@@ -59,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Handle connect action
-    const { code, waba_id, phone_number_id } = body as ConnectRequestBody;
+    const { code, waba_id, phone_number_id, business_id } = body as ConnectRequestBody;
 
     // Validate required fields
     if (!code || !waba_id || !phone_number_id) {
@@ -89,6 +91,16 @@ export async function POST(request: NextRequest) {
         { error: result.error || 'Failed to connect WhatsApp' },
         { status: 500 }
       );
+    }
+
+    // Save Meta Business ID if provided (for tech provider API)
+    if (business_id) {
+      const adminSupabase = getSupabase();
+      await adminSupabase
+        .from('tenants')
+        .update({ meta_business_id: business_id })
+        .eq('id', tenant.id);
+      console.log(`[API] Saved meta_business_id ${business_id} for tenant ${tenant.id}`);
     }
 
     console.log(`[API] WhatsApp connected successfully for ${user.email}`);

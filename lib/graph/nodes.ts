@@ -7,6 +7,7 @@ import { generateText } from 'ai';
 import { tool, zodSchema } from '@ai-sdk/provider-utils';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
+import { resolveModel } from '@/lib/agents/model';
 import { generateReasoningFast } from '@/lib/agents/reasoning';
 import { checkAvailability, createEvent } from '@/lib/tools/calendar';
 import { sendWhatsAppLink, escalateToHuman } from '@/lib/whatsapp/send';
@@ -470,6 +471,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
   const systemPrompt = buildSystemPrompt({
     message,
     context,
+    history,
     conversationState,
     reasoning: reasoning!,
     topicChanged,
@@ -631,7 +633,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
 
   try {
     const result = await generateText({
-      model: anthropic('claude-sonnet-4-5-20250929'),
+      model: resolveModel(agentConfig?.model),
       system: systemPrompt,
       messages: history,
       tools,

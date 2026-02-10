@@ -14,6 +14,7 @@ import { formatReasoningForPrompt, ReasoningResult } from '@/lib/agents/reasonin
 import { getSentimentInstruction } from '@/lib/agents/sentiment';
 import { getIndustryPromptSection } from '@/lib/agents/industry';
 import { getKnowledgeContextForSystemPrompt } from '@/lib/knowledge';
+import { getFewShotContext, getFewShotContextFromTenant } from '@/lib/agents/few-shot';
 import { ConversationContext } from '@/types';
 import { GraphAgentConfig } from './state';
 
@@ -315,6 +316,7 @@ NO menciones tu producto hasta saber más sobre su situación.`,
 interface BuildPromptParams {
   message: string;
   context: ConversationContext;
+  history: Array<{ role: string; content: string }>;
   conversationState: PersistedConversationState;
   reasoning: ReasoningResult;
   topicChanged: boolean;
@@ -327,6 +329,7 @@ export function buildSystemPrompt(params: BuildPromptParams): string {
   const {
     message,
     context,
+    history,
     conversationState,
     reasoning,
     topicChanged,
@@ -361,6 +364,39 @@ export function buildSystemPrompt(params: BuildPromptParams): string {
   const industrySection = getIndustryPromptSection(reasoning.industry);
   if (industrySection) {
     parts.push(industrySection);
+  }
+
+  // 3b. TENANT CONTEXT FIELDS (granular product/pricing/sales context)
+  if (agentConfig) {
+    const tenantContextParts: string[] = [];
+    if (agentConfig.productContext) tenantContextParts.push(`# PRODUCTO\n${agentConfig.productContext}`);
+    if (agentConfig.pricingContext) tenantContextParts.push(`# PRECIOS\n${agentConfig.pricingContext}`);
+    if (agentConfig.salesProcessContext) tenantContextParts.push(`# PROCESO DE VENTA\n${agentConfig.salesProcessContext}`);
+    if (agentConfig.qualificationContext) tenantContextParts.push(`# CALIFICACIÓN\n${agentConfig.qualificationContext}`);
+    if (agentConfig.competitorContext) tenantContextParts.push(`# COMPETENCIA\n${agentConfig.competitorContext}`);
+    if (tenantContextParts.length > 0) {
+      parts.push(tenantContextParts.join('\n\n'));
+    }
+
+    // Custom objection handlers
+    if (agentConfig.objectionHandlers && Object.keys(agentConfig.objectionHandlers).length > 0) {
+      const handlers = Object.entries(agentConfig.objectionHandlers)
+        .map(([objection, response]) => `"${objection}":\n→ ${response}`)
+        .join('\n\n');
+      parts.push(`# MANEJO DE OBJECIONES\n${handlers}`);
+    }
+  }
+
+  // 3c. FEW-SHOT EXAMPLES
+  // Tenant examples take priority; skip Loomi defaults when custom systemPrompt is set
+  let fewShotSection = '';
+  if (agentConfig?.fewShotExamples?.length) {
+    fewShotSection = getFewShotContextFromTenant(message, history, agentConfig.fewShotExamples);
+  } else if (!agentConfig?.systemPrompt) {
+    fewShotSection = getFewShotContext(message, history);
+  }
+  if (fewShotSection) {
+    parts.push(fewShotSection);
   }
 
   // 4. CONTEXTO DE CONVERSACIÓN
@@ -430,6 +466,19 @@ export function buildSystemPrompt(params: BuildPromptParams): string {
   const sentimentInstruction = getSentimentInstruction(reasoning.sentiment);
   if (sentimentInstruction) {
     parts.push(`# INSTRUCCIÓN DE TONO\n${sentimentInstruction}`);
+  }
+
+  // Tenant tone override
+  if (agentConfig?.tone && agentConfig.tone !== 'professional') {
+    const toneMap: Record<string, string> = {
+      friendly: 'Usa un tono amigable y cercano. Tutéa al cliente.',
+      casual: 'Usa un tono muy casual e informal. Habla como amigo.',
+      formal: 'Usa un tono formal y de usted. Mantén distancia profesional.',
+    };
+    const toneInstruction = toneMap[agentConfig.tone];
+    if (toneInstruction) {
+      parts.push(`# TONO DE COMUNICACIÓN\n${toneInstruction}`);
+    }
   }
 
   // 6. INSTRUCCIÓN DE FASE (last = highest recency attention)

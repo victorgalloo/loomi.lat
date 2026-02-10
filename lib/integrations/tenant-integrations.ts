@@ -17,6 +17,7 @@ export interface TenantIntegration {
   calClientId: string | null;
   calEventTypeId: string | null;
   calUsername: string | null;
+  stripeHasKey: boolean;
   stripeAccountId: string | null;
   stripeOnboardingComplete: boolean;
   connectedAt: string | null;
@@ -38,6 +39,7 @@ function mapRow(row: Record<string, unknown>): TenantIntegration {
     calClientId: row.cal_client_id as string | null,
     calEventTypeId: row.cal_event_type_id as string | null,
     calUsername: row.cal_username as string | null,
+    stripeHasKey: !!(row.stripe_secret_key_encrypted),
     stripeAccountId: row.stripe_account_id as string | null,
     stripeOnboardingComplete: (row.stripe_onboarding_complete as boolean) ?? false,
     connectedAt: row.connected_at as string | null,
@@ -54,7 +56,7 @@ export async function getIntegrations(tenantId: string): Promise<TenantIntegrati
 
   const { data, error } = await supabase
     .from('tenant_integrations')
-    .select('id, tenant_id, provider, status, cal_client_id, cal_event_type_id, cal_username, stripe_account_id, stripe_onboarding_complete, connected_at, error_message, settings')
+    .select('id, tenant_id, provider, status, cal_client_id, cal_event_type_id, cal_username, stripe_secret_key_encrypted, stripe_account_id, stripe_onboarding_complete, connected_at, error_message, settings')
     .eq('tenant_id', tenantId);
 
   if (error || !data) return [];
@@ -72,7 +74,7 @@ export async function getIntegration(
 
   const { data, error } = await supabase
     .from('tenant_integrations')
-    .select('id, tenant_id, provider, status, cal_client_id, cal_event_type_id, cal_username, stripe_account_id, stripe_onboarding_complete, connected_at, error_message, settings')
+    .select('id, tenant_id, provider, status, cal_client_id, cal_event_type_id, cal_username, stripe_secret_key_encrypted, stripe_account_id, stripe_onboarding_complete, connected_at, error_message, settings')
     .eq('tenant_id', tenantId)
     .eq('provider', provider)
     .single();
@@ -97,7 +99,7 @@ export async function upsertIntegration(
       { tenant_id: tenantId, provider, ...data },
       { onConflict: 'tenant_id,provider' }
     )
-    .select('id, tenant_id, provider, status, cal_client_id, cal_event_type_id, cal_username, stripe_account_id, stripe_onboarding_complete, connected_at, error_message, settings')
+    .select('id, tenant_id, provider, status, cal_client_id, cal_event_type_id, cal_username, stripe_secret_key_encrypted, stripe_account_id, stripe_onboarding_complete, connected_at, error_message, settings')
     .single();
 
   if (error) {
@@ -128,6 +130,7 @@ export async function disconnectIntegration(
       cal_client_secret_encrypted: null,
       cal_event_type_id: null,
       cal_username: null,
+      stripe_secret_key_encrypted: null,
       stripe_account_id: null,
       stripe_onboarding_complete: false,
       connected_at: null,
@@ -215,6 +218,46 @@ export async function saveCalCredentials(
   await upsertIntegration(tenantId, 'calcom', {
     cal_client_id: clientId,
     cal_client_secret_encrypted: encrypt(clientSecret),
+  });
+}
+
+/**
+ * Get decrypted Stripe secret key for a tenant
+ */
+export async function getStripeCredentials(
+  tenantId: string
+): Promise<{ secretKey: string } | null> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from('tenant_integrations')
+    .select('stripe_secret_key_encrypted')
+    .eq('tenant_id', tenantId)
+    .eq('provider', 'stripe_connect')
+    .single();
+
+  if (error || !data) return null;
+
+  const encrypted = data.stripe_secret_key_encrypted as string | null;
+  if (!encrypted) return null;
+
+  try {
+    return { secretKey: decrypt(encrypted) };
+  } catch (e) {
+    console.error('[Integrations] Failed to decrypt Stripe secret key:', e);
+    return null;
+  }
+}
+
+/**
+ * Save Stripe secret key (encrypted)
+ */
+export async function saveStripeCredentials(
+  tenantId: string,
+  secretKey: string
+): Promise<void> {
+  await upsertIntegration(tenantId, 'stripe_connect', {
+    stripe_secret_key_encrypted: encrypt(secretKey),
   });
 }
 

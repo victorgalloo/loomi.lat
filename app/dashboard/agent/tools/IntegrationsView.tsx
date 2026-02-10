@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Calendar, CreditCard, Loader2, ExternalLink, Unplug, Save } from 'lucide-react';
+import { Loader2, ExternalLink, Unplug, Save } from 'lucide-react';
 import type { TenantIntegration, IntegrationProvider } from '@/lib/integrations/tenant-integrations';
 
 interface IntegrationsViewProps {
@@ -25,14 +25,39 @@ const STATUS_LABELS: Record<string, string> = {
   disconnected: 'desconectado',
 };
 
+function CalComLogo({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" fill="currentColor" fillOpacity="0.1"/>
+      <path d="M16.5 8.25v7.5a.75.75 0 01-.75.75h-1.5a.75.75 0 01-.75-.75V15a3.75 3.75 0 110-6v-.75a.75.75 0 01.75-.75h1.5a.75.75 0 01.75.75zM13.5 12a2.25 2.25 0 10-4.5 0 2.25 2.25 0 004.5 0z" fill="currentColor"/>
+    </svg>
+  );
+}
+
+function StripeLogo({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 7.5A4.5 4.5 0 017.5 3h9A4.5 4.5 0 0121 7.5v9a4.5 4.5 0 01-4.5 4.5h-9A4.5 4.5 0 013 16.5v-9z" fill="#635BFF"/>
+      <path d="M11.2 10.16c0-.53.44-.74.97-.74.87 0 1.97.27 2.84.74V7.74A7.6 7.6 0 0012.17 7c-2.37 0-3.95 1.24-3.95 3.31 0 3.23 4.45 2.72 4.45 4.11 0 .63-.55.83-1.08.83-.93 0-2.13-.38-3.08-.9v2.44a7.82 7.82 0 003.08.65c2.43 0 4.1-1.2 4.1-3.3-.01-3.49-4.49-2.87-4.49-4.23z" fill="white"/>
+    </svg>
+  );
+}
+
 export default function IntegrationsView({ tenantId, integrations: initialIntegrations }: IntegrationsViewProps) {
   const searchParams = useSearchParams();
   const [integrations, setIntegrations] = useState(initialIntegrations);
   const [disconnecting, setDisconnecting] = useState<IntegrationProvider | null>(null);
+
+  // Cal.com credential state
   const [calClientId, setCalClientId] = useState('');
   const [calClientSecret, setCalClientSecret] = useState('');
-  const [savingCredentials, setSavingCredentials] = useState(false);
-  const [credentialsSaved, setCredentialsSaved] = useState(false);
+  const [savingCalCreds, setSavingCalCreds] = useState(false);
+  const [calCredsSaved, setCalCredsSaved] = useState(false);
+
+  // Stripe credential state
+  const [stripeSecretKey, setStripeSecretKey] = useState('');
+  const [savingStripeCreds, setSavingStripeCreds] = useState(false);
+  const [stripeCredsSaved, setStripeCredsSaved] = useState(false);
 
   // Flash messages from OAuth redirects
   const calcomStatus = searchParams.get('calcom');
@@ -56,10 +81,12 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
         setIntegrations(prev =>
           prev.map(i =>
             i.provider === provider
-              ? { ...i, status: 'disconnected' as const, calUsername: null, stripeAccountId: null, stripeOnboardingComplete: false, connectedAt: null }
+              ? { ...i, status: 'disconnected' as const, calClientId: null, calUsername: null, stripeHasKey: false, stripeAccountId: null, stripeOnboardingComplete: false, connectedAt: null }
               : i
           )
         );
+        if (provider === 'calcom') setCalCredsSaved(false);
+        if (provider === 'stripe_connect') setStripeCredsSaved(false);
       }
     } catch {
       // silent
@@ -68,9 +95,9 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
     }
   };
 
-  const handleSaveCredentials = async () => {
+  const handleSaveCalCredentials = async () => {
     if (!calClientId.trim() || !calClientSecret.trim()) return;
-    setSavingCredentials(true);
+    setSavingCalCreds(true);
     try {
       const res = await fetch('/api/integrations/calcom/credentials', {
         method: 'POST',
@@ -78,7 +105,7 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
         body: JSON.stringify({ clientId: calClientId.trim(), clientSecret: calClientSecret.trim() }),
       });
       if (res.ok) {
-        setCredentialsSaved(true);
+        setCalCredsSaved(true);
         setIntegrations(prev => {
           const exists = prev.some(i => i.provider === 'calcom');
           if (exists) {
@@ -87,29 +114,55 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
             );
           }
           return [...prev, {
-            id: '',
-            tenantId,
-            provider: 'calcom' as const,
-            status: 'disconnected' as const,
-            calClientId: calClientId.trim(),
-            calEventTypeId: null,
-            calUsername: null,
-            stripeAccountId: null,
-            stripeOnboardingComplete: false,
-            connectedAt: null,
-            errorMessage: null,
-            settings: {},
+            id: '', tenantId, provider: 'calcom' as const, status: 'disconnected' as const,
+            calClientId: calClientId.trim(), calEventTypeId: null, calUsername: null,
+            stripeHasKey: false, stripeAccountId: null, stripeOnboardingComplete: false,
+            connectedAt: null, errorMessage: null, settings: {},
           }];
         });
       }
     } catch {
       // silent
     } finally {
-      setSavingCredentials(false);
+      setSavingCalCreds(false);
     }
   };
 
-  const calHasCredentials = !!(calcom?.calClientId || credentialsSaved);
+  const handleSaveStripeCredentials = async () => {
+    if (!stripeSecretKey.trim()) return;
+    setSavingStripeCreds(true);
+    try {
+      const res = await fetch('/api/integrations/stripe/credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secretKey: stripeSecretKey.trim() }),
+      });
+      if (res.ok) {
+        setStripeCredsSaved(true);
+        setIntegrations(prev => {
+          const exists = prev.some(i => i.provider === 'stripe_connect');
+          if (exists) {
+            return prev.map(i =>
+              i.provider === 'stripe_connect' ? { ...i, stripeHasKey: true } : i
+            );
+          }
+          return [...prev, {
+            id: '', tenantId, provider: 'stripe_connect' as const, status: 'disconnected' as const,
+            calClientId: null, calEventTypeId: null, calUsername: null,
+            stripeHasKey: true, stripeAccountId: null, stripeOnboardingComplete: false,
+            connectedAt: null, errorMessage: null, settings: {},
+          }];
+        });
+      }
+    } catch {
+      // silent
+    } finally {
+      setSavingStripeCreds(false);
+    }
+  };
+
+  const calHasCredentials = !!(calcom?.calClientId || calCredsSaved);
+  const stripeHasCredentials = !!(stripe?.stripeHasKey || stripeCredsSaved);
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
@@ -169,7 +222,7 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-surface-2 border border-border flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-foreground" />
+                <CalComLogo className="w-6 h-6 text-foreground" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -249,18 +302,18 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
                 />
               </div>
               <button
-                onClick={handleSaveCredentials}
-                disabled={savingCredentials || !calClientId.trim() || !calClientSecret.trim()}
+                onClick={handleSaveCalCredentials}
+                disabled={savingCalCreds || !calClientId.trim() || !calClientSecret.trim()}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {savingCredentials ? (
+                {savingCalCreds ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <Save className="w-3.5 h-3.5" />
                 )}
                 guardar credenciales
               </button>
-              {credentialsSaved && (
+              {calCredsSaved && (
                 <p className="text-xs text-terminal-green">
                   Credenciales guardadas. Ya puedes conectar Cal.com.
                 </p>
@@ -273,8 +326,8 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
         <div className="p-5 rounded-2xl border border-border bg-surface">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-surface-2 border border-border flex items-center justify-center">
-                <CreditCard className="w-5 h-5 text-foreground" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center">
+                <StripeLogo className="w-10 h-10" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -310,7 +363,7 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
                   <ExternalLink className="w-3.5 h-3.5" />
                   completar
                 </a>
-              ) : (
+              ) : stripeHasCredentials ? (
                 <a
                   href="/api/integrations/stripe/connect"
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors bg-foreground text-background hover:bg-foreground/90"
@@ -318,7 +371,7 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
                   <ExternalLink className="w-3.5 h-3.5" />
                   conectar
                 </a>
-              )}
+              ) : null}
             </div>
           </div>
           {stripe?.status === 'connected' && (
@@ -340,6 +393,37 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
             <p className="mt-2 ml-[52px] text-xs text-terminal-red">
               {stripe.errorMessage}
             </p>
+          )}
+          {stripe?.status !== 'connected' && stripe?.status !== 'pending' && (
+            <div className="mt-4 ml-[52px] space-y-3">
+              <div className="space-y-2">
+                <label className="text-xs text-muted">Secret Key</label>
+                <input
+                  type="password"
+                  value={stripeSecretKey}
+                  onChange={e => setStripeSecretKey(e.target.value)}
+                  placeholder="sk_live_..."
+                  className="w-full px-3 py-2 text-sm rounded-lg bg-background border border-border font-mono text-foreground placeholder:text-muted/50 focus:outline-none focus:border-foreground/30"
+                />
+              </div>
+              <button
+                onClick={handleSaveStripeCredentials}
+                disabled={savingStripeCreds || !stripeSecretKey.trim()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingStripeCreds ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Save className="w-3.5 h-3.5" />
+                )}
+                guardar credenciales
+              </button>
+              {stripeCredsSaved && (
+                <p className="text-xs text-terminal-green">
+                  Credenciales guardadas. Ya puedes conectar Stripe.
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>

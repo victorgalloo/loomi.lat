@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
-import ToolsView from "./ToolsView";
+import { getIntegrations } from "@/lib/integrations/tenant-integrations";
+import IntegrationsView from "./IntegrationsView";
 
 export default async function ToolsPage() {
   const supabase = await createClient();
@@ -24,5 +25,7 @@ export default async function ToolsPage() {
     redirect("/login");
   }
 
-  return <ToolsView tenantId={tenantId} />;
+  const integrations = await getIntegrations(tenantId);
+
+  return <IntegrationsView tenantId={tenantId} integrations={integrations} />;
 }

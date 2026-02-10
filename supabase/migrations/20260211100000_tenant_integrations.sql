@@ -18,6 +18,9 @@ CREATE TABLE IF NOT EXISTS tenant_integrations (
   cal_event_type_id TEXT,
   cal_username TEXT,
 
+  -- Stripe Connect credentials (per-tenant)
+  stripe_secret_key_encrypted TEXT,
+
   -- Stripe Connect
   stripe_account_id TEXT,
   stripe_onboarding_complete BOOLEAN DEFAULT false,

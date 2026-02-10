@@ -5,7 +5,7 @@
 
 import { generateText } from 'ai';
 import { tool, zodSchema } from '@ai-sdk/provider-utils';
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
 import { generateReasoningFast } from '@/lib/agents/reasoning';
 import { checkAvailability, createEvent } from '@/lib/tools/calendar';
@@ -402,7 +402,7 @@ Si hay resumen previo, actualízalo incorporando la nueva información.`;
 
   try {
     const result = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: anthropic('claude-haiku-4-5-20251001'),
       system: summaryPrompt,
       prompt: 'Resume la conversación.',
       maxOutputTokens: 300,
@@ -615,7 +615,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
 
   try {
     const result = await generateText({
-      model: openai('gpt-5.2-chat-latest'),
+      model: anthropic('claude-sonnet-4-5-20250929'),
       system: systemPrompt,
       messages: history,
       tools,

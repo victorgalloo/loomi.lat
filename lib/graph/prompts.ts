@@ -486,12 +486,34 @@ export function buildSystemPrompt(params: BuildPromptParams): string {
   // 6. INSTRUCCIÓN DE FASE (last = highest recency attention)
   parts.push(`# ESTADO ACTUAL: ${resolvedPhase.toUpperCase()}`);
 
-  const stateInstruction = STATE_INSTRUCTIONS[resolvedPhase];
-  if (stateInstruction) {
-    parts.push(stateInstruction);
+  if (agentConfig?.systemPrompt) {
+    // Tenant has custom prompt: only inject generic phase context (no Loomi-specific scripts)
+    const genericPhaseHints: Partial<Record<SalesPhase, string>> = {
+      discovery: 'Primera interacción. Preséntate y pregunta sobre su situación.',
+      preguntando_volumen: 'Ya conoces el tipo de negocio. Pregunta sobre volumen o escala.',
+      listo_para_demo: 'Ya tienes suficiente info. Propón avanzar al siguiente paso.',
+      proponer_demo_urgente: 'El usuario expresó dolor o es referido. Muestra empatía y propón avanzar.',
+      dar_horarios: 'El usuario aceptó avanzar. Ofrece horarios o siguiente paso concreto.',
+      pedir_email: 'El usuario propuso un horario. Confirma y pide su correo.',
+      confirmar_y_despedir: 'El usuario dio su email. Agenda y confirma.',
+      esperando_aceptacion: 'Ya propusiste avanzar. Espera confirmación.',
+      esperando_confirmacion: 'Esperando que el usuario confirme horario.',
+      pedir_clarificacion_ya: 'El usuario dijo "Ya" sin contexto. Asume interés y avanza.',
+      preguntar_que_tiene: 'El usuario dice que ya tiene algo. Pregunta qué usa antes de proponer.',
+    };
+    const hint = genericPhaseHints[resolvedPhase];
+    if (hint) {
+      parts.push(hint);
+    }
+    parts.push(`# INSTRUCCIÓN FINAL\nResponde de forma concisa. Sigue las instrucciones de tu prompt de sistema.`);
+  } else {
+    // Loomi default: use detailed Loomi-specific state scripts
+    const stateInstruction = STATE_INSTRUCTIONS[resolvedPhase];
+    if (stateInstruction) {
+      parts.push(stateInstruction);
+    }
+    parts.push(`# INSTRUCCIÓN FINAL\nResponde en máximo 2 oraciones. NO hagas preguntas si ya tienes suficiente info. CIERRA hacia la demo.`);
   }
-
-  parts.push(`# INSTRUCCIÓN FINAL\nResponde en máximo 2 oraciones. NO hagas preguntas si ya tienes suficiente info. CIERRA hacia la demo.`);
 
   return parts.join('\n\n');
 }

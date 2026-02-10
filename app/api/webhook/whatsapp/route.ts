@@ -37,6 +37,7 @@ import {
 } from '@/lib/handoff';
 import { getConversationContext } from '@/lib/memory/context';
 import { simpleAgent } from '@/lib/agents/simple-agent';
+import { processMessageGraph } from '@/lib/graph/graph';
 import {
   checkRateLimit,
   isProcessing,
@@ -993,8 +994,12 @@ export async function POST(request: NextRequest) {
 
       let result;
       try {
-        // Pass agent config for tenant-specific behavior
-        result = await simpleAgent(message.text, context, agentConfig);
+        if (process.env.USE_LANGGRAPH === 'true') {
+          result = await processMessageGraph(message.text, context);
+        } else {
+          // Pass agent config for tenant-specific behavior
+          result = await simpleAgent(message.text, context, agentConfig);
+        }
       } catch (agentError) {
         console.error('Agent error:', agentError);
 
@@ -1177,13 +1182,15 @@ export async function POST(request: NextRequest) {
               ]
             });
 
-            // Generate memory if needed
-            if (await shouldGenerateMemory(context.conversation.startedAt, context.recentMessages.length + 2)) {
-              await generateMemory(context.lead.id, [
-                ...context.recentMessages,
-                { id: '', role: 'user', content: message.text, timestamp: new Date() },
-                { id: '', role: 'assistant', content: result.response, timestamp: new Date() },
-              ]);
+            // Generate memory if needed (skipped when LangGraph handles summarization)
+            if (process.env.USE_LANGGRAPH !== 'true') {
+              if (await shouldGenerateMemory(context.conversation.startedAt, context.recentMessages.length + 2)) {
+                await generateMemory(context.lead.id, [
+                  ...context.recentMessages,
+                  { id: '', role: 'user', content: message.text, timestamp: new Date() },
+                  { id: '', role: 'assistant', content: result.response, timestamp: new Date() },
+                ]);
+              }
             }
           }
         } catch (err) {

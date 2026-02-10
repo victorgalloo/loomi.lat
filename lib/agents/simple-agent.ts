@@ -100,6 +100,14 @@ function isSimpleMessage(message: string, historyLength: number): boolean {
 export interface SimpleAgentResult {
   response: string;
   tokensUsed?: number;
+  appointmentBooked?: {
+    eventId: string;
+    date: string;
+    time: string;
+    email: string;
+    meetingUrl?: string;
+  };
+  brochureSent?: boolean;
   escalatedToHuman?: {
     reason: string;
     summary: string;

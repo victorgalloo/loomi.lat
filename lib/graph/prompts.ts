@@ -344,8 +344,10 @@ export function buildSystemPrompt(params: BuildPromptParams): string {
   // If tenant has a custom systemPrompt, use it as the base (replaces IDENTITY + RULES).
   // Otherwise keep Loomi defaults.
   if (agentConfig?.systemPrompt) {
+    console.log(`[GraphPrompt] Using tenant systemPrompt (${agentConfig.systemPrompt.length} chars)`);
     parts.push(agentConfig.systemPrompt);
   } else {
+    console.log(`[GraphPrompt] Using Loomi defaults (no tenant systemPrompt, agentConfig: ${!!agentConfig})`);
     parts.push(IDENTITY);
     parts.push(RULES);
   }

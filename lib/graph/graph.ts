@@ -73,6 +73,7 @@ export async function processMessageGraph(
 
   console.log('=== GRAPH INVOCATION ===');
   console.log(`Turn: ${conversationState.turn_count + 1}, Phase: ${conversationState.phase}`);
+  console.log(`[Graph] agentConfig present: ${!!agentConfig}, systemPrompt: ${!!agentConfig?.systemPrompt}, model: ${agentConfig?.model || 'default'}`);
 
   // Invoke the graph
   const graph = getCompiledGraph();

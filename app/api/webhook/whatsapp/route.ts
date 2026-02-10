@@ -994,6 +994,7 @@ export async function POST(request: NextRequest) {
 
       let result;
       try {
+        console.log(`[Webhook] USE_LANGGRAPH=${process.env.USE_LANGGRAPH}, tenantId=${tenantId}, hasAgentConfig=${!!agentConfig}, hasSystemPrompt=${!!agentConfig?.systemPrompt}, systemPromptLen=${agentConfig?.systemPrompt?.length || 0}`);
         if (process.env.USE_LANGGRAPH === 'true') {
           result = await processMessageGraph(message.text, context, agentConfig);
         } else {

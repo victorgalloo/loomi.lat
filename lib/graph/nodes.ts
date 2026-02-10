@@ -15,6 +15,8 @@ import { createKnowledgeTools } from '@/lib/knowledge';
 import { SimpleAgentResult } from '@/lib/agents/simple-agent';
 import { buildSystemPrompt } from './prompts';
 import { syncSummaryToLeadMemory } from './memory';
+import { analyzeProgress } from '@/lib/agents/progress-tracker';
+import { guardResponse } from '@/lib/agents/response-guard';
 import {
   GraphStateType,
   SalesPhase,
@@ -352,6 +354,25 @@ export function routeNode(state: GraphStateType): Partial<GraphStateType> {
   // --- Update phase ---
   convState.phase = resolvedPhase;
 
+  // --- Progress tracking (anti-loop) ---
+  const progress = analyzeProgress({
+    history,
+    currentMessage: state.message,
+    turnCount: convState.turn_count,
+    existingAskCounts: convState.ask_counts,
+  });
+  convState.ask_counts = progress.askCounts;
+  convState.stalled_turns = progress.stalledTurns;
+
+  // Build progress instruction for generateNode
+  let progressInstruction = '';
+  if (progress.progressInstruction) {
+    progressInstruction = progress.progressInstruction;
+  }
+  if (progress.pivotInstruction) {
+    progressInstruction += (progressInstruction ? '\n' : '') + progress.pivotInstruction;
+  }
+
   // --- Calculate needsSummary ---
   const needsSummary = convState.turn_count >= 5 &&
     (convState.turn_count - convState.last_summary_turn >= 5);
@@ -360,6 +381,7 @@ export function routeNode(state: GraphStateType): Partial<GraphStateType> {
     resolvedPhase,
     needsSummary,
     saidLater,
+    progressInstruction,
     conversationState: convState,
   };
 }
@@ -453,7 +475,7 @@ function getNextBusinessDays(count: number): string[] {
 }
 
 export async function generateNode(state: GraphStateType): Promise<Partial<GraphStateType>> {
-  const { resolvedPhase, context, reasoning, conversationState, message, history, topicChanged, currentTopic, agentConfig } = state;
+  const { resolvedPhase, context, reasoning, conversationState, message, history, topicChanged, currentTopic, agentConfig, progressInstruction } = state;
 
   // Deterministic path: show schedule list
   if (resolvedPhase === 'dar_horarios') {
@@ -478,6 +500,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
     currentTopic,
     resolvedPhase,
     agentConfig,
+    progressInstruction,
   });
 
   // Client info for tools
@@ -637,7 +660,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
       system: systemPrompt,
       messages: history,
       tools,
-      maxOutputTokens: agentConfig?.maxResponseTokens || 250,
+      maxOutputTokens: agentConfig?.maxResponseTokens || 200,
       temperature: agentConfig?.temperature,
       onStepFinish: async (step) => {
         if (step.toolResults) {
@@ -681,6 +704,30 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
     response = response.replace(/\*+/g, '');
     response = response.replace(/^(Víctor|Victor):\s*/i, '');
 
+    // Phase 3D: Response guard (length enforcement)
+    const guarded = guardResponse(response, 3);
+    response = guarded.response;
+    if (guarded.wasGuarded) {
+      console.log(`[GraphGenerate] Response guarded: ${guarded.reason}`);
+    }
+
+    // Phase 5B: Promise-action validation
+    let showScheduleList = false;
+    const PROMISE_PATTERNS = [
+      { pattern: /te muestro.*horarios|horarios.*disponibles|déjame.*horarios/i, tool: 'schedule_demo' },
+    ];
+    const toolsCalled = new Set(
+      (result.steps?.flatMap((s: { toolCalls?: Array<{ toolName: string }> }) =>
+        s.toolCalls?.map(tc => tc.toolName) || []) || [])
+    );
+    for (const { pattern, tool } of PROMISE_PATTERNS) {
+      if (pattern.test(response) && !toolsCalled.has(tool)) {
+        showScheduleList = true;
+        console.log(`[GraphGenerate] Promise validation: response promises "${tool}" but didn't call it. Triggering schedule list.`);
+        break;
+      }
+    }
+
     console.log('=== GRAPH RESPONSE ===');
     console.log(response);
 
@@ -699,6 +746,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
         escalatedToHuman: escalatedToHumanResult,
         detectedIndustry: reasoning && reasoning.industry !== 'generic' ? reasoning.industry : undefined,
         saidLater: state.saidLater,
+        showScheduleList: showScheduleList || undefined,
       },
       conversationState: updatedState,
     };

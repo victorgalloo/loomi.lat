@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { Scenario } from './scenarios';
 
 const evaluationSchema = z.object({
-  score: z.number().min(0).max(100),
+  score: z.number().describe('Score from 0 to 100'),
   passed: z.boolean(),
   issues: z.array(z.string()),
   suggestions: z.array(z.string()),
@@ -39,6 +39,8 @@ CRITERIOS A EVALUAR:
 4. Debe proponer demo: ${scenario.criteria.shouldAskForDemo ? 'SÍ debe hacerlo' : 'No aplica aún'}
 5. Respuesta corta (máx 3 oraciones): ${scenario.criteria.shouldBeShort ? 'SÍ verificar' : 'No aplica'}
 ${scenario.criteria.customCheck ? `6. IMPORTANTE: ${scenario.criteria.customCheck}` : ''}
+7. No repetir preguntas ya hechas en la conversación: SÍ verificar (revisar historial completo)
+8. Avanzar la conversación (no quedarse en el mismo tema): ${conversationContext.split('\n').length >= 8 ? 'SÍ verificar si hay 4+ turnos previos' : 'No aplica aún'}
 
 INSTRUCCIONES:
 - Score de 0-100 basado en qué tan bien cumple los criterios

@@ -36,19 +36,15 @@ import {
   DEFAULT_OBJECTION_HANDLERS,
   DEFAULT_AGENT_NAME,
   DEFAULT_AGENT_ROLE,
+  buildDynamicIdentity,
 } from './defaults';
+import { analyzeProgress } from './progress-tracker';
+import { guardResponse } from './response-guard';
 
 // Keyword sets for state detection
-const HANDOFF_KEYWORDS = new Set([
-  'humano', 'persona', 'persona real', 'hablar con alguien',
-  'asesor', 'representante', 'alguien real', 'no eres humano',
-  'eres un bot', 'quiero hablar con'
-]);
-
-const FRUSTRATION_KEYWORDS = new Set([
-  'no me entiendes', 'no entiendes', 'esto no sirve', 'no sirve',
-  'ya me cansé', 'me cansé', 'inútil', 'no funciona', 'mal servicio'
-]);
+// Note: HANDOFF_KEYWORDS and FRUSTRATION_KEYWORDS removed.
+// Handoff detection is now handled at webhook level via detectHandoffTrigger()
+// with context-awareness to prevent false positives.
 
 const LATER_KEYWORDS = new Set([
   'luego', 'después', 'despues', 'ahorita no', 'al rato', 'otro día'
@@ -177,9 +173,9 @@ interface AgentConfigOptions {
  * Build tenant analysis context from agent config, falling back to defaults
  */
 function buildTenantAnalysisContext(agentConfig?: AgentConfigOptions): TenantAnalysisContext {
-  const hasCustomPrompt = !!agentConfig?.systemPrompt;
+  const hasCustomIdentity = !!(agentConfig?.systemPrompt || agentConfig?.agentName || agentConfig?.businessName);
 
-  if (!hasCustomPrompt) {
+  if (!hasCustomIdentity) {
     // Loomi default: comportamiento actual intacto
     return {
       productContext: agentConfig?.productContext || DEFAULT_PRODUCT_CONTEXT,
@@ -329,10 +325,18 @@ export async function simpleAgent(
   const currentMsg = message.toLowerCase();
   let saidLater = containsAny(currentMsg, LATER_KEYWORDS);
 
-  // Detectar estado - solo handoff triggers, el resto lo maneja el multi-agent
-  let state = 'conversacion_activa';
-  if (containsAny(currentMsg, HANDOFF_KEYWORDS)) state = 'handoff_human_request';
-  else if (containsAny(currentMsg, FRUSTRATION_KEYWORDS)) state = 'handoff_frustrated';
+  // Handoff detection is now handled at webhook level (detectHandoffTrigger with context).
+  // Simple-agent only needs to know the conversation state for prompt assembly.
+  const state = 'conversacion_activa';
+
+  // ============================================
+  // STEP 3.5: Progress tracking (anti-loop)
+  // ============================================
+  const progress = analyzeProgress({
+    history,
+    currentMessage: message,
+    turnCount: history.length,
+  });
 
   // Construir contexto del cliente
   const contextParts: string[] = [];
@@ -347,8 +351,10 @@ export async function simpleAgent(
     contextParts.push(`Info previa: ${context.memory}`);
   }
 
-  // Use tenant's custom system prompt if available, otherwise fall back to default
-  const basePrompt = agentConfig?.systemPrompt || DEFAULT_SYSTEM_PROMPT;
+  // Use tenant's custom system prompt, or build dynamic identity from config, or fall back to default
+  const basePrompt = agentConfig?.systemPrompt
+    || (agentConfig?.businessName ? buildDynamicIdentity(agentConfig) : null)
+    || DEFAULT_SYSTEM_PROMPT;
   let systemWithContext = basePrompt;
 
   // Add industry-specific context (for all tenants)
@@ -380,6 +386,14 @@ export async function simpleAgent(
     systemWithContext += `\n\n# ANÁLISIS ADICIONAL\n${formatReasoningForPrompt(reasoning)}`;
   }
 
+  // Add progress tracking alert (anti-loop, high recency attention)
+  if (progress.progressInstruction) {
+    systemWithContext += `\n\n# ALERTA DE PROGRESO\n${progress.progressInstruction}`;
+  }
+  if (progress.pivotInstruction) {
+    systemWithContext += `\n${progress.pivotInstruction}`;
+  }
+
   // Add sentiment instruction only if multi-agent failed (it includes tono_recomendado)
   if (!sellerInstructions && sentimentInstruction) {
     systemWithContext += `\n\n# INSTRUCCIÓN DE TONO\n${sentimentInstruction}`;
@@ -387,28 +401,18 @@ export async function simpleAgent(
 
   systemWithContext += `\n\n# ESTADO ACTUAL: ${state.toUpperCase()}`;
 
-  // Instrucciones específicas por estado (unified for all tenants)
-  const stateInstructions: Record<string, string> = {
-    'handoff_human_request': `
-ACCIÓN OBLIGATORIA: El usuario pidió hablar con un humano. USA escalate_to_human INMEDIATAMENTE.
-- NO intentes retenerlo
-- Responde: "Claro, te comunico con alguien del equipo. Te escriben en los próximos minutos."`,
-
-    'handoff_frustrated': `
-ACCIÓN OBLIGATORIA: El usuario está frustrado. USA escalate_to_human con URGENCIA.
-- Muestra empatía: "Perdón si no me expliqué bien."
-- Escala: "Deja te paso con alguien que te puede ayudar mejor."`,
-
-    'conversacion_activa': `Sigue el análisis multi-agente de arriba.
+  systemWithContext += `\nSigue el análisis multi-agente de arriba.
 Sé directo, conversacional, mensajes cortos (2-3 líneas max).
-UNA pregunta a la vez.`
-  };
+UNA pregunta a la vez.`;
 
-  if (stateInstructions[state]) {
-    systemWithContext += stateInstructions[state];
-  }
-
-  systemWithContext += `\n\n# INSTRUCCIÓN FINAL\nResponde en máximo 2-3 líneas. Sé directo y conversacional. UNA pregunta a la vez. Si quieren demo/reunión, usa schedule_demo. Si quieren comprar, pide email y usa send_payment_link. NUNCA menciones productos o servicios que no estén en tu prompt.`;
+  systemWithContext += `\n\n# REGLAS INQUEBRANTABLES
+1. Máximo 2 oraciones + 1 pregunta (3 oraciones total)
+2. UNA sola pregunta por mensaje
+3. Si ya preguntaste algo y no respondieron, NO lo repitas — cambia de enfoque
+4. Si prometes algo (horarios, info), USA la herramienta correspondiente
+5. NUNCA te identifiques como Loomi/Lu si tienes otro nombre configurado
+6. Si quieren demo/reunión, usa schedule_demo. Si quieren comprar, pide email y usa send_payment_link
+7. NUNCA menciones productos o servicios que no estén en tu prompt`;
 
   // Get client info
   const clientName = context.lead.name || 'Cliente';
@@ -582,42 +586,9 @@ UNA pregunta a la vez.`
   let paymentLinkSent: SimpleAgentResult['paymentLinkSent'] = undefined;
   let showScheduleList = false;
 
-  // AUTOMATIC HANDOFF: If user explicitly asks for human, do it immediately without relying on the model
-  if (state === 'handoff_human_request' || state === 'handoff_frustrated') {
-    console.log(`[Agent] Automatic handoff triggered: ${state}`);
-
-    const recentMsgs = history.slice(-5).map(m => ({
-      role: m.role as 'user' | 'assistant',
-      content: m.content
-    }));
-
-    const handoffReason = state === 'handoff_frustrated' ? 'user_frustrated' : 'user_requested';
-    const priority = state === 'handoff_frustrated' ? 'critical' : 'urgent';
-
-    const result = await executeHandoff({
-      phone: clientPhone,
-      name: clientName,
-      recentMessages: recentMsgs,
-      reason: handoffReason,
-      priority
-    });
-
-    if (result.notifiedOperator) {
-      escalatedToHuman = {
-        reason: handoffReason,
-        summary: message
-      };
-
-      // Response is already sent by executeHandoff, but return it for logging
-      return {
-        response: '', // Client already notified by handoff system
-        escalatedToHuman,
-        saidLater
-      };
-    }
-    // If escalation failed (no FALLBACK_PHONE), continue with normal flow
-    console.warn('[Agent] Escalation failed - FALLBACK_PHONE might not be configured');
-  }
+  // Note: Automatic handoff is now handled at webhook level (detectHandoffTrigger with context)
+  // before the agent is even called. This prevents false positives like "no funciona"
+  // when describing their situation.
 
   try {
     const result = await generateText({
@@ -626,7 +597,7 @@ UNA pregunta a la vez.`
       messages: history,
       tools,
       temperature: agentConfig?.temperature ?? 0.7,
-      maxOutputTokens: agentConfig?.maxResponseTokens ?? 500,
+      maxOutputTokens: agentConfig?.maxResponseTokens ?? 250,
       onStepFinish: async (step) => {
         if (step.toolResults) {
           for (const toolResult of step.toolResults) {
@@ -706,6 +677,32 @@ UNA pregunta a la vez.`
     // Final fallback
     if (!response) {
       response = '¿En qué más te puedo ayudar?';
+    }
+
+    // Phase 3B: Response guard (length enforcement)
+    const guarded = guardResponse(response, 3);
+    response = guarded.response;
+    if (guarded.wasGuarded) {
+      console.log(`[Agent] Response guarded: ${guarded.reason}`);
+    }
+
+    // Phase 5A: Promise-action validation
+    // If agent promised to show schedules but didn't call schedule_demo, trigger the list
+    const PROMISE_PATTERNS = [
+      { pattern: /te muestro.*horarios|horarios.*disponibles|déjame.*horarios/i, tool: 'schedule_demo' },
+    ];
+    if (!showScheduleList) {
+      const toolsCalled = new Set(
+        (result.steps?.flatMap((s: { toolCalls?: Array<{ toolName: string }> }) =>
+          s.toolCalls?.map(tc => tc.toolName) || []) || [])
+      );
+      for (const { pattern, tool } of PROMISE_PATTERNS) {
+        if (pattern.test(response) && !toolsCalled.has(tool)) {
+          showScheduleList = true;
+          console.log(`[Agent] Promise validation: response promises "${tool}" but didn't call it. Triggering schedule list.`);
+          break;
+        }
+      }
     }
 
     console.log('=== RESPONSE ===');

@@ -9,6 +9,23 @@
 export const DEFAULT_AGENT_NAME = 'Lu';
 export const DEFAULT_AGENT_ROLE = 'growth advisor de Loomi';
 
+/**
+ * Build dynamic identity string from tenant config.
+ * Prevents identity confusion when tenants have businessName but no systemPrompt.
+ */
+export function buildDynamicIdentity(config: {
+  agentName?: string | null;
+  agentRole?: string | null;
+  businessName?: string | null;
+  businessDescription?: string | null;
+}): string {
+  const name = config.agentName || config.businessName || 'Asistente';
+  const role = config.agentRole || (config.businessName
+    ? `representante de ${config.businessName}`
+    : 'asistente de ventas');
+  return `Eres ${name}, ${role}.${config.businessDescription ? ' ' + config.businessDescription : ''}`;
+}
+
 export const DEFAULT_PRODUCT_CONTEXT = `Loomi es un agente de IA para WhatsApp que vende 24/7. No es un chatbot de flujos - es inteligencia artificial real que:
 
 - **Piensa antes de responder**: Análisis multi-agente con GPT-4o

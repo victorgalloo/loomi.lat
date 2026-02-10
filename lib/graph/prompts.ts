@@ -17,6 +17,7 @@ import { getKnowledgeContextForSystemPrompt } from '@/lib/knowledge';
 import { getFewShotContext, getFewShotContextFromTenant } from '@/lib/agents/few-shot';
 import { ConversationContext } from '@/types';
 import { GraphAgentConfig } from './state';
+import { buildDynamicIdentity } from '@/lib/agents/defaults';
 
 // ============================================
 // SECTION 1: IDENTIDAD
@@ -323,6 +324,7 @@ interface BuildPromptParams {
   currentTopic: string;
   resolvedPhase: SalesPhase;
   agentConfig?: GraphAgentConfig;
+  progressInstruction?: string;
 }
 
 export function buildSystemPrompt(params: BuildPromptParams): string {
@@ -336,16 +338,20 @@ export function buildSystemPrompt(params: BuildPromptParams): string {
     currentTopic,
     resolvedPhase,
     agentConfig,
+    progressInstruction,
   } = params;
 
   const parts: string[] = [];
 
   // 1. IDENTIDAD + 2. REGLAS
-  // If tenant has a custom systemPrompt, use it as the base (replaces IDENTITY + RULES).
-  // Otherwise keep Loomi defaults.
+  // Priority: custom systemPrompt > dynamic identity from config > Loomi defaults
   if (agentConfig?.systemPrompt) {
     console.log(`[GraphPrompt] Using tenant systemPrompt (${agentConfig.systemPrompt.length} chars)`);
     parts.push(agentConfig.systemPrompt);
+  } else if (agentConfig?.businessName || agentConfig?.agentName) {
+    console.log(`[GraphPrompt] Using dynamic identity for ${agentConfig.businessName || agentConfig.agentName}`);
+    parts.push(buildDynamicIdentity(agentConfig));
+    parts.push(RULES);
   } else {
     console.log(`[GraphPrompt] Using Loomi defaults (no tenant systemPrompt, agentConfig: ${!!agentConfig})`);
     parts.push(IDENTITY);
@@ -465,6 +471,11 @@ export function buildSystemPrompt(params: BuildPromptParams): string {
   // 5. ANÁLISIS (near end)
   parts.push(`# ANÁLISIS DE SITUACIÓN\n${formatReasoningForPrompt(reasoning)}`);
 
+  // 5b. ALERTA DE PROGRESO (anti-loop, high recency attention)
+  if (progressInstruction) {
+    parts.push(`# ALERTA DE PROGRESO\n${progressInstruction}`);
+  }
+
   const sentimentInstruction = getSentimentInstruction(reasoning.sentiment);
   if (sentimentInstruction) {
     parts.push(`# INSTRUCCIÓN DE TONO\n${sentimentInstruction}`);
@@ -512,7 +523,12 @@ export function buildSystemPrompt(params: BuildPromptParams): string {
     if (stateInstruction) {
       parts.push(stateInstruction);
     }
-    parts.push(`# INSTRUCCIÓN FINAL\nResponde en máximo 2 oraciones. NO hagas preguntas si ya tienes suficiente info. CIERRA hacia la demo.`);
+    parts.push(`# REGLAS INQUEBRANTABLES
+1. Máximo 2 oraciones + 1 pregunta (3 oraciones total)
+2. UNA sola pregunta por mensaje
+3. Si ya preguntaste algo y no respondieron, NO lo repitas — cambia de enfoque
+4. Si prometes algo (horarios, info), USA la herramienta correspondiente
+5. NUNCA te identifiques como Loomi/Lu si tienes otro nombre configurado`);
   }
 
   return parts.join('\n\n');

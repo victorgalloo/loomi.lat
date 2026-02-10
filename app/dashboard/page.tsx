@@ -3,8 +3,6 @@ import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import TenantDashboard from "@/components/dashboard/TenantDashboard";
 import { getTenantById, getWhatsAppAccounts, getOrCreateTenant } from "@/lib/tenant/context";
-import { isAuthorizedPartner } from "@/lib/partners/auth";
-
 export default async function DashboardPage() {
   const supabase = await createClient();
 
@@ -14,11 +12,6 @@ export default async function DashboardPage() {
 
   if (!user || !user.email) {
     redirect("/login");
-  }
-
-  // Check if user is an authorized partner - redirect to partners page
-  if (isAuthorizedPartner(user.email)) {
-    redirect("/partners");
   }
 
   // Determine user role

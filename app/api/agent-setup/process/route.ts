@@ -18,7 +18,14 @@ const ExtractedConfigSchema = z.object({
   salesProcessContext: z.string().describe('Pasos del proceso de venta ideal'),
   qualificationContext: z.string().describe('Criterios de buen/mal fit para el producto'),
   competitorContext: z.string().describe('Alternativas del mercado y cómo diferenciarse'),
-  objectionHandlers: z.record(z.string(), z.string()).describe('Tipo de objeción → script de manejo'),
+  objectionHandlers: z.object({
+    precio: z.string().optional().describe('Script para objeción de precio'),
+    timing: z.string().optional().describe('Script para objeción de timing'),
+    no_confio_ia: z.string().optional().describe('Script para objeción de desconfianza en IA'),
+    ya_tengo: z.string().optional().describe('Script para objeción "ya tengo algo"'),
+    no_necesito: z.string().optional().describe('Script para objeción "no lo necesito"'),
+    otro: z.string().optional().describe('Script para otras objeciones comunes'),
+  }).describe('Tipo de objeción → script de manejo'),
   agentName: z.string().describe('Nombre sugerido para el agente (ej: "Sofía", "Carlos")'),
   agentRole: z.string().describe('Rol del agente (ej: "asesora de ventas", "especialista en seguros")'),
   fewShotExamples: z.array(z.object({
@@ -137,8 +144,14 @@ IMPORTANTE:
       suggestions.push('Agrega más contenido (textos de tu web, emails, catálogos) para una mejor configuración');
     }
 
+    // Convert objectionHandlers from typed object to Record<string, string>
+    const handlers: Record<string, string> = {};
+    for (const [key, value] of Object.entries(result.object.objectionHandlers)) {
+      if (value) handlers[key] = value;
+    }
+
     return NextResponse.json({
-      extracted: result.object,
+      extracted: { ...result.object, objectionHandlers: handlers },
       confidence,
       suggestions,
     });

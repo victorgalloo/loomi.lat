@@ -35,6 +35,8 @@ export async function loadConversationState(
       previous_topic: data.previous_topic,
       proposed_datetime: data.proposed_datetime,
       awaiting_email: data.awaiting_email,
+      ask_counts: data.ask_counts || {},
+      stalled_turns: data.stalled_turns || 0,
     };
   }
 
@@ -99,5 +101,7 @@ function serializeForDb(state: PersistedConversationState) {
     previous_topic: state.previous_topic,
     proposed_datetime: state.proposed_datetime,
     awaiting_email: state.awaiting_email,
+    ask_counts: state.ask_counts,
+    stalled_turns: state.stalled_turns,
   };
 }

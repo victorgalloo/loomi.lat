@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import { getWhatsAppAccounts } from "@/lib/tenant/context";
-import { isAuthorizedPartner } from "@/lib/partners/auth";
 import DashboardLayoutClient from "./DashboardLayoutClient";
 
 export default async function DashboardLayout({
@@ -18,11 +17,6 @@ export default async function DashboardLayout({
 
   if (!user || !user.email) {
     redirect("/login");
-  }
-
-  // Partners get redirected to their dedicated page
-  if (isAuthorizedPartner(user.email)) {
-    redirect("/partners");
   }
 
   const userRole = await getUserRole(user.email);

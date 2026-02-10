@@ -206,12 +206,13 @@ export const HANDOFF_TRIGGERS = {
     'on-premise', 'self-hosted', 'sla', 'contrato anual'
   ]),
 
-  // Competitor mentions (opportunity)
+  // Competitor mentions (informational only, NOT handoff triggers)
+  // Kept for reference but no longer triggers handoff.
+  // "ya uso", "ya tengo" etc. are discovery signals, not escalation signals.
   competitors: new Set([
     'wati', 'manychat', 'leadsales', 'respond.io', 'messagebird',
     'twilio', 'zenvia', 'waboxapp', 'sirena', 'trengo', 'landbot',
-    'chatfuel', 'botsify', 'tidio', 'drift', 'intercom',
-    'ya uso', 'ya tengo', 'actualmente uso', 'estoy con'
+    'chatfuel', 'botsify', 'tidio', 'drift', 'intercom'
   ]),
 
   // Payment issues
@@ -227,46 +228,80 @@ export const HANDOFF_TRIGGERS = {
 // ===========================================
 
 /**
- * Detect handoff triggers from message
+ * Check if user is describing their own situation (not complaining about the bot).
+ * E.g., "mi chatbot no funciona" = describing their problem, not frustration with us.
  */
-export function detectHandoffTrigger(message: string): {
+function isUserDescribingTheirSituation(
+  recentMessages?: Array<{ role: string; content: string }>
+): boolean {
+  if (!recentMessages || recentMessages.length === 0) return false;
+
+  // Find the last assistant message
+  for (let i = recentMessages.length - 1; i >= 0; i--) {
+    if (recentMessages[i].role === 'assistant') {
+      const assistantMsg = recentMessages[i].content.toLowerCase();
+      // If last assistant message was a discovery question, user is likely
+      // describing their situation, not expressing frustration with us
+      const discoveryPatterns = [
+        'qué tipo de negocio', 'cuántos mensajes', 'cómo manejan',
+        'qué usas', 'cómo te va', 'qué te llamó', 'en qué te puedo',
+        'a qué te dedicas', 'cuéntame', 'qué problema', 'qué necesitas',
+        'cómo funciona tu', 'qué solución', 'qué herramienta'
+      ];
+      return discoveryPatterns.some(p => assistantMsg.includes(p));
+    }
+  }
+  return false;
+}
+
+/**
+ * Detect handoff triggers from message with conversation context.
+ * Frustration keywords are only triggered when the user is actually frustrated
+ * with the bot, not when describing their own situation.
+ */
+export function detectHandoffTrigger(
+  message: string,
+  recentMessages?: Array<{ role: string; content: string }>
+): {
   shouldHandoff: boolean;
   reason: HandoffReason;
   priority: HandoffPriority;
 } | null {
   const lower = message.toLowerCase();
 
-  // Check each trigger category
+  // 1. Human request keywords — always trigger (unambiguous)
   for (const keyword of HANDOFF_TRIGGERS.humanRequest) {
     if (lower.includes(keyword)) {
       return { shouldHandoff: true, reason: 'user_requested', priority: 'urgent' };
     }
   }
 
-  for (const keyword of HANDOFF_TRIGGERS.frustration) {
-    if (lower.includes(keyword)) {
-      return { shouldHandoff: true, reason: 'user_frustrated', priority: 'critical' };
+  // 2. Frustration keywords — only trigger if NOT describing their situation
+  if (!isUserDescribingTheirSituation(recentMessages)) {
+    for (const keyword of HANDOFF_TRIGGERS.frustration) {
+      if (lower.includes(keyword)) {
+        return { shouldHandoff: true, reason: 'user_frustrated', priority: 'critical' };
+      }
     }
   }
 
+  // 3. Enterprise signals — always trigger
   for (const keyword of HANDOFF_TRIGGERS.enterprise) {
     if (lower.includes(keyword)) {
       return { shouldHandoff: true, reason: 'enterprise_lead', priority: 'urgent' };
     }
   }
 
+  // 4. Payment issues — always trigger
   for (const keyword of HANDOFF_TRIGGERS.paymentIssues) {
     if (lower.includes(keyword)) {
       return { shouldHandoff: true, reason: 'payment_issue', priority: 'urgent' };
     }
   }
 
-  // Competitors - still handoff but normal priority (it's an opportunity)
-  for (const keyword of HANDOFF_TRIGGERS.competitors) {
-    if (lower.includes(keyword)) {
-      return { shouldHandoff: true, reason: 'competitor_mention', priority: 'normal' };
-    }
-  }
+  // 5. Competitors — NO LONGER trigger handoff.
+  // "ya uso", "ya tengo" are discovery signals, not escalation signals.
+  // The agent should handle these in conversation.
 
   return null;
 }

@@ -949,8 +949,11 @@ export async function POST(request: NextRequest) {
         context.memory = '[ALUMNO/CLIENTE EXISTENTE] No le vendas. Pregunta cómo le ha ido, si necesita ayuda con algo, o si tiene dudas sobre su cuenta.';
       }
 
-      // Check for handoff triggers before calling agent
-      const handoffTrigger = detectHandoffTrigger(message.text);
+      // Check for handoff triggers before calling agent (with context for false-positive prevention)
+      const handoffTrigger = detectHandoffTrigger(
+        message.text,
+        context.recentMessages.map(m => ({ role: m.role, content: m.content }))
+      );
       const hasRepeatedFailures = detectRepeatedFailures(
         context.recentMessages.map(m => ({ role: m.role, content: m.content }))
       );

@@ -56,6 +56,8 @@ export interface PersistedConversationState {
   previous_topic: string | null;
   proposed_datetime: { date?: string; time?: string } | null;
   awaiting_email: boolean;
+  ask_counts: Record<string, number>;
+  stalled_turns: number;
 }
 
 export const DEFAULT_PERSISTED_STATE: PersistedConversationState = {
@@ -76,6 +78,8 @@ export const DEFAULT_PERSISTED_STATE: PersistedConversationState = {
   previous_topic: null,
   proposed_datetime: null,
   awaiting_email: false,
+  ask_counts: {},
+  stalled_turns: 0,
 };
 
 // Topic categories for detection
@@ -112,6 +116,7 @@ export const GraphState = Annotation.Root({
   resolvedPhase: Annotation<SalesPhase>,
   needsSummary: Annotation<boolean>,
   saidLater: Annotation<boolean>,
+  progressInstruction: Annotation<string>,
 
   // Output (set by generateNode)
   result: Annotation<SimpleAgentResult | null>,

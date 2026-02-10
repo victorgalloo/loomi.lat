@@ -17,9 +17,8 @@ const navItems = [
   { href: '/dashboard/crm', label: 'pipeline' },
   { href: '/dashboard/conversations', label: 'inbox' },
   { href: '/broadcasts', label: 'broadcasts' },
-  { href: '/dashboard/agent', label: 'agente', subItems: [
+  { href: '/dashboard/agent/setup', label: 'agente', subItems: [
     { href: '/dashboard/agent/setup', label: 'setup' },
-    { href: '/dashboard/agent', label: 'config' },
     { href: '/dashboard/agent/prompt', label: 'prompt' },
     { href: '/dashboard/agent/knowledge', label: 'knowledge' },
     { href: '/dashboard/agent/tools', label: 'tools' },
@@ -67,7 +66,8 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
           <nav className="hidden md:flex items-center gap-8">
             {navItems.map((item) => {
               const isActive = pathname === item.href ||
-                (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                (item.href !== '/dashboard' && pathname.startsWith(item.href)) ||
+                (item.subItems && item.subItems.some(sub => pathname.startsWith(sub.href)));
 
               return (
                 <Link
@@ -141,7 +141,7 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
       {pathname.startsWith('/dashboard/agent') && (
         <div className="fixed top-14 left-0 right-0 z-40 h-10 border-b bg-surface/95 backdrop-blur-sm border-border shadow-subtle">
           <div className="h-full max-w-6xl mx-auto px-4 flex items-center gap-4">
-            {navItems.find(i => i.href === '/dashboard/agent')?.subItems?.map((sub) => {
+            {navItems.find(i => i.subItems && i.label === 'agente')?.subItems?.map((sub) => {
               const isSubActive = pathname === sub.href;
               return (
                 <Link

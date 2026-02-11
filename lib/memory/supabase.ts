@@ -252,17 +252,17 @@ export async function getActiveConversation(leadId: string): Promise<Conversatio
     .eq('lead_id', leadId)
     .is('ended_at', null)
     .order('started_at', { ascending: false })
-    .limit(1)
-    .single();
+    .limit(1);
 
-  if (error || !data) return null;
+  if (error || !data || data.length === 0) return null;
 
+  const row = data[0];
   return {
-    id: data.id,
-    leadId: data.lead_id,
-    startedAt: new Date(data.started_at),
-    endedAt: data.ended_at ? new Date(data.ended_at) : undefined,
-    summary: data.summary
+    id: row.id,
+    leadId: row.lead_id,
+    startedAt: new Date(row.started_at),
+    endedAt: row.ended_at ? new Date(row.ended_at) : undefined,
+    summary: row.summary
   };
 }
 

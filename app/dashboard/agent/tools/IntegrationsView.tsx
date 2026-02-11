@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Loader2, ExternalLink, Unplug, Save } from 'lucide-react';
@@ -24,15 +25,6 @@ const STATUS_LABELS: Record<string, string> = {
   error: 'error',
   disconnected: 'desconectado',
 };
-
-function CalComLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" fill="currentColor" fillOpacity="0.1"/>
-      <path d="M16.5 8.25v7.5a.75.75 0 01-.75.75h-1.5a.75.75 0 01-.75-.75V15a3.75 3.75 0 110-6v-.75a.75.75 0 01.75-.75h1.5a.75.75 0 01.75.75zM13.5 12a2.25 2.25 0 10-4.5 0 2.25 2.25 0 004.5 0z" fill="currentColor"/>
-    </svg>
-  );
-}
 
 function StripeLogo({ className }: { className?: string }) {
   return (
@@ -168,19 +160,19 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
     <div className="max-w-3xl mx-auto px-6 py-12">
       {/* Header */}
       <div className="mb-10">
-        <div className="flex items-center gap-2 mb-4 font-mono">
+        <div className="flex items-center gap-2 mb-4">
           <Link
             href="/dashboard/agent"
             className="text-sm text-muted hover:text-foreground"
           >
-            ./agente
+            Agente
           </Link>
           <span className="text-sm text-border">/</span>
-          <span className="text-sm text-foreground">integraciones</span>
+          <span className="text-sm text-foreground">Integraciones</span>
         </div>
         <div>
-          <h1 className="text-xl font-medium text-foreground font-mono">
-            ./integraciones_
+          <h1 className="text-xl font-semibold text-foreground">
+            Integraciones
           </h1>
           <p className="text-sm mt-1 text-muted">
             Conecta servicios externos a tu agente de WhatsApp
@@ -221,13 +213,13 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
         <div className="p-5 rounded-2xl border border-border bg-surface">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-surface-2 border border-border flex items-center justify-center">
-                <CalComLogo className="w-6 h-6 text-foreground" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden">
+                <Image src="/logos/calcom.png" alt="Cal.com" width={40} height={40} className="w-full h-full object-cover" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-foreground">Cal.com</span>
-                  <span className={`text-xs font-mono ${STATUS_STYLES[calcom?.status || 'disconnected']}`}>
+                  <span className={`text-xs ${STATUS_STYLES[calcom?.status || 'disconnected']}`}>
                     {STATUS_LABELS[calcom?.status || 'disconnected']}
                   </span>
                 </div>
@@ -332,7 +324,7 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-foreground">Stripe Connect</span>
-                  <span className={`text-xs font-mono ${STATUS_STYLES[stripe?.status || 'disconnected']}`}>
+                  <span className={`text-xs ${STATUS_STYLES[stripe?.status || 'disconnected']}`}>
                     {STATUS_LABELS[stripe?.status || 'disconnected']}
                   </span>
                 </div>
@@ -429,24 +421,24 @@ export default function IntegrationsView({ tenantId, integrations: initialIntegr
       </div>
 
       {/* Footer nav */}
-      <div className="mt-10 pt-6 border-t border-border flex gap-3 font-mono">
+      <div className="mt-10 pt-6 border-t border-border flex gap-3">
         <Link
           href="/dashboard/agent"
           className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
         >
-          config basica
+          Configuracion basica
         </Link>
         <Link
           href="/dashboard/agent/prompt"
           className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
         >
-          prompt
+          Prompt
         </Link>
         <Link
           href="/dashboard/agent/knowledge"
           className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
         >
-          knowledge
+          Knowledge
         </Link>
       </div>
     </div>

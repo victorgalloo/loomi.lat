@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Send, RefreshCw, AlertTriangle } from 'lucide-react';
 import BroadcastConversations from './BroadcastConversations';
+import StatCard from '@/components/dashboard/StatCard';
 
 interface Campaign {
   id: string;
@@ -42,7 +43,7 @@ const recipientStatusColors: Record<string, string> = {
   pending: 'bg-surface-2 text-muted border-border',
   sent: 'bg-terminal-yellow/10 text-terminal-yellow border-terminal-yellow/20',
   delivered: 'bg-terminal-green/10 text-terminal-green border-terminal-green/20',
-  read: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+  read: 'bg-info/10 text-info border-info/20',
   failed: 'bg-terminal-red/10 text-terminal-red border-terminal-red/20',
 };
 
@@ -69,13 +70,13 @@ const i18n: Record<Lang, Record<string, string>> = {
     sentAt: 'sent at',
     error: 'error',
     noRecipients: 'No recipients',
-    sendBroadcast: './send-broadcast',
+    sendBroadcast: 'Send Broadcast',
     sendError: 'Error sending',
     networkError: 'Network error',
-    confirmTitle: './confirm-send_',
+    confirmTitle: 'Confirm Send',
     confirmWarning: 'This action will send {count} WhatsApp messages',
-    cancel: 'cancel',
-    confirmSend: 'confirm send',
+    cancel: 'Cancel',
+    confirmSend: 'Confirm Send',
     draft: 'draft',
     completed: 'completed',
     failedStatus: 'failed',
@@ -100,13 +101,13 @@ const i18n: Record<Lang, Record<string, string>> = {
     sentAt: 'enviado',
     error: 'error',
     noRecipients: 'Sin destinatarios',
-    sendBroadcast: './enviar-broadcast',
+    sendBroadcast: 'Enviar Broadcast',
     sendError: 'Error al enviar',
     networkError: 'Error de red',
-    confirmTitle: './confirmar-envío_',
+    confirmTitle: 'Confirmar Envío',
     confirmWarning: 'Esta acción enviará {count} mensajes de WhatsApp',
-    cancel: 'cancelar',
-    confirmSend: 'confirmar envío',
+    cancel: 'Cancelar',
+    confirmSend: 'Confirmar Envío',
     draft: 'borrador',
     completed: 'completado',
     failedStatus: 'fallido',
@@ -219,7 +220,7 @@ export default function CampaignDetailView({
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h1 className="text-xl font-medium font-mono text-foreground">{campaign.name}</h1>
+            <h1 className="text-xl font-medium text-foreground">{campaign.name}</h1>
             <div className="flex items-center gap-3 mt-0.5">
               <span className="text-xs font-mono text-muted">
                 template: {campaign.template_name}
@@ -251,7 +252,7 @@ export default function CampaignDetailView({
             <button
               onClick={() => setShowConfirm(true)}
               disabled={sending}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
               {sending ? t.sending : t.sendBroadcast}
@@ -268,58 +269,14 @@ export default function CampaignDetailView({
         </div>
       )}
 
-      {/* Stats Bar */}
-      <div className="flex items-center gap-6 text-sm pb-6 mb-6 border-b border-border flex-wrap">
-        <div>
-          <span className="text-muted">{t.total}</span>
-          <span className="ml-2 font-mono text-foreground">{totalCount.toLocaleString()}</span>
-        </div>
-        {readCount > 0 && (
-          <>
-            <span className="text-border">·</span>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-muted">{t.read}</span>
-              <span className="font-mono text-blue-500">{readCount.toLocaleString()}</span>
-            </div>
-          </>
-        )}
-        {deliveredCount > 0 && (
-          <>
-            <span className="text-border">·</span>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-terminal-green" />
-              <span className="text-muted">{t.delivered}</span>
-              <span className="font-mono text-terminal-green">{deliveredCount.toLocaleString()}</span>
-            </div>
-          </>
-        )}
-        <span className="text-border">·</span>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-terminal-yellow" />
-          <span className="text-muted">{t.sent}</span>
-          <span className="font-mono text-terminal-yellow">{sentCount.toLocaleString()}</span>
-        </div>
-        {failedCount > 0 && (
-          <>
-            <span className="text-border">·</span>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-terminal-red" />
-              <span className="text-muted">{t.failed}</span>
-              <span className="font-mono text-terminal-red">{failedCount.toLocaleString()}</span>
-            </div>
-          </>
-        )}
-        {pendingCount > 0 && (
-          <>
-            <span className="text-border">·</span>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-muted" />
-              <span className="text-muted">{t.pending}</span>
-              <span className="font-mono text-muted">{pendingCount.toLocaleString()}</span>
-            </div>
-          </>
-        )}
+      {/* Stats Grid */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 pb-6 mb-6 border-b border-border">
+        <StatCard label={t.total} value={totalCount.toLocaleString()} />
+        <StatCard label={t.read} value={readCount.toLocaleString()} />
+        <StatCard label={t.delivered} value={deliveredCount.toLocaleString()} />
+        <StatCard label={t.sent} value={sentCount.toLocaleString()} />
+        <StatCard label={t.failed} value={failedCount.toLocaleString()} />
+        <StatCard label={t.pending} value={pendingCount.toLocaleString()} />
       </div>
 
       {/* Progress bar */}
@@ -329,7 +286,7 @@ export default function CampaignDetailView({
             <div className="h-full flex">
               {readCount > 0 && (
                 <div
-                  className="h-full bg-blue-500 transition-all duration-500"
+                  className="h-full bg-info transition-all duration-500"
                   style={{ width: `${(readCount / totalCount) * 100}%` }}
                 />
               )}
@@ -427,7 +384,7 @@ export default function CampaignDetailView({
                 <div className="w-2.5 h-2.5 rounded-full bg-terminal-yellow" />
                 <div className="w-2.5 h-2.5 rounded-full bg-terminal-green" />
               </div>
-              <span className="text-sm font-mono text-foreground ml-2">{t.confirmTitle}</span>
+              <span className="text-sm font-medium text-foreground ml-2">{t.confirmTitle}</span>
             </div>
             <div className="p-4 space-y-4">
               <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-terminal-yellow/10 border border-terminal-yellow/20">
@@ -439,14 +396,14 @@ export default function CampaignDetailView({
               <div className="flex items-center gap-2 justify-end">
                 <button
                   onClick={() => setShowConfirm(false)}
-                  className="px-3 py-1.5 rounded-xl bg-surface border border-border text-sm font-mono text-muted hover:text-foreground transition-colors"
+                  className="px-3 py-1.5 rounded-xl bg-surface border border-border text-sm text-muted hover:text-foreground transition-colors"
                 >
                   {t.cancel}
                 </button>
                 <button
                   onClick={handleSend}
                   disabled={sending}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                   {sending ? t.sending : t.confirmSend}

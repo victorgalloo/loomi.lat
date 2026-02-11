@@ -137,7 +137,7 @@ function ConfidenceGauge({ confidence }: { confidence: number }) {
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - confidence * circumference;
-  const color = confidence >= 0.7 ? '#27C93F' : confidence >= 0.4 ? '#FFBD2E' : '#FF5F56';
+  const color = confidence >= 0.7 ? 'var(--terminal-green)' : confidence >= 0.4 ? 'var(--terminal-yellow)' : 'var(--terminal-red)';
   const label = confidence >= 0.7 ? 'Alta confianza' : confidence >= 0.4 ? 'Media confianza' : 'Baja confianza';
   const variant = confidence >= 0.7 ? 'success' as const : confidence >= 0.4 ? 'warning' as const : 'error' as const;
 
@@ -198,7 +198,7 @@ function CollapsibleSection({
 function Confetti() {
   const particles = Array.from({ length: 20 }, (_, i) => ({
     id: i,
-    color: ['#FF5F56', '#FFBD2E', '#27C93F', '#3B82F6'][i % 4],
+    color: ['var(--terminal-red)', 'var(--terminal-yellow)', 'var(--terminal-green)', 'var(--info)'][i % 4],
     x: (Math.random() - 0.5) * 500,
     y: (Math.random() - 0.5) * 500,
     rotate: Math.random() * 360,
@@ -498,14 +498,14 @@ export default function AgentSetupWizard({ existingConfig, onSave }: AgentSetupW
           <div className="w-2.5 h-2.5 rounded-full bg-terminal-red" />
           <div className="w-2.5 h-2.5 rounded-full bg-terminal-yellow" />
           <div className="w-2.5 h-2.5 rounded-full bg-terminal-green" />
-          <span className="ml-2 text-sm font-mono text-muted">./setup</span>
+          <span className="ml-2 text-sm text-muted">Setup</span>
         </div>
         <div className="px-4 py-4 flex items-center gap-3">
           {STEPS.map((s, i) => (
             <div key={i} className="flex items-center gap-2">
               <motion.div
                 className={cn(
-                  'w-7 h-7 rounded-full flex items-center justify-center text-sm font-mono border',
+                  'w-7 h-7 rounded-full flex items-center justify-center text-sm border',
                   i === step && 'bg-foreground text-background border-foreground',
                   i < step && 'bg-terminal-green/20 text-terminal-green border-terminal-green/30',
                   i > step && 'bg-surface-2 text-muted border-border',
@@ -863,7 +863,7 @@ export default function AgentSetupWizard({ existingConfig, onSave }: AgentSetupW
               <div className="space-y-3">
                 {Object.entries(objectionHandlers).map(([key, value]) => (
                   <div key={key}>
-                    <label className="block text-label text-muted mb-1 font-mono">{key}</label>
+                    <label className="block text-label text-muted mb-1">{key}</label>
                     <textarea value={value} onChange={e => setObjectionHandlers(prev => ({ ...prev, [key]: e.target.value }))} rows={2}
                       className="w-full bg-background border border-border rounded-lg p-3 text-body text-foreground resize-y focus:outline-none focus:ring-1 focus:ring-foreground/20" />
                   </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, Search, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import StatCard from '@/components/dashboard/StatCard';
 
 interface Conversation {
   id: string;
@@ -206,8 +207,8 @@ export default function ConversationsView({ conversations: initialConversations,
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold text-foreground font-mono">
-            ./inbox_
+          <h1 className="text-xl font-semibold text-foreground">
+            Inbox
           </h1>
           <span className="text-label px-2.5 py-1 rounded-full font-medium bg-surface border border-border text-muted">
             {totalConversations} chats
@@ -229,22 +230,11 @@ export default function ConversationsView({ conversations: initialConversations,
         </div>
       </div>
 
-      {/* Stats Bar */}
-      <div className="flex items-center gap-6 text-sm pb-6 mb-6 border-b border-border">
-        <div>
-          <span className="text-muted">total chats</span>
-          <span className="ml-2 font-mono text-foreground">{totalConversations}</span>
-        </div>
-        <span className="text-border">·</span>
-        <div>
-          <span className="text-muted">activas hoy</span>
-          <span className="ml-2 font-mono text-info">{activeToday}</span>
-        </div>
-        <span className="text-border">·</span>
-        <div>
-          <span className="text-muted">mensajes</span>
-          <span className="ml-2 font-mono text-foreground">{totalMessages}</span>
-        </div>
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <StatCard label="Total Chats" value={totalConversations} />
+        <StatCard label="Activas Hoy" value={activeToday} />
+        <StatCard label="Mensajes" value={totalMessages} />
       </div>
 
       {/* Filter Tabs */}
@@ -278,9 +268,9 @@ export default function ConversationsView({ conversations: initialConversations,
               className={`
                 flex items-center justify-between px-4 py-3 rounded-2xl border
                 ${alert.priority === 'critical'
-                  ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                  ? 'bg-terminal-red/10 border-terminal-red/20 text-terminal-red'
                   : alert.priority === 'urgent'
-                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                    ? 'bg-terminal-yellow/10 border-terminal-yellow/20 text-terminal-yellow'
                     : 'bg-info/10 border-info/20 text-info'
                 }
               `}
@@ -341,10 +331,10 @@ export default function ConversationsView({ conversations: initialConversations,
                     {conversation.broadcastClassification && conversation.broadcastClassification !== 'bot_autoresponse' && (
                       <span className={`text-xs ${
                         conversation.broadcastClassification === 'hot'
-                          ? 'text-orange-500'
+                          ? 'text-warning'
                           : conversation.broadcastClassification === 'warm'
-                            ? 'text-yellow-500'
-                            : 'text-blue-400'
+                            ? 'text-terminal-yellow'
+                            : 'text-info'
                       }`}>
                         {conversation.broadcastClassification === 'hot' ? '🔥' : conversation.broadcastClassification === 'warm' ? '🟡' : '🥶'}
                       </span>

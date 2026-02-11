@@ -63,11 +63,11 @@ function getStageStyle(stage: string): { label: string; bg: string; text: string
     'Negociacion': { label: 'Negociacion', bg: 'bg-surface-2', text: 'text-muted' },
     'Ganado': { label: 'Ganado', bg: 'bg-surface-2', text: 'text-muted' },
     'customer': { label: 'Cliente', bg: 'bg-surface-2', text: 'text-muted' },
-    'Perdido': { label: 'Perdido', bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400' },
+    'Perdido': { label: 'Perdido', bg: 'bg-terminal-red/10', text: 'text-terminal-red' },
     'cold': { label: 'Frio', bg: 'bg-surface-2', text: 'text-muted' },
   };
 
-  const style = stages[stage] || { label: stage, bg: 'bg-zinc-500/10', text: 'text-muted' };
+  const style = stages[stage] || { label: stage, bg: 'bg-surface-2', text: 'text-muted' };
   return style;
 }
 
@@ -173,7 +173,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
               {stage.label}
             </span>
             {botPaused && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-terminal-yellow/10 text-terminal-yellow">
                 bot pausado
               </span>
             )}
@@ -211,7 +211,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
           <p className="text-label uppercase tracking-wider text-muted">
             Mensajes
           </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-foreground">
+          <p className="text-xl font-semibold tabular-nums mt-1 text-foreground">
             {messages.length}
           </p>
         </div>
@@ -231,7 +231,7 @@ export default function ConversationDetailView({ conversation, lead, messages: i
 
         <div>
           <p className="text-label uppercase tracking-wider text-muted">
-            Telefono
+            Teléfono
           </p>
           <p className="text-sm font-medium mt-1 text-muted-foreground">
             {lead.phone}
@@ -251,8 +251,8 @@ export default function ConversationDetailView({ conversation, lead, messages: i
             </div>
             {botPaused && (
               <div className="flex items-center gap-1.5">
-                <PauseCircle className="w-3.5 h-3.5 text-amber-500" />
-                <span className="text-xs text-amber-500">
+                <PauseCircle className="w-3.5 h-3.5 text-terminal-yellow" />
+                <span className="text-xs text-terminal-yellow">
                   bot pausado - respondiendo manualmente
                 </span>
               </div>

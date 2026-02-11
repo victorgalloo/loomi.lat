@@ -1208,8 +1208,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         status: 'ok',
         tokensUsed: result.tokensUsed,
-        v: 2,
-        ...(wasEmptyResponse ? { debug: { wasEmpty: true, recentMsgs: context.recentMessages.length, paymentLink: !!result.paymentLinkSent } } : {})
+        v: 3,
+        ...(wasEmptyResponse ? {
+          debug: {
+            wasEmpty: true,
+            recentMsgs: context.recentMessages.length,
+            paymentLink: !!result.paymentLinkSent,
+            escalated: !!result.escalatedToHuman,
+            rawResponse: result.response?.substring(0, 100) || '(null)',
+          }
+        } : {})
       });
 
     } finally {

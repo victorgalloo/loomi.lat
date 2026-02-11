@@ -1056,6 +1056,7 @@ export async function POST(request: NextRequest) {
 
       // Guard against empty responses
       let wasEmptyResponse = false;
+      const originalResponse = result.response;
       if (!result.response || !result.response.trim()) {
         wasEmptyResponse = true;
         console.warn(`[Webhook] v2 Empty response: phone=${message.phone}, msg="${message.text?.substring(0, 50)}", recentMsgs=${context.recentMessages.length}, tokensUsed=${result.tokensUsed}, paymentLink=${!!result.paymentLinkSent}`);
@@ -1215,7 +1216,7 @@ export async function POST(request: NextRequest) {
             recentMsgs: context.recentMessages.length,
             paymentLink: !!result.paymentLinkSent,
             escalated: !!result.escalatedToHuman,
-            rawResponse: result.response?.substring(0, 100) || '(null)',
+            origResponse: originalResponse === undefined ? 'undefined' : originalResponse === null ? 'null' : originalResponse === '' ? '(empty-string)' : `"${originalResponse.substring(0, 80)}"`,
           }
         } : {})
       });

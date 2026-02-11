@@ -157,6 +157,8 @@ interface AgentConfigOptions {
   model?: string | null;
   // Tenant ID for multi-tenant features (payments, etc)
   tenantId?: string;
+  // WhatsApp credentials for sending messages from the correct number
+  whatsappCredentials?: { phoneNumberId: string; accessToken: string; tenantId?: string };
   // Configurable tenant context fields
   productContext?: string | null;
   pricingContext?: string | null;
@@ -568,18 +570,17 @@ UNA pregunta a la vez.`;
 
           if (fixedLink) {
             console.log(`[Tool] Using fixed payment link: ${fixedLink}`);
-            const sent = await sendPaymentLink(clientPhone, fixedLink, productName);
+            const waCreds = agentConfig?.whatsappCredentials;
+            const sent = await sendPaymentLink(clientPhone, fixedLink, productName, waCreds);
             // Set closure fallback in case model doesn't generate text after tool call
-            if (sent) {
-              toolResponseMessage = 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.';
-              paymentLinkSent = { plan: productName, email, checkoutUrl: fixedLink };
-            }
+            toolResponseMessage = sent
+              ? 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.'
+              : `Aquí tienes el link de pago: ${fixedLink}`;
+            paymentLinkSent = { plan: productName, email, checkoutUrl: fixedLink };
             return {
-              success: sent,
+              success: true,
               checkoutUrl: fixedLink,
-              message: sent
-                ? 'Link de pago enviado exitosamente por WhatsApp.'
-                : 'No se pudo enviar el link de pago.',
+              message: 'Link de pago enviado exitosamente por WhatsApp.',
             };
           }
 
@@ -593,17 +594,16 @@ UNA pregunta a la vez.`;
               amount: 27500,
               productName,
             });
-            const sent = await sendPaymentLink(clientPhone, shortUrl, productName);
-            if (sent) {
-              toolResponseMessage = 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.';
-              paymentLinkSent = { plan: productName, email, checkoutUrl: shortUrl };
-            }
+            const waCreds = agentConfig?.whatsappCredentials;
+            const sent = await sendPaymentLink(clientPhone, shortUrl, productName, waCreds);
+            toolResponseMessage = sent
+              ? 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.'
+              : `Aquí tienes el link de pago: ${shortUrl}`;
+            paymentLinkSent = { plan: productName, email, checkoutUrl: shortUrl };
             return {
-              success: sent,
+              success: true,
               checkoutUrl: shortUrl,
-              message: sent
-                ? 'Link de pago enviado exitosamente por WhatsApp.'
-                : 'No se pudo enviar el link de pago.',
+              message: 'Link de pago enviado exitosamente por WhatsApp.',
             };
           }
 

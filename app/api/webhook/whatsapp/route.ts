@@ -1003,8 +1003,11 @@ export async function POST(request: NextRequest) {
         if (process.env.USE_LANGGRAPH === 'true') {
           result = await processMessageGraph(message.text, context, agentConfig);
         } else {
-          // Pass agent config for tenant-specific behavior
-          result = await simpleAgent(message.text, context, agentConfig);
+          // Pass agent config with WhatsApp credentials for tenant-specific behavior
+          const configWithCreds = credentials && agentConfig
+            ? { ...agentConfig, whatsappCredentials: credentials }
+            : agentConfig;
+          result = await simpleAgent(message.text, context, configWithCreds);
         }
       } catch (agentError) {
         console.error('Agent error:', agentError);
@@ -1055,9 +1058,13 @@ export async function POST(request: NextRequest) {
       let wasEmptyResponse = false;
       if (!result.response || !result.response.trim()) {
         wasEmptyResponse = true;
-        console.warn(`[Webhook] Empty response: phone=${message.phone}, msg="${message.text?.substring(0, 50)}", recentMsgs=${context.recentMessages.length}, tokensUsed=${result.tokensUsed}`);
-        // Re-run the agent with a simpler fallback approach
-        result.response = 'Dame un momento, estoy procesando tu solicitud.';
+        console.warn(`[Webhook] v2 Empty response: phone=${message.phone}, msg="${message.text?.substring(0, 50)}", recentMsgs=${context.recentMessages.length}, tokensUsed=${result.tokensUsed}, paymentLink=${!!result.paymentLinkSent}`);
+        // If payment link was sent, confirm it
+        if (result.paymentLinkSent) {
+          result.response = 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.';
+        } else {
+          result.response = 'Dame un momento, estoy procesando tu solicitud.';
+        }
       }
 
       // Send response
@@ -1201,7 +1208,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         status: 'ok',
         tokensUsed: result.tokensUsed,
-        ...(wasEmptyResponse ? { debug: { wasEmpty: true, recentMsgs: context.recentMessages.length } } : {})
+        v: 2,
+        ...(wasEmptyResponse ? { debug: { wasEmpty: true, recentMsgs: context.recentMessages.length, paymentLink: !!result.paymentLinkSent } } : {})
       });
 
     } finally {

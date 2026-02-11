@@ -155,6 +155,8 @@ interface AgentConfigOptions {
   customTools?: CustomToolDef[];
   // Model override per tenant
   model?: string | null;
+  // Tenant ID for multi-tenant features (payments, etc)
+  tenantId?: string;
   // Configurable tenant context fields
   productContext?: string | null;
   pricingContext?: string | null;

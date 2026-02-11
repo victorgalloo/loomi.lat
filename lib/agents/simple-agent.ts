@@ -569,6 +569,11 @@ UNA pregunta a la vez.`;
           if (fixedLink) {
             console.log(`[Tool] Using fixed payment link: ${fixedLink}`);
             const sent = await sendPaymentLink(clientPhone, fixedLink, productName);
+            // Set closure fallback in case model doesn't generate text after tool call
+            if (sent) {
+              toolResponseMessage = 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.';
+              paymentLinkSent = { plan: productName, email, checkoutUrl: fixedLink };
+            }
             return {
               success: sent,
               checkoutUrl: fixedLink,
@@ -585,10 +590,14 @@ UNA pregunta a la vez.`;
               tenantId,
               email,
               phone: clientPhone,
-              amount: 27500, // default $275
+              amount: 27500,
               productName,
             });
             const sent = await sendPaymentLink(clientPhone, shortUrl, productName);
+            if (sent) {
+              toolResponseMessage = 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.';
+              paymentLinkSent = { plan: productName, email, checkoutUrl: shortUrl };
+            }
             return {
               success: sent,
               checkoutUrl: shortUrl,
@@ -631,11 +640,11 @@ UNA pregunta a la vez.`;
     console.log(`[Agent] Added ${agentConfig.customTools.length} custom tools: ${agentConfig.customTools.map(t => t.name).join(', ')}`);
   }
 
-  // Track tool results
+  // Track tool results via closure (more reliable than parsing SDK result objects)
   let escalatedToHuman: SimpleAgentResult['escalatedToHuman'] = undefined;
   let paymentLinkSent: SimpleAgentResult['paymentLinkSent'] = undefined;
   let showScheduleList = false;
-  let toolCallsLog: string[] = [];
+  let toolResponseMessage = ''; // Set by tools when they execute, used as fallback if model text is empty
 
   // Note: Automatic handoff is now handled at webhook level (detectHandoffTrigger with context)
   // before the agent is even called. This prevents false positives like "no funciona"
@@ -666,18 +675,9 @@ UNA pregunta a la vez.`;
               }
             }
 
-            // Track send_payment_link
-            if (toolResult.toolName === 'send_payment_link' && output?.success) {
-              const toolCall = step.toolCalls?.find(tc => tc.toolName === 'send_payment_link');
-              if (toolCall) {
-                const args = toolCall.input as { email: string; amount: number; productName: string };
-                paymentLinkSent = {
-                  plan: `${args.productName} - $${args.amount / 100}`,
-                  email: args.email,
-                  checkoutUrl: output.checkoutUrl || ''
-                };
-                console.log(`[Tool] Payment link sent: $${args.amount / 100} to ${args.email}`);
-              }
+            // Track send_payment_link (also tracked directly in tool closure)
+            if (toolResult.toolName === 'send_payment_link' && output?.success && !paymentLinkSent) {
+              paymentLinkSent = { plan: 'payment', email: '', checkoutUrl: output.checkoutUrl || '' };
             }
 
             // Track schedule_demo - trigger interactive schedule list
@@ -699,34 +699,10 @@ UNA pregunta a la vez.`;
     response = response.replace(/\*+/g, '');
     response = response.replace(/^(Víctor|Victor):\s*/i, '');
 
-    // If model called tools but didn't generate text, use tool result message
-    // Check both toolResults (old API) and steps (new API)
-    const toolResults = result.toolResults ||
-      (result.steps?.flatMap((s: { toolResults?: unknown[] }) => s.toolResults || [])) || [];
-
-    console.log('[Debug] response:', response);
-    console.log('[Debug] toolResults count:', toolResults.length);
-
-    if (!response && toolResults.length > 0) {
-      for (const toolResult of toolResults) {
-        const tr = toolResult as {
-          toolName?: string;
-          result?: { success?: boolean; message?: string; bookingLink?: string };
-          output?: { success?: boolean; message?: string; bookingLink?: string; checkoutUrl?: string };
-        };
-        console.log('[Debug] toolResult:', JSON.stringify(tr));
-        // Handle both 'result' and 'output' property names (API versions differ)
-        const output = tr.output || tr.result;
-        if (output?.message) {
-          response = output.message;
-          break;
-        }
-        // Fallback for schedule_demo
-        if (tr.toolName === 'schedule_demo' && output?.bookingLink) {
-          response = `¡Listo! Agenda tu demo aquí: ${output.bookingLink}`;
-          break;
-        }
-      }
+    // If model called tools but didn't generate text, use closure fallback
+    if (!response && toolResponseMessage) {
+      console.log(`[Agent] Using tool closure response: "${toolResponseMessage}"`);
+      response = toolResponseMessage;
     }
 
     // Final fallback

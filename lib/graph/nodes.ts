@@ -705,7 +705,6 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
       system: systemPrompt,
       messages: history,
       tools,
-      maxSteps: 3,
       maxOutputTokens: agentConfig?.maxResponseTokens || 200,
       temperature: agentConfig?.temperature,
       onStepFinish: async (step) => {
@@ -745,6 +744,13 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
         }
       }
     });
+
+    const toolsCalled2 = result.steps?.flatMap((s: { toolCalls?: Array<{ toolName: string }> }) =>
+      s.toolCalls?.map(tc => tc.toolName) || []) || [];
+    console.log(`[GraphGenerate] Raw text length: ${result.text.length}, tools called: [${toolsCalled2.join(', ')}], steps: ${result.steps?.length || 0}, finishReason: ${result.finishReason}`);
+    if (!result.text.trim()) {
+      console.warn(`[GraphGenerate] EMPTY response! History length: ${history.length}, message: "${message.substring(0, 50)}"`);
+    }
 
     let response = result.text.trim();
     response = response.replace(/\*+/g, '');

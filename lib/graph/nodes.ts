@@ -705,6 +705,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
       system: systemPrompt,
       messages: history,
       tools,
+      maxSteps: 3,
       maxOutputTokens: agentConfig?.maxResponseTokens || 200,
       temperature: agentConfig?.temperature,
       onStepFinish: async (step) => {

@@ -43,7 +43,7 @@ function generateShortCode(length: number = 8): string {
 // Crear URL corta para pago
 async function createShortPaymentUrl(stripeUrl: string): Promise<string> {
   const code = generateShortCode();
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loomi-insurtech-5cna.vercel.app';
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://loomi.lat').replace(/\/+$/, '');
 
   // Guardar en Redis por 24 horas
   await getRedis().set(`pay:${code}`, stripeUrl, { ex: 86400 });
@@ -155,7 +155,7 @@ export async function createCheckoutSession(params: CreateCheckoutParams): Promi
   }
 
   // 2. Crear Checkout Session
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tu-dominio.vercel.app';
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://loomi.lat').replace(/\/+$/, '');
 
   const session = await getStripe().checkout.sessions.create({
     customer: stripeCustomerId,
@@ -249,7 +249,7 @@ export async function createTenantCheckoutSession(params: CreateTenantCheckoutPa
   }
 
   const tenantStripe = new Stripe(creds.secretKey);
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loomi-insurtech-5cna.vercel.app';
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://loomi.lat').replace(/\/+$/, '');
 
   // Create checkout session with inline price_data (no pre-created Price needed)
   const session = await tenantStripe.checkout.sessions.create({
@@ -326,7 +326,7 @@ export async function createBillingPortalSession(
   stripeCustomerId: string,
   returnUrl?: string
 ): Promise<string> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tu-dominio.vercel.app';
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://loomi.lat').replace(/\/+$/, '');
 
   const session = await getStripe().billingPortal.sessions.create({
     customer: stripeCustomerId,

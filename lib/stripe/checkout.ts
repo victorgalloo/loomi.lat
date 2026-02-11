@@ -216,6 +216,81 @@ export function getPlanDisplayName(plan: 'starter' | 'growth' | 'business'): str
   return PLAN_NAMES[plan];
 }
 
+// ============================================
+// Tenant Checkout (one-time payments via tenant Stripe key)
+// ============================================
+
+interface CreateTenantCheckoutParams {
+  tenantId: string;
+  email: string;
+  phone?: string;
+  leadId?: string;
+  amount: number;        // en centavos (27500 para $275)
+  productName: string;
+  currency?: string;     // default 'usd'
+}
+
+/**
+ * Crea un Checkout Session usando la Stripe key del tenant.
+ * Modo 'payment' (pago único), price_data inline (no necesita Price ID pre-creado).
+ */
+export async function createTenantCheckoutSession(params: CreateTenantCheckoutParams): Promise<{
+  url: string;
+  shortUrl: string;
+  sessionId: string;
+}> {
+  const { tenantId, email, phone, leadId, amount, productName, currency = 'usd' } = params;
+
+  // Get tenant's own Stripe key
+  const { getStripeCredentials } = await import('@/lib/integrations/tenant-integrations');
+  const creds = await getStripeCredentials(tenantId);
+  if (!creds) {
+    throw new Error(`No Stripe credentials found for tenant ${tenantId}`);
+  }
+
+  const tenantStripe = new Stripe(creds.secretKey);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loomi-insurtech-5cna.vercel.app';
+
+  // Create checkout session with inline price_data (no pre-created Price needed)
+  const session = await tenantStripe.checkout.sessions.create({
+    mode: 'payment',
+    payment_method_types: ['card'],
+    customer_email: email,
+    line_items: [
+      {
+        price_data: {
+          currency,
+          product_data: {
+            name: productName,
+          },
+          unit_amount: amount,
+        },
+        quantity: 1,
+      },
+    ],
+    success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${baseUrl}/cancel`,
+    metadata: {
+      tenantId,
+      leadId: leadId || '',
+      source: 'whatsapp_bot',
+      phone: phone || '',
+    },
+    locale: 'es',
+  });
+
+  // Create short URL
+  const shortUrl = await createShortPaymentUrl(session.url!);
+
+  console.log(`[Stripe] Tenant checkout session created: ${session.id} for ${productName} (${amount} ${currency})`);
+
+  return {
+    url: session.url!,
+    shortUrl,
+    sessionId: session.id,
+  };
+}
+
 /**
  * Cancela una suscripción al final del periodo
  */

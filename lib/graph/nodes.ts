@@ -631,6 +631,51 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
       }
     }),
 
+    send_payment_link: tool({
+      description: 'Envía un link de pago de Stripe al cliente por WhatsApp. Usa cuando el cliente confirmó que quiere comprar y ya dio su email. El monto es en centavos USD (ej: 27500 = $275).',
+      inputSchema: zodSchema(z.object({
+        email: z.string().describe('Email del cliente para el checkout'),
+        amount: z.number().describe('Monto en centavos USD (ej: 27500 para $275)'),
+        productName: z.string().describe('Nombre del producto o servicio'),
+      })),
+      execute: async (params) => {
+        const { email, amount, productName } = params as { email: string; amount: number; productName: string };
+        const tenantId = agentConfig?.tenantId;
+        if (!tenantId) {
+          return { success: false, message: 'No se pudo identificar el tenant.' };
+        }
+
+        console.log(`[Tool] Creating tenant payment link for ${email} (tenant: ${tenantId}, $${amount / 100})`);
+        try {
+          const { createTenantCheckoutSession } = await import('@/lib/stripe/checkout');
+          const { shortUrl } = await createTenantCheckoutSession({
+            tenantId,
+            email,
+            phone: clientPhone,
+            amount,
+            productName,
+          });
+
+          const { sendPaymentLink } = await import('@/lib/whatsapp/send');
+          const sent = await sendPaymentLink(
+            clientPhone,
+            shortUrl,
+            `${productName} - $${amount / 100} USD`
+          );
+          return {
+            success: sent,
+            checkoutUrl: shortUrl,
+            message: sent
+              ? 'Link de pago enviado exitosamente por WhatsApp.'
+              : 'No se pudo enviar el link de pago.',
+          };
+        } catch (error) {
+          console.error('[Tool] Tenant payment link error:', error);
+          return { success: false, message: 'Error al crear el link de pago.' };
+        }
+      }
+    }),
+
     ...createKnowledgeTools()
   };
 

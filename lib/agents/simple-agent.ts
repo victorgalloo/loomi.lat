@@ -447,7 +447,7 @@ UNA pregunta a la vez.`;
   // Define tools
   const tools = {
     escalate_to_human: tool({
-      description: 'Transfiere la conversación a un humano. Usa cuando: el cliente pide hablar con una persona, es un deal enterprise, tiene preguntas técnicas muy específicas, o está frustrado.',
+      description: 'Transfiere la conversación a un humano. SOLO usa cuando el cliente dice LITERALMENTE "quiero hablar con un humano" o "pásame con una persona". NUNCA la uses para objeciones, dudas, desconfianza, o preguntas difíciles — resuélvelas tú mismo.',
       inputSchema: zodSchema(z.object({
         reason: z.string().describe('Motivo de la escalación'),
         summary: z.string().describe('Resumen breve de la conversación y qué necesita el cliente'),

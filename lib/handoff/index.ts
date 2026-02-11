@@ -188,12 +188,13 @@ export const HANDOFF_TRIGGERS = {
     'hablar con una persona', 'quiero un humano'
   ]),
 
-  // Frustration indicators
+  // Frustration indicators (with the bot, NOT sales objections)
+  // Words like "estafa", "fraude", "mentira" are common sales objections
+  // that the agent should handle — NOT automatic handoff triggers.
   frustration: new Set([
     'no me entiendes', 'no entiendes', 'esto no sirve', 'no sirve',
     'ya me cansé', 'me cansé', 'inútil', 'no funciona', 'mal servicio',
-    'pésimo', 'horrible', 'terrible', 'peor', 'nunca', 'jamás',
-    'estafa', 'fraude', 'robo', 'mentira', 'engaño', 'falso',
+    'pésimo', 'horrible', 'terrible',
     'qué asco', 'que asco', 'basura', 'porquería', 'porqueria'
   ]),
 

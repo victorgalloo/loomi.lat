@@ -608,7 +608,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
     }),
 
     escalate_to_human: tool({
-      description: 'Transfiere la conversación a un humano. Usa SOLO para clientes VIP, proyectos grandes, o cuando el cliente lo pida explícitamente.',
+      description: 'Transfiere la conversación a un humano. SOLO usa cuando el cliente dice LITERALMENTE "quiero hablar con un humano" o "pásame con una persona". NUNCA la uses para objeciones, dudas, desconfianza, preguntas sobre estafas, o preguntas difíciles — resuélvelas tú mismo.',
       inputSchema: zodSchema(z.object({
         reason: z.string().describe('Motivo de la escalación'),
         summary: z.string().describe('Resumen breve de la conversación')

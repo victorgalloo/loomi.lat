@@ -1056,6 +1056,8 @@ export async function POST(request: NextRequest) {
         const firstName = context.lead.name?.split(' ')[0];
         const hasCustom = !!agentConfig?.systemPrompt;
         const businessName = agentConfig?.businessName || 'nuestro equipo';
+        console.warn(`[Webhook] EMPTY RESPONSE DEBUG: phone=${message.phone}, msg="${message.text?.substring(0, 50)}", recentMsgs=${context.recentMessages.length}, convId=${context.conversation.id}, hasCustomPrompt=${hasCustom}, rawResponse="${result.response}", tokensUsed=${result.tokensUsed}`);
+        result._wasEmpty = true;
         result.response = firstName && firstName !== 'Usuario'
           ? (hasCustom
             ? `Hola ${firstName}! ¿En qué te puedo ayudar?`
@@ -1063,7 +1065,6 @@ export async function POST(request: NextRequest) {
           : (hasCustom
             ? 'Hola! ¿En qué te puedo ayudar?'
             : `Hola! Soy del equipo de ${businessName}. ¿En qué te puedo ayudar?`);
-        console.warn(`[Webhook] Empty response from agent, using fallback for ${message.phone}`);
       }
 
       // Send response
@@ -1206,7 +1207,8 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         status: 'ok',
-        tokensUsed: result.tokensUsed
+        tokensUsed: result.tokensUsed,
+        ...(result._wasEmpty ? { debug: { wasEmpty: true, recentMsgs: context.recentMessages.length } } : {})
       });
 
     } finally {

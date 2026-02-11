@@ -12,7 +12,7 @@
  * - Combined iterations (js-combine-iterations)
  */
 
-import { generateText } from 'ai';
+import { generateText, stepCountIs } from 'ai';
 import { tool, zodSchema } from '@ai-sdk/provider-utils';
 import { resolveModel } from './model';
 import { z } from 'zod';
@@ -635,7 +635,9 @@ UNA pregunta a la vez.`;
       tools,
       temperature: agentConfig?.temperature ?? 0.7,
       maxOutputTokens: agentConfig?.maxResponseTokens ?? 250,
+      stopWhen: stepCountIs(3),
       onStepFinish: async (step) => {
+        console.log(`[Agent] Step finished: toolCalls=${step.toolCalls?.length || 0}, text=${step.text?.substring(0, 50) || '(empty)'}, finishReason=${step.finishReason}`);
         if (step.toolResults) {
           for (const toolResult of step.toolResults) {
             const output = toolResult.output as { success?: boolean; checkoutUrl?: string } | undefined;
@@ -654,13 +656,13 @@ UNA pregunta a la vez.`;
             if (toolResult.toolName === 'send_payment_link' && output?.success) {
               const toolCall = step.toolCalls?.find(tc => tc.toolName === 'send_payment_link');
               if (toolCall) {
-                const args = toolCall.input as { email: string; monthlyAmount: number };
+                const args = toolCall.input as { email: string; amount: number; productName: string };
                 paymentLinkSent = {
-                  plan: `$${args.monthlyAmount}/mes`,
+                  plan: `${args.productName} - $${args.amount / 100}`,
                   email: args.email,
                   checkoutUrl: output.checkoutUrl || ''
                 };
-                console.log(`[Tool] Payment link sent: $${args.monthlyAmount}/mes to ${args.email}`);
+                console.log(`[Tool] Payment link sent: $${args.amount / 100} to ${args.email}`);
               }
             }
 
@@ -676,6 +678,8 @@ UNA pregunta a la vez.`;
         }
       }
     });
+
+    console.log(`[Agent] generateText done: steps=${result.steps?.length || 0}, text="${result.text?.substring(0, 80) || '(empty)'}", finishReason=${result.finishReason}`);
 
     let response = result.text.trim();
     response = response.replace(/\*+/g, '');

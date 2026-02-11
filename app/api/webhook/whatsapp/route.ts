@@ -1057,7 +1057,7 @@ export async function POST(request: NextRequest) {
         const hasCustom = !!agentConfig?.systemPrompt;
         const businessName = agentConfig?.businessName || 'nuestro equipo';
         console.warn(`[Webhook] EMPTY RESPONSE DEBUG: phone=${message.phone}, msg="${message.text?.substring(0, 50)}", recentMsgs=${context.recentMessages.length}, convId=${context.conversation.id}, hasCustomPrompt=${hasCustom}, rawResponse="${result.response}", tokensUsed=${result.tokensUsed}`);
-        result._wasEmpty = true;
+        (result as Record<string, unknown>)._wasEmpty = true;
         result.response = firstName && firstName !== 'Usuario'
           ? (hasCustom
             ? `Hola ${firstName}! ¿En qué te puedo ayudar?`
@@ -1208,7 +1208,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         status: 'ok',
         tokensUsed: result.tokensUsed,
-        ...(result._wasEmpty ? { debug: { wasEmpty: true, recentMsgs: context.recentMessages.length } } : {})
+        ...((result as Record<string, unknown>)._wasEmpty ? { debug: { wasEmpty: true, recentMsgs: context.recentMessages.length } } : {})
       });
 
     } finally {

@@ -1051,20 +1051,13 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Guard against empty responses (bug: model sometimes returns empty text)
+      // Guard against empty responses
+      let wasEmptyResponse = false;
       if (!result.response || !result.response.trim()) {
-        const firstName = context.lead.name?.split(' ')[0];
-        const hasCustom = !!agentConfig?.systemPrompt;
-        const businessName = agentConfig?.businessName || 'nuestro equipo';
-        console.warn(`[Webhook] EMPTY RESPONSE DEBUG: phone=${message.phone}, msg="${message.text?.substring(0, 50)}", recentMsgs=${context.recentMessages.length}, convId=${context.conversation.id}, hasCustomPrompt=${hasCustom}, rawResponse="${result.response}", tokensUsed=${result.tokensUsed}`);
-        (result as Record<string, unknown>)._wasEmpty = true;
-        result.response = firstName && firstName !== 'Usuario'
-          ? (hasCustom
-            ? `Hola ${firstName}! ¿En qué te puedo ayudar?`
-            : `Hola ${firstName}! Soy del equipo de ${businessName}. ¿En qué te puedo ayudar?`)
-          : (hasCustom
-            ? 'Hola! ¿En qué te puedo ayudar?'
-            : `Hola! Soy del equipo de ${businessName}. ¿En qué te puedo ayudar?`);
+        wasEmptyResponse = true;
+        console.warn(`[Webhook] Empty response: phone=${message.phone}, msg="${message.text?.substring(0, 50)}", recentMsgs=${context.recentMessages.length}, tokensUsed=${result.tokensUsed}`);
+        // Re-run the agent with a simpler fallback approach
+        result.response = 'Dame un momento, estoy procesando tu solicitud.';
       }
 
       // Send response
@@ -1208,7 +1201,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         status: 'ok',
         tokensUsed: result.tokensUsed,
-        ...((result as Record<string, unknown>)._wasEmpty ? { debug: { wasEmpty: true, recentMsgs: context.recentMessages.length } } : {})
+        ...(wasEmptyResponse ? { debug: { wasEmpty: true, recentMsgs: context.recentMessages.length } } : {})
       });
 
     } finally {

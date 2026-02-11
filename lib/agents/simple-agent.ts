@@ -660,7 +660,6 @@ UNA pregunta a la vez.`;
       maxOutputTokens: agentConfig?.maxResponseTokens ?? 250,
       stopWhen: stepCountIs(3),
       onStepFinish: async (step) => {
-        console.log(`[Agent] Step finished: toolCalls=${step.toolCalls?.length || 0}, text=${step.text?.substring(0, 50) || '(empty)'}, finishReason=${step.finishReason}`);
         if (step.toolResults) {
           for (const toolResult of step.toolResults) {
             const output = toolResult.output as { success?: boolean; checkoutUrl?: string } | undefined;
@@ -692,8 +691,6 @@ UNA pregunta a la vez.`;
         }
       }
     });
-
-    console.log(`[Agent] generateText done: steps=${result.steps?.length || 0}, text="${result.text?.substring(0, 80) || '(empty)'}", finishReason=${result.finishReason}`);
 
     let response = result.text.trim();
     response = response.replace(/\*+/g, '');

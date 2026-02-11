@@ -704,10 +704,12 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
     console.log(`[GraphGenerate] Added ${agentConfig.customTools.length} custom tools`);
   }
 
-  // Track tool results
+  // Track tool results via closures (reliable fallback if model text is empty after tool call)
   let appointmentBooked: SimpleAgentResult['appointmentBooked'] = undefined;
   let brochureSent = false;
   let escalatedToHumanResult: SimpleAgentResult['escalatedToHuman'] = undefined;
+  let paymentLinkSent: SimpleAgentResult['paymentLinkSent'] = undefined;
+  let toolResponseMessage = '';
 
   try {
     const result = await generateText({
@@ -743,6 +745,15 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
               console.log(`[Tool] Brochure sent`);
             }
 
+            if (toolResult.toolName === 'send_payment_link') {
+              const paymentOutput = toolResult.output as { success?: boolean; checkoutUrl?: string; message?: string } | undefined;
+              if (paymentOutput?.success) {
+                toolResponseMessage = 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.';
+              } else if (paymentOutput?.message) {
+                toolResponseMessage = paymentOutput.message;
+              }
+            }
+
             if (toolResult.toolName === 'escalate_to_human' && output?.success) {
               const toolCall = step.toolCalls?.find(tc => tc.toolName === 'escalate_to_human');
               if (toolCall) {
@@ -756,16 +767,19 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
       }
     });
 
-    const toolsCalled2 = result.steps?.flatMap((s: { toolCalls?: Array<{ toolName: string }> }) =>
-      s.toolCalls?.map(tc => tc.toolName) || []) || [];
-    console.log(`[GraphGenerate] Raw text length: ${result.text.length}, tools called: [${toolsCalled2.join(', ')}], steps: ${result.steps?.length || 0}, finishReason: ${result.finishReason}`);
-    if (!result.text.trim()) {
-      console.warn(`[GraphGenerate] EMPTY response! History length: ${history.length}, message: "${message.substring(0, 50)}"`);
-    }
-
     let response = result.text.trim();
     response = response.replace(/\*+/g, '');
     response = response.replace(/^(Víctor|Victor):\s*/i, '');
+
+    // Closure fallback: if model generated no text but a tool ran, use tool's message
+    if (!response && toolResponseMessage) {
+      console.log(`[GraphGenerate] Using tool closure fallback: "${toolResponseMessage}"`);
+      response = toolResponseMessage;
+    }
+
+    if (!response) {
+      response = '¿En qué más te puedo ayudar?';
+    }
 
     // Phase 3D: Response guard (length enforcement)
     const guarded = guardResponse(response, 3);
@@ -806,6 +820,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
         tokensUsed: result.usage?.totalTokens,
         appointmentBooked,
         brochureSent: brochureSent || undefined,
+        paymentLinkSent,
         escalatedToHuman: escalatedToHumanResult,
         detectedIndustry: reasoning && reasoning.industry !== 'generic' ? reasoning.industry : undefined,
         saidLater: state.saidLater,

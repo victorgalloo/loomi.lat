@@ -36,7 +36,6 @@ import {
   REASON_CONFIG
 } from '@/lib/handoff';
 import { getConversationContext } from '@/lib/memory/context';
-import { simpleAgent } from '@/lib/agents/simple-agent';
 import { processMessageGraph } from '@/lib/graph/graph';
 import {
   checkRateLimit,
@@ -999,17 +998,12 @@ export async function POST(request: NextRequest) {
 
       let result;
       try {
-        console.log(`[Webhook] USE_LANGGRAPH=${process.env.USE_LANGGRAPH}, tenantId=${tenantId}, hasAgentConfig=${!!agentConfig}, hasSystemPrompt=${!!agentConfig?.systemPrompt}, systemPromptLen=${agentConfig?.systemPrompt?.length || 0}`);
         // Inject WhatsApp credentials into agent config for tool use
         const configWithCreds = credentials && agentConfig
           ? { ...agentConfig, whatsappCredentials: credentials }
           : agentConfig;
 
-        if (process.env.USE_LANGGRAPH === 'true') {
-          result = await processMessageGraph(message.text, context, configWithCreds);
-        } else {
-          result = await simpleAgent(message.text, context, configWithCreds);
-        }
+        result = await processMessageGraph(message.text, context, configWithCreds);
       } catch (agentError) {
         console.error('Agent error:', agentError);
 
@@ -1056,12 +1050,8 @@ export async function POST(request: NextRequest) {
       }
 
       // Guard against empty responses
-      let wasEmptyResponse = false;
-      const originalResponse = result.response;
       if (!result.response || !result.response.trim()) {
-        wasEmptyResponse = true;
-        console.warn(`[Webhook] v2 Empty response: phone=${message.phone}, msg="${message.text?.substring(0, 50)}", recentMsgs=${context.recentMessages.length}, tokensUsed=${result.tokensUsed}, paymentLink=${!!result.paymentLinkSent}`);
-        // If payment link was sent, confirm it
+        console.warn(`[Webhook] Empty response for ${message.phone}`);
         if (result.paymentLinkSent) {
           result.response = 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.';
         } else {
@@ -1209,17 +1199,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         status: 'ok',
-        tokensUsed: result.tokensUsed,
-        v: 3,
-        ...(wasEmptyResponse ? {
-          debug: {
-            wasEmpty: true,
-            recentMsgs: context.recentMessages.length,
-            paymentLink: !!result.paymentLinkSent,
-            escalated: !!result.escalatedToHuman,
-            origResponse: originalResponse === undefined ? 'undefined' : originalResponse === null ? 'null' : originalResponse === '' ? '(empty-string)' : `"${originalResponse.substring(0, 80)}"`,
-          }
-        } : {})
+        tokensUsed: result.tokensUsed
       });
 
     } finally {

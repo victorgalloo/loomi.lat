@@ -279,8 +279,8 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold text-foreground font-mono">
-            ./pipeline_
+          <h1 className="text-xl font-semibold text-foreground">
+            Pipeline
           </h1>
           <span className="text-label px-2.5 py-1 rounded-full font-medium bg-surface border border-border text-muted">
             {totalLeads} leads
@@ -327,22 +327,16 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
         </div>
       </div>
 
-      {/* Stats Bar */}
-      <div className="flex items-center gap-6 text-sm pb-6 mb-6 border-b border-border">
-        <div>
-          <span className="text-muted">pipeline total</span>
-          <span className="ml-2 font-mono text-foreground">{formatCurrency(totalValue)}</span>
-        </div>
-        <span className="text-border">·</span>
-        <div>
-          <span className="text-muted">cerrados</span>
-          <span className="ml-2 font-mono text-info">{formatCurrency(wonValue)}</span>
-        </div>
-        <span className="text-border">·</span>
-        <div>
-          <span className="text-muted">conversión</span>
-          <span className="ml-2 font-mono text-foreground">{totalLeads > 0 ? Math.round((wonDeals.length / totalLeads) * 100) : 0}%</span>
-        </div>
+      {/* Stats */}
+      <div className="flex items-center gap-2 text-sm mb-5 text-muted">
+        <span className="font-mono tabular-nums text-foreground">{formatCurrency(totalValue)}</span>
+        <span className="text-label">pipeline</span>
+        <span className="text-border">|</span>
+        <span className="font-mono tabular-nums text-foreground">{formatCurrency(wonValue)}</span>
+        <span className="text-label">cerrados</span>
+        <span className="text-border">|</span>
+        <span className="font-mono tabular-nums text-foreground">{totalLeads > 0 ? Math.round((wonDeals.length / totalLeads) * 100) : 0}%</span>
+        <span className="text-label">conversión</span>
       </div>
 
       {/* Kanban Board */}
@@ -396,8 +390,8 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
           <div className="relative w-full max-w-md mx-4 rounded-2xl shadow-elevated bg-surface-elevated border border-border">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <h2 className="text-base font-semibold text-foreground font-mono">
-                nuevo lead
+              <h2 className="text-base font-semibold text-foreground">
+                Nuevo Lead
               </h2>
               <button
                 onClick={() => setShowModal(false)}
@@ -486,9 +480,9 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
               <button
                 onClick={handleCreateLead}
                 disabled={!newLead.name || !newLead.phone || isCreating}
-                className="px-4 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90 font-mono"
+                className="px-4 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90"
               >
-                {isCreating ? 'creando...' : './crear-lead'}
+                {isCreating ? 'Creando...' : 'Crear Lead'}
               </button>
             </div>
           </div>

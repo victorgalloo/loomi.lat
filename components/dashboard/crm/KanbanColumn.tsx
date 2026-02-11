@@ -41,42 +41,42 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, onExport }: Kanban
   // Minimal color accents (stage dots keep accent colors)
   const stageColors: Record<string, string> = {
     cyan: 'bg-info',
-    amber: 'bg-info',
+    amber: 'bg-warning',
     purple: 'bg-info',
     blue: 'bg-info',
-    orange: 'bg-info',
-    emerald: 'bg-info',
-    red: 'bg-info',
-    gray: 'bg-info',
+    orange: 'bg-warning',
+    emerald: 'bg-success',
+    red: 'bg-error',
+    gray: 'bg-muted',
     indigo: 'bg-info',
   };
 
   return (
-    <div className="flex flex-col w-[300px] min-w-[300px] shrink-0">
+    <div className="flex flex-col w-[260px] min-w-[260px] shrink-0">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3 bg-surface rounded-xl px-3 py-2.5 border border-border/50">
+      <div className="flex items-center justify-between mb-2 px-1 py-1.5">
         <div className="flex items-center gap-2">
-          <div className={`w-3 h-3 rounded-full ${stageColors[stage.color] || stageColors.gray}`} />
-          <h3 className="text-sm font-medium text-foreground/70">
+          <div className={`w-2 h-2 rounded-full ${stageColors[stage.color] || stageColors.gray}`} />
+          <h3 className="text-label font-medium text-muted">
             {stage.name}
           </h3>
-          <span className="text-sm px-1.5 py-0.5 rounded font-medium bg-surface-2 border border-border text-muted">
+          <span className="text-label tabular-nums text-muted/60">
             {leads.length}
           </span>
         </div>
         <div className="flex items-center gap-2">
           {totalValue > 0 && (
-            <span className="text-sm tabular-nums text-muted">
+            <span className="text-sm tabular-nums font-mono text-muted">
               {formatCurrency(totalValue)}
             </span>
           )}
           {leads.length > 0 && onExport && (
             <button
               onClick={() => onExport(stage, leads)}
-              className="p-1 rounded-lg transition-colors text-muted hover:text-foreground hover:bg-surface-2"
+              className="p-0.5 rounded-lg transition-colors text-muted hover:text-foreground hover:bg-surface-2"
               title={`Exportar ${stage.name}`}
             >
-              <Download className="w-3.5 h-3.5" />
+              <Download className="w-3 h-3" />
             </button>
           )}
         </div>
@@ -86,11 +86,10 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, onExport }: Kanban
       <div
         ref={setNodeRef}
         className={`
-          flex-1 rounded-2xl p-2 space-y-2
-          min-h-[120px] max-h-[calc(100vh-280px)] overflow-y-auto
+          flex-1 rounded-xl p-1.5 space-y-1.5
+          min-h-[120px] max-h-[calc(100vh-240px)] overflow-y-auto
           transition-colors duration-200
-          border border-border/50
-          ${isOver ? 'bg-surface' : 'bg-surface/30'}
+          ${isOver ? 'bg-surface/50' : ''}
         `}
       >
         <SortableContext items={leads.map(l => l.id)} strategy={verticalListSortingStrategy}>

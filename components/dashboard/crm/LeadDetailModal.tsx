@@ -72,7 +72,7 @@ function LeadDetailModal({ lead, stages, onClose, onSave, onDelete }: LeadDetail
     }
   };
 
-  const inputClasses ='w-full px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 outline-none bg-background border border-border text-foreground placeholder:text-muted shadow-subtle focus:ring-2 focus:ring-info/30 focus:border-info/50';
+  const inputClasses ='w-full px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 outline-none bg-background border border-border text-foreground placeholder:text-muted focus:ring-2 focus:ring-info/30 focus:border-info/50';
 
   const labelClasses = 'block text-label font-medium mb-2.5 text-muted';
 
@@ -102,8 +102,10 @@ function LeadDetailModal({ lead, stages, onClose, onSave, onDelete }: LeadDetail
                   <h2 className="text-base font-semibold text-foreground">
                     {lead.name}
                   </h2>
-                  <p className="text-xs font-mono mt-0.5 text-muted">
-                    {lead.phone} · {lead.stage}
+                  <p className="text-xs mt-0.5 text-muted">
+                    <span className="font-mono">{lead.phone}</span>
+                    <span className="mx-1">·</span>
+                    <span>{lead.stage}</span>
                   </p>
                 </div>
               </div>
@@ -211,7 +213,7 @@ function LeadDetailModal({ lead, stages, onClose, onSave, onDelete }: LeadDetail
 
           {/* Conversation (default view) */}
           {!editing && !confirmDelete && (
-            <div className="flex flex-col" style={{ height: '420px' }}>
+            <div className="flex flex-col max-h-[420px]">
               <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                 {loadingMessages ? (
                   <div className="flex items-center justify-center py-12">

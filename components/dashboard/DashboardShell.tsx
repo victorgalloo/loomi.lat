@@ -1,35 +1,46 @@
 'use client';
 
-import { ReactNode } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { LogOut, Sun, Moon } from 'lucide-react';
+import { ReactNode, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { Sun, Moon, Menu } from 'lucide-react';
+import Sidebar from './Sidebar';
+import Image from 'next/image';
 
 interface DashboardShellProps {
   children: ReactNode;
   userName?: string;
+  tenantName?: string;
   isConnected?: boolean;
 }
 
-const navItems = [
-  { href: '/dashboard', label: 'overview' },
-  { href: '/dashboard/crm', label: 'pipeline' },
-  { href: '/dashboard/conversations', label: 'inbox' },
-  { href: '/broadcasts', label: 'broadcasts' },
-  { href: '/dashboard/agent/setup', label: 'agente', subItems: [
-    { href: '/dashboard/agent/setup', label: 'setup' },
-    { href: '/dashboard/agent/prompt', label: 'prompt' },
-    { href: '/dashboard/agent/knowledge', label: 'knowledge' },
-    { href: '/dashboard/agent/tools', label: 'tools' },
-  ]},
-  { href: '/dashboard/settings', label: 'settings' },
-];
+const breadcrumbMap: Record<string, string> = {
+  '/dashboard': 'Overview',
+  '/dashboard/crm': 'Pipeline',
+  '/dashboard/conversations': 'Inbox',
+  '/broadcasts': 'Broadcasts',
+  '/dashboard/agent/setup': 'Agente / Setup',
+  '/dashboard/agent/prompt': 'Agente / Prompt',
+  '/dashboard/agent/knowledge': 'Agente / Knowledge',
+  '/dashboard/agent/tools': 'Agente / Integraciones',
+  '/dashboard/analytics': 'Analytics',
+  '/dashboard/settings': 'Settings',
+  '/dashboard/connect': 'Conexión WhatsApp',
+};
 
-export default function DashboardShell({ children, isConnected }: DashboardShellProps) {
+function getBreadcrumb(pathname: string): string {
+  if (breadcrumbMap[pathname]) return breadcrumbMap[pathname];
+  // Conversation detail
+  if (pathname.startsWith('/dashboard/conversations/')) return 'Inbox / Conversación';
+  // Broadcast detail
+  if (pathname.startsWith('/broadcasts/')) return 'Broadcasts / Campaña';
+  // Agent sub-routes
+  if (pathname.startsWith('/dashboard/agent')) return 'Agente';
+  return 'Dashboard';
+}
+
+export default function DashboardShell({ children, userName, tenantName, isConnected }: DashboardShellProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const supabase = createClient();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const toggleTheme = () => {
     const current = document.documentElement.getAttribute('data-theme');
@@ -38,133 +49,65 @@ export default function DashboardShell({ children, isConnected }: DashboardShell
     localStorage.setItem('loomi-theme', next);
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
-    router.refresh();
-  };
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-14 border-b bg-background/95 backdrop-blur-md border-border shadow-subtle">
-        <div className="h-full max-w-6xl mx-auto px-4 flex items-center justify-between">
-          {/* Logo */}
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2"
-          >
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-terminal-red" />
-              <div className="w-2 h-2 rounded-full bg-terminal-yellow" />
-              <div className="w-2 h-2 rounded-full bg-terminal-green" />
-            </div>
-            <span className="text-sm font-semibold text-foreground font-mono">loomi_</span>
-          </Link>
+    <div className="flex h-screen bg-background overflow-hidden">
+      {/* Sidebar */}
+      <Sidebar
+        userName={userName}
+        tenantName={tenantName}
+        isConnected={isConnected}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
 
-          {/* Nav */}
-          <nav className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href ||
-                (item.href !== '/dashboard' && pathname.startsWith(item.href)) ||
-                (item.subItems && item.subItems.some(sub => pathname.startsWith(sub.href)));
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar */}
+        <header className="h-12 border-b border-border bg-background flex items-center justify-between px-4 md:px-6 shrink-0">
+          {/* Left: mobile menu + breadcrumb */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-surface transition-colors md:hidden"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <span className="text-sm text-muted">
+              {getBreadcrumb(pathname)}
+            </span>
+          </div>
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`text-body transition-colors font-mono px-3 py-1.5 rounded-lg ${
-                    isActive
-                      ? 'text-foreground bg-surface-2'
-                      : 'text-muted hover:text-foreground hover:bg-surface'
-                  }`}
-                >
-                  ./{item.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Right */}
-          <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border ${isConnected ? 'bg-terminal-green/10 border-terminal-green/20' : 'bg-terminal-yellow/10 border-terminal-yellow/20'}`}>
-              <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-terminal-green' : 'bg-terminal-yellow'}`} />
-              <span className={`text-sm font-mono ${isConnected ? 'text-terminal-green' : 'text-terminal-yellow'}`}>
-                {isConnected ? 'live' : 'offline'}
-              </span>
+          {/* Right: status + theme + meta */}
+          <div className="flex items-center gap-3">
+            <div className={`hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-md text-xs ${
+              isConnected
+                ? 'text-terminal-green bg-terminal-green/10'
+                : 'text-terminal-yellow bg-terminal-yellow/10'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-terminal-green' : 'bg-terminal-yellow'}`} />
+              {isConnected ? 'Conectado' : 'Offline'}
             </div>
 
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg transition-colors text-muted hover:text-foreground hover:bg-surface-2"
+              className="p-1.5 rounded-md transition-colors text-muted hover:text-foreground hover:bg-surface"
             >
-              <Sun className="w-4 h-4 hidden dark:block" />
-              <Moon className="w-4 h-4 block dark:hidden" />
+              <Sun className="w-4 h-4 hidden [html[data-theme=dark]_&]:block" />
+              <Moon className="w-4 h-4 block [html[data-theme=dark]_&]:hidden" />
             </button>
 
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-lg transition-colors text-muted hover:text-foreground hover:bg-surface-2"
-              title="Salir"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-2 py-1 rounded-md border border-border bg-surface">
+              <Image src="/logos/meta-logo.png" alt="Meta" width={40} height={13} className="object-contain opacity-50" />
+              <span className="text-muted text-xs">Tech Provider</span>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Mobile Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-md border-border shadow-elevated">
-        <div className="flex items-center justify-around py-3">
-          {navItems.slice(0, 5).map((item) => {
-            const isActive = pathname === item.href ||
-              (item.href !== '/dashboard' && pathname.startsWith(item.href));
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`text-sm font-medium font-mono px-2 py-1 rounded-lg ${
-                  isActive
-                    ? 'text-foreground bg-surface-2'
-                    : 'text-muted'
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* Agent Sub-Nav */}
-      {pathname.startsWith('/dashboard/agent') && (
-        <div className="fixed top-14 left-0 right-0 z-40 h-10 border-b bg-surface/95 backdrop-blur-sm border-border shadow-subtle">
-          <div className="h-full max-w-6xl mx-auto px-4 flex items-center gap-4">
-            {navItems.find(i => i.subItems && i.label === 'agente')?.subItems?.map((sub) => {
-              const isSubActive = pathname === sub.href;
-              return (
-                <Link
-                  key={sub.href}
-                  href={sub.href}
-                  className={`text-sm transition-colors font-mono px-2.5 py-1 rounded-lg ${
-                    isSubActive
-                      ? 'text-foreground bg-surface-2'
-                      : 'text-muted hover:text-foreground hover:bg-surface'
-                  }`}
-                >
-                  ./{sub.label}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Content */}
-      <main className={`${pathname.startsWith('/dashboard/agent') ? 'pt-[96px]' : 'pt-14'} pb-16 md:pb-0`}>
-        {children}
-      </main>
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

@@ -131,16 +131,7 @@ function KanbanBoard({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            gap: '16px',
-            overflowX: 'auto',
-            paddingBottom: '16px',
-            minWidth: 'max-content'
-          }}
-        >
+        <div className="flex flex-row gap-4 overflow-x-auto pb-4 min-w-max">
           {stages
             .sort((a, b) => a.position - b.position)
             .map((stage) => (

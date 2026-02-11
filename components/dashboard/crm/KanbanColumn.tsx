@@ -52,15 +52,7 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, onExport }: Kanban
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        width: '300px',
-        minWidth: '300px',
-        flexShrink: 0
-      }}
-    >
+    <div className="flex flex-col w-[300px] min-w-[300px] shrink-0">
       {/* Header */}
       <div className="flex items-center justify-between mb-3 bg-surface rounded-xl px-3 py-2.5 border border-border/50">
         <div className="flex items-center gap-2">
@@ -74,7 +66,7 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, onExport }: Kanban
         </div>
         <div className="flex items-center gap-2">
           {totalValue > 0 && (
-            <span className="text-sm font-mono text-muted">
+            <span className="text-sm tabular-nums text-muted">
               {formatCurrency(totalValue)}
             </span>
           )}
@@ -100,10 +92,6 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, onExport }: Kanban
           border border-border/50
           ${isOver ? 'bg-surface' : 'bg-surface/30'}
         `}
-        style={{
-          scrollbarWidth: 'thin',
-          scrollbarColor: 'var(--border) transparent',
-        }}
       >
         <SortableContext items={leads.map(l => l.id)} strategy={verticalListSortingStrategy}>
           {leads.map((lead) => (

@@ -114,7 +114,7 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
       {/* Deal Value */}
       {lead.dealValue && lead.dealValue > 0 && (
         <div className="mt-3 pt-3 border-t border-border">
-          <span className="text-sm font-mono font-medium text-info">
+          <span className="text-sm tabular-nums font-medium text-info">
             {formatCurrency(lead.dealValue)}
           </span>
         </div>
@@ -126,6 +126,7 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
           e.stopPropagation();
         }}
         className="absolute top-2 right-6 opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity duration-200 hover:bg-surface-2 text-muted"
+        title="Opciones"
       >
         <MoreHorizontal className="w-3.5 h-3.5" />
       </button>

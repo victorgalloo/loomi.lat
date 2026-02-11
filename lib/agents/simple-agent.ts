@@ -549,38 +549,51 @@ UNA pregunta a la vez.`;
     }),
 
     send_payment_link: tool({
-      description: 'Envía un link de pago de Stripe. Usa SOLO cuando el cliente confirmó que quiere contratar y ya sabes qué plan quiere (starter=$199, growth=$349, business=$599).',
+      description: 'Envía un link de pago de Stripe al cliente por WhatsApp. Usa cuando el cliente confirmó que quiere comprar y ya dio su email. El monto es en centavos USD (ej: 27500 = $275).',
       inputSchema: zodSchema(z.object({
-        email: z.string().describe('Email del cliente'),
-        plan: z.enum(['starter', 'growth', 'business']).describe('Plan elegido: starter ($199), growth ($349), o business ($599)')
+        email: z.string().describe('Email del cliente para el checkout'),
+        amount: z.number().describe('Monto en centavos USD (ej: 27500 para $275)'),
+        productName: z.string().describe('Nombre del producto o servicio'),
       })),
       execute: async (params) => {
-        const { email, plan } = params as { email: string; plan: 'starter' | 'growth' | 'business' };
-        const planPrices = { starter: 199, growth: 349, business: 599 };
-        const price = planPrices[plan];
+        const { email, amount, productName } = params as { email: string; amount: number; productName: string };
+        const tenantId = agentConfig?.tenantId;
 
-        console.log(`[Tool] Creating payment link for ${email}, plan: ${plan} ($${price}/mes)`);
+        console.log(`[Tool] Creating payment link for ${email}, amount: $${amount / 100}, tenant: ${tenantId}`);
         try {
-          const { url } = await createCheckoutSession({
-            email,
-            phone: clientPhone,
-            plan
-          });
-          const planLabel = `${plan.charAt(0).toUpperCase() + plan.slice(1)} - $${price}/mes`;
-          const sent = await sendPaymentLink(clientPhone, url, planLabel);
-          return {
-            success: sent,
-            checkoutUrl: url,
-            message: sent
-              ? `Link de pago enviado. Plan ${plan}: $${price}/mes.`
-              : 'No se pudo enviar el link de pago.'
-          };
+          if (tenantId) {
+            // Tenant-specific payment (uses tenant's Stripe key)
+            const { createTenantCheckoutSession } = await import('@/lib/stripe/checkout');
+            const { shortUrl } = await createTenantCheckoutSession({
+              tenantId,
+              email,
+              phone: clientPhone,
+              amount,
+              productName,
+            });
+            const sent = await sendPaymentLink(clientPhone, shortUrl, `${productName} - $${amount / 100} USD`);
+            return {
+              success: sent,
+              checkoutUrl: shortUrl,
+              message: sent
+                ? 'Link de pago enviado exitosamente por WhatsApp.'
+                : 'No se pudo enviar el link de pago.',
+            };
+          } else {
+            // Loomi default: map to subscription plans
+            const planMap: Record<number, 'starter' | 'growth' | 'business'> = { 19900: 'starter', 34900: 'growth', 59900: 'business' };
+            const plan = planMap[amount] || 'starter';
+            const { url } = await createCheckoutSession({ email, phone: clientPhone, plan });
+            const sent = await sendPaymentLink(clientPhone, url, `${productName} - $${amount / 100}/mes`);
+            return {
+              success: sent,
+              checkoutUrl: url,
+              message: sent ? 'Link de pago enviado.' : 'No se pudo enviar el link de pago.',
+            };
+          }
         } catch (error) {
           console.error('[Tool] Payment link error:', error);
-          return {
-            success: false,
-            message: 'Error al crear el link de pago.'
-          };
+          return { success: false, message: 'Error al crear el link de pago.' };
         }
       }
     })

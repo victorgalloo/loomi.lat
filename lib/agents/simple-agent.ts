@@ -551,29 +551,44 @@ UNA pregunta a la vez.`;
     }),
 
     send_payment_link: tool({
-      description: 'Envía un link de pago de Stripe al cliente por WhatsApp. Usa cuando el cliente confirmó que quiere comprar y ya dio su email. El monto es en centavos USD (ej: 27500 = $275).',
+      description: 'Envía un link de pago de Stripe al cliente por WhatsApp. Usa cuando el cliente confirmó que quiere comprar y ya dio su email.',
       inputSchema: zodSchema(z.object({
-        email: z.string().describe('Email del cliente para el checkout'),
-        amount: z.number().describe('Monto en centavos USD (ej: 27500 para $275)'),
+        email: z.string().describe('Email del cliente'),
         productName: z.string().describe('Nombre del producto o servicio'),
       })),
       execute: async (params) => {
-        const { email, amount, productName } = params as { email: string; amount: number; productName: string };
+        const { email, productName } = params as { email: string; productName: string };
         const tenantId = agentConfig?.tenantId;
 
-        console.log(`[Tool] Creating payment link for ${email}, amount: $${amount / 100}, tenant: ${tenantId}`);
+        console.log(`[Tool] send_payment_link for ${email}, product: ${productName}, tenant: ${tenantId}`);
         try {
+          // 1. Check for fixed payment link in products catalog
+          const catalog = agentConfig?.productsCatalog as Record<string, unknown> | undefined;
+          const fixedLink = catalog?.paymentLink as string | undefined;
+
+          if (fixedLink) {
+            console.log(`[Tool] Using fixed payment link: ${fixedLink}`);
+            const sent = await sendPaymentLink(clientPhone, fixedLink, productName);
+            return {
+              success: sent,
+              checkoutUrl: fixedLink,
+              message: sent
+                ? 'Link de pago enviado exitosamente por WhatsApp.'
+                : 'No se pudo enviar el link de pago.',
+            };
+          }
+
+          // 2. Tenant with Stripe credentials: create dynamic checkout
           if (tenantId) {
-            // Tenant-specific payment (uses tenant's Stripe key)
             const { createTenantCheckoutSession } = await import('@/lib/stripe/checkout');
             const { shortUrl } = await createTenantCheckoutSession({
               tenantId,
               email,
               phone: clientPhone,
-              amount,
+              amount: 27500, // default $275
               productName,
             });
-            const sent = await sendPaymentLink(clientPhone, shortUrl, `${productName} - $${amount / 100} USD`);
+            const sent = await sendPaymentLink(clientPhone, shortUrl, productName);
             return {
               success: sent,
               checkoutUrl: shortUrl,
@@ -581,18 +596,16 @@ UNA pregunta a la vez.`;
                 ? 'Link de pago enviado exitosamente por WhatsApp.'
                 : 'No se pudo enviar el link de pago.',
             };
-          } else {
-            // Loomi default: map to subscription plans
-            const planMap: Record<number, 'starter' | 'growth' | 'business'> = { 19900: 'starter', 34900: 'growth', 59900: 'business' };
-            const plan = planMap[amount] || 'starter';
-            const { url } = await createCheckoutSession({ email, phone: clientPhone, plan });
-            const sent = await sendPaymentLink(clientPhone, url, `${productName} - $${amount / 100}/mes`);
-            return {
-              success: sent,
-              checkoutUrl: url,
-              message: sent ? 'Link de pago enviado.' : 'No se pudo enviar el link de pago.',
-            };
           }
+
+          // 3. Loomi default
+          const { url } = await createCheckoutSession({ email, phone: clientPhone, plan: 'starter' });
+          const sent = await sendPaymentLink(clientPhone, url, productName);
+          return {
+            success: sent,
+            checkoutUrl: url,
+            message: sent ? 'Link de pago enviado.' : 'No se pudo enviar el link de pago.',
+          };
         } catch (error) {
           console.error('[Tool] Payment link error:', error);
           return { success: false, message: 'Error al crear el link de pago.' };
@@ -622,6 +635,7 @@ UNA pregunta a la vez.`;
   let escalatedToHuman: SimpleAgentResult['escalatedToHuman'] = undefined;
   let paymentLinkSent: SimpleAgentResult['paymentLinkSent'] = undefined;
   let showScheduleList = false;
+  let toolCallsLog: string[] = [];
 
   // Note: Automatic handoff is now handled at webhook level (detectHandoffTrigger with context)
   // before the agent is even called. This prevents false positives like "no funciona"

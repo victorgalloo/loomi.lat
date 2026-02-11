@@ -13,6 +13,7 @@ import { AgentConfig } from '@/lib/tenant/context';
 export type GraphAgentConfig = AgentConfig & {
   knowledgeContext?: string;
   customTools?: Array<{ name: string; description: string; displayName: string; mockResponse?: unknown }>;
+  whatsappCredentials?: { phoneNumberId: string; accessToken: string; tenantId?: string };
 };
 
 // The 11 sales phases matching simple-agent.ts state machine

@@ -1000,13 +1000,14 @@ export async function POST(request: NextRequest) {
       let result;
       try {
         console.log(`[Webhook] USE_LANGGRAPH=${process.env.USE_LANGGRAPH}, tenantId=${tenantId}, hasAgentConfig=${!!agentConfig}, hasSystemPrompt=${!!agentConfig?.systemPrompt}, systemPromptLen=${agentConfig?.systemPrompt?.length || 0}`);
+        // Inject WhatsApp credentials into agent config for tool use
+        const configWithCreds = credentials && agentConfig
+          ? { ...agentConfig, whatsappCredentials: credentials }
+          : agentConfig;
+
         if (process.env.USE_LANGGRAPH === 'true') {
-          result = await processMessageGraph(message.text, context, agentConfig);
+          result = await processMessageGraph(message.text, context, configWithCreds);
         } else {
-          // Pass agent config with WhatsApp credentials for tenant-specific behavior
-          const configWithCreds = credentials && agentConfig
-            ? { ...agentConfig, whatsappCredentials: credentials }
-            : agentConfig;
           result = await simpleAgent(message.text, context, configWithCreds);
         }
       } catch (agentError) {

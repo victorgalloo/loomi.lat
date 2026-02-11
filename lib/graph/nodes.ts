@@ -3,7 +3,7 @@
  * 5 nodes: analyze, route, summarize, generate, persist
  */
 
-import { generateText } from 'ai';
+import { generateText, stepCountIs } from 'ai';
 import { tool, zodSchema } from '@ai-sdk/provider-utils';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
@@ -632,45 +632,55 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
     }),
 
     send_payment_link: tool({
-      description: 'Envía un link de pago de Stripe al cliente por WhatsApp. Usa cuando el cliente confirmó que quiere comprar y ya dio su email. El monto es en centavos USD (ej: 27500 = $275).',
+      description: 'Envía un link de pago de Stripe al cliente por WhatsApp. Usa cuando el cliente confirmó que quiere comprar y ya dio su email.',
       inputSchema: zodSchema(z.object({
-        email: z.string().describe('Email del cliente para el checkout'),
-        amount: z.number().describe('Monto en centavos USD (ej: 27500 para $275)'),
+        email: z.string().describe('Email del cliente'),
         productName: z.string().describe('Nombre del producto o servicio'),
       })),
       execute: async (params) => {
-        const { email, amount, productName } = params as { email: string; amount: number; productName: string };
+        const { email, productName } = params as { email: string; productName: string };
         const tenantId = agentConfig?.tenantId;
-        if (!tenantId) {
-          return { success: false, message: 'No se pudo identificar el tenant.' };
-        }
 
-        console.log(`[Tool] Creating tenant payment link for ${email} (tenant: ${tenantId}, $${amount / 100})`);
+        console.log(`[Tool] send_payment_link for ${email}, product: ${productName}, tenant: ${tenantId}`);
         try {
-          const { createTenantCheckoutSession } = await import('@/lib/stripe/checkout');
-          const { shortUrl } = await createTenantCheckoutSession({
-            tenantId,
-            email,
-            phone: clientPhone,
-            amount,
-            productName,
-          });
-
           const { sendPaymentLink } = await import('@/lib/whatsapp/send');
-          const sent = await sendPaymentLink(
-            clientPhone,
-            shortUrl,
-            `${productName} - $${amount / 100} USD`
-          );
-          return {
-            success: sent,
-            checkoutUrl: shortUrl,
-            message: sent
-              ? 'Link de pago enviado exitosamente por WhatsApp.'
-              : 'No se pudo enviar el link de pago.',
-          };
+          const waCreds = agentConfig?.whatsappCredentials;
+
+          // 1. Fixed payment link from products catalog
+          const catalog = agentConfig?.productsCatalog as Record<string, unknown> | undefined;
+          const fixedLink = catalog?.paymentLink as string | undefined;
+
+          if (fixedLink) {
+            console.log(`[Tool] Using fixed payment link: ${fixedLink}`);
+            const sent = await sendPaymentLink(clientPhone, fixedLink, productName, waCreds);
+            return {
+              success: true,
+              checkoutUrl: fixedLink,
+              message: sent
+                ? 'Link de pago enviado exitosamente por WhatsApp.'
+                : `Link de pago: ${fixedLink}`,
+            };
+          }
+
+          // 2. Dynamic checkout via tenant Stripe
+          if (tenantId) {
+            const { createTenantCheckoutSession } = await import('@/lib/stripe/checkout');
+            const { shortUrl } = await createTenantCheckoutSession({
+              tenantId, email, phone: clientPhone, amount: 27500, productName,
+            });
+            const sent = await sendPaymentLink(clientPhone, shortUrl, productName, waCreds);
+            return {
+              success: true,
+              checkoutUrl: shortUrl,
+              message: sent
+                ? 'Link de pago enviado exitosamente por WhatsApp.'
+                : `Link de pago: ${shortUrl}`,
+            };
+          }
+
+          return { success: false, message: 'No se pudo identificar el tenant.' };
         } catch (error) {
-          console.error('[Tool] Tenant payment link error:', error);
+          console.error('[Tool] Payment link error:', error);
           return { success: false, message: 'Error al crear el link de pago.' };
         }
       }
@@ -707,6 +717,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
       tools,
       maxOutputTokens: agentConfig?.maxResponseTokens || 200,
       temperature: agentConfig?.temperature,
+      stopWhen: stepCountIs(3),
       onStepFinish: async (step) => {
         if (step.toolResults) {
           for (const toolResult of step.toolResults) {

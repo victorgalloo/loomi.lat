@@ -51,6 +51,18 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, onExport }: Kanban
     indigo: 'bg-info',
   };
 
+  const stageBorderColors: Record<string, string> = {
+    cyan: 'border-t-info',
+    amber: 'border-t-warning',
+    purple: 'border-t-info',
+    blue: 'border-t-info',
+    orange: 'border-t-warning',
+    emerald: 'border-t-success',
+    red: 'border-t-warning',
+    gray: 'border-t-muted',
+    indigo: 'border-t-info',
+  };
+
   return (
     <div className="flex flex-col w-[260px] min-w-[260px] shrink-0">
       {/* Header */}
@@ -89,6 +101,7 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, onExport }: Kanban
           flex-1 rounded-xl p-1.5 space-y-1.5
           min-h-[120px] max-h-[calc(100vh-240px)] overflow-y-auto
           transition-colors duration-200
+          border-t-2 ${stageBorderColors[stage.color] || 'border-t-muted'}
           ${isOver ? 'bg-surface/50' : ''}
         `}
       >

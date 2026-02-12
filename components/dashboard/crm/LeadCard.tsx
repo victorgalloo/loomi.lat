@@ -48,11 +48,35 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
     }).format(value);
   };
 
-  const priorityBorder = {
-    low: '',
-    medium: 'border-l-[3px] border-l-warning',
-    high: 'border-l-[3px] border-l-warning',
+  // Classification stripe takes priority, then priority, then nothing
+  const getLeftAccent = () => {
+    if (lead.broadcastClassification) {
+      const colors: Record<string, string> = {
+        hot: 'border-l-[3px] border-l-warning',
+        warm: 'border-l-[3px] border-l-success',
+        cold: 'border-l-[3px] border-l-info',
+        bot_autoresponse: 'border-l-[3px] border-l-muted',
+      };
+      return colors[lead.broadcastClassification] || '';
+    }
+    if (lead.priority === 'high') return 'border-l-[3px] border-l-warning';
+    if (lead.priority === 'medium') return 'border-l-[3px] border-l-border-hover';
+    return '';
   };
+
+  const getRelativeTime = (dateStr: string | null | undefined) => {
+    if (!dateStr) return null;
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h`;
+    const days = Math.floor(hrs / 24);
+    if (days < 30) return `${days}d`;
+    return `${Math.floor(days / 30)}mo`;
+  };
+
+  const relativeTime = getRelativeTime(lead.lastActivityAt);
 
   return (
     <div
@@ -65,7 +89,7 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
         group relative rounded-xl border p-2 cursor-grab active:cursor-grabbing
         transition-all duration-150
         bg-surface-elevated border-border hover:shadow-subtle hover:-translate-y-0.5
-        ${priorityBorder[lead.priority]}
+        ${getLeftAccent()}
         ${isDragging ? 'opacity-50 scale-105 shadow-elevated z-50' : ''}
       `}
     >
@@ -74,27 +98,24 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">
           <p className="text-sm font-medium truncate text-foreground">{lead.name}</p>
-          {lead.broadcastClassification && (
-            <span
-              className={`flex-shrink-0 w-1.5 h-1.5 rounded-full ${
-                ({
-                  hot: 'bg-warning',
-                  warm: 'bg-success',
-                  cold: 'bg-info',
-                  bot_autoresponse: 'bg-muted',
-                } as Record<string, string>)[lead.broadcastClassification] || 'bg-muted'
-              }`}
-              title={lead.broadcastClassification === 'bot_autoresponse' ? 'bot' : lead.broadcastClassification}
-            />
-          )}
-          {lead.dealValue && lead.dealValue > 0 && (
-            <span className="ml-auto flex-shrink-0 text-xs tabular-nums font-mono text-muted">
-              {formatCurrency(lead.dealValue)}
-            </span>
-          )}
+          <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+            {lead.dealValue && lead.dealValue > 0 && (
+              <span className="text-xs tabular-nums font-mono text-muted">
+                {formatCurrency(lead.dealValue)}
+              </span>
+            )}
+            {relativeTime && (
+              <span className="text-xs tabular-nums text-muted/60">{relativeTime}</span>
+            )}
+          </div>
         </div>
         {lead.companyName && (
-          <p className="text-xs truncate mt-0.5 text-muted">{lead.companyName}</p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <p className="text-xs truncate text-muted">{lead.companyName}</p>
+            {lead.conversationCount && lead.conversationCount > 0 && (
+              <span className="text-xs tabular-nums text-muted/50">{lead.conversationCount} msg</span>
+            )}
+          </div>
         )}
       </div>
 

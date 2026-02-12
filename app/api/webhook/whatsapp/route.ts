@@ -60,7 +60,8 @@ import { sendPaymentLink } from '@/lib/whatsapp/send';
 import { saveMessage, createAppointment, updateLeadStage, updateLeadIndustry } from '@/lib/memory/supabase';
 import { generateMemory, shouldGenerateMemory } from '@/lib/memory/generate';
 import { syncLeadToHubSpot } from '@/lib/integrations/hubspot';
-import { checkAvailability, createEvent } from '@/lib/tools/calendar';
+import { checkAvailability, createEvent, CalTenantConfig } from '@/lib/tools/calendar';
+import { getCalConfig } from '@/lib/integrations/tenant-integrations';
 import { ConversationContext } from '@/types';
 import {
   scheduleDemoReminders,
@@ -227,12 +228,12 @@ function getNextBusinessDays(count: number, skip: number = 0): string[] {
 /**
  * Get available time slots
  */
-async function getAvailableTimeSlots(skip: number = 0, daysCount: number = 2): Promise<TimeSlot[]> {
+async function getAvailableTimeSlots(skip: number = 0, daysCount: number = 2, calConfig?: CalTenantConfig): Promise<TimeSlot[]> {
   try {
     const dates = getNextBusinessDays(daysCount, skip);
     console.log(`[getAvailableTimeSlots] Checking dates: ${dates.join(',')}`);
 
-    const allSlots = await checkAvailability(dates.join(','));
+    const allSlots = await checkAvailability(dates.join(','), calConfig);
     console.log(`[getAvailableTimeSlots] Got ${allSlots.length} raw slots`);
 
     // Group slots by date in single iteration (js-combine-iterations)
@@ -462,7 +463,8 @@ async function handleEmailForPendingPlan(
 async function handleEmailForPendingSlot(
   message: ParsedWhatsAppMessage,
   context: ConversationContext,
-  tenantId?: string
+  tenantId?: string,
+  calConfig?: CalTenantConfig
 ): Promise<{
   handled: boolean;
   response?: string;
@@ -496,7 +498,7 @@ async function handleEmailForPendingSlot(
     name: context.lead.name,
     phone: context.lead.phone,
     email
-  });
+  }, calConfig);
 
   // Clear pending slot
   await clearPendingSlot(message.phone, tenantId);
@@ -603,6 +605,7 @@ export async function POST(request: NextRequest) {
     let credentials: TenantCredentials | undefined;
     let tenantId: string | undefined;
     let agentConfig: AgentConfig | undefined;
+    let calConfig: CalTenantConfig | undefined;
 
     if (message.phoneNumberId) {
       const tenantData = await getTenantFromPhoneNumberId(message.phoneNumberId);
@@ -613,13 +616,18 @@ export async function POST(request: NextRequest) {
           accessToken: tenantData.accessToken,
           tenantId: tenantData.tenantId
         };
-        // Load agent config, knowledge docs and tools for this tenant
-        const [loadedConfig, tenantDocs, tenantTools] = await Promise.all([
+        // Load agent config, knowledge docs, tools, and Cal.com config for this tenant
+        const [loadedConfig, tenantDocs, tenantTools, calCfg] = await Promise.all([
           getAgentConfig(tenantId),
           getTenantDocuments(tenantId),
-          getTenantTools(tenantId)
+          getTenantTools(tenantId),
+          getCalConfig(tenantId)
         ]);
         agentConfig = loadedConfig || undefined;
+        // Build CalTenantConfig from DB credentials
+        if (calCfg) {
+          calConfig = { apiKey: calCfg.accessToken, eventTypeId: calCfg.eventTypeId, tenantId };
+        }
         // Enrich agent config with knowledge and tools
         if (agentConfig && (tenantDocs || tenantTools.length > 0)) {
           agentConfig = {
@@ -730,7 +738,7 @@ export async function POST(request: NextRequest) {
           console.log(`[Webhook] User wants more days`);
           waitUntil(
             (async () => {
-              const moreSlots = await getAvailableTimeSlots(2, 3);
+              const moreSlots = await getAvailableTimeSlots(2, 3, calConfig);
               if (moreSlots.length > 0) {
                 await sendScheduleList(message.phone, moreSlots, 'Más horarios', 'Aquí tienes más opciones:', credentials);
                 await setScheduleListSent(message.phone, tenantId);
@@ -757,7 +765,7 @@ export async function POST(request: NextRequest) {
         waitUntil(
           (async () => {
             await sendWhatsAppMessage(message.phone, 'Claro, déjame mostrarte más opciones.', credentials);
-            const moreSlots = await getAvailableTimeSlots(2, 3);
+            const moreSlots = await getAvailableTimeSlots(2, 3, calConfig);
             if (moreSlots.length > 0) {
               await sendScheduleList(message.phone, moreSlots, 'Más horarios', 'Aquí tienes más opciones:', credentials);
               await setScheduleListSent(message.phone, tenantId);
@@ -774,7 +782,7 @@ export async function POST(request: NextRequest) {
       const buttonReply = await handleButtonReply(message, tenantId);
       if (buttonReply.handled && buttonReply.showScheduleList) {
         console.log(`[Webhook] User wants to change time`);
-        const slots = await getAvailableTimeSlots();
+        const slots = await getAvailableTimeSlots(0, 2, calConfig);
         if (slots.length > 0) {
           await sendScheduleList(message.phone, slots, 'Elige otro horario', 'Estos son los horarios disponibles:', credentials);
           await setScheduleListSent(message.phone, tenantId);
@@ -803,7 +811,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 3. Handle email for pending slot
-      const emailResult = await handleEmailForPendingSlot(message, context, tenantId);
+      const emailResult = await handleEmailForPendingSlot(message, context, tenantId, calConfig);
       if (emailResult.handled) {
         await sendWhatsAppMessage(message.phone, emailResult.response!, credentials);
         await saveMessage(context.conversation.id, 'assistant', emailResult.response!, context.lead.id);
@@ -1029,7 +1037,7 @@ export async function POST(request: NextRequest) {
       // Check if agent triggered schedule list
       if (result.showScheduleList) {
         console.log('[Webhook] Agent triggered schedule list');
-        const slots = await getAvailableTimeSlots();
+        const slots = await getAvailableTimeSlots(0, 2, calConfig);
         if (slots.length > 0) {
           // Send agent's response first, then the schedule list
           if (result.response) {

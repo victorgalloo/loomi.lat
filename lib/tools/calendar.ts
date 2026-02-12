@@ -15,6 +15,12 @@ interface BookingResult {
   error?: string;
 }
 
+export interface CalTenantConfig {
+  apiKey: string;
+  eventTypeId: string;
+  tenantId?: string;
+}
+
 const CAL_API_KEY = process.env.CAL_API_KEY;
 const CAL_EVENT_TYPE_ID = process.env.CAL_EVENT_TYPE_ID;
 const CAL_API_URL = 'https://api.cal.com/v1';
@@ -22,20 +28,41 @@ const CAL_API_URL = 'https://api.cal.com/v1';
 // Timezone for Mexico City
 const TIMEZONE = 'America/Mexico_City';
 
-// Cache event type duration to avoid repeated API calls
-let cachedEventLength: number | null = null;
+/**
+ * Resolve Cal.com credentials: tenant config takes priority, then env vars
+ */
+function resolveCalConfig(calConfig?: CalTenantConfig): { apiKey: string; eventTypeId: string; tenantId?: string } | null {
+  if (calConfig?.apiKey && calConfig?.eventTypeId) {
+    return calConfig;
+  }
+  if (CAL_API_KEY && CAL_EVENT_TYPE_ID) {
+    return { apiKey: CAL_API_KEY, eventTypeId: CAL_EVENT_TYPE_ID };
+  }
+  console.error('[Calendar] No Cal.com credentials available (neither tenant config nor env vars)');
+  return null;
+}
 
-async function getEventLength(): Promise<number> {
-  if (cachedEventLength) return cachedEventLength;
+// Cache event type duration per eventTypeId to avoid cross-tenant contamination
+const eventLengthCache = new Map<string, number>();
+
+async function getEventLength(calConfig?: CalTenantConfig): Promise<number> {
+  const config = resolveCalConfig(calConfig);
+  if (!config) return 15;
+
+  const cached = eventLengthCache.get(config.eventTypeId);
+  if (cached) return cached;
+
   try {
-    const res = await fetch(`${CAL_API_URL}/event-types/${CAL_EVENT_TYPE_ID}?apiKey=${CAL_API_KEY}`);
+    const res = await fetch(`${CAL_API_URL}/event-types/${config.eventTypeId}?apiKey=${config.apiKey}`);
     if (res.ok) {
       const data = await res.json();
-      cachedEventLength = data.event_type?.length || 15;
-      return cachedEventLength as number;
+      const length = data.event_type?.length || 15;
+      eventLengthCache.set(config.eventTypeId, length);
+      return length;
     }
   } catch (e) {
-    console.error('[Calendar] Failed to fetch event length:', e);
+    const tenantTag = config.tenantId ? `[tenant:${config.tenantId}]` : '';
+    console.error(`[Calendar]${tenantTag} Failed to fetch event length:`, e);
   }
   return 15; // fallback
 }
@@ -67,11 +94,16 @@ function getMexicoCityOffset(dateStr: string): string {
  * Check availability for given dates
  * @param dates Comma-separated dates in YYYY-MM-DD format
  */
-export async function checkAvailability(dates: string): Promise<CalSlot[]> {
+export async function checkAvailability(dates: string, calConfig?: CalTenantConfig): Promise<CalSlot[]> {
   // Mock mode for testing
   if (process.env.CAL_MOCK_MODE === 'true') {
     return getMockSlots(dates);
   }
+
+  const config = resolveCalConfig(calConfig);
+  if (!config) return [];
+
+  const tenantTag = config.tenantId ? `[tenant:${config.tenantId}]` : '';
 
   try {
     const dateList = dates.split(',').map(d => d.trim());
@@ -82,17 +114,17 @@ export async function checkAvailability(dates: string): Promise<CalSlot[]> {
       const endTime = `${date}T23:59:59`;
 
       const response = await fetch(
-        `${CAL_API_URL}/slots?apiKey=${CAL_API_KEY}&eventTypeId=${CAL_EVENT_TYPE_ID}&startTime=${startTime}&endTime=${endTime}&timeZone=${TIMEZONE}`,
+        `${CAL_API_URL}/slots?apiKey=${config.apiKey}&eventTypeId=${config.eventTypeId}&startTime=${startTime}&endTime=${endTime}&timeZone=${TIMEZONE}`,
         { method: 'GET' }
       );
 
       if (!response.ok) {
-        console.error(`[Calendar] Availability error for ${date}:`, await response.text());
+        console.error(`[Calendar]${tenantTag} Availability error for ${date}:`, await response.text());
         continue;
       }
 
       const data = await response.json();
-      console.log(`[Calendar] Raw response for ${date}:`, JSON.stringify(data));
+      console.log(`[Calendar]${tenantTag} Raw response for ${date}:`, JSON.stringify(data));
 
       // Parse slots from response
       const slots = data.slots || {};
@@ -114,7 +146,7 @@ export async function checkAvailability(dates: string): Promise<CalSlot[]> {
     return allSlots;
 
   } catch (error) {
-    console.error('[Calendar] Availability error:', error);
+    console.error(`[Calendar]${tenantTag} Availability error:`, error);
     return [];
   }
 }
@@ -128,7 +160,7 @@ export async function createEvent(params: {
   name: string;
   phone: string;
   email: string;
-}): Promise<BookingResult> {
+}, calConfig?: CalTenantConfig): Promise<BookingResult> {
   // Mock mode for testing
   if (process.env.CAL_MOCK_MODE === 'true') {
     return {
@@ -138,19 +170,24 @@ export async function createEvent(params: {
     };
   }
 
+  const config = resolveCalConfig(calConfig);
+  if (!config) return { success: false, error: 'No Cal.com credentials available' };
+
+  const tenantTag = config.tenantId ? `[tenant:${config.tenantId}]` : '';
+
   try {
     const offset = getMexicoCityOffset(params.date);
     const startTime = `${params.date}T${params.time}:00${offset}`;
-    const eventLength = await getEventLength();
+    const eventLength = await getEventLength(calConfig);
     const endTime = `${params.date}T${addMinutesFormatted(params.time, eventLength)}:00${offset}`;
 
-    console.log(`[Calendar] Booking: start=${startTime}, end=${endTime}, length=${eventLength}min`);
+    console.log(`[Calendar]${tenantTag} Booking: start=${startTime}, end=${endTime}, length=${eventLength}min`);
 
-    const response = await fetch(`${CAL_API_URL}/bookings?apiKey=${CAL_API_KEY}`, {
+    const response = await fetch(`${CAL_API_URL}/bookings?apiKey=${config.apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        eventTypeId: parseInt(CAL_EVENT_TYPE_ID || '0'),
+        eventTypeId: parseInt(config.eventTypeId),
         start: startTime,
         end: endTime,
         responses: {
@@ -168,7 +205,7 @@ export async function createEvent(params: {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('[Calendar] Booking error:', error);
+      console.error(`[Calendar]${tenantTag} Booking error:`, error);
       return { success: false, error };
     }
 
@@ -181,7 +218,7 @@ export async function createEvent(params: {
     };
 
   } catch (error) {
-    console.error('[Calendar] Booking error:', error);
+    console.error(`[Calendar]${tenantTag} Booking error:`, error);
     return { success: false, error: String(error) };
   }
 }
@@ -189,14 +226,19 @@ export async function createEvent(params: {
 /**
  * Cancel a booking
  */
-export async function cancelEvent(eventId: string): Promise<boolean> {
+export async function cancelEvent(eventId: string, calConfig?: CalTenantConfig): Promise<boolean> {
   if (process.env.CAL_MOCK_MODE === 'true') {
     return true;
   }
 
+  const config = resolveCalConfig(calConfig);
+  if (!config) return false;
+
+  const tenantTag = config.tenantId ? `[tenant:${config.tenantId}]` : '';
+
   try {
     const response = await fetch(
-      `${CAL_API_URL}/bookings/${eventId}?apiKey=${CAL_API_KEY}`,
+      `${CAL_API_URL}/bookings/${eventId}?apiKey=${config.apiKey}`,
       {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -206,7 +248,7 @@ export async function cancelEvent(eventId: string): Promise<boolean> {
 
     return response.ok;
   } catch (error) {
-    console.error('[Calendar] Cancel error:', error);
+    console.error(`[Calendar]${tenantTag} Cancel error:`, error);
     return false;
   }
 }
@@ -214,14 +256,19 @@ export async function cancelEvent(eventId: string): Promise<boolean> {
 /**
  * Update the email of an existing booking
  */
-export async function updateEventEmail(eventId: string, email: string): Promise<boolean> {
+export async function updateEventEmail(eventId: string, email: string, calConfig?: CalTenantConfig): Promise<boolean> {
   if (process.env.CAL_MOCK_MODE === 'true') {
     console.log(`[Calendar Mock] Updated event ${eventId} email to ${email}`);
     return true;
   }
 
+  const config = resolveCalConfig(calConfig);
+  if (!config) return false;
+
+  const tenantTag = config.tenantId ? `[tenant:${config.tenantId}]` : '';
+
   try {
-    const response = await fetch(`${CAL_API_URL}/bookings/${eventId}?apiKey=${CAL_API_KEY}`, {
+    const response = await fetch(`${CAL_API_URL}/bookings/${eventId}?apiKey=${config.apiKey}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -232,12 +279,12 @@ export async function updateEventEmail(eventId: string, email: string): Promise<
     });
 
     if (response.ok) {
-      console.log(`[Calendar] Updated event ${eventId} email to ${email}`);
+      console.log(`[Calendar]${tenantTag} Updated event ${eventId} email to ${email}`);
       return true;
     }
     return false;
   } catch (error) {
-    console.error('[Calendar] Update email error:', error);
+    console.error(`[Calendar]${tenantTag} Update email error:`, error);
     return false;
   }
 }

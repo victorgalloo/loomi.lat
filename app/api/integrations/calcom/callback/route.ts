@@ -77,11 +77,30 @@ export async function GET(request: NextRequest) {
       // non-critical
     }
 
+    // Fetch event types to auto-save the first event type ID
+    let calEventTypeId: string | undefined;
+    try {
+      const etRes = await fetch(`https://api.cal.com/v1/event-types?apiKey=${tokens.access_token}`);
+      if (etRes.ok) {
+        const etData = await etRes.json();
+        const eventTypes = etData.event_types || etData.data || [];
+        if (eventTypes.length > 0) {
+          calEventTypeId = String(eventTypes[0].id);
+          console.log(`[Cal.com] Auto-detected event type ID: ${calEventTypeId} (${eventTypes[0].title || eventTypes[0].slug})`);
+        } else {
+          console.warn(`[Cal.com] No event types found for tenant ${tenantId}. Booking will fail until one is created.`);
+        }
+      }
+    } catch {
+      console.warn(`[Cal.com] Failed to fetch event types for tenant ${tenantId}`);
+    }
+
     await saveCalTokens(tenantId, {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
       expiresAt: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : undefined,
       calUsername,
+      calEventTypeId,
     });
 
     return NextResponse.redirect(`${appUrl}/dashboard/agent/tools?calcom=connected`);

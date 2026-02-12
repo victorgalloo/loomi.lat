@@ -20,7 +20,8 @@ import { ConversationContext } from '@/types';
 import { sendPaymentLink } from '@/lib/whatsapp/send';
 import { executeHandoff, HandoffContext } from '@/lib/handoff';
 import { createCheckoutSession } from '@/lib/stripe/checkout';
-import { createEvent } from '@/lib/tools/calendar';
+import { createEvent, CalTenantConfig } from '@/lib/tools/calendar';
+import { getCalConfig } from '@/lib/integrations/tenant-integrations';
 import { generateReasoningFast, formatReasoningForPrompt } from './reasoning';
 import { getSentimentInstruction } from './sentiment';
 import { getIndustryPromptSection, detectIndustry, Industry, INDUSTRY_CONTEXTS } from './industry';
@@ -440,6 +441,13 @@ UNA pregunta a la vez.`;
 6. Si quieren demo/reunión, usa schedule_demo. Si quieren comprar, pide email y usa send_payment_link
 7. NUNCA menciones productos o servicios que no estén en tu prompt`;
 
+  // Resolve Cal.com config for this tenant (per-tenant OAuth or env var fallback)
+  let calConfig: CalTenantConfig | undefined;
+  if (agentConfig?.tenantId) {
+    const cfg = await getCalConfig(agentConfig.tenantId);
+    if (cfg) calConfig = { apiKey: cfg.accessToken, eventTypeId: cfg.eventTypeId, tenantId: agentConfig.tenantId };
+  }
+
   // Get client info
   const clientName = context.lead.name || 'Cliente';
   const clientPhone = context.lead.phone || '';
@@ -535,7 +543,7 @@ UNA pregunta a la vez.`;
             name,
             email,
             phone: clientPhone,
-          });
+          }, calConfig);
           if (result.success) {
             console.log(`[Tool] Demo booked! Event ID: ${result.eventId}`);
             return {

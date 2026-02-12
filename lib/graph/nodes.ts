@@ -9,7 +9,8 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
 import { resolveModel } from '@/lib/agents/model';
 import { generateReasoningFast } from '@/lib/agents/reasoning';
-import { checkAvailability, createEvent } from '@/lib/tools/calendar';
+import { checkAvailability, createEvent, CalTenantConfig } from '@/lib/tools/calendar';
+import { getCalConfig } from '@/lib/integrations/tenant-integrations';
 import { sendWhatsAppLink, escalateToHuman } from '@/lib/whatsapp/send';
 import { createKnowledgeTools } from '@/lib/knowledge';
 import { SimpleAgentResult } from '@/lib/agents/simple-agent';
@@ -477,6 +478,13 @@ function getNextBusinessDays(count: number): string[] {
 export async function generateNode(state: GraphStateType): Promise<Partial<GraphStateType>> {
   const { resolvedPhase, context, reasoning, conversationState, message, history, topicChanged, currentTopic, agentConfig, progressInstruction } = state;
 
+  // Resolve Cal.com config for this tenant
+  let calConfig: CalTenantConfig | undefined;
+  if (agentConfig?.tenantId) {
+    const cfg = await getCalConfig(agentConfig.tenantId);
+    if (cfg) calConfig = { apiKey: cfg.accessToken, eventTypeId: cfg.eventTypeId, tenantId: agentConfig.tenantId };
+  }
+
   // Deterministic path: show schedule list
   if (resolvedPhase === 'dar_horarios') {
     console.log('[GraphGenerate] User accepted demo, triggering schedule list');
@@ -530,7 +538,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
           const nextDays = getNextBusinessDays(3);
           dateToCheck = nextDays.join(',');
         }
-        const slots = await checkAvailability(dateToCheck);
+        const slots = await checkAvailability(dateToCheck, calConfig);
         if (slots.length === 0) {
           return { available: false, message: 'No hay horarios disponibles para esa fecha.' };
         }
@@ -560,7 +568,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
           name: clientName,
           phone: clientPhone,
           email
-        });
+        }, calConfig);
         if (result.success) {
           if (result.meetingUrl && clientPhone) {
             const { sendWhatsAppMessage } = await import('@/lib/whatsapp/send');

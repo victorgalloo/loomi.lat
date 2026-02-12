@@ -164,7 +164,12 @@ export async function getCalConfig(tenantId: string): Promise<CalConfig | null> 
   const accessTokenEncrypted = data.access_token_encrypted as string | null;
   const eventTypeId = data.cal_event_type_id as string | null;
 
-  if (!accessTokenEncrypted || !eventTypeId) return null;
+  if (!accessTokenEncrypted) return null;
+
+  if (!eventTypeId) {
+    console.warn(`[Integrations] Cal.com token exists for tenant ${tenantId} but cal_event_type_id is null. Reconnect OAuth or set event type manually.`);
+    return null;
+  }
 
   try {
     return {

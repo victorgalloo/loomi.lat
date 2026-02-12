@@ -51,7 +51,7 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
   const priorityBorder = {
     low: '',
     medium: 'border-l-[3px] border-l-warning',
-    high: 'border-l-[3px] border-l-error',
+    high: 'border-l-[3px] border-l-warning',
   };
 
   return (
@@ -78,8 +78,8 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
             <span
               className={`flex-shrink-0 w-1.5 h-1.5 rounded-full ${
                 ({
-                  hot: 'bg-error',
-                  warm: 'bg-warning',
+                  hot: 'bg-warning',
+                  warm: 'bg-success',
                   cold: 'bg-info',
                   bot_autoresponse: 'bg-muted',
                 } as Record<string, string>)[lead.broadcastClassification] || 'bg-muted'

@@ -46,7 +46,7 @@ function KanbanColumn({ stage, leads, onLeadClick, onAddLead, onExport }: Kanban
     blue: 'bg-info',
     orange: 'bg-warning',
     emerald: 'bg-success',
-    red: 'bg-error',
+    red: 'bg-warning',
     gray: 'bg-muted',
     indigo: 'bg-info',
   };

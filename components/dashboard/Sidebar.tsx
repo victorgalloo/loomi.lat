@@ -181,11 +181,11 @@ export default function Sidebar({ userName, tenantName, isConnected, mobileOpen,
           {renderNavItem(homeItem)}
         </ul>
 
-        {/* CONFIGURAR section */}
-        <NavSection label="Configurar" items={configurarNav} collapsed={collapsed} renderNavItem={renderNavItem} />
-
         {/* MONITOREAR section */}
         <NavSection label="Monitorear" items={monitorearNav} collapsed={collapsed} renderNavItem={renderNavItem} />
+
+        {/* CONFIGURAR section */}
+        <NavSection label="Configurar" items={configurarNav} collapsed={collapsed} renderNavItem={renderNavItem} />
 
         {/* CONFIGURACIÓN section */}
         <NavSection label="Configuración" items={configuracionNav} collapsed={collapsed} renderNavItem={renderNavItem} />

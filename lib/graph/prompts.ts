@@ -396,15 +396,18 @@ export async function buildSystemPrompt(params: BuildPromptParams): Promise<stri
   }
 
   // 3c. FEW-SHOT EXAMPLES
-  // Tenant examples take priority; skip Loomi defaults when custom systemPrompt is set
-  let fewShotSection = '';
-  if (agentConfig?.fewShotExamples?.length) {
-    fewShotSection = getFewShotContextFromTenant(message, history, agentConfig.fewShotExamples);
+  // For custom prompt tenants: few-shots are injected LATER (near end) for max recency attention
+  // For Loomi defaults: inject here in position 3c as before
+  let tenantFewShotSection = '';
+  if (agentConfig?.fewShotExamples?.length && agentConfig?.systemPrompt) {
+    // Save for later injection near the end
+    tenantFewShotSection = getFewShotContextFromTenant(message, history, agentConfig.fewShotExamples);
+  } else if (agentConfig?.fewShotExamples?.length) {
+    const section = getFewShotContextFromTenant(message, history, agentConfig.fewShotExamples);
+    if (section) parts.push(section);
   } else if (!agentConfig?.systemPrompt) {
-    fewShotSection = await getFewShotContext(message, history);
-  }
-  if (fewShotSection) {
-    parts.push(fewShotSection);
+    const section = await getFewShotContext(message, history);
+    if (section) parts.push(section);
   }
 
   // 4. CONTEXTO DE CONVERSACIÓN
@@ -498,25 +501,32 @@ export async function buildSystemPrompt(params: BuildPromptParams): Promise<stri
   parts.push(`# ESTADO ACTUAL: ${resolvedPhase.toUpperCase()}`);
 
   if (agentConfig?.systemPrompt) {
-    // Tenant has custom prompt: only inject generic phase context (no Loomi-specific scripts)
+    // Tenant has custom prompt: inject minimal phase context that doesn't override custom instructions
     const genericPhaseHints: Partial<Record<SalesPhase, string>> = {
-      discovery: 'Primera interacción. Preséntate y pregunta sobre su situación.',
-      preguntando_volumen: 'Ya conoces el tipo de negocio. Pregunta sobre volumen o escala.',
-      listo_para_demo: 'Ya tienes suficiente info. Propón avanzar al siguiente paso.',
-      proponer_demo_urgente: 'El usuario expresó dolor o es referido. Muestra empatía y propón avanzar.',
-      dar_horarios: 'El usuario aceptó avanzar. Ofrece el siguiente paso concreto según tu prompt.',
+      discovery: 'Primera interacción. Sigue el proceso de tu prompt de sistema.',
       pedir_email: 'Necesitas el email del usuario para avanzar. Pídelo.',
-      confirmar_y_despedir: 'El usuario dio su email. Sigue las instrucciones de tu prompt para el siguiente paso (pago, agendamiento, etc).',
-      esperando_aceptacion: 'Ya propusiste avanzar. Espera confirmación.',
-      esperando_confirmacion: 'Esperando que el usuario confirme horario.',
-      pedir_clarificacion_ya: 'El usuario dijo "Ya" sin contexto. Asume interés y avanza.',
-      preguntar_que_tiene: 'El usuario dice que ya tiene algo. Pregunta qué usa antes de proponer.',
+      confirmar_y_despedir: 'El usuario dio su email. Usa send_payment_link o sigue tu prompt para el siguiente paso.',
     };
     const hint = genericPhaseHints[resolvedPhase];
     if (hint) {
       parts.push(hint);
     }
-    parts.push(`# INSTRUCCIÓN FINAL\nResponde de forma concisa. Sigue las instrucciones de tu prompt de sistema.`);
+
+    // Inject tenant few-shots near end for maximum recency attention
+    if (tenantFewShotSection) {
+      parts.push(tenantFewShotSection);
+    }
+
+    // Inject salesProcessContext at the VERY END for maximum recency attention
+    if (agentConfig.salesProcessContext) {
+      parts.push(`# RECORDATORIO CRÍTICO\n${agentConfig.salesProcessContext}`);
+    }
+
+    parts.push(`# INSTRUCCIÓN FINAL
+PROHIBIDO dar respuestas genéricas de 1-2 líneas como "¿Te late entrarle?" sin información.
+OBLIGATORIO: Toda respuesta debe tener MÍNIMO 3 líneas con datos concretos del producto.
+IMITA EXACTAMENTE el formato y contenido de los ejemplos anteriores — tienen el nivel de detalle correcto.
+Si un ejemplo muestra 4 líneas con precio, garantía y módulos, TÚ también das 4 líneas con precio, garantía y módulos.`);
   } else {
     // Loomi default: use detailed Loomi-specific state scripts
     const stateInstruction = STATE_INSTRUCTIONS[resolvedPhase];

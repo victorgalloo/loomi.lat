@@ -366,6 +366,31 @@ function selectExamples(tags: string[], maxExamples: number = 2): ConversationEx
 function formatExamples(examples: ConversationExample[]): string {
   if (examples.length === 0) return '';
 
+  const formatted = examples.map(ex => {
+    // Extract the assistant response from conversation to highlight it as the required output
+    const lines = ex.conversation.split('\n').filter(l => l.trim());
+    const assistantLine = lines.find(l => l.match(/^(Asistente|Bot|Assistant):/i));
+    const userLine = lines.find(l => l.match(/^(Usuario|User|Cliente):/i));
+
+    if (assistantLine && userLine) {
+      const userMsg = userLine.replace(/^(Usuario|User|Cliente):\s*/i, '');
+      const botMsg = assistantLine.replace(/^(Asistente|Bot|Assistant):\s*/i, '');
+      return `CUANDO digan algo como: "${userMsg}"
+RESPONDE ASÍ (adapta el nombre): "${botMsg}"`;
+    }
+    return `${ex.context}\n${ex.conversation}`;
+  }).join('\n\n');
+
+  return `# RESPUESTAS OBLIGATORIAS — COPIA EL FORMATO Y NIVEL DE DETALLE
+${formatted}`;
+}
+
+/**
+ * Formatea los ejemplos para Loomi defaults (multi-turn conversations)
+ */
+function formatExamplesDefault(examples: ConversationExample[]): string {
+  if (examples.length === 0) return '';
+
   const formatted = examples.map(ex => `
 ### Ejemplo: ${ex.context}
 ${ex.conversation}
@@ -422,7 +447,7 @@ export async function getFewShotContext(
     const examples = await selectExamplesSemantic(currentMessage, userMessages, 2);
     if (examples.length > 0) {
       console.log(`[Few-Shot] Semantic match: ${examples.map(e => e.id).join(', ')}`);
-      return formatExamples(examples);
+      return formatExamplesDefault(examples);
     }
   } catch (err) {
     // Silent fallback to keywords
@@ -438,7 +463,7 @@ export async function getFewShotContext(
 
   console.log(`[Few-Shot] Keyword match: Tags: ${tags.join(', ')}, Examples: ${examples.map(e => e.id).join(', ')}`);
 
-  return formatExamples(examples);
+  return formatExamplesDefault(examples);
 }
 
 export function getExamplesByCategory(category: string): ConversationExample[] {
@@ -478,7 +503,9 @@ function selectExamplesFromTenant(
 }
 
 /**
- * Generates few-shot context from tenant-provided examples
+ * Generates few-shot context from tenant-provided examples.
+ * Uses direct substring matching of example tags against message text,
+ * bypassing the Loomi-specific keyword map (which doesn't cover tenant domains).
  */
 export function getFewShotContextFromTenant(
   currentMessage: string,
@@ -492,13 +519,42 @@ export function getFewShotContextFromTenant(
     .map(m => m.content)
     .slice(-5);
 
+  const allText = [currentMessage, ...userMessages].join(' ').toLowerCase();
+
+  // Direct substring matching: check if example tags appear in user text
+  const scored = tenantExamples.map(example => {
+    const matchCount = example.tags.filter(tag => allText.includes(tag.toLowerCase())).length;
+    return { example, score: matchCount };
+  });
+
+  const matched = scored
+    .filter(s => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2)
+    .map(s => s.example);
+
+  if (matched.length > 0) {
+    console.log(`[Few-Shot Tenant] Direct match: ${matched.map(e => e.id).join(', ')}`);
+    return formatExamples(matched);
+  }
+
+  // Fallback 1: try global keyword map
   const tags = detectTags(currentMessage, userMessages);
-  if (tags.length === 0) return '';
+  if (tags.length > 0) {
+    const keywordMatch = selectExamplesFromTenant(tags, tenantExamples, 2);
+    if (keywordMatch.length > 0) {
+      console.log(`[Few-Shot Tenant] Keyword fallback: ${keywordMatch.map(e => e.id).join(', ')}`);
+      return formatExamples(keywordMatch);
+    }
+  }
 
-  const examples = selectExamplesFromTenant(tags, tenantExamples, 2);
-  if (examples.length === 0) return '';
+  // Fallback 2: ALWAYS include at least 1 example so the model has a quality reference.
+  // Pick the first example (should be the most general/representative one).
+  const defaultExample = tenantExamples[0];
+  if (defaultExample) {
+    console.log(`[Few-Shot Tenant] Default fallback: ${defaultExample.id}`);
+    return formatExamples([defaultExample]);
+  }
 
-  console.log(`[Few-Shot Tenant] Tags: ${tags.join(', ')}, Examples: ${examples.map(e => e.id).join(', ')}`);
-
-  return formatExamples(examples);
+  return '';
 }

@@ -48,21 +48,6 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
     }).format(value);
   };
 
-  // Classification stripe takes priority, then priority, then nothing
-  const getLeftAccent = () => {
-    if (lead.broadcastClassification) {
-      const colors: Record<string, string> = {
-        hot: 'border-l-[3px] border-l-warning',
-        warm: 'border-l-[3px] border-l-terminal-yellow',
-        cold: 'border-l-[3px] border-l-info',
-        bot_autoresponse: 'border-l-[3px] border-l-muted',
-      };
-      return colors[lead.broadcastClassification] || '';
-    }
-    if (lead.priority === 'high') return 'border-l-[3px] border-l-warning';
-    if (lead.priority === 'medium') return 'border-l-[3px] border-l-border-hover';
-    return '';
-  };
 
   const getRelativeTime = (dateStr: string | null | undefined) => {
     if (!dateStr) return null;
@@ -89,7 +74,6 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
         group relative rounded-xl border p-2 cursor-grab active:cursor-grabbing
         transition-all duration-150
         bg-surface-elevated border-border hover:shadow-subtle hover:-translate-y-0.5
-        ${getLeftAccent()}
         ${isDragging ? 'opacity-50 scale-105 shadow-elevated z-50' : ''}
       `}
     >

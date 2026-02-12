@@ -64,7 +64,7 @@ const config: Config = {
         "surface-elevated": "var(--surface-elevated)",
       },
       fontFamily: {
-        sans: ["Lexend", "Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "SF Mono", "Menlo", "monospace"],
       },
       borderRadius: {
@@ -82,11 +82,16 @@ const config: Config = {
         'label': ['13px', { lineHeight: '1.4' }],
         'body': ['15px', { lineHeight: '1.7' }],
       },
+      letterSpacing: {
+        widest: '0.1em',
+      },
       animation: {
         blink: "blink 1s step-end infinite",
         float: "float 6s ease-in-out infinite",
         "spin-slow": "spin 8s linear infinite",
         marquee: "marquee 30s linear infinite",
+        "marquee-reverse": "marquee-reverse 30s linear infinite",
+        "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
       },
       keyframes: {
         blink: {
@@ -100,6 +105,14 @@ const config: Config = {
         marquee: {
           "0%": { transform: "translateX(0%)" },
           "100%": { transform: "translateX(-50%)" },
+        },
+        "marquee-reverse": {
+          "0%": { transform: "translateX(-50%)" },
+          "100%": { transform: "translateX(0%)" },
+        },
+        "pulse-subtle": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
         },
       },
     },

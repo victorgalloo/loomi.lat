@@ -230,7 +230,7 @@ export function InteractiveDemo() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-6 font-mono">
+          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-6">
             Pruébalo
           </h2>
           <p className="text-muted text-lg">
@@ -437,14 +437,14 @@ export function InteractiveDemo() {
 
         {/* Quick prompts */}
         <div className="mt-8">
-          <p className="text-sm text-muted text-center mb-4 font-mono">Prueba estos escenarios <span className="text-terminal-green">→</span></p>
+          <p className="text-sm text-muted text-center mb-4">Prueba estos escenarios <span className="text-terminal-green">→</span></p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {QUICK_PROMPTS.map((prompt) => (
               <button
                 key={prompt.label}
                 onClick={() => handleQuickButton(prompt.text)}
                 disabled={isTyping}
-                className={`group flex items-center gap-2.5 px-4 py-3 text-sm rounded-2xl transition-all font-mono disabled:opacity-50 bg-surface hover:bg-surface-2 ${prompt.borderColor}`}
+                className={`group flex items-center gap-2.5 px-4 py-3 text-sm rounded-2xl transition-all disabled:opacity-50 bg-surface hover:bg-surface-2 ${prompt.borderColor}`}
               >
                 <prompt.icon className={`w-4 h-4 ${prompt.iconColor}`} />
                 <span className="text-foreground text-xs">{prompt.label}</span>
@@ -463,7 +463,7 @@ export function InteractiveDemo() {
         >
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-xl font-mono text-sm hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-xl text-sm hover:opacity-90 transition-opacity"
           >
             <Sparkles className="w-4 h-4" />
             Configura tu propio agente

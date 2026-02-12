@@ -3,6 +3,7 @@
 import { Linkedin, Instagram, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 const WHATSAPP_LINK = 'https://api.whatsapp.com/send?phone=529849800629&text=Hola%20Loomi%20quiero%20una%20demo';
 
@@ -35,7 +36,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="w-9 h-9 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-muted hover:text-foreground transition-colors"
+                  className="w-9 h-9 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-muted hover:text-foreground hover:-translate-y-1 transition-all duration-200"
                 >
                   <social.icon className="w-4 h-4" />
                 </a>
@@ -44,21 +45,25 @@ export function Footer() {
           </div>
 
           {/* Links */}
-          <div className="flex gap-6 text-sm font-mono text-muted">
+          <div className="flex gap-6 text-sm text-muted">
             <Link href="#features" className="hover:text-foreground">features</Link>
             <Link href="#pricing" className="hover:text-foreground">precios</Link>
-            <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-foreground">demo</a>
+            <Link href="/demo" className="hover:text-foreground">demo</Link>
           </div>
         </div>
 
         {/* Bottom */}
-        <div className="mt-8 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4 font-mono text-sm text-muted">
+        <div className="mt-8 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted">
           <p>
             © {new Date().getFullYear()} loomi by{' '}
             <a href="https://www.linkedin.com/company/anthanaagency/" target="_blank" rel="noopener noreferrer" className="text-foreground hover:underline">
               anthana
             </a>
           </p>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-background">
+            <Image src="/logos/meta-logo.png" alt="Meta" width={60} height={20} className="object-contain opacity-60" />
+            <span className="text-muted text-xs">Tech Provider</span>
+          </div>
           <div className="flex items-center gap-2">
             <span>made with</span>
             <motion.span className="text-terminal-red" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity }}>♥</motion.span>

@@ -104,7 +104,7 @@ function FeatureRow({ feature, index }: { feature: typeof FEATURES[0]; index: nu
           className={!isEven ? 'lg:order-1 lg:text-right' : ''}
         >
           <p className="text-muted font-mono text-sm mb-2">{feature.tech}</p>
-          <h3 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-3 font-mono">
+          <h3 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-3">
             .{feature.title}
           </h3>
           <p className="text-xl lg:text-2xl text-muted mb-4">
@@ -134,15 +134,15 @@ export function Features() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-muted font-mono text-sm mb-6"
+            className="text-muted text-sm mb-6"
           >
-            // ./features
+            Features
           </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground mb-6 font-mono"
+            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground mb-6"
           >
             No es un chatbot básico
           </motion.h2>

@@ -72,7 +72,7 @@ export default function DashboardShell({ children, userName, tenantName, isConne
             >
               <Menu className="w-5 h-5" />
             </button>
-            <span className="text-sm text-muted">
+            <span className="text-sm font-medium text-foreground">
               {getBreadcrumb(pathname)}
             </span>
           </div>

@@ -4,16 +4,17 @@ import { Button } from '@/components/ui/button-loomi';
 import { ArrowRight, MessageCircle, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const WHATSAPP_LINK = 'https://api.whatsapp.com/send?phone=529849800629&text=Hola%20Loomi%20quiero%20una%20demo';
 
 // WhatsApp chat demo component
 export function HeroDemo() {
   const messages = [
-    { role: 'user', text: 'Hola, vi su anuncio. ¿Cuánto cuesta el seguro de vida?' },
-    { role: 'agent', text: '¡Hola! 👋 Me da gusto que escribas. Para cotizarte, ¿me podrías decir tu edad?' },
-    { role: 'user', text: '34 años' },
-    { role: 'agent', text: 'Perfecto. Un plan básico desde $199/mes. ¿Te gustaría agendar una llamada de 15 min para ver opciones?' },
+    { role: 'user', text: 'Hola, vi su anuncio. ¿Qué hace su plataforma?' },
+    { role: 'agent', text: '¡Hola! 👋 Automatizamos ventas por WhatsApp con IA. ¿Cuántos leads recibes al mes?' },
+    { role: 'user', text: 'Unos 200, pero solo atendemos la mitad' },
+    { role: 'agent', text: 'Con Loomi puedes atender el 100% en <1s. ¿Te agendo una demo de 15 min?' },
   ];
 
   return (
@@ -84,6 +85,16 @@ export function HeroDemo() {
   );
 }
 
+// Floating decorative shapes
+const FLOATING_SHAPES = [
+  { size: 6, x: '15%', y: '20%', delay: 0, duration: 7 },
+  { size: 4, x: '80%', y: '15%', delay: 1, duration: 9 },
+  { size: 8, x: '10%', y: '70%', delay: 2, duration: 8 },
+  { size: 5, x: '85%', y: '65%', delay: 0.5, duration: 10 },
+  { size: 3, x: '50%', y: '85%', delay: 1.5, duration: 6 },
+  { size: 7, x: '70%', y: '40%', delay: 3, duration: 11 },
+];
+
 export function Hero() {
   return (
     <section className="relative min-h-screen flex flex-col justify-center items-center overflow-hidden bg-background">
@@ -99,6 +110,25 @@ export function Hero() {
         <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-background to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
       </div>
+
+      {/* Floating dots/shapes */}
+      {FLOATING_SHAPES.map((shape, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full bg-foreground/5 pointer-events-none"
+          style={{ width: shape.size, height: shape.size, left: shape.x, top: shape.y }}
+          animate={{
+            y: [0, -20, 0],
+            opacity: [0.3, 0.6, 0.3],
+          }}
+          transition={{
+            duration: shape.duration,
+            repeat: Infinity,
+            delay: shape.delay,
+            ease: 'easeInOut',
+          }}
+        />
+      ))}
 
       {/* Main content */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6 py-20">
@@ -117,7 +147,7 @@ export function Hero() {
               height={26}
               className="object-contain opacity-60"
             />
-            <span className="text-muted text-xs font-mono">Tech Provider</span>
+            <span className="text-muted text-xs">Tech Provider</span>
           </div>
         </motion.div>
 
@@ -126,7 +156,7 @@ export function Hero() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4, duration: 0.8, ease: 'easeOut' }}
-          className="text-7xl sm:text-8xl md:text-9xl lg:text-[11rem] font-black tracking-tighter mb-6 font-mono"
+          className="text-7xl sm:text-8xl md:text-9xl lg:text-[11rem] font-black tracking-tighter mb-6"
         >
           <span className="text-foreground">LOOMI</span>
           <span className="animate-blink text-foreground">_</span>
@@ -137,7 +167,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="text-xl sm:text-2xl md:text-3xl text-muted font-mono tracking-wide max-w-2xl mb-12"
+          className="text-xl sm:text-2xl md:text-3xl text-muted tracking-wide max-w-2xl mb-12"
         >
           Agente AI para WhatsApp que vende 24/7
         </motion.p>
@@ -147,29 +177,46 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
+          className="flex flex-col sm:flex-row gap-4 justify-center"
         >
-          <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+          <Link href="/login">
             <Button
               variant="primary"
               size="lg"
-              className="group text-lg px-8 py-6 rounded-xl font-mono"
+              className="group text-lg px-8 py-6 rounded-xl w-full sm:w-auto relative overflow-hidden"
+            >
+              <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              Empezar gratis
+              <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+          <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+            <Button
+              variant="secondary"
+              size="lg"
+              className="group text-lg px-8 py-6 rounded-xl w-full sm:w-auto"
             >
               <MessageCircle className="w-5 h-5 mr-3" />
-              ./agendar-demo
-              <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+              WhatsApp
             </Button>
           </a>
         </motion.div>
 
-        {/* Trust line */}
-        <motion.p
+        {/* Trust line with animated counter */}
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="mt-6 text-sm text-muted/60 font-mono"
+          className="mt-8 flex flex-col items-center gap-3"
         >
-          setup en 5 minutos · sin tarjeta
-        </motion.p>
+          <p className="text-sm text-muted/60">
+            Setup en 5 minutos · Sin tarjeta
+          </p>
+          <div className="flex items-center gap-2 text-xs text-muted/40">
+            <span className="tabular-nums font-medium text-muted/60">200+ empresas</span>
+            <span>confían en Loomi</span>
+          </div>
+        </motion.div>
       </div>
 
       {/* Scroll indicator */}

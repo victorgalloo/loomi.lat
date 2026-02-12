@@ -57,10 +57,10 @@ function StepItem({ step, index, isLast }: { step: typeof STEPS[0]; index: numbe
           style={{ x: useTransform(scrollYProgress, [0, 0.5], [30, 0]) }}
           className="pt-4 lg:pt-8"
         >
-          <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4 font-mono">
+          <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
             {step.title}
           </h3>
-          <span className="inline-block text-lg font-mono text-muted px-4 py-2 bg-surface rounded-full border border-border">
+          <span className="inline-block text-lg text-muted px-4 py-2 bg-surface rounded-full border border-border">
             {step.detail}
           </span>
         </motion.div>
@@ -79,7 +79,7 @@ export function HowItWorks() {
           viewport={{ once: true }}
           className="text-center mb-24"
         >
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-6 font-mono">
+          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-6">
             De "hola" a demo
           </h2>
           <p className="text-xl lg:text-2xl text-muted">

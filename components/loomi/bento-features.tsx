@@ -260,10 +260,10 @@ function FeatureSection({ feature, index }: { feature: typeof FEATURES[0]; index
           style={{ y }}
           className={!isEven ? 'lg:order-2' : ''}
         >
-          <p className="text-muted font-mono text-sm mb-4">
-            // feature_{String(index + 1).padStart(2, '0')}
+          <p className="text-muted text-sm mb-4">
+            Feature {String(index + 1).padStart(2, '0')}
           </p>
-          <h3 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground leading-none mb-4 font-mono">
+          <h3 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground leading-none mb-4">
             .{feature.title}
           </h3>
           <p className="text-3xl lg:text-4xl text-muted mb-6">
@@ -300,15 +300,15 @@ export function BentoFeatures() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-muted font-mono text-sm mb-8"
+            className="text-muted text-sm mb-8"
           >
-            // así piensa loomi
+            Así piensa Loomi
           </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-6xl sm:text-7xl lg:text-8xl font-black text-foreground mb-6 font-mono leading-none"
+            className="text-6xl sm:text-7xl lg:text-8xl font-black text-foreground mb-6 leading-none"
           >
             No scripts.
             <br />
@@ -323,7 +323,7 @@ export function BentoFeatures() {
           viewport={{ once: true }}
           className="mb-32"
         >
-          <p className="text-center text-muted text-sm font-mono mb-8">
+          <p className="text-center text-muted text-sm mb-8">
             $ conversación en tiempo real
           </p>
           <HeroDemo />

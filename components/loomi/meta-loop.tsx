@@ -53,7 +53,7 @@ function Step({ step, index, isLast }: { step: typeof STEPS[0]; index: number; i
         </span>
 
         <div className="pt-4 lg:pt-8">
-          <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-2 font-mono">
+          <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-2">
             {step.title}
           </h3>
           <p className={`text-2xl lg:text-3xl ${isNegative ? 'text-terminal-red' : 'text-muted'}`}>
@@ -79,7 +79,7 @@ export function MetaLoop() {
             <span className="w-3 h-3 rounded-full bg-terminal-green" />
             Meta Conversions API
           </div>
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-6 font-mono leading-tight">
+          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-6 leading-tight">
             Cierra el loop
             <br />
             <span className="text-muted">con Meta Ads</span>

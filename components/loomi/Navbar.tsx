@@ -51,14 +51,14 @@ export function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             {NAV_LINKS.map((link) => (
-              <motion.div key={link.href} whileHover={{ y: -2 }}>
-                <Link
-                  href={link.href}
-                  className="text-muted hover:text-foreground transition-colors text-sm font-mono"
-                >
-                  ./{link.label}
-                </Link>
-              </motion.div>
+              <Link
+                key={link.href}
+                href={link.href}
+                className="relative text-muted hover:text-foreground transition-colors text-sm group"
+              >
+                {link.label.charAt(0).toUpperCase() + link.label.slice(1)}
+                <span className="absolute -bottom-1 left-0 w-0 h-px bg-foreground transition-all duration-300 group-hover:w-full" />
+              </Link>
             ))}
           </div>
 
@@ -66,14 +66,14 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
             <Link href="/login">
-              <Button variant="secondary" size="sm" className="font-mono">
-                login
+              <Button variant="secondary" size="sm">
+                Login
               </Button>
             </Link>
             <Link href="/demo">
-              <Button variant="primary" size="sm" className="gap-2 font-mono">
+              <Button variant="primary" size="sm" className="gap-2">
                 <MessageCircle className="w-4 h-4" />
-                ./demo
+                Demo
               </Button>
             </Link>
           </div>
@@ -105,22 +105,22 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="block text-muted hover:text-foreground text-base py-2 font-mono"
+                  className="block text-muted hover:text-foreground text-base py-2"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  ./{link.label}
+                  {link.label.charAt(0).toUpperCase() + link.label.slice(1)}
                 </Link>
               ))}
               <div className="pt-3 border-t border-border space-y-2">
                 <Link href="/login" className="block" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="secondary" size="md" className="w-full font-mono">
-                    login
+                  <Button variant="secondary" size="md" className="w-full">
+                    Login
                   </Button>
                 </Link>
                 <Link href="/demo" className="block" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="primary" size="md" className="w-full gap-2 font-mono">
+                  <Button variant="primary" size="md" className="w-full gap-2">
                     <MessageCircle className="w-4 h-4" />
-                    ./demo
+                    Demo
                   </Button>
                 </Link>
               </div>

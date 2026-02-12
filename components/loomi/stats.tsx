@@ -24,7 +24,7 @@ export function Stats() {
               transition={{ delay: index * 0.1, duration: 0.5 }}
               className="bg-background p-8 lg:p-12 text-center"
             >
-              <motion.div className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-4 font-mono">
+              <motion.div className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-4">
                 <AnimatedCounter
                   end={stat.value}
                   suffix={stat.suffix}
@@ -33,7 +33,7 @@ export function Stats() {
                   duration={2000}
                 />
               </motion.div>
-              <div className="text-muted text-sm sm:text-base font-mono">
+              <div className="text-muted text-sm sm:text-base">
                 {stat.label}
               </div>
             </motion.div>

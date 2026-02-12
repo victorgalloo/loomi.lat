@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, ArrowRight, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button-loomi';
+import Link from 'next/link';
 
 const WHATSAPP_LINK = 'https://api.whatsapp.com/send?phone=529849800629&text=Hola%20Loomi%20quiero%20una%20demo';
 
@@ -50,7 +51,7 @@ export function Pricing() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-8 font-mono"
+            className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-8"
           >
             Precios
           </motion.h2>
@@ -60,7 +61,7 @@ export function Pricing() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-4 font-mono"
+            className="inline-flex items-center gap-4"
           >
             <button
               onClick={() => setIsYearly(false)}
@@ -96,7 +97,8 @@ export function Pricing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className={`relative p-8 ${plan.highlight ? 'bg-foreground text-background' : 'bg-background'}`}
+              whileHover={{ scale: 1.02 }}
+              className={`relative p-8 transition-colors duration-200 ${plan.highlight ? 'bg-foreground text-background' : 'bg-background hover:bg-surface'}`}
             >
               {plan.highlight && (
                 <span className="absolute top-4 right-4 text-xs font-mono px-3 py-1 rounded-full bg-background text-foreground">
@@ -104,10 +106,10 @@ export function Pricing() {
                 </span>
               )}
 
-              <h3 className={`text-xl font-bold font-mono mb-1 ${plan.highlight ? 'text-background' : 'text-foreground'}`}>
-                ./{plan.name}
+              <h3 className={`text-xl font-bold mb-1 ${plan.highlight ? 'text-background' : 'text-foreground'}`}>
+                {plan.name.charAt(0).toUpperCase() + plan.name.slice(1)}
               </h3>
-              <p className={`text-sm font-mono mb-6 ${plan.highlight ? 'text-background/60' : 'text-muted'}`}>
+              <p className={`text-sm mb-6 ${plan.highlight ? 'text-background/60' : 'text-muted'}`}>
                 {plan.msgs}
               </p>
 
@@ -126,7 +128,7 @@ export function Pricing() {
                 )}
               </div>
 
-              <ul className="space-y-2 mb-8 font-mono">
+              <ul className="space-y-2 mb-8">
                 {plan.features.map((feature) => (
                   <li key={feature} className={`flex items-center gap-2 text-sm ${plan.highlight ? 'text-background/80' : 'text-muted'}`}>
                     <Check className={`w-4 h-4 ${plan.highlight ? 'text-background' : 'text-foreground'}`} />
@@ -135,16 +137,28 @@ export function Pricing() {
                 ))}
               </ul>
 
-              <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="block">
-                <Button
-                  variant={plan.highlight ? 'secondary' : 'primary'}
-                  className={`w-full font-mono ${plan.highlight ? 'bg-background text-foreground' : ''}`}
-                >
-                  {plan.highlight && <MessageCircle className="w-4 h-4 mr-2" />}
-                  Empezar
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </a>
+              {plan.monthlyPrice !== null ? (
+                <Link href="/login" className="block">
+                  <Button
+                    variant={plan.highlight ? 'secondary' : 'primary'}
+                    className={`w-full ${plan.highlight ? 'bg-background text-foreground' : ''}`}
+                  >
+                    Empezar
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              ) : (
+                <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="block">
+                  <Button
+                    variant="primary"
+                    className="w-full"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Contactar
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </a>
+              )}
             </motion.div>
           ))}
         </div>
@@ -153,7 +167,7 @@ export function Pricing() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center text-muted text-lg mt-12 font-mono"
+          className="text-center text-muted text-lg mt-12"
         >
           14 días gratis · sin tarjeta
         </motion.p>

@@ -16,6 +16,7 @@ import {
   Plug,
   BarChart3,
   Settings,
+  Phone,
   LogOut,
   PanelLeftClose,
   PanelLeft,
@@ -34,25 +35,24 @@ interface NavItem {
   href: string;
   label: string;
   icon: React.ReactNode;
-  section?: string;
 }
 
-const mainNav: NavItem[] = [
-  { href: '/dashboard', label: 'Home', icon: <LayoutDashboard className="w-[18px] h-[18px]" /> },
-  { href: '/dashboard/crm', label: 'Pipeline', icon: <Kanban className="w-[18px] h-[18px]" /> },
-  { href: '/dashboard/conversations', label: 'Inbox', icon: <MessageSquare className="w-[18px] h-[18px]" /> },
-  { href: '/broadcasts', label: 'Broadcasts', icon: <Send className="w-[18px] h-[18px]" /> },
-];
-
-const agentNav: NavItem[] = [
-  { href: '/dashboard/agent/setup', label: 'Setup', icon: <Settings2 className="w-[18px] h-[18px]" />, section: 'AGENTE' },
+const configurarNav: NavItem[] = [
+  { href: '/dashboard/agent/setup', label: 'Setup', icon: <Settings2 className="w-[18px] h-[18px]" /> },
   { href: '/dashboard/agent/prompt', label: 'Prompt', icon: <FileText className="w-[18px] h-[18px]" /> },
   { href: '/dashboard/agent/knowledge', label: 'Knowledge', icon: <BookOpen className="w-[18px] h-[18px]" /> },
   { href: '/dashboard/agent/tools', label: 'Integraciones', icon: <Plug className="w-[18px] h-[18px]" /> },
 ];
 
-const bottomNav: NavItem[] = [
+const monitorearNav: NavItem[] = [
+  { href: '/dashboard/crm', label: 'Pipeline', icon: <Kanban className="w-[18px] h-[18px]" /> },
+  { href: '/dashboard/conversations', label: 'Inbox', icon: <MessageSquare className="w-[18px] h-[18px]" /> },
+  { href: '/broadcasts', label: 'Broadcasts', icon: <Send className="w-[18px] h-[18px]" /> },
+];
+
+const configuracionNav: NavItem[] = [
   { href: '/dashboard/analytics', label: 'Analytics', icon: <BarChart3 className="w-[18px] h-[18px]" /> },
+  { href: '/dashboard/connect', label: 'WhatsApp', icon: <Phone className="w-[18px] h-[18px]" /> },
   { href: '/dashboard/settings', label: 'Settings', icon: <Settings className="w-[18px] h-[18px]" /> },
 ];
 
@@ -60,6 +60,27 @@ function isRouteActive(pathname: string, href: string): boolean {
   if (href === '/dashboard') return pathname === '/dashboard';
   if (href === '/broadcasts') return pathname.startsWith('/broadcasts');
   return pathname.startsWith(href);
+}
+
+function NavSection({ label, items, collapsed, renderNavItem }: {
+  label: string;
+  items: NavItem[];
+  collapsed: boolean;
+  renderNavItem: (item: NavItem) => React.ReactNode;
+}) {
+  return (
+    <div className="mt-5">
+      {!collapsed && (
+        <p className="text-[11px] uppercase tracking-widest text-muted px-3 mb-2 select-none">
+          {label}
+        </p>
+      )}
+      {collapsed && <div className="border-t border-border my-2" />}
+      <ul className="space-y-0.5">
+        {items.map(renderNavItem)}
+      </ul>
+    </div>
+  );
 }
 
 export default function Sidebar({ userName, tenantName, isConnected, mobileOpen, onMobileClose }: SidebarProps) {
@@ -117,6 +138,8 @@ export default function Sidebar({ userName, tenantName, isConnected, mobileOpen,
     );
   };
 
+  const homeItem: NavItem = { href: '/dashboard', label: 'Home', icon: <LayoutDashboard className="w-[18px] h-[18px]" /> };
+
   const sidebarContent = (
     <div className={`flex flex-col h-full ${collapsed ? 'w-[var(--sidebar-collapsed)]' : 'w-[var(--sidebar-width)]'} transition-all duration-200`}>
       {/* Header: traffic dots + brand */}
@@ -151,32 +174,21 @@ export default function Sidebar({ userName, tenantName, isConnected, mobileOpen,
         </button>
       </div>
 
-      {/* Main nav */}
+      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-3">
+        {/* Home standalone */}
         <ul className="space-y-0.5">
-          {mainNav.map(renderNavItem)}
+          {renderNavItem(homeItem)}
         </ul>
 
-        {/* Agent section */}
-        <div className="mt-5">
-          {!collapsed && (
-            <p className="text-xs uppercase tracking-widest text-muted px-3 mb-2 select-none">
-              Agente
-            </p>
-          )}
-          {collapsed && <div className="border-t border-border my-2" />}
-          <ul className="space-y-0.5">
-            {agentNav.map(renderNavItem)}
-          </ul>
-        </div>
+        {/* CONFIGURAR section */}
+        <NavSection label="Configurar" items={configurarNav} collapsed={collapsed} renderNavItem={renderNavItem} />
 
-        {/* Bottom nav */}
-        <div className="mt-5">
-          {collapsed && <div className="border-t border-border my-2" />}
-          <ul className="space-y-0.5">
-            {bottomNav.map(renderNavItem)}
-          </ul>
-        </div>
+        {/* MONITOREAR section */}
+        <NavSection label="Monitorear" items={monitorearNav} collapsed={collapsed} renderNavItem={renderNavItem} />
+
+        {/* CONFIGURACIÓN section */}
+        <NavSection label="Configuración" items={configuracionNav} collapsed={collapsed} renderNavItem={renderNavItem} />
       </nav>
 
       {/* WhatsApp status */}

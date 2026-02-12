@@ -71,7 +71,7 @@ function Calculator() {
         <div className="w-12 h-12 rounded-2xl bg-terminal-red/10 flex items-center justify-center">
           <TrendingDown className="w-6 h-6 text-terminal-red" />
         </div>
-        <h3 className="text-2xl font-bold text-foreground font-mono">./calcula-pérdida</h3>
+        <h3 className="text-2xl font-bold text-foreground">Calcula tu pérdida</h3>
       </div>
 
       <div className="space-y-8 font-mono">
@@ -156,7 +156,7 @@ function BeforeAfter() {
   return (
     <div className="p-8 lg:p-10 h-full">
       <div className="flex items-center justify-between mb-8">
-        <h3 className="text-2xl font-bold text-foreground font-mono">./tu-whatsapp</h3>
+        <h3 className="text-2xl font-bold text-foreground">Tu WhatsApp</h3>
         <div className="flex items-center gap-1 p-1 bg-surface rounded-2xl">
           <button
             onClick={() => setIsAfter(false)}
@@ -272,13 +272,13 @@ function LiveStats() {
         />
         <span className="text-terminal-red font-bold">LIVE</span>
       </div>
-      <h2 className="text-6xl sm:text-7xl lg:text-8xl font-black text-foreground mb-6 font-mono">
+      <h2 className="text-6xl sm:text-7xl lg:text-8xl font-black text-foreground mb-6">
         <span className="text-terminal-red">{lostLeads.toLocaleString()}</span> leads
       </h2>
-      <p className="text-2xl lg:text-3xl text-muted mb-4 font-mono">
+      <p className="text-2xl lg:text-3xl text-muted mb-4">
         perdidos hoy por respuestas tardías
       </p>
-      <p className="text-lg text-muted font-mono">
+      <p className="text-lg text-muted">
         <span className="text-terminal-red">+{lostToday}</span> en la última hora
       </p>
     </motion.div>
@@ -335,9 +335,9 @@ function SlotCounter() {
       </p>
 
       <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="block">
-        <Button variant="primary" size="lg" className="w-full font-mono text-lg py-6">
+        <Button variant="primary" size="lg" className="w-full text-lg py-6">
           <MessageCircle className="w-5 h-5 mr-2" />
-          ./reservar-slot
+          Reservar slot
           <ArrowRight className="w-5 h-5 ml-2" />
         </Button>
       </a>
@@ -372,7 +372,7 @@ export function VideoSection() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center text-muted text-lg mt-16 font-mono"
+          className="text-center text-muted text-lg mt-16"
         >
           // el 78% de los leads compran al primero que responde
         </motion.p>

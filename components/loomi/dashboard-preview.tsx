@@ -164,7 +164,7 @@ export function DashboardPreview() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-20 text-center font-mono"
+          className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-20 text-center"
         >
           Así se ve por dentro
         </motion.h2>

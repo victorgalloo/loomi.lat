@@ -98,81 +98,60 @@ export default function TenantDashboard({
   }, [tenantId]);
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-12">
+    <div className="max-w-4xl mx-auto px-6 py-8">
       {/* Header */}
-      <div className="mb-12">
-        <h1 className="text-xl font-medium text-foreground font-mono">
-          {tenant.name.split(' ')[0]}_
+      <div className="mb-8">
+        <h1 className="text-xl font-semibold text-foreground">
+          Hola, {tenant.name.split(' ')[0]}
         </h1>
         <p className="text-sm mt-1 text-muted">
           {tenant.companyName || tenant.email}
         </p>
       </div>
 
-      {/* Status */}
-      <div className="flex items-center gap-6 text-sm mb-12 pb-8 border-b border-border">
+      {/* Stats inline */}
+      <div className="flex items-center gap-6 text-sm mb-8 pb-6 border-b border-border flex-wrap">
+        <div><span className="text-muted">Leads</span> <span className="font-semibold tabular-nums">{stats.totalLeads}</span></div>
+        <span className="text-border">|</span>
+        <div><span className="text-muted">Conversaciones</span> <span className="font-semibold tabular-nums">{stats.activeConversations}</span></div>
+        <span className="text-border">|</span>
+        <div><span className="text-muted">Tibios</span> <span className="font-semibold tabular-nums">{stats.warmLeads}</span></div>
+        <span className="text-border">|</span>
+        <div><span className="text-muted">Calientes</span> <span className="font-semibold tabular-nums">{stats.hotLeads}</span></div>
+        <span className="text-border">|</span>
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${whatsappAccount.connected ? 'bg-terminal-green' : 'bg-terminal-yellow'}`} />
           <span className="text-muted">
-            {whatsappAccount.connected ? 'conectado' : 'desconectado'}
+            {whatsappAccount.connected ? 'Conectado' : 'Desconectado'}
           </span>
         </div>
-        <span className="text-border">·</span>
-        <span className="text-muted font-mono">
-          {tenant.subscriptionTier}
-        </span>
-        <span className="text-border">·</span>
-        <span className="text-muted">
-          {stats.totalLeads} leads
-        </span>
-      </div>
-
-      {/* Stats */}
-      <div className="flex items-center gap-6 text-sm mb-12 pb-8 border-b border-border">
-        <div>
-          <span className="text-muted">leads</span>
-          <span className="ml-2 font-mono text-foreground">{stats.totalLeads}</span>
-        </div>
-        <span className="text-border">·</span>
-        <div>
-          <span className="text-muted">activas</span>
-          <span className="ml-2 font-mono text-foreground">{stats.activeConversations}</span>
-        </div>
-        <span className="text-border">·</span>
-        <div>
-          <span className="text-muted">tibios</span>
-          <span className="ml-2 font-mono text-terminal-yellow">{stats.warmLeads}</span>
-        </div>
-        <span className="text-border">·</span>
-        <div>
-          <span className="text-muted">calientes</span>
-          <span className="ml-2 font-mono text-terminal-red">{stats.hotLeads}</span>
-        </div>
+        <span className="text-border">|</span>
+        <span className="text-muted">{tenant.subscriptionTier}</span>
       </div>
 
       {/* Links */}
-      <nav className="space-y-1 border-t pt-8 border-border">
+      <nav className="space-y-1">
         <Link
           href="/dashboard/crm"
-          className="flex items-center justify-between py-3 px-3 -mx-3 rounded-xl group text-muted hover:text-foreground hover:bg-surface-2 transition-colors"
+          className="flex items-center justify-between py-3 px-3 -mx-3 rounded-xl group text-muted hover:text-foreground hover:bg-surface transition-colors"
         >
-          <span className="font-mono">./pipeline</span>
+          <span>Pipeline</span>
           <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
         </Link>
 
         <Link
           href="/dashboard/conversations"
-          className="flex items-center justify-between py-3 px-3 -mx-3 rounded-xl group text-muted hover:text-foreground hover:bg-surface-2 transition-colors"
+          className="flex items-center justify-between py-3 px-3 -mx-3 rounded-xl group text-muted hover:text-foreground hover:bg-surface transition-colors"
         >
-          <span className="font-mono">./conversaciones</span>
+          <span>Conversaciones</span>
           <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
         </Link>
 
         <Link
-          href="/dashboard/agent"
-          className="flex items-center justify-between py-3 px-3 -mx-3 rounded-xl group text-muted hover:text-foreground hover:bg-surface-2 transition-colors"
+          href="/dashboard/agent/setup"
+          className="flex items-center justify-between py-3 px-3 -mx-3 rounded-xl group text-muted hover:text-foreground hover:bg-surface transition-colors"
         >
-          <span className="font-mono">./configurar-agente</span>
+          <span>Configurar Agente</span>
           <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
         </Link>
 
@@ -181,7 +160,7 @@ export default function TenantDashboard({
             href="/dashboard/connect"
             className="flex items-center justify-between py-3 px-3 -mx-3 rounded-xl group text-terminal-yellow hover:text-terminal-yellow/80 hover:bg-terminal-yellow/5 transition-colors"
           >
-            <span className="font-mono">./conectar-whatsapp</span>
+            <span>Conectar WhatsApp</span>
             <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
           </Link>
         )}

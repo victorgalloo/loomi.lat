@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from '@/components/theme-provider';
+import { ChatBubble } from '@/components/loomi/chat-bubble';
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -34,6 +35,7 @@ export default function RootLayout({
         <ThemeProvider defaultTheme="light">
           <div className="antialiased bg-background text-foreground transition-colors duration-300">
             {children}
+            <ChatBubble />
           </div>
         </ThemeProvider>
         <SpeedInsights />

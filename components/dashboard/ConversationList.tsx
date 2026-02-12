@@ -32,13 +32,17 @@ function formatTimeAgo(date: Date): string {
 
 function getStageLabel(stage: string): { label: string; color: string } {
   const stages: Record<string, { label: string; color: string }> = {
-    initial: { label: 'Nuevo', color: 'bg-surface-2 text-muted' },
-    qualified: { label: 'Calificado', color: 'bg-surface-2 text-muted' },
-    demo_scheduled: { label: 'Demo agendada', color: 'bg-surface-2 text-muted' },
-    demo_completed: { label: 'Demo completada', color: 'bg-surface-2 text-muted' },
-    payment_pending: { label: 'Pago pendiente', color: 'bg-surface-2 text-muted' },
-    customer: { label: 'Cliente', color: 'bg-surface-2 text-muted' },
-    cold: { label: 'Frio', color: 'bg-surface-2 text-muted' },
+    Cold: { label: 'Cold', color: 'bg-info/10 text-info' },
+    Warm: { label: 'Warm', color: 'bg-terminal-yellow/10 text-terminal-yellow' },
+    Hot: { label: 'Hot', color: 'bg-warning/10 text-warning' },
+    Ganado: { label: 'Ganado', color: 'bg-terminal-green/10 text-terminal-green' },
+    Perdido: { label: 'Perdido', color: 'bg-surface-2 text-muted' },
+    // Legacy aliases
+    initial: { label: 'Cold', color: 'bg-info/10 text-info' },
+    qualified: { label: 'Hot', color: 'bg-warning/10 text-warning' },
+    demo_scheduled: { label: 'Hot', color: 'bg-warning/10 text-warning' },
+    customer: { label: 'Ganado', color: 'bg-terminal-green/10 text-terminal-green' },
+    cold: { label: 'Cold', color: 'bg-info/10 text-info' },
   };
 
   return stages[stage] || { label: stage, color: 'bg-surface-2 text-muted' };

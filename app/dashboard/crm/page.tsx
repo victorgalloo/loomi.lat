@@ -41,13 +41,11 @@ export default async function CRMPage() {
         isLost: s.is_lost,
       }))
     : [
-        { id: '1', name: 'Nuevo', color: 'cyan', position: 0, isWon: false, isLost: false },
-        { id: '2', name: 'Contactado', color: 'blue', position: 1, isWon: false, isLost: false },
-        { id: '3', name: 'Calificado', color: 'purple', position: 2, isWon: false, isLost: false },
-        { id: '4', name: 'Propuesta', color: 'amber', position: 3, isWon: false, isLost: false },
-        { id: '5', name: 'Negociacion', color: 'orange', position: 4, isWon: false, isLost: false },
-        { id: '6', name: 'Ganado', color: 'emerald', position: 5, isWon: true, isLost: false },
-        { id: '7', name: 'Perdido', color: 'red', position: 6, isWon: false, isLost: true },
+        { id: '1', name: 'Cold', color: 'blue', position: 0, isWon: false, isLost: false },
+        { id: '2', name: 'Warm', color: 'amber', position: 1, isWon: false, isLost: false },
+        { id: '3', name: 'Hot', color: 'orange', position: 2, isWon: false, isLost: false },
+        { id: '4', name: 'Ganado', color: 'emerald', position: 3, isWon: true, isLost: false },
+        { id: '5', name: 'Perdido', color: 'gray', position: 4, isWon: false, isLost: true },
       ];
 
   // Fetch leads
@@ -76,7 +74,7 @@ export default async function CRMPage() {
     companyName: lead.company_name,
     contactEmail: lead.contact_email,
     dealValue: lead.deal_value,
-    stage: lead.stage || 'Nuevo',
+    stage: lead.stage || 'Cold',
     priority: (lead.priority || 'medium') as 'low' | 'medium' | 'high',
     lastActivityAt: lead.last_activity_at,
     broadcastClassification: lead.broadcast_classification,

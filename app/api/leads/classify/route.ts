@@ -82,7 +82,7 @@ export async function POST() {
 
       // Classify
       const classification = await classifyConversationWithAI(messages);
-      await applyClassificationToLead(supabase, lead.id, classification, lead.stage || 'Nuevo');
+      await applyClassificationToLead(supabase, lead.id, classification, lead.stage || 'Cold');
 
       results[classification]++;
       classified++;

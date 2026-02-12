@@ -22,19 +22,17 @@ interface Message {
 // ── Stage pipeline ───────────────────────────────────────────────────
 
 const STAGE_POSITION: Record<string, number> = {
-  nuevo: 0, new: 0, initial: 0, lead: 0,
-  contactado: 1, contacted: 1,
-  calificado: 2, qualified: 2,
-  propuesta: 3, proposal: 3,
-  negociacion: 4, negotiation: 4,
-  ganado: 5, won: 5, closed: 5,
-  perdido: 6, lost: 6,
+  cold: 0, nuevo: 0, new: 0, initial: 0, lead: 0, contactado: 0,
+  warm: 1, contacted: 1,
+  hot: 2, calificado: 2, qualified: 2, propuesta: 2, negociacion: 2,
+  ganado: 3, won: 3, closed: 3,
+  perdido: 4, lost: 4,
 };
 
 const CLASSIFICATION_STAGE: Record<Exclude<Classification, 'bot_autoresponse'>, string> = {
-  hot: 'Calificado',
-  warm: 'Contactado',
-  cold: 'Contactado',
+  hot: 'Hot',
+  warm: 'Warm',
+  cold: 'Cold',
 };
 
 const CLASSIFICATION_PRIORITY: Record<Exclude<Classification, 'bot_autoresponse'>, string> = {

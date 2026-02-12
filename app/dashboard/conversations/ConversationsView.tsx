@@ -40,19 +40,23 @@ function formatTimeAgo(dateStr: string): string {
 
 function getStageLabel(stage: string): string {
   const stages: Record<string, string> = {
-    'Nuevo': 'nuevo',
-    'initial': 'nuevo',
-    'Contactado': 'contactado',
-    'qualified': 'calificado',
-    'Calificado': 'calificado',
-    'Demo Agendada': 'demo',
-    'demo_scheduled': 'demo',
-    'Propuesta': 'propuesta',
-    'Negociacion': 'negociación',
+    'Cold': 'cold',
+    'Warm': 'warm',
+    'Hot': 'hot',
     'Ganado': 'ganado',
-    'customer': 'cliente',
     'Perdido': 'perdido',
-    'cold': 'frío',
+    // Legacy aliases
+    'Nuevo': 'cold',
+    'initial': 'cold',
+    'Contactado': 'warm',
+    'qualified': 'hot',
+    'Calificado': 'hot',
+    'Demo Agendada': 'hot',
+    'demo_scheduled': 'hot',
+    'Propuesta': 'hot',
+    'Negociacion': 'hot',
+    'customer': 'ganado',
+    'cold': 'cold',
   };
   return stages[stage] || stage;
 }
@@ -128,7 +132,7 @@ export default function ConversationsView({ conversations: initialConversations,
               lastMessage: 'Nueva conversación',
               lastMessageTime: newConv.started_at,
               messageCount: 0,
-              stage: lead.stage || 'Nuevo',
+              stage: lead.stage || 'Cold',
               broadcastClassification: lead.broadcast_classification || undefined,
             }, ...prev]);
           }

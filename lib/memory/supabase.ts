@@ -113,7 +113,7 @@ export async function createLead(
   const insertData: Record<string, unknown> = {
     phone,
     name,
-    stage: 'Nuevo',
+    stage: 'Cold',
     is_test: options?.isTest ?? false
   };
 
@@ -221,7 +221,7 @@ export async function saveLeadQualification(
       message_volume: qualification.messageVolume,
       industry: qualification.industry,
       is_qualified: true,
-      stage: 'Nuevo',
+      stage: 'Cold',
       last_interaction: new Date().toISOString(),
     })
     .eq('id', leadId);
@@ -486,7 +486,7 @@ export async function getColdLeads(hoursInactive: number = 48, limit: number = 5
     .from('leads')
     .select('*')
     .lt('last_interaction', cutoffDate.toISOString())
-    .not('stage', 'in', '("Calificado","Ganado","Perdido")')
+    .not('stage', 'in', '("Hot","Ganado","Perdido")')
     .order('last_interaction', { ascending: true })
     .limit(limit);
 

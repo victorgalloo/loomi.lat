@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         company_name: body.company_name || null,
         contact_email: body.contact_email || null,
         deal_value: body.deal_value || null,
-        stage: body.stage || 'Nuevo',
+        stage: body.stage || 'Cold',
         priority: body.priority || 'medium',
         tenant_id: tenantId,
         is_test: false

@@ -816,7 +816,7 @@ export async function POST(request: NextRequest) {
           waitUntil((async () => {
             try {
               const appointment = await createAppointment(context.lead.id, scheduledAt, eventId);
-              await updateLeadStage(context.lead.id, 'Calificado');
+              await updateLeadStage(context.lead.id, 'Hot');
 
               // Use Temporal for follow-ups if enabled, otherwise use legacy scheduler
               if (isTemporalEnabled('followups') && tenantContext) {
@@ -875,7 +875,7 @@ export async function POST(request: NextRequest) {
                     phone: context.lead.phone,
                     name: context.lead.name,
                     email,
-                    stage: 'Calificado',
+                    stage: 'Hot',
                     messages: [...context.recentMessages, { role: 'user', content: message.text }],
                     appointmentBooked: { date, time, meetingUrl }
                   });
@@ -925,7 +925,7 @@ export async function POST(request: NextRequest) {
           // Update lead stage to payment_pending
           waitUntil((async () => {
             try {
-              await updateLeadStage(context.lead.id, 'Negociacion');
+              await updateLeadStage(context.lead.id, 'Hot');
             } catch (err) {
               console.error('[Webhook] Update stage error:', err);
             }
@@ -941,7 +941,7 @@ export async function POST(request: NextRequest) {
 
       // Detect alumni/existing customer and inject context
       const alumniKeywords = ['ya soy cliente', 'ya cursé', 'ya curse', 'ya tomé', 'ya tome', 'ya compré', 'ya compre', 'soy alumno', 'soy alumna', 'ya tengo loomi', 'ya lo tengo'];
-      const isAlumni = ['Ganado', 'customer', 'alumno'].includes(context.lead.stage) ||
+      const isAlumni = ['Ganado', 'customer', 'alumno', 'won'].includes(context.lead.stage) ||
         alumniKeywords.some(kw => message.text.toLowerCase().includes(kw));
 
       if (isAlumni && context.memory) {

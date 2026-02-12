@@ -52,19 +52,23 @@ function formatDate(date: string): string {
 
 function getStageStyle(stage: string): { label: string; bg: string; text: string } {
   const stages: Record<string, { label: string; bg: string; text: string }> = {
-    'Nuevo': { label: 'Nuevo', bg: 'bg-surface-2', text: 'text-muted' },
-    'initial': { label: 'Nuevo', bg: 'bg-surface-2', text: 'text-muted' },
-    'Contactado': { label: 'Contactado', bg: 'bg-surface-2', text: 'text-muted' },
-    'qualified': { label: 'Calificado', bg: 'bg-surface-2', text: 'text-muted' },
-    'Calificado': { label: 'Calificado', bg: 'bg-surface-2', text: 'text-muted' },
-    'Demo Agendada': { label: 'Demo Agendada', bg: 'bg-surface-2', text: 'text-muted' },
-    'demo_scheduled': { label: 'Demo Agendada', bg: 'bg-surface-2', text: 'text-muted' },
-    'Propuesta': { label: 'Propuesta', bg: 'bg-surface-2', text: 'text-muted' },
-    'Negociacion': { label: 'Negociacion', bg: 'bg-surface-2', text: 'text-muted' },
-    'Ganado': { label: 'Ganado', bg: 'bg-surface-2', text: 'text-muted' },
-    'customer': { label: 'Cliente', bg: 'bg-surface-2', text: 'text-muted' },
-    'Perdido': { label: 'Perdido', bg: 'bg-terminal-red/10', text: 'text-terminal-red' },
-    'cold': { label: 'Frio', bg: 'bg-surface-2', text: 'text-muted' },
+    'Cold': { label: 'Cold', bg: 'bg-info/10', text: 'text-info' },
+    'Warm': { label: 'Warm', bg: 'bg-terminal-yellow/10', text: 'text-terminal-yellow' },
+    'Hot': { label: 'Hot', bg: 'bg-warning/10', text: 'text-warning' },
+    'Ganado': { label: 'Ganado', bg: 'bg-terminal-green/10', text: 'text-terminal-green' },
+    'Perdido': { label: 'Perdido', bg: 'bg-surface-2', text: 'text-muted' },
+    // Legacy aliases
+    'Nuevo': { label: 'Cold', bg: 'bg-info/10', text: 'text-info' },
+    'initial': { label: 'Cold', bg: 'bg-info/10', text: 'text-info' },
+    'Contactado': { label: 'Warm', bg: 'bg-terminal-yellow/10', text: 'text-terminal-yellow' },
+    'qualified': { label: 'Hot', bg: 'bg-warning/10', text: 'text-warning' },
+    'Calificado': { label: 'Hot', bg: 'bg-warning/10', text: 'text-warning' },
+    'Demo Agendada': { label: 'Hot', bg: 'bg-warning/10', text: 'text-warning' },
+    'demo_scheduled': { label: 'Hot', bg: 'bg-warning/10', text: 'text-warning' },
+    'Propuesta': { label: 'Hot', bg: 'bg-warning/10', text: 'text-warning' },
+    'Negociacion': { label: 'Hot', bg: 'bg-warning/10', text: 'text-warning' },
+    'customer': { label: 'Ganado', bg: 'bg-terminal-green/10', text: 'text-terminal-green' },
+    'cold': { label: 'Cold', bg: 'bg-info/10', text: 'text-info' },
   };
 
   const style = stages[stage] || { label: stage, bg: 'bg-surface-2', text: 'text-muted' };

@@ -153,7 +153,7 @@ export async function GET(
             supabase,
             lead.id,
             classification,
-            lead.stage || 'Nuevo',
+            lead.stage || 'Cold',
           );
         }
 
@@ -161,7 +161,7 @@ export async function GET(
           id: conv.id,
           leadName: lead.name || 'Usuario',
           leadPhone: lead.phone,
-          leadStage: lead.stage || 'Nuevo',
+          leadStage: lead.stage || 'Cold',
           messageCount: count || 0,
           lastMessage: lastMessage?.content || '',
           lastMessageRole: lastMessage?.role || 'user',

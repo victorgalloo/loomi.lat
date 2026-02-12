@@ -43,7 +43,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
                 companyName: newLead.company_name,
                 contactEmail: newLead.contact_email,
                 dealValue: newLead.deal_value,
-                stage: newLead.stage || 'Nuevo',
+                stage: newLead.stage || 'Cold',
                 priority: newLead.priority || 'medium',
                 lastActivityAt: newLead.last_activity_at,
                 broadcastClassification: newLead.broadcast_classification,
@@ -61,7 +61,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
                     companyName: updated.company_name,
                     contactEmail: updated.contact_email,
                     dealValue: updated.deal_value,
-                    stage: updated.stage || 'Nuevo',
+                    stage: updated.stage || 'Cold',
                     priority: updated.priority || 'medium',
                     lastActivityAt: updated.last_activity_at,
                     broadcastClassification: updated.broadcast_classification,
@@ -156,7 +156,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
           company_name: newLead.companyName || null,
           contact_email: newLead.contactEmail || null,
           deal_value: newLead.dealValue ? parseFloat(newLead.dealValue) : null,
-          stage: 'Nuevo'
+          stage: 'Cold'
         })
       });
 
@@ -169,7 +169,7 @@ export default function CRMView({ stages, leads: initialLeads, tenantId }: CRMVi
           companyName: created.company_name,
           contactEmail: created.contact_email,
           dealValue: created.deal_value,
-          stage: created.stage || 'Nuevo',
+          stage: created.stage || 'Cold',
           priority: 'medium',
           lastActivityAt: created.created_at,
           conversationCount: 0

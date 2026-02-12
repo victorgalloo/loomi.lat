@@ -2,6 +2,7 @@
 
 import { Fragment } from 'react';
 import { TrendingUp, Target, BarChart3 } from 'lucide-react';
+import StatCard from '@/components/dashboard/StatCard';
 
 interface AnalyticsData {
   totalLeads: number;
@@ -19,112 +20,47 @@ interface AnalyticsViewProps {
 }
 
 export default function AnalyticsView({ data }: AnalyticsViewProps) {
-  const mainMetrics = [
-    {
-      label: 'leads',
-      value: data.totalLeads,
-      change: data.newLeadsThisMonth,
-      changeLabel: 'este mes',
-    },
-    {
-      label: 'conversaciones',
-      value: data.totalConversations,
-    },
-    {
-      label: 'mensajes',
-      value: data.messagesThisMonth,
-      subLabel: 'este mes',
-    },
-    {
-      label: 'citas',
-      value: data.appointmentsBooked,
-    }
-  ];
-
   const stageLabels: Record<string, string> = {
-    initial: 'Nuevos',
-    Nuevo: 'Nuevos',
-    qualified: 'Calificados',
-    Calificado: 'Calificados',
-    Contactado: 'Contactados',
-    demo_scheduled: 'Demo agendada',
-    'Demo Agendada': 'Demo agendada',
-    demo_completed: 'Demo completada',
-    Propuesta: 'Propuesta',
-    Negociacion: 'Negociación',
-    payment_pending: 'Pago pendiente',
-    customer: 'Clientes',
+    Cold: 'Cold',
+    Warm: 'Warm',
+    Hot: 'Hot',
     Ganado: 'Ganados',
     Perdido: 'Perdidos',
-    cold: 'Fríos'
+    // Legacy aliases
+    initial: 'Cold',
+    Nuevo: 'Cold',
+    Contactado: 'Warm',
+    qualified: 'Hot',
+    Calificado: 'Hot',
+    demo_scheduled: 'Hot',
+    'Demo Agendada': 'Hot',
+    Propuesta: 'Hot',
+    Negociacion: 'Hot',
+    customer: 'Ganados',
+    cold: 'Cold',
   };
 
   return (
     <div className="px-6 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold text-foreground font-mono">
-            ./analytics_
-          </h1>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-foreground">
+          Analytics
+        </h1>
       </div>
 
-      {/* Stats Bar */}
-      <div className="flex items-center gap-8 pb-6 mb-6 border-b border-border">
-        <div>
-          <p className="text-label uppercase tracking-wider text-muted">
-            total leads
-          </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-foreground">
-            {data.totalLeads}
-          </p>
-        </div>
-
-        <div className="w-px h-8 bg-border" />
-
-        <div>
-          <p className="text-label uppercase tracking-wider text-muted">
-            calificados
-          </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-info">
-            {data.qualifiedLeads}
-          </p>
-        </div>
-
-        <div className="w-px h-8 bg-border" />
-
-        <div>
-          <p className="text-label uppercase tracking-wider text-muted">
-            tasa respuesta
-          </p>
-          <p className="text-xl font-semibold font-mono mt-1 text-foreground">
-            {data.responseRate}%
-          </p>
-        </div>
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        <StatCard label="Total Leads" value={data.totalLeads} subtitle={`+${data.newLeadsThisMonth} este mes`} />
+        <StatCard label="Calificados" value={data.qualifiedLeads} />
+        <StatCard label="Tasa Respuesta" value={`${data.responseRate}%`} />
+        <StatCard label="Citas" value={data.appointmentsBooked} />
       </div>
 
-      {/* Main Metrics */}
-      <div className="flex items-center gap-6 text-sm mb-6 pb-6 border-b border-border flex-wrap">
-        {mainMetrics.map((metric, i) => (
-          <Fragment key={metric.label}>
-            {i > 0 && <div className="w-px h-8 bg-border" />}
-            <div>
-              <p className="text-label uppercase tracking-wider text-muted">{metric.label}</p>
-              <p className="text-xl font-semibold font-mono mt-1 text-foreground">
-                {metric.value.toLocaleString()}
-              </p>
-              {metric.change !== undefined && (
-                <p className="text-xs mt-0.5 flex items-center gap-1 text-info">
-                  <TrendingUp className="w-3 h-3" /> +{metric.change} {metric.changeLabel}
-                </p>
-              )}
-              {metric.subLabel && (
-                <p className="text-xs mt-0.5 text-muted">{metric.subLabel}</p>
-              )}
-            </div>
-          </Fragment>
-        ))}
+      {/* Main Metrics Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        <StatCard label="Conversaciones" value={data.totalConversations} />
+        <StatCard label="Mensajes" value={data.messagesThisMonth} subtitle="Este mes" />
       </div>
 
       {/* Secondary Metrics */}
@@ -133,13 +69,13 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
         <div>
           <h3 className="text-sm font-medium mb-5 flex items-center gap-2 text-foreground">
             <Target className="w-4 h-4 text-info" />
-            calidad de leads
+            Calidad de Leads
           </h3>
           <div className="space-y-5">
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted">leads calificados</span>
-                <span className="font-mono text-foreground">
+                <span className="text-muted">Leads calificados</span>
+                <span className="tabular-nums text-foreground">
                   {data.qualifiedLeads} / {data.totalLeads}
                 </span>
               </div>
@@ -152,8 +88,8 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted">tasa de respuesta</span>
-                <span className="font-mono text-foreground">
+                <span className="text-muted">Tasa de respuesta</span>
+                <span className="tabular-nums text-foreground">
                   {data.responseRate}%
                 </span>
               </div>
@@ -171,7 +107,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
         <div>
           <h3 className="text-sm font-medium mb-5 flex items-center gap-2 text-foreground">
             <BarChart3 className="w-4 h-4 text-muted" />
-            leads por etapa
+            Leads por Etapa
           </h3>
           <div className="space-y-3">
             {Object.entries(data.stageBreakdown).length > 0 ? (
@@ -189,7 +125,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <span className="text-xs font-mono w-6 text-right text-muted">
+                    <span className="text-xs tabular-nums w-6 text-right text-muted">
                       {count}
                     </span>
                   </div>
@@ -206,7 +142,7 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
 
       {/* Coming Soon */}
       <div className="mt-6 pt-6 border-t border-border text-center">
-        <p className="text-sm text-muted">más analíticas próximamente — gráficas de tendencias, análisis de sentimiento y reportes exportables</p>
+        <p className="text-sm text-muted">Más analíticas próximamente — gráficas de tendencias, análisis de sentimiento y reportes exportables</p>
       </div>
     </div>
   );

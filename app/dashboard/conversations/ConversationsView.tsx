@@ -328,19 +328,18 @@ export default function ConversationsView({ conversations: initialConversations,
                     <span className="text-xs text-muted">
                       {getStageLabel(conversation.stage)}
                     </span>
-                    {conversation.broadcastClassification && conversation.broadcastClassification !== 'bot_autoresponse' && (
+                    {conversation.broadcastClassification && (
                       <span className={`text-xs ${
                         conversation.broadcastClassification === 'hot'
                           ? 'text-warning'
                           : conversation.broadcastClassification === 'warm'
                             ? 'text-terminal-yellow'
-                            : 'text-info'
+                            : conversation.broadcastClassification === 'cold'
+                              ? 'text-info'
+                              : 'text-muted'
                       }`}>
-                        {conversation.broadcastClassification === 'hot' ? '🔥' : conversation.broadcastClassification === 'warm' ? '🟡' : '🥶'}
+                        {conversation.broadcastClassification === 'bot_autoresponse' ? 'bot' : conversation.broadcastClassification}
                       </span>
-                    )}
-                    {conversation.broadcastClassification === 'bot_autoresponse' && (
-                      <span className="text-xs text-muted">🤖</span>
                     )}
                   </div>
                   <p className="text-xs text-muted truncate max-w-[400px]">

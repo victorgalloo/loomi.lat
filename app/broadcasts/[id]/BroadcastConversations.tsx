@@ -214,13 +214,13 @@ function ChatPanel({ conv, lang, t, onClose }: {
             </span>
           )}
           {conv.category === 'hot' && (
-            <span className="text-orange-400">{t.hotLead}</span>
+            <span className="text-warning">{t.hotLead}</span>
           )}
           {conv.category === 'warm' && (
             <span className="text-terminal-yellow">{t.warmLead}</span>
           )}
           {conv.category === 'cold' && (
-            <span className="text-blue-400">{t.coldLead}</span>
+            <span className="text-info">{t.coldLead}</span>
           )}
           {conv.category === 'bot_autoresponse' && (
             <span className="text-muted">{t.botAutoresponse}</span>
@@ -275,20 +275,20 @@ function ConversationRow({ conv, lang, t, onClick }: {
           conv.category === 'handoff'
             ? 'bg-terminal-red/10 border-terminal-red/30'
             : conv.category === 'hot'
-            ? 'bg-orange-500/10 border-orange-500/30'
+            ? 'bg-warning/10 border-warning/30'
             : conv.category === 'warm'
             ? 'bg-terminal-yellow/10 border-terminal-yellow/30'
             : conv.category === 'cold'
-            ? 'bg-blue-500/10 border-blue-500/30'
+            ? 'bg-info/10 border-info/30'
             : conv.category === 'bot_autoresponse'
             ? 'bg-muted/10 border-muted/30'
             : 'bg-background border-border'
         }`}>
           <span className={`text-xs font-mono ${
             conv.category === 'handoff' ? 'text-terminal-red'
-            : conv.category === 'hot' ? 'text-orange-400'
+            : conv.category === 'hot' ? 'text-warning'
             : conv.category === 'warm' ? 'text-terminal-yellow'
-            : conv.category === 'cold' ? 'text-blue-400'
+            : conv.category === 'cold' ? 'text-info'
             : conv.category === 'bot_autoresponse' ? 'text-muted'
             : 'text-foreground'
           }`}>
@@ -311,7 +311,7 @@ function ConversationRow({ conv, lang, t, onClick }: {
             </span>
           )}
           {conv.category === 'hot' && (
-            <span className="text-xs text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-warning bg-warning/10 px-1.5 py-0.5 rounded">
               {t.hotLead}
             </span>
           )}
@@ -321,7 +321,7 @@ function ConversationRow({ conv, lang, t, onClick }: {
             </span>
           )}
           {conv.category === 'cold' && (
-            <span className="text-xs text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-info bg-info/10 px-1.5 py-0.5 rounded">
               {t.coldLead}
             </span>
           )}

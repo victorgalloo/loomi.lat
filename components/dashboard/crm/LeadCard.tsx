@@ -53,7 +53,7 @@ function LeadCard({ lead, onClick }: LeadCardProps) {
     if (lead.broadcastClassification) {
       const colors: Record<string, string> = {
         hot: 'border-l-[3px] border-l-warning',
-        warm: 'border-l-[3px] border-l-success',
+        warm: 'border-l-[3px] border-l-terminal-yellow',
         cold: 'border-l-[3px] border-l-info',
         bot_autoresponse: 'border-l-[3px] border-l-muted',
       };

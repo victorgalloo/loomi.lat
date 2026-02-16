@@ -12,7 +12,7 @@ export interface ConversationExample {
   id: string;
   tags: string[];
   context: string;
-  conversation: string;
+  conversation: string | Array<{ role: string; content: string }>;
   whyItWorked: string;
 }
 
@@ -367,8 +367,22 @@ function formatExamples(examples: ConversationExample[]): string {
   if (examples.length === 0) return '';
 
   const formatted = examples.map(ex => {
-    // Extract the assistant response from conversation to highlight it as the required output
-    const lines = ex.conversation.split('\n').filter(l => l.trim());
+    // conversation can be a string (Loomi defaults) or an array of {role, content} (industry templates)
+    const conv = ex.conversation;
+
+    if (Array.isArray(conv)) {
+      // Array format from industry templates: [{role: 'user', content: '...'}, ...]
+      const userMsg = conv.find(m => m.role === 'user')?.content;
+      const botMsg = conv.find(m => m.role === 'assistant')?.content;
+      if (userMsg && botMsg) {
+        return `CUANDO digan algo como: "${userMsg}"
+RESPONDE ASÍ (adapta el nombre): "${botMsg}"`;
+      }
+      return `${ex.context}\n${conv.map(m => `${m.role === 'user' ? 'Cliente' : 'Bot'}: ${m.content}`).join('\n')}`;
+    }
+
+    // String format from Loomi defaults
+    const lines = String(conv).split('\n').filter(l => l.trim());
     const assistantLine = lines.find(l => l.match(/^(Asistente|Bot|Assistant):/i));
     const userLine = lines.find(l => l.match(/^(Usuario|User|Cliente):/i));
 
@@ -378,7 +392,7 @@ function formatExamples(examples: ConversationExample[]): string {
       return `CUANDO digan algo como: "${userMsg}"
 RESPONDE ASÍ (adapta el nombre): "${botMsg}"`;
     }
-    return `${ex.context}\n${ex.conversation}`;
+    return `${ex.context}\n${conv}`;
   }).join('\n\n');
 
   return `# RESPUESTAS OBLIGATORIAS — COPIA EL FORMATO Y NIVEL DE DETALLE
@@ -391,12 +405,17 @@ ${formatted}`;
 function formatExamplesDefault(examples: ConversationExample[]): string {
   if (examples.length === 0) return '';
 
-  const formatted = examples.map(ex => `
+  const formatted = examples.map(ex => {
+    const conv = Array.isArray(ex.conversation)
+      ? ex.conversation.map(m => `${m.role === 'user' ? 'Cliente' : 'Bot'}: ${m.content}`).join('\n')
+      : ex.conversation;
+    return `
 ### Ejemplo: ${ex.context}
-${ex.conversation}
+${conv}
 
 **Por qué funcionó:** ${ex.whyItWorked}
-`).join('\n');
+`;
+  }).join('\n');
 
   return `
 # EJEMPLOS RELEVANTES - IMITA ESTE ESTILO

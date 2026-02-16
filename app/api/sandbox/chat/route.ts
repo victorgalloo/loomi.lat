@@ -9,38 +9,7 @@ import { simpleAgent } from '@/lib/agents/simple-agent';
 import { getAgentConfig } from '@/lib/tenant/context';
 import { getTenantDocuments, getTenantTools } from '@/lib/tenant/knowledge';
 import { ConversationContext, Message } from '@/types';
-
-// In-memory rate limiting (per IP)
-const rateLimiter = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 10; // max messages
-const RATE_WINDOW_MS = 60 * 1000; // per minute
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimiter.get(ip);
-
-  if (!entry || entry.resetAt < now) {
-    rateLimiter.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return true;
-  }
-
-  if (entry.count >= RATE_LIMIT) {
-    return false;
-  }
-
-  entry.count++;
-  return true;
-}
-
-// Clean up old entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, entry] of rateLimiter.entries()) {
-    if (entry.resetAt < now) {
-      rateLimiter.delete(ip);
-    }
-  }
-}, 60 * 1000);
+import { sandboxRateLimiter } from '@/lib/ratelimit';
 
 export interface SandboxChatRequest {
   message: string;
@@ -73,12 +42,13 @@ export interface SandboxChatResponse {
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
+    // Rate limiting (Upstash Redis — works across serverless instances)
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
                request.headers.get('x-real-ip') ||
                'unknown';
 
-    if (!checkRateLimit(ip)) {
+    const { success } = await sandboxRateLimiter.limit(ip);
+    if (!success) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please wait a moment before sending more messages.' },
         { status: 429 }

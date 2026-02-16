@@ -91,6 +91,6 @@ export async function isBotPaused(conversationId: string): Promise<boolean> {
     return false;
   } catch (error) {
     console.error('[BotPause] Error checking pause:', error);
-    return false; // Fail open - let bot respond if we can't check
+    return true; // Fail closed - don't respond if we can't verify pause state
   }
 }

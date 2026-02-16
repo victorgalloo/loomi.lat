@@ -18,6 +18,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { waitUntil } from '@vercel/functions';
 import { parseWhatsAppWebhook, ParsedWhatsAppMessage } from '@/lib/whatsapp/parse';
+import { retryAsync } from '@/lib/utils/retry';
 import {
   sendWhatsAppMessage,
   sendScheduleList,
@@ -35,7 +36,7 @@ import {
   HandoffContext,
   REASON_CONFIG
 } from '@/lib/handoff';
-import { getConversationContext } from '@/lib/memory/context';
+import { getWebhookContext } from '@/lib/memory/context';
 import { processMessageGraph } from '@/lib/graph/graph';
 import {
   checkRateLimit,
@@ -61,7 +62,6 @@ import { saveMessage, createAppointment, updateLeadStage, updateLeadIndustry } f
 import { generateMemory, shouldGenerateMemory } from '@/lib/memory/generate';
 import { syncLeadToHubSpot } from '@/lib/integrations/hubspot';
 import { checkAvailability, createEvent, CalTenantConfig } from '@/lib/tools/calendar';
-import { getCalConfig } from '@/lib/integrations/tenant-integrations';
 import { ConversationContext } from '@/types';
 import {
   scheduleDemoReminders,
@@ -70,12 +70,29 @@ import {
   cancelFollowUps,
   checkAndHandleOptOut
 } from '@/lib/followups/scheduler';
-import { getTenantFromPhoneNumberId, getAgentConfig, AgentConfig } from '@/lib/tenant/context';
-import { getTenantDocuments, getTenantTools } from '@/lib/tenant/knowledge';
-import { isBotPaused } from '@/lib/bot-pause';
+import { getTenantFromPhoneNumberId, AgentConfig } from '@/lib/tenant/context';
 import { isAutoResponder } from '@/lib/whatsapp/autoresponder';
 import { transcribeWhatsAppAudio } from '@/lib/whatsapp/audio';
 import { trackDemoScheduled } from '@/lib/integrations/meta-conversions';
+
+// Webhook timeout guard: Vercel kills functions at 30s, so we race at 25s
+const WEBHOOK_TIMEOUT_MS = 25000;
+
+class WebhookTimeoutError extends Error {
+  constructor() {
+    super('Webhook processing exceeded 25s timeout');
+    this.name = 'WebhookTimeoutError';
+  }
+}
+
+function withWebhookTimeout<T>(promise: Promise<T>): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new WebhookTimeoutError()), WEBHOOK_TIMEOUT_MS)
+    ),
+  ]);
+}
 
 // Temporal feature flags (no gRPC connection required)
 function isTemporalEnabled(feature: 'followups' | 'booking' | 'payments' | 'integrations'): boolean {
@@ -664,34 +681,18 @@ export async function POST(request: NextRequest) {
       }
 
       // ============================================
-      // PHASE 2: Tenant-dependent ops (parallel)
-      // Lock, markAsRead, context, and config loads all start simultaneously
+      // PHASE 2: Single RPC + non-Supabase ops (parallel)
+      // 1 Postgres call replaces 12 individual Supabase round trips
       // ============================================
-      const lockP = acquireConversationLock(message.phone, 5000, tenantId);
-      const readP = markAsRead(message.messageId, credentials);
-      const contextP = getConversationContext(message, tenantId);
-      const configsP = tenantId
-        ? Promise.all([getAgentConfig(tenantId), getTenantDocuments(tenantId), getTenantTools(tenantId), getCalConfig(tenantId)])
-        : null;
+      const [lockAcquired, , webhookCtx] = await Promise.all([
+        acquireConversationLock(message.phone, 5000, tenantId),  // Redis
+        markAsRead(message.messageId, credentials),               // WhatsApp API
+        getWebhookContext(message, tenantId),                      // 1 RPC call
+      ]);
 
-      const [lockAcquired, , context] = await Promise.all([lockP, readP, contextP]);
-
-      // Process tenant configs (already resolved — started before the await above)
-      if (configsP) {
-        const [loadedConfig, tenantDocs, tenantTools, calCfg] = await configsP;
-        agentConfig = loadedConfig || undefined;
-        if (calCfg) {
-          calConfig = { apiKey: calCfg.accessToken, eventTypeId: calCfg.eventTypeId, tenantId: tenantId! };
-        }
-        if (agentConfig && (tenantDocs || tenantTools.length > 0)) {
-          agentConfig = {
-            ...agentConfig,
-            ...(tenantDocs ? { knowledgeContext: tenantDocs } : {}),
-            ...(tenantTools.length > 0 ? { customTools: tenantTools } : {})
-          } as AgentConfig & { knowledgeContext?: string; customTools?: unknown[] };
-        }
-        console.log(`[Webhook] Tenant ${tenantId}: docs=${!!tenantDocs}, tools=${tenantTools.length}`);
-      }
+      const { context, botPaused, conversationState: preloadedConversationState } = webhookCtx;
+      agentConfig = webhookCtx.agentConfig;
+      calConfig = webhookCtx.calConfig;
 
       // Gate: conversation lock
       if (!lockAcquired) {
@@ -712,8 +713,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ status: 'autoresponder_detected' });
       }
 
-      // Check if bot is paused (operator has taken control)
-      if (await isBotPaused(context.conversation.id)) {
+      // Check if bot is paused (operator has taken control) — from RPC result
+      if (botPaused) {
         console.log(`[Webhook] Bot paused for conversation ${context.conversation.id}, saving message only`);
         await saveMessage(context.conversation.id, 'user', message.text, context.lead.id);
         return NextResponse.json({ status: 'bot_paused' });
@@ -1031,9 +1032,39 @@ export async function POST(request: NextRequest) {
           ? { ...agentConfig, whatsappCredentials: credentials }
           : agentConfig;
 
-        result = await processMessageGraph(message.text, context, configWithCreds);
+        result = await withWebhookTimeout(
+          processMessageGraph(message.text, context, configWithCreds, preloadedConversationState)
+        );
         t2 = performance.now();
       } catch (agentError) {
+        // Webhook timeout: send fallback message + handoff
+        if (agentError instanceof WebhookTimeoutError) {
+          console.error(`[Webhook] TIMEOUT after ${WEBHOOK_TIMEOUT_MS}ms for ${message.phone}`);
+          waitUntil((async () => {
+            try {
+              await sendWhatsAppMessage(
+                message.phone,
+                'Disculpa la demora, estoy tardando más de lo normal. Te comunico con alguien del equipo.',
+                credentials
+              );
+              await handoffOnServiceError(
+                message.phone,
+                context.lead.name || 'Cliente',
+                'webhook',
+                'Webhook timeout: processing exceeded 25s',
+                context.recentMessages.slice(-5).map(m => ({
+                  role: m.role as 'user' | 'assistant',
+                  content: m.content
+                })),
+                credentials
+              );
+            } catch (err) {
+              console.error('[Webhook] Timeout fallback error:', err);
+            }
+          })());
+          return NextResponse.json({ status: 'timeout_handoff' });
+        }
+
         console.error('Agent error:', agentError);
 
         // Use new handoff system for agent errors
@@ -1093,102 +1124,133 @@ export async function POST(request: NextRequest) {
       const t3 = performance.now();
       console.log(`⏱️ [Webhook] Preprocess: ${(t1 - t0).toFixed(0)}ms | Pipeline: ${(t2! - t1).toFixed(0)}ms | WA send: ${(t3 - t2!).toFixed(0)}ms | TOTAL: ${(t3 - t0).toFixed(0)}ms`);
 
-      // Background operations (non-blocking)
+      // Background operations (non-blocking, isolated with allSettled)
       waitUntil((async () => {
-        try {
-          // Save assistant message to DB (fire-and-forget)
-          await saveMessage(context.conversation.id, 'assistant', result.response, context.lead.id);
-
-          // Update industry if detected
-          if (result.detectedIndustry) {
-            await updateLeadIndustry(context.lead.id, result.detectedIndustry);
+        // Critical: save message with retry (3 attempts, exponential backoff)
+        await retryAsync(
+          () => saveMessage(context.conversation.id, 'assistant', result.response, context.lead.id),
+          {
+            maxAttempts: 3,
+            onRetry: (err, attempt) => console.warn(`[Webhook] saveMessage retry ${attempt}:`, err),
           }
+        ).catch(err => console.error('[Webhook] saveMessage failed after retries:', err));
 
-          // Schedule "said later" follow-up
-          if (result.saidLater) {
-            if (isTemporalEnabled('followups') && tenantContext) {
-              const temporalLead: TemporalLead = {
-                id: context.lead.id,
-                phone: context.lead.phone,
-                name: context.lead.name,
-                email: context.lead.email ?? null,
-                company: context.lead.company ?? null,
-                industry: context.lead.industry ?? null,
-                stage: context.lead.stage,
-                challenge: context.lead.challenge ?? null
-              };
-              const temporal = await getTemporalModule();
-              if (temporal) {
-                await temporal.startFollowUpWorkflow({
-                  tenant: tenantContext,
-                  leadId: context.lead.id,
-                  lead: temporalLead,
-                  type: 'said_later'
-                });
-                console.log('[Webhook] Started Temporal said_later workflow');
+        // All remaining tasks run in parallel, each isolated with .catch()
+        const backgroundTasks: Promise<unknown>[] = [];
+
+        // Update industry if detected
+        if (result.detectedIndustry) {
+          backgroundTasks.push(
+            updateLeadIndustry(context.lead.id, result.detectedIndustry)
+              .catch(err => console.error('[Webhook] updateLeadIndustry error:', err))
+          );
+        }
+
+        // Schedule "said later" follow-up
+        if (result.saidLater) {
+          backgroundTasks.push(
+            (async () => {
+              if (isTemporalEnabled('followups') && tenantContext) {
+                const temporalLead: TemporalLead = {
+                  id: context.lead.id,
+                  phone: context.lead.phone,
+                  name: context.lead.name,
+                  email: context.lead.email ?? null,
+                  company: context.lead.company ?? null,
+                  industry: context.lead.industry ?? null,
+                  stage: context.lead.stage,
+                  challenge: context.lead.challenge ?? null
+                };
+                const temporal = await getTemporalModule();
+                if (temporal) {
+                  await temporal.startFollowUpWorkflow({
+                    tenant: tenantContext,
+                    leadId: context.lead.id,
+                    lead: temporalLead,
+                    type: 'said_later'
+                  });
+                  console.log('[Webhook] Started Temporal said_later workflow');
+                } else {
+                  await scheduleSaidLaterFollowUp(context.lead.id, context.lead);
+                }
               } else {
-                console.warn('[Webhook] Temporal module unavailable, falling back to legacy follow-up');
                 await scheduleSaidLaterFollowUp(context.lead.id, context.lead);
               }
-            } else {
-              await scheduleSaidLaterFollowUp(context.lead.id, context.lead);
-            }
-          }
+            })().catch(err => console.error('[Webhook] saidLater follow-up error:', err))
+          );
+        }
 
-          // Schedule re-engagement for early conversations that end with a question
-          // (high chance the lead will go cold if they don't respond)
-          const isEarlyConversation = context.recentMessages.length <= 4;
-          const endsWithQuestion = result.response.trim().endsWith('?');
-          if (isEarlyConversation && endsWithQuestion && !result.saidLater && !result.escalatedToHuman) {
-            if (isTemporalEnabled('followups') && tenantContext) {
-              const temporalLead: TemporalLead = {
-                id: context.lead.id,
-                phone: context.lead.phone,
-                name: context.lead.name,
-                email: context.lead.email ?? null,
-                company: context.lead.company ?? null,
-                industry: context.lead.industry ?? null,
-                stage: context.lead.stage,
-                challenge: context.lead.challenge ?? null
-              };
-              const temporal = await getTemporalModule();
-              if (temporal) {
-                await temporal.startReengagementWorkflow({
-                  tenant: tenantContext,
-                  leadId: context.lead.id,
-                  lead: temporalLead
-                });
-                console.log('[Webhook] Started Temporal re-engagement workflow for early conversation');
+        // Schedule re-engagement for early conversations that end with a question
+        const isEarlyConversation = context.recentMessages.length <= 4;
+        const endsWithQuestion = result.response.trim().endsWith('?');
+        if (isEarlyConversation && endsWithQuestion && !result.saidLater && !result.escalatedToHuman) {
+          backgroundTasks.push(
+            (async () => {
+              if (isTemporalEnabled('followups') && tenantContext) {
+                const temporalLead: TemporalLead = {
+                  id: context.lead.id,
+                  phone: context.lead.phone,
+                  name: context.lead.name,
+                  email: context.lead.email ?? null,
+                  company: context.lead.company ?? null,
+                  industry: context.lead.industry ?? null,
+                  stage: context.lead.stage,
+                  challenge: context.lead.challenge ?? null
+                };
+                const temporal = await getTemporalModule();
+                if (temporal) {
+                  await temporal.startReengagementWorkflow({
+                    tenant: tenantContext,
+                    leadId: context.lead.id,
+                    lead: temporalLead
+                  });
+                  console.log('[Webhook] Started Temporal re-engagement workflow');
+                } else {
+                  await scheduleReengagement(context.lead.id, context.lead, context.memory);
+                }
               } else {
                 await scheduleReengagement(context.lead.id, context.lead, context.memory);
               }
-            } else {
-              await scheduleReengagement(context.lead.id, context.lead, context.memory);
-            }
-          }
+            })().catch(err => console.error('[Webhook] re-engagement error:', err))
+          );
+        }
 
-          // Sync to HubSpot (use Temporal if integrations enabled)
-          if (isTemporalEnabled('integrations') && tenantContext) {
-            const temporalLead: TemporalLead = {
-              id: context.lead.id,
-              phone: context.lead.phone,
-              name: context.lead.name,
-              email: context.lead.email ?? null,
-              company: context.lead.company ?? null,
-              industry: context.lead.industry ?? null,
-              stage: context.lead.stage
-            };
-            const temporal = await getTemporalModule();
-            if (temporal) {
-              await temporal.startIntegrationSyncWorkflow({
-                tenant: tenantContext,
-                leadId: context.lead.id,
-                lead: temporalLead,
-                conversationId: context.conversation.id,
-                eventType: 'conversation_ended'
-              });
+        // Sync to HubSpot
+        backgroundTasks.push(
+          (async () => {
+            if (isTemporalEnabled('integrations') && tenantContext) {
+              const temporalLead: TemporalLead = {
+                id: context.lead.id,
+                phone: context.lead.phone,
+                name: context.lead.name,
+                email: context.lead.email ?? null,
+                company: context.lead.company ?? null,
+                industry: context.lead.industry ?? null,
+                stage: context.lead.stage
+              };
+              const temporal = await getTemporalModule();
+              if (temporal) {
+                await temporal.startIntegrationSyncWorkflow({
+                  tenant: tenantContext,
+                  leadId: context.lead.id,
+                  lead: temporalLead,
+                  conversationId: context.conversation.id,
+                  eventType: 'conversation_ended'
+                });
+              } else {
+                await syncLeadToHubSpot({
+                  phone: context.lead.phone,
+                  name: context.lead.name,
+                  company: context.lead.company,
+                  stage: context.lead.stage,
+                  messages: [
+                    ...context.recentMessages,
+                    { role: 'user', content: message.text },
+                    { role: 'assistant', content: result.response }
+                  ]
+                });
+              }
             } else {
-              console.warn('[Webhook] Temporal module unavailable, falling back to direct HubSpot sync');
               await syncLeadToHubSpot({
                 phone: context.lead.phone,
                 name: context.lead.name,
@@ -1201,21 +1263,13 @@ export async function POST(request: NextRequest) {
                 ]
               });
             }
-          } else {
-            await syncLeadToHubSpot({
-              phone: context.lead.phone,
-              name: context.lead.name,
-              company: context.lead.company,
-              stage: context.lead.stage,
-              messages: [
-                ...context.recentMessages,
-                { role: 'user', content: message.text },
-                { role: 'assistant', content: result.response }
-              ]
-            });
+          })().catch(err => console.error('[Webhook] HubSpot sync error:', err))
+        );
 
-            // Generate memory if needed (skipped when LangGraph handles summarization)
-            if (process.env.USE_LANGGRAPH !== 'true') {
+        // Generate memory if needed (skipped when LangGraph handles summarization)
+        if (process.env.USE_LANGGRAPH !== 'true') {
+          backgroundTasks.push(
+            (async () => {
               if (await shouldGenerateMemory(context.conversation.startedAt, context.recentMessages.length + 2)) {
                 await generateMemory(context.lead.id, [
                   ...context.recentMessages,
@@ -1223,10 +1277,15 @@ export async function POST(request: NextRequest) {
                   { id: '', role: 'assistant', content: result.response, timestamp: new Date() },
                 ]);
               }
-            }
-          }
-        } catch (err) {
-          console.error('[Webhook] After error:', err);
+            })().catch(err => console.error('[Webhook] memory generation error:', err))
+          );
+        }
+
+        // Wait for all background tasks, none can crash the others
+        const results = await Promise.allSettled(backgroundTasks);
+        const failed = results.filter(r => r.status === 'rejected');
+        if (failed.length > 0) {
+          console.warn(`[Webhook] ${failed.length}/${results.length} background tasks failed`);
         }
       })());
 

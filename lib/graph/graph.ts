@@ -11,7 +11,7 @@ import { StateGraph, END } from '@langchain/langgraph';
 import { ConversationContext } from '@/types';
 import { SimpleAgentResult } from '@/lib/agents/simple-agent';
 import { GraphAgentConfig } from './state';
-import { GraphState, DEFAULT_PERSISTED_STATE } from './state';
+import { GraphState, DEFAULT_PERSISTED_STATE, PersistedConversationState } from './state';
 import { loadConversationState } from './memory';
 import { analyzeNode, routeNode, summarizeNode, generateNode, persistNode } from './nodes';
 import { withTiming, printTimingSummary } from './timing-middleware';
@@ -51,14 +51,18 @@ function getCompiledGraph() {
 /**
  * Entry point that replaces simpleAgent().
  * Same signature: (message, context) → SimpleAgentResult
+ *
+ * @param preloadedState - Optional state preloaded from the RPC call.
+ *   When provided, skips the separate loadConversationState() query (~50-200ms savings).
  */
 export async function processMessageGraph(
   message: string,
   context: ConversationContext,
-  agentConfig?: GraphAgentConfig
+  agentConfig?: GraphAgentConfig,
+  preloadedState?: PersistedConversationState
 ): Promise<SimpleAgentResult> {
-  // Load persisted state from Supabase
-  const conversationState = await loadConversationState(
+  // Use preloaded state if available, otherwise load from Supabase
+  const conversationState = preloadedState ?? await loadConversationState(
     context.conversation.id,
     context.lead.id
   );

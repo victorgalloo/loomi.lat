@@ -3,6 +3,8 @@
  * Handles availability checking and booking
  */
 
+import { fetchWithTimeout } from '@/lib/utils/fetch-with-timeout';
+
 interface CalSlot {
   date: string;
   time: string;
@@ -53,7 +55,7 @@ async function getEventLength(calConfig?: CalTenantConfig): Promise<number> {
   if (cached) return cached;
 
   try {
-    const res = await fetch(`${CAL_API_URL}/event-types/${config.eventTypeId}?apiKey=${config.apiKey}`);
+    const res = await fetchWithTimeout(`${CAL_API_URL}/event-types/${config.eventTypeId}?apiKey=${config.apiKey}`);
     if (res.ok) {
       const data = await res.json();
       const length = data.event_type?.length || 15;
@@ -113,7 +115,7 @@ export async function checkAvailability(dates: string, calConfig?: CalTenantConf
       const startTime = `${date}T00:00:00`;
       const endTime = `${date}T23:59:59`;
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${CAL_API_URL}/slots?apiKey=${config.apiKey}&eventTypeId=${config.eventTypeId}&startTime=${startTime}&endTime=${endTime}&timeZone=${TIMEZONE}`,
         { method: 'GET' }
       );
@@ -183,7 +185,7 @@ export async function createEvent(params: {
 
     console.log(`[Calendar]${tenantTag} Booking: start=${startTime}, end=${endTime}, length=${eventLength}min`);
 
-    const response = await fetch(`${CAL_API_URL}/bookings?apiKey=${config.apiKey}`, {
+    const response = await fetchWithTimeout(`${CAL_API_URL}/bookings?apiKey=${config.apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -237,7 +239,7 @@ export async function cancelEvent(eventId: string, calConfig?: CalTenantConfig):
   const tenantTag = config.tenantId ? `[tenant:${config.tenantId}]` : '';
 
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${CAL_API_URL}/bookings/${eventId}?apiKey=${config.apiKey}`,
       {
         method: 'DELETE',
@@ -268,7 +270,7 @@ export async function updateEventEmail(eventId: string, email: string, calConfig
   const tenantTag = config.tenantId ? `[tenant:${config.tenantId}]` : '';
 
   try {
-    const response = await fetch(`${CAL_API_URL}/bookings/${eventId}?apiKey=${config.apiKey}`, {
+    const response = await fetchWithTimeout(`${CAL_API_URL}/bookings/${eventId}?apiKey=${config.apiKey}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

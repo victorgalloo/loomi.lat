@@ -3,6 +3,8 @@
  * Syncs leads and conversations to HubSpot
  */
 
+import { fetchWithTimeout } from '@/lib/utils/fetch-with-timeout';
+
 interface HubSpotSyncParams {
   phone: string;
   name: string;
@@ -87,7 +89,7 @@ export async function syncLeadToHubSpot(params: HubSpotSyncParams): Promise<void
  */
 async function findContactByPhone(phone: string): Promise<{ id: string } | null> {
   try {
-    const response = await fetch(`${HUBSPOT_API_URL}/crm/v3/objects/contacts/search`, {
+    const response = await fetchWithTimeout(`${HUBSPOT_API_URL}/crm/v3/objects/contacts/search`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
@@ -106,7 +108,8 @@ async function findContactByPhone(phone: string): Promise<{ id: string } | null>
           }
         ],
         limit: 1
-      })
+      }),
+      timeoutMs: 6000,
     });
 
     if (!response.ok) {
@@ -126,13 +129,14 @@ async function findContactByPhone(phone: string): Promise<{ id: string } | null>
  * Create a new contact
  */
 async function createContact(properties: Record<string, string>): Promise<{ id: string }> {
-  const response = await fetch(`${HUBSPOT_API_URL}/crm/v3/objects/contacts`, {
+  const response = await fetchWithTimeout(`${HUBSPOT_API_URL}/crm/v3/objects/contacts`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ properties })
+    body: JSON.stringify({ properties }),
+    timeoutMs: 6000,
   });
 
   if (!response.ok) {
@@ -146,13 +150,14 @@ async function createContact(properties: Record<string, string>): Promise<{ id: 
  * Update an existing contact
  */
 async function updateContact(contactId: string, properties: Record<string, string>): Promise<void> {
-  const response = await fetch(`${HUBSPOT_API_URL}/crm/v3/objects/contacts/${contactId}`, {
+  const response = await fetchWithTimeout(`${HUBSPOT_API_URL}/crm/v3/objects/contacts/${contactId}`, {
     method: 'PATCH',
     headers: {
       'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ properties })
+    body: JSON.stringify({ properties }),
+    timeoutMs: 6000,
   });
 
   if (!response.ok) {
@@ -202,7 +207,7 @@ export async function createDeal(data: {
 
   try {
     // Create the deal
-    const response = await fetch(`${HUBSPOT_API_URL}/crm/v3/objects/deals`, {
+    const response = await fetchWithTimeout(`${HUBSPOT_API_URL}/crm/v3/objects/deals`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
@@ -216,7 +221,8 @@ export async function createDeal(data: {
           closedate: meetingDate?.toISOString() || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           pipeline: 'default'
         }
-      })
+      }),
+      timeoutMs: 6000,
     });
 
     if (!response.ok) {
@@ -227,12 +233,13 @@ export async function createDeal(data: {
     const dealResult = await response.json();
 
     // Associate deal with contact
-    await fetch(`${HUBSPOT_API_URL}/crm/v3/objects/deals/${dealResult.id}/associations/contacts/${contactId}/deal_to_contact`, {
+    await fetchWithTimeout(`${HUBSPOT_API_URL}/crm/v3/objects/deals/${dealResult.id}/associations/contacts/${contactId}/deal_to_contact`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
         'Content-Type': 'application/json'
-      }
+      },
+      timeoutMs: 6000,
     });
 
     console.log(`[HubSpot] Deal created: ${dealResult.id} for contact ${contactId}`);
@@ -252,7 +259,7 @@ export async function logNote(contactId: string, content: string): Promise<boole
   }
 
   try {
-    const response = await fetch(`${HUBSPOT_API_URL}/crm/v3/objects/notes`, {
+    const response = await fetchWithTimeout(`${HUBSPOT_API_URL}/crm/v3/objects/notes`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
@@ -270,7 +277,8 @@ export async function logNote(contactId: string, content: string): Promise<boole
             associationTypeId: 202 // Note to Contact
           }]
         }]
-      })
+      }),
+      timeoutMs: 6000,
     });
 
     if (response.ok) {
@@ -315,7 +323,7 @@ export async function updateDealStage(dealId: string, stage: string): Promise<bo
   }
 
   try {
-    const response = await fetch(`${HUBSPOT_API_URL}/crm/v3/objects/deals/${dealId}`, {
+    const response = await fetchWithTimeout(`${HUBSPOT_API_URL}/crm/v3/objects/deals/${dealId}`, {
       method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
@@ -325,7 +333,8 @@ export async function updateDealStage(dealId: string, stage: string): Promise<bo
         properties: {
           dealstage: stage
         }
-      })
+      }),
+      timeoutMs: 6000,
     });
 
     if (response.ok) {

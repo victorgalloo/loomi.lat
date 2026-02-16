@@ -384,5 +384,25 @@ export async function getConversationState(
   }
 }
 
+// ============================================
+// API Route Rate Limiters (Upstash Redis)
+// ============================================
+
+/** Demo chat: 15 requests per minute per IP */
+export const demoRateLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(15, '1m'),
+  analytics: true,
+  prefix: 'ratelimit:demo:',
+});
+
+/** Sandbox chat: 10 requests per minute per IP */
+export const sandboxRateLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, '1m'),
+  analytics: true,
+  prefix: 'ratelimit:sandbox:',
+});
+
 // Export Redis client for direct use if needed
 export { redis };

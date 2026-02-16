@@ -14,6 +14,7 @@
 
 import { createHash } from 'crypto';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { fetchWithTimeout } from '@/lib/utils/fetch-with-timeout';
 
 // Configuration
 const META_PIXEL_ID = process.env.META_PIXEL_ID;
@@ -189,14 +190,15 @@ export async function sendConversionEvent(
   }
 
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${META_API_URL}/${META_PIXEL_ID}/events`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        timeoutMs: 6000,
       }
     );
 
@@ -468,12 +470,13 @@ async function sendConversionEventDirect(
   }
 
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${META_API_URL}/${META_PIXEL_ID}/events`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        timeoutMs: 6000,
       }
     );
 

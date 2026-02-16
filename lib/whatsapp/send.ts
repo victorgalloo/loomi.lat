@@ -6,6 +6,8 @@
  * Falls back to environment variables for backward compatibility
  */
 
+import { fetchWithTimeout } from '@/lib/utils/fetch-with-timeout';
+
 export interface TemplateComponent {
   type: 'header' | 'body' | 'button';
   sub_type?: 'quick_reply' | 'url';
@@ -77,14 +79,14 @@ export async function markAsRead(
   credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+    const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
       headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         status: 'read',
         message_id: messageId
-      })
+      }),
     });
 
     if (!response.ok) {
@@ -110,7 +112,7 @@ export async function sendWhatsAppMessage(
   credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+    const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
       headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
@@ -154,7 +156,7 @@ export async function sendScheduleList(
       description: slot.date && slot.time ? `${slot.date} ${slot.time}` : ''
     }));
 
-    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+    const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
       headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
@@ -205,7 +207,7 @@ export async function sendConfirmationButtons(
   credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+    const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
       headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
@@ -293,7 +295,7 @@ export async function sendTemplateMessage(
       }
     };
 
-    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+    const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
       headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify(payload)
@@ -435,7 +437,7 @@ export async function sendWhatsAppDocument(
   credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+    const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
       headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
@@ -470,7 +472,7 @@ export async function sendWhatsAppAudio(
   credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+    const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
       headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
@@ -506,7 +508,7 @@ export async function sendWhatsAppImage(
   credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+    const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
       headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
@@ -543,7 +545,7 @@ export async function sendWhatsAppVideo(
   credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+    const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
       headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
@@ -601,7 +603,7 @@ export async function sendChallengeList(
   credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+    const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
       headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
@@ -652,7 +654,7 @@ export async function sendVolumeList(
   credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+    const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
       headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
@@ -703,7 +705,7 @@ export async function sendIndustryList(
   credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+    const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
       headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({
@@ -777,7 +779,7 @@ export async function sendPlanSelection(
   credentials?: TenantCredentials
 ): Promise<boolean> {
   try {
-    const response = await fetch(getApiUrl(credentials?.phoneNumberId), {
+    const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
       headers: getHeaders(credentials?.accessToken),
       body: JSON.stringify({

@@ -6,6 +6,7 @@
  */
 
 import { TenantCredentials } from './send';
+import { fetchWithTimeout } from '@/lib/utils/fetch-with-timeout';
 
 /**
  * Download media from WhatsApp Graph API
@@ -23,10 +24,11 @@ async function downloadWhatsAppMedia(
   }
 
   // Step 1: Get media URL
-  const mediaRes = await fetch(
+  const mediaRes = await fetchWithTimeout(
     `https://graph.facebook.com/v21.0/${mediaId}`,
     {
-      headers: { Authorization: `Bearer ${accessToken}` }
+      headers: { Authorization: `Bearer ${accessToken}` },
+      timeoutMs: 10000,
     }
   );
 
@@ -37,8 +39,9 @@ async function downloadWhatsAppMedia(
   const mediaData = await mediaRes.json() as { url: string };
 
   // Step 2: Download media binary
-  const downloadRes = await fetch(mediaData.url, {
-    headers: { Authorization: `Bearer ${accessToken}` }
+  const downloadRes = await fetchWithTimeout(mediaData.url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    timeoutMs: 10000,
   });
 
   if (!downloadRes.ok) {
@@ -64,12 +67,13 @@ async function transcribeWithWhisper(audioData: ArrayBuffer): Promise<string> {
   formData.append('model', 'whisper-1');
   formData.append('language', 'es');
 
-  const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+  const response = await fetchWithTimeout('https://api.openai.com/v1/audio/transcriptions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`
     },
-    body: formData
+    body: formData,
+    timeoutMs: 15000,
   });
 
   if (!response.ok) {

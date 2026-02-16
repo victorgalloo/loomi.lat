@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from '@/components/theme-provider';
+import { PostHogProvider } from '@/components/posthog-provider';
+import { PostHogPageview } from '@/components/posthog-pageview';
 import { ChatBubble } from '@/components/loomi/chat-bubble';
 import "./globals.css";
 
@@ -31,12 +34,17 @@ export default function RootLayout({
   return (
     <html lang="es" data-theme="light" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans`}>
-        <ThemeProvider defaultTheme="light">
-          <div className="antialiased bg-background text-foreground transition-colors duration-300">
-            {children}
-            <ChatBubble />
-          </div>
-        </ThemeProvider>
+        <PostHogProvider>
+          <Suspense fallback={null}>
+            <PostHogPageview />
+          </Suspense>
+          <ThemeProvider defaultTheme="light">
+            <div className="antialiased bg-background text-foreground transition-colors duration-300">
+              {children}
+              <ChatBubble />
+            </div>
+          </ThemeProvider>
+        </PostHogProvider>
         <SpeedInsights />
       </body>
     </html>

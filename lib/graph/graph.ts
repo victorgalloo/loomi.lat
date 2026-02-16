@@ -14,17 +14,18 @@ import { GraphAgentConfig } from './state';
 import { GraphState, DEFAULT_PERSISTED_STATE } from './state';
 import { loadConversationState } from './memory';
 import { analyzeNode, routeNode, summarizeNode, generateNode, persistNode } from './nodes';
+import { withTiming, printTimingSummary } from './timing-middleware';
 
 // Compiled graph singleton
 let compiledGraph: ReturnType<ReturnType<typeof buildGraph>['compile']> | null = null;
 
 function buildGraph() {
   const graph = new StateGraph(GraphState)
-    .addNode('analyze', analyzeNode)
-    .addNode('route', routeNode)
-    .addNode('summarize', summarizeNode)
-    .addNode('generate', generateNode)
-    .addNode('persist', persistNode)
+    .addNode('analyze', withTiming('analyze', analyzeNode))
+    .addNode('route', withTiming('route', routeNode))
+    .addNode('summarize', withTiming('summarize', summarizeNode))
+    .addNode('generate', withTiming('generate', generateNode))
+    .addNode('persist', withTiming('persist', persistNode))
     .addEdge('__start__', 'analyze')
     .addEdge('analyze', 'route')
     .addConditionalEdges('route', (state) => {
@@ -114,7 +115,11 @@ export async function processMessageGraph(
     needsSummary: false,
     saidLater: false,
     result: null,
+    _nodeTimings: [],
   });
+
+  // Print timing summary
+  printTimingSummary(finalState._nodeTimings);
 
   if (!finalState.result) {
     return { response: 'Perdón, tuve un problema. ¿Me repites?' };

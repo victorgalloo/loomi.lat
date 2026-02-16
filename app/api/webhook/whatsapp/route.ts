@@ -173,6 +173,22 @@ const OTHER_DAYS_KEYWORDS = new Set([
   'más días', 'mas dias', 'siguiente semana', 'proxima semana', 'próxima semana'
 ]);
 
+// Tenant cache with 5-minute TTL (avoids repeated Supabase lookups for same phone_number_id)
+const tenantCache = new Map<string, { data: NonNullable<Awaited<ReturnType<typeof getTenantFromPhoneNumberId>>>; cachedAt: number }>();
+const TENANT_CACHE_TTL = 5 * 60 * 1000;
+
+async function getCachedTenant(phoneNumberId: string) {
+  const cached = tenantCache.get(phoneNumberId);
+  if (cached && Date.now() - cached.cachedAt < TENANT_CACHE_TTL) {
+    return cached.data;
+  }
+  const data = await getTenantFromPhoneNumberId(phoneNumberId);
+  if (data) {
+    tenantCache.set(phoneNumberId, { data, cachedAt: Date.now() });
+  }
+  return data;
+}
+
 /**
  * Extract email from text using hoisted regex
  */
@@ -552,6 +568,7 @@ export async function GET(request: NextRequest) {
 
 // Handle incoming messages
 export async function POST(request: NextRequest) {
+  const t0 = performance.now();
   try {
     const body = await request.json();
     const message = parseWhatsAppWebhook(body);
@@ -595,40 +612,77 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: 'ok' });
     }
 
-    // Early exit: Duplicate processing
-    if (await isProcessing(message.messageId)) {
+    // ============================================
+    // PHASE 1: Independent checks (parallel)
+    // No dependencies between these three operations
+    // ============================================
+    const [isDuplicate, tenantData, rateLimit] = await Promise.all([
+      isProcessing(message.messageId),
+      message.phoneNumberId ? getCachedTenant(message.phoneNumberId) : Promise.resolve(null),
+      checkRateLimit(message.phone),
+    ]);
+
+    // Gate: duplicate
+    if (isDuplicate) {
       console.log(`Message ${message.messageId} already processing`);
       return NextResponse.json({ status: 'duplicate' });
     }
 
-    // Multi-tenant: Get tenant credentials from phone_number_id
+    // Resolve tenant credentials from cache/DB result
     let credentials: TenantCredentials | undefined;
     let tenantId: string | undefined;
     let agentConfig: AgentConfig | undefined;
     let calConfig: CalTenantConfig | undefined;
 
-    if (message.phoneNumberId) {
-      const tenantData = await getTenantFromPhoneNumberId(message.phoneNumberId);
-      if (tenantData) {
-        tenantId = tenantData.tenantId;
-        credentials = {
-          phoneNumberId: message.phoneNumberId,
-          accessToken: tenantData.accessToken,
-          tenantId: tenantData.tenantId
-        };
-        // Load agent config, knowledge docs, tools, and Cal.com config for this tenant
-        const [loadedConfig, tenantDocs, tenantTools, calCfg] = await Promise.all([
-          getAgentConfig(tenantId),
-          getTenantDocuments(tenantId),
-          getTenantTools(tenantId),
-          getCalConfig(tenantId)
-        ]);
-        agentConfig = loadedConfig || undefined;
-        // Build CalTenantConfig from DB credentials
-        if (calCfg) {
-          calConfig = { apiKey: calCfg.accessToken, eventTypeId: calCfg.eventTypeId, tenantId };
+    if (tenantData) {
+      tenantId = tenantData.tenantId;
+      credentials = {
+        phoneNumberId: message.phoneNumberId,
+        accessToken: tenantData.accessToken,
+        tenantId: tenantData.tenantId
+      };
+    } else if (message.phoneNumberId) {
+      console.log(`[Webhook] No tenant found for phone_number_id ${message.phoneNumberId}, using env vars`);
+    }
+
+    // Gate: rate limit (before acquiring costly resources)
+    if (!rateLimit.allowed) {
+      console.log(`Rate limited: ${message.phone} - ${rateLimit.reason}`);
+      if (rateLimit.reason === 'minute_limit') {
+        await sendWhatsAppMessage(message.phone, 'Dame un momento para procesar tus mensajes anteriores.', credentials);
+      }
+      return NextResponse.json({ status: 'rate_limited' });
+    }
+
+    try {
+      // Audio transcription (needs credentials, modifies message.text before context load)
+      if (message.mediaId && (message.mediaType === 'audio' || message.mediaType === 'voice')) {
+        const transcription = await transcribeWhatsAppAudio(message.mediaId, credentials);
+        if (transcription) {
+          message.text = `[Audio transcrito: ${transcription}]`;
         }
-        // Enrich agent config with knowledge and tools
+      }
+
+      // ============================================
+      // PHASE 2: Tenant-dependent ops (parallel)
+      // Lock, markAsRead, context, and config loads all start simultaneously
+      // ============================================
+      const lockP = acquireConversationLock(message.phone, 5000, tenantId);
+      const readP = markAsRead(message.messageId, credentials);
+      const contextP = getConversationContext(message, tenantId);
+      const configsP = tenantId
+        ? Promise.all([getAgentConfig(tenantId), getTenantDocuments(tenantId), getTenantTools(tenantId), getCalConfig(tenantId)])
+        : null;
+
+      const [lockAcquired, , context] = await Promise.all([lockP, readP, contextP]);
+
+      // Process tenant configs (already resolved — started before the await above)
+      if (configsP) {
+        const [loadedConfig, tenantDocs, tenantTools, calCfg] = await configsP;
+        agentConfig = loadedConfig || undefined;
+        if (calCfg) {
+          calConfig = { apiKey: calCfg.accessToken, eventTypeId: calCfg.eventTypeId, tenantId: tenantId! };
+        }
         if (agentConfig && (tenantDocs || tenantTools.length > 0)) {
           agentConfig = {
             ...agentConfig,
@@ -636,52 +690,17 @@ export async function POST(request: NextRequest) {
             ...(tenantTools.length > 0 ? { customTools: tenantTools } : {})
           } as AgentConfig & { knowledgeContext?: string; customTools?: unknown[] };
         }
-        console.log(`[Webhook] Multi-tenant: Routing to tenant ${tenantId}, docs: ${!!tenantDocs}, tools: ${tenantTools.length}`);
-      } else {
-        // Fallback to environment variables for backward compatibility
-        console.log(`[Webhook] No tenant found for phone_number_id ${message.phoneNumberId}, using env vars`);
-      }
-    }
-
-    try {
-      // Transcribe audio messages before any other processing
-      if (message.mediaId && (message.mediaType === 'audio' || message.mediaType === 'voice')) {
-        const transcription = await transcribeWhatsAppAudio(message.mediaId, credentials);
-        if (transcription) {
-          message.text = `[Audio transcrito: ${transcription}]`;
-        }
-        // If transcription fails, message.text remains '[Audio]' from the parser
+        console.log(`[Webhook] Tenant ${tenantId}: docs=${!!tenantDocs}, tools=${tenantTools.length}`);
       }
 
-      // Check rate limits
-      const rateLimit = await checkRateLimit(message.phone);
-      if (!rateLimit.allowed) {
-        console.log(`Rate limited: ${message.phone} - ${rateLimit.reason}`);
-        if (rateLimit.reason === 'minute_limit') {
-          await sendWhatsAppMessage(message.phone, 'Dame un momento para procesar tus mensajes anteriores.', credentials);
-        }
-        return NextResponse.json({ status: 'rate_limited' });
-      }
-
-      // Acquire conversation lock to prevent duplicate responses from rapid messages
-      const lockAcquired = await acquireConversationLock(message.phone, 5000, tenantId);
+      // Gate: conversation lock
       if (!lockAcquired) {
-        console.log(`[Webhook] Could not acquire conversation lock for ${message.phone}, saving message only`);
-        // Still mark as read and save message, but don't respond
-        await markAsRead(message.messageId, credentials);
-        const ctx = await getConversationContext(message, tenantId);
-        await saveMessage(ctx.conversation.id, 'user', message.text, ctx.lead.id);
+        console.log(`[Webhook] Could not acquire lock for ${message.phone}, saving message only`);
+        await saveMessage(context.conversation.id, 'user', message.text, context.lead.id);
         return NextResponse.json({ status: 'queued_no_response' });
       }
 
-      // Mark message as read immediately (shows blue checkmarks)
-      await markAsRead(message.messageId, credentials);
-
-      // Get conversation context (with tenant_id if available)
-      const context = await getConversationContext(message, tenantId);
-
       // Build TenantContext for Temporal workflows
-      // Default to 'starter' tier if not specified (can be loaded from DB in production)
       const tenantContext: TenantContext | null = tenantId
         ? buildTenantContext(tenantId, 'starter')
         : null;
@@ -700,8 +719,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ status: 'bot_paused' });
       }
 
-      // Check for opt-out signals (e.g., "no me interesa", "deja de escribirme")
-      // This also handles multiple cold responses pattern
+      // Check for opt-out signals
       const recentMessagesForOptOut = context.recentMessages?.map(m => ({
         role: m.role,
         content: m.content
@@ -716,8 +734,7 @@ export async function POST(request: NextRequest) {
         console.log(`[Webhook] Lead ${context.lead.id} opted out of follow-ups`);
       }
 
-      // Save message and cancel re-engagement in parallel (async-parallel)
-      // If opted out, we already marked them - just cancel remaining follow-ups
+      // Save message and cancel re-engagement in parallel
       const cancelFollowUpsPromise = isTemporalEnabled('followups') && tenantContext
         ? getTemporalModule().then(t => t?.cancelFollowUps(tenantContext.tenantId, context.lead.id))
         : cancelFollowUps(context.lead.id, ['cold_lead_reengagement', 'reengagement_2', 'reengagement_3']);
@@ -726,6 +743,8 @@ export async function POST(request: NextRequest) {
         saveMessage(context.conversation.id, 'user', message.text, context.lead.id),
         cancelFollowUpsPromise
       ]);
+
+      const t1 = performance.now();
 
       // ============================================
       // DETERMINISTIC FLOW - Handle interactive messages first
@@ -1005,6 +1024,7 @@ export async function POST(request: NextRequest) {
       }
 
       let result;
+      let t2: number;
       try {
         // Inject WhatsApp credentials into agent config for tool use
         const configWithCreds = credentials && agentConfig
@@ -1012,6 +1032,7 @@ export async function POST(request: NextRequest) {
           : agentConfig;
 
         result = await processMessageGraph(message.text, context, configWithCreds);
+        t2 = performance.now();
       } catch (agentError) {
         console.error('Agent error:', agentError);
 
@@ -1067,13 +1088,17 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Send response
+      // Send response (saveMessage deferred to waitUntil)
       await sendWhatsAppMessage(message.phone, result.response, credentials);
-      await saveMessage(context.conversation.id, 'assistant', result.response, context.lead.id);
+      const t3 = performance.now();
+      console.log(`⏱️ [Webhook] Preprocess: ${(t1 - t0).toFixed(0)}ms | Pipeline: ${(t2! - t1).toFixed(0)}ms | WA send: ${(t3 - t2!).toFixed(0)}ms | TOTAL: ${(t3 - t0).toFixed(0)}ms`);
 
-      // Background operations
+      // Background operations (non-blocking)
       waitUntil((async () => {
         try {
+          // Save assistant message to DB (fire-and-forget)
+          await saveMessage(context.conversation.id, 'assistant', result.response, context.lead.id);
+
           // Update industry if detected
           if (result.detectedIndustry) {
             await updateLeadIndustry(context.lead.id, result.detectedIndustry);

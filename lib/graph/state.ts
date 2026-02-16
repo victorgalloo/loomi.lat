@@ -8,6 +8,7 @@ import { ConversationContext } from '@/types';
 import { SimpleAgentResult } from '@/lib/agents/simple-agent';
 import { ReasoningResult } from '@/lib/agents/reasoning';
 import { AgentConfig } from '@/lib/tenant/context';
+import { NodeTiming } from './timing-middleware';
 
 // Extended type matching what the webhook attaches (knowledgeContext + customTools)
 export type GraphAgentConfig = AgentConfig & {
@@ -121,6 +122,9 @@ export const GraphState = Annotation.Root({
 
   // Output (set by generateNode)
   result: Annotation<SimpleAgentResult | null>,
+
+  // Timing (set by withTiming middleware)
+  _nodeTimings: Annotation<NodeTiming[]>,
 });
 
 export type GraphStateType = typeof GraphState.State;

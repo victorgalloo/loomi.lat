@@ -49,8 +49,7 @@ export async function syncLeadToHubSpot(params: HubSpotSyncParams): Promise<void
       lastname: params.name.split(' ').slice(1).join(' ') || '',
       phone: params.phone,
       lifecyclestage: lifecycleStage,
-      hs_lead_status: params.stage,
-      whatsapp_conversation_summary: conversationSummary.substring(0, 65535)
+      hs_lead_status: mapLeadStatusToHubSpot(params.stage),
     };
 
     if (params.email) {
@@ -182,6 +181,33 @@ function mapStageToHubSpot(stage: string): string {
   };
 
   return stageMap[stage] || 'lead';
+}
+
+/**
+ * Map internal stage to HubSpot hs_lead_status
+ * Valid values: NEW, OPEN, IN_PROGRESS, OPEN_DEAL, UNQUALIFIED,
+ *               ATTEMPTED_TO_CONTACT, CONNECTED, BAD_TIMING
+ */
+function mapLeadStatusToHubSpot(stage: string): string {
+  const statusMap: Record<string, string> = {
+    'Cold': 'NEW',
+    'initial': 'NEW',
+    'discovery': 'OPEN',
+    'Warm': 'IN_PROGRESS',
+    'qualified': 'IN_PROGRESS',
+    'Hot': 'OPEN_DEAL',
+    'demo_scheduled': 'OPEN_DEAL',
+    'Demo Agendada': 'OPEN_DEAL',
+    'demo_completed': 'OPEN_DEAL',
+    'proposal_sent': 'OPEN_DEAL',
+    'Ganado': 'CONNECTED',
+    'closed_won': 'CONNECTED',
+    'Perdido': 'UNQUALIFIED',
+    'closed_lost': 'UNQUALIFIED',
+    'cold': 'BAD_TIMING',
+  };
+
+  return statusMap[stage] || 'OPEN';
 }
 
 // ============================================

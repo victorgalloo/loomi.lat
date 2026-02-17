@@ -12,10 +12,7 @@
     "train:apply": "npm run train -- --apply",
     "train:full": "npm run train -- --full",
     "train:live": "npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/live-training.ts",
-    "migrate": "npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/run-migration.ts",
-    "worker": "DOTENV_CONFIG_PATH=.env.local node -r dotenv/config packages/temporal-workers/node_modules/.bin/ts-node packages/temporal-workers/src/worker.ts",
-    "worker:build": "npm run --prefix packages/temporal-workers build",
-    "worker:start": "DOTENV_CONFIG_PATH=.env.local node -r dotenv/config packages/temporal-workers/dist/worker.js"
+    "migrate": "npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/run-migration.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.38",
@@ -32,7 +29,6 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.81.1",
-    "@temporalio/client": "^1.11.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.36.1",
     "@vercel/functions": "^3.3.6",

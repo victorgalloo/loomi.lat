@@ -4,6 +4,7 @@ import { useState, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { LogOut, Sun, Moon, FileText, Code, Database, Layers, Zap } from 'lucide-react';
+import Image from 'next/image';
 
 interface PartnersViewProps {
   userEmail: string;
@@ -130,10 +131,14 @@ export default function PartnersView({ userEmail }: PartnersViewProps) {
           </div>
 
           {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-border">
-            <p className="text-xs text-muted font-mono text-center">
+          <div className="mt-8 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-muted font-mono">
               $ last_updated: <span className="text-terminal-green">{new Date().toLocaleDateString('es-MX')}</span>
             </p>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-surface">
+              <Image src="/logos/meta-logo.png" alt="Meta" width={50} height={16} className="object-contain opacity-60" />
+              <span className="text-muted text-xs font-mono">Tech Provider</span>
+            </div>
           </div>
         </div>
       </main>
@@ -264,12 +269,6 @@ function TechStackSection() {
       category: 'Deploy',
       description: 'Hosting serverless. Deploy automatico en cada push a main. Edge functions, preview deployments por PR.',
       files: 'vercel.json',
-    },
-    {
-      tech: 'Temporal.io',
-      category: 'Orquestacion',
-      description: 'Workflows duraderos para follow-ups y recordatorios. Reintentos automaticos, estado persistente. Opcional.',
-      files: 'lib/temporal/',
     },
   ];
 

@@ -9,7 +9,7 @@
 
 import { StateGraph, END } from '@langchain/langgraph';
 import { LangChainCallbackHandler } from '@posthog/ai/langchain';
-import { getPostHogServer } from '@/lib/analytics/posthog';
+import { getPostHogServer, flushPostHog } from '@/lib/analytics/posthog';
 import { ConversationContext } from '@/types';
 import { SimpleAgentResult } from '@/lib/agents/simple-agent';
 import { GraphAgentConfig } from './state';
@@ -134,6 +134,9 @@ export async function processMessageGraph(
 
   // Print timing summary
   printTimingSummary(finalState._nodeTimings);
+
+  // Flush PostHog events before serverless function returns
+  await flushPostHog();
 
   if (!finalState.result) {
     return { response: 'Perdón, tuve un problema. ¿Me repites?' };

@@ -15,7 +15,7 @@ import { checkAvailability, createEvent, CalTenantConfig } from '@/lib/tools/cal
 import { getCalConfig } from '@/lib/integrations/tenant-integrations';
 import { sendWhatsAppLink, escalateToHuman } from '@/lib/whatsapp/send';
 import { createKnowledgeTools } from '@/lib/knowledge';
-import { SimpleAgentResult } from '@/lib/agents/simple-agent';
+import { SimpleAgentResult } from './state';
 import { buildSystemPrompt } from './prompts';
 import { syncSummaryToLeadMemory } from './memory';
 import { analyzeProgress } from '@/lib/agents/progress-tracker';

@@ -4,7 +4,7 @@ import { EvalReport, ScenarioResult } from './runner';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const PROMPT_FILE_PATH = path.join(process.cwd(), 'lib', 'agents', 'simple-agent.ts');
+const PROMPT_FILE_PATH = path.join(process.cwd(), 'lib', 'agents', 'defaults.ts');
 
 interface PromptImprovement {
   category: string;
@@ -142,8 +142,8 @@ function extractCurrentPrompt(): string {
   try {
     const fileContent = fs.readFileSync(PROMPT_FILE_PATH, 'utf-8');
 
-    // Extraer el contenido entre los backticks del SYSTEM_PROMPT
-    const match = fileContent.match(/const SYSTEM_PROMPT = `([\s\S]*?)`;/);
+    // Extraer el contenido entre los backticks del DEFAULT_SYSTEM_PROMPT
+    const match = fileContent.match(/export const DEFAULT_SYSTEM_PROMPT = `([\s\S]*?)`;/);
     if (match) {
       return match[1];
     }
@@ -165,8 +165,8 @@ function applyNewPrompt(newPrompt: string): boolean {
       .replace(/\$/g, '\\$');
 
     const updatedContent = fileContent.replace(
-      /const SYSTEM_PROMPT = `[\s\S]*?`;/,
-      `const SYSTEM_PROMPT = \`${escapedPrompt}\`;`
+      /export const DEFAULT_SYSTEM_PROMPT = `[\s\S]*?`;/,
+      `export const DEFAULT_SYSTEM_PROMPT = \`${escapedPrompt}\`;`
     );
 
     fs.writeFileSync(PROMPT_FILE_PATH, updatedContent, 'utf-8');

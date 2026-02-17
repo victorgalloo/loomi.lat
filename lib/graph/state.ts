@@ -5,10 +5,34 @@
 
 import { Annotation } from '@langchain/langgraph';
 import { ConversationContext } from '@/types';
-import { SimpleAgentResult } from '@/lib/agents/simple-agent';
 import { ReasoningResult } from '@/lib/agents/reasoning';
 import { AgentConfig } from '@/lib/tenant/context';
 import { NodeTiming } from './timing-middleware';
+
+export interface SimpleAgentResult {
+  response: string;
+  tokensUsed?: number;
+  appointmentBooked?: {
+    eventId: string;
+    date: string;
+    time: string;
+    email: string;
+    meetingUrl?: string;
+  };
+  brochureSent?: boolean;
+  escalatedToHuman?: {
+    reason: string;
+    summary: string;
+  };
+  paymentLinkSent?: {
+    plan: string;
+    email: string;
+    checkoutUrl: string;
+  };
+  detectedIndustry?: string;
+  saidLater?: boolean;
+  showScheduleList?: boolean;
+}
 
 // Extended type matching what the webhook attaches (knowledgeContext + customTools)
 export type GraphAgentConfig = AgentConfig & {

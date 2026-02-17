@@ -5,7 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { simpleAgent } from '@/lib/agents/simple-agent';
+import { processMessageGraph } from '@/lib/graph/graph';
+import { GraphAgentConfig } from '@/lib/graph/state';
 import { getAgentConfig } from '@/lib/tenant/context';
 import { getTenantDocuments, getTenantTools } from '@/lib/tenant/knowledge';
 import { ConversationContext, Message } from '@/types';
@@ -155,11 +156,11 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Sandbox] Processing message for session ${sessionId}, tenant: ${tenantId || 'demo'}, customPrompt: ${useCustomPrompt}, tools: ${tenantTools.length}, hasKnowledge: ${!!knowledgeContext}`);
 
-    // Call the real agent
-    const result = await simpleAgent(
+    // Call the real agent (LangGraph)
+    const result = await processMessageGraph(
       message,
       context,
-      agentConfig || undefined
+      (agentConfig || undefined) as GraphAgentConfig | undefined
     );
 
     console.log(`[Sandbox] Response generated, tokens: ${result.tokensUsed || 'N/A'}`);

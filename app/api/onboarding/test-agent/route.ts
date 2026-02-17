@@ -16,7 +16,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getTenantIdForUser } from '@/lib/supabase/user-role';
-import { simpleAgent } from '@/lib/agents/simple-agent';
+import { processMessageGraph } from '@/lib/graph/graph';
+import type { GraphAgentConfig } from '@/lib/graph/state';
 import type { ConversationContext, Lead, Conversation, Message } from '@/types';
 import { updateOnboardingStatus, getOnboardingStatus } from '@/lib/onboarding/progress';
 
@@ -125,15 +126,15 @@ export async function POST(request: NextRequest) {
       firstInteractionDate: new Date(),
     };
 
-    // Call the REAL agent with the custom prompt
-    const result = await simpleAgent(message, context, {
+    // Call the REAL agent (LangGraph) with the custom prompt
+    const result = await processMessageGraph(message, context, {
       systemPrompt: customSystemPrompt || null,
       businessName: businessName || null,
       businessDescription: businessDescription || null,
       productsServices: productsServices || null,
       tone: (tone as 'professional' | 'friendly' | 'casual' | 'formal') || 'professional',
       customInstructions: customInstructions || null,
-    });
+    } as GraphAgentConfig);
 
     // Update test results in onboarding status
     const currentStatus = await getOnboardingStatus(tenantId);

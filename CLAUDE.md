@@ -37,8 +37,14 @@ app/
 └── page.tsx              # Landing page (/)
 
 lib/
+├── graph/
+│   ├── graph.ts          # LangGraph entry point (processMessageGraph)
+│   ├── state.ts          # Graph state schema + SimpleAgentResult type
+│   ├── nodes.ts          # 5 nodes: analyze, route, summarize, generate, persist
+│   ├── prompts.ts        # System prompt builder
+│   └── memory.ts         # Conversation state persistence
 ├── agents/
-│   ├── simple-agent.ts   # Agente principal (full features)
+│   ├── defaults.ts       # Default prompts and identity
 │   ├── demo-agent.ts     # Agente ligero para landing demo
 │   ├── few-shot.ts       # Ejemplos para el prompt
 │   └── reasoning.ts      # Análisis con o3-mini

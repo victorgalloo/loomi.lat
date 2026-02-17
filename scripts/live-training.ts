@@ -11,7 +11,7 @@ import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
 import * as readline from 'readline';
-import { simpleAgent } from '../lib/agents/simple-agent';
+import { processMessageGraph } from '../lib/graph/graph';
 import { ConversationContext, Message } from '../types';
 
 const rl = readline.createInterface({
@@ -84,7 +84,7 @@ async function main() {
 
     try {
       // Obtener respuesta del agente
-      const result = await simpleAgent(input, context);
+      const result = await processMessageGraph(input, context);
 
       // Agregar respuesta del agente
       messages.push({

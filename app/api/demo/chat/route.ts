@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { simpleAgent } from '@/lib/agents/simple-agent';
+import { processMessageGraph } from '@/lib/graph/graph';
 import { ConversationContext, Lead, Conversation, Message } from '@/types';
 import { checkAvailability } from '@/lib/tools/calendar';
 import { demoRateLimiter } from '@/lib/ratelimit';
@@ -85,8 +85,8 @@ export async function POST(request: NextRequest) {
       isFirstConversation: history.length === 0,
     };
 
-    // Call the REAL agent
-    const result = await simpleAgent(message, context);
+    // Call the REAL agent (LangGraph)
+    const result = await processMessageGraph(message, context);
 
     // If agent triggered schedule list, fetch and return slots
     if (result.showScheduleList) {

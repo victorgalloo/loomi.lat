@@ -4,7 +4,8 @@
  */
 
 import 'dotenv/config';
-import { simpleAgent } from '../lib/agents/simple-agent';
+import { processMessageGraph } from '../lib/graph/graph';
+import type { GraphAgentConfig } from '../lib/graph/state';
 import { ConversationContext, Message } from '../types';
 
 // Mensaje inicial del broadcast
@@ -156,10 +157,10 @@ async function runScenario(scenario: { name: string; response: string }, index: 
   const startTime = Date.now();
 
   try {
-    const result = await simpleAgent(scenario.response, context, {
+    const result = await processMessageGraph(scenario.response, context, {
       systemPrompt: GROWTH_ROCKSTAR_PROMPT,
       tone: 'friendly',
-    });
+    } as GraphAgentConfig);
 
     const elapsed = Date.now() - startTime;
 

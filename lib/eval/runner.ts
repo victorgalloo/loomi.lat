@@ -1,6 +1,6 @@
 import { SCENARIOS, Scenario } from './scenarios';
 import { evaluateResponse, EvaluationResult } from './evaluator';
-import { simpleAgent } from '../agents/simple-agent';
+import { processMessageGraph } from '../graph/graph';
 import { ConversationContext, Message } from '@/types';
 
 export interface ScenarioResult {
@@ -49,8 +49,8 @@ async function runScenario(scenario: Scenario): Promise<ScenarioResult> {
     hasActiveAppointment: false,
   };
 
-  // Ejecutar el agente real
-  const result = await simpleAgent(scenario.nextUserMessage, context);
+  // Ejecutar el agente real (LangGraph)
+  const result = await processMessageGraph(scenario.nextUserMessage, context);
   const agentResponse = result.response;
 
   // Evaluar la respuesta

@@ -3,18 +3,15 @@
  * 5 nodes: analyze, route, summarize, generate, persist
  */
 
-import { generateText, stepCountIs } from 'ai';
-import { tool, zodSchema } from '@ai-sdk/provider-utils';
-import { anthropic } from '@ai-sdk/anthropic';
-import { withTracing } from '@posthog/ai/vercel';
-import { getPostHogServer } from '@/lib/analytics/posthog';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { tool as langchainTool, type StructuredToolInterface } from '@langchain/core/tools';
+import { HumanMessage, SystemMessage, AIMessage, ToolMessage, type BaseMessage } from '@langchain/core/messages';
+import type { RunnableConfig } from '@langchain/core/runnables';
 import { z } from 'zod';
-import { resolveModel, TracingOptions } from '@/lib/agents/model';
 import { generateReasoningFast } from '@/lib/agents/reasoning';
 import { checkAvailability, createEvent, CalTenantConfig } from '@/lib/tools/calendar';
 import { getCalConfig } from '@/lib/integrations/tenant-integrations';
 import { sendWhatsAppLink, escalateToHuman } from '@/lib/whatsapp/send';
-import { createKnowledgeTools } from '@/lib/knowledge';
 import { SimpleAgentResult } from './state';
 import { buildSystemPrompt } from './prompts';
 import { syncSummaryToLeadMemory } from './memory';
@@ -27,6 +24,33 @@ import {
   PersistedConversationState,
   ObjectionEntry,
 } from './state';
+
+// ============================================
+// Model helpers
+// ============================================
+
+const OPENAI_TO_CLAUDE: Record<string, string> = {
+  'gpt-4o-mini': 'claude-haiku-4-5-20251001',
+  'gpt-4o': 'claude-sonnet-4-5-20250929',
+  'gpt-5.2-chat-latest': 'claude-sonnet-4-5-20250929',
+};
+
+function resolveChatModel(modelOverride?: string | null): string {
+  if (!modelOverride) return 'claude-sonnet-4-5-20250929';
+  if (modelOverride.startsWith('claude-')) return modelOverride;
+  return OPENAI_TO_CLAUDE[modelOverride] ?? 'claude-sonnet-4-5-20250929';
+}
+
+function extractTextContent(content: string | Array<Record<string, unknown>>): string {
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) {
+    return content
+      .filter(b => b.type === 'text' && typeof b.text === 'string')
+      .map(b => b.text as string)
+      .join('');
+  }
+  return '';
+}
 
 // ============================================
 // Keyword Sets (migrated from simple-agent.ts)
@@ -393,7 +417,7 @@ export function routeNode(state: GraphStateType): Partial<GraphStateType> {
 // NODE 3: summarizeNode (conditional)
 // ============================================
 
-export async function summarizeNode(state: GraphStateType): Promise<Partial<GraphStateType>> {
+export async function summarizeNode(state: GraphStateType, config?: RunnableConfig): Promise<Partial<GraphStateType>> {
   const history = state.history;
   const convState = { ...state.conversationState };
 
@@ -427,24 +451,17 @@ Formato: Texto corrido, sin bullets. Incluye solo información confirmada.
 Si hay resumen previo, actualízalo incorporando la nueva información.`;
 
   try {
-    // Wrap summarize model with PostHog tracing if tenant context available
-    const baseModel = anthropic('claude-haiku-4-5-20251001');
-    const summaryModel = state.agentConfig?.tenantId
-      ? withTracing(baseModel, getPostHogServer(), {
-          posthogDistinctId: state.agentConfig.tenantId,
-          posthogTraceId: state.context.conversation.id,
-          posthogProperties: { node: 'summarize' },
-        })
-      : baseModel;
-
-    const result = await generateText({
-      model: summaryModel,
-      system: summaryPrompt,
-      prompt: 'Resume la conversación.',
-      maxOutputTokens: 300,
+    const model = new ChatAnthropic({
+      model: 'claude-haiku-4-5-20251001',
+      maxTokens: 300,
     });
 
-    const newSummary = result.text.trim();
+    const result = await model.invoke([
+      new SystemMessage(summaryPrompt),
+      new HumanMessage('Resume la conversación.'),
+    ], config);
+
+    const newSummary = extractTextContent(result.content).trim();
 
     if (newSummary && newSummary.length > 10) {
       convState.summary = newSummary;
@@ -487,15 +504,8 @@ function getNextBusinessDays(count: number): string[] {
   return dates;
 }
 
-export async function generateNode(state: GraphStateType): Promise<Partial<GraphStateType>> {
+export async function generateNode(state: GraphStateType, config?: RunnableConfig): Promise<Partial<GraphStateType>> {
   const { resolvedPhase, context, reasoning, conversationState, message, history, topicChanged, currentTopic, agentConfig, progressInstruction } = state;
-
-  // Build tracing options for PostHog LLM analytics (always trace)
-  const tracing: TracingOptions = {
-    distinctId: agentConfig?.tenantId || context.lead.id || 'anonymous',
-    traceId: context.conversation.id,
-    properties: { node: 'generate', phase: resolvedPhase },
-  };
 
   // Resolve Cal.com config for this tenant
   let calConfig: CalTenantConfig | undefined;
@@ -534,267 +544,254 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
   const clientName = context.lead.name || 'Cliente';
   const clientPhone = context.lead.phone || '';
 
-  // Define tools (migrated from simple-agent.ts)
-  const checkAvailabilitySchema = z.object({
-    date: z.string().describe('Fecha en formato YYYY-MM-DD. Si no se especifica fecha exacta, usa los próximos días hábiles.')
-  });
-
-  const bookAppointmentSchema = z.object({
-    date: z.string().describe('Fecha de la cita en formato YYYY-MM-DD'),
-    time: z.string().describe('Hora de la cita en formato HH:MM (24h)'),
-    email: z.string().describe('Email del cliente para enviar la invitación')
-  });
-
-  const tools = {
-    check_availability: tool({
-      description: 'Verifica disponibilidad en el calendario para una fecha específica. Usa formato YYYY-MM-DD.',
-      inputSchema: zodSchema(checkAvailabilitySchema),
-      execute: async (params) => {
-        const { date } = params as z.infer<typeof checkAvailabilitySchema>;
-        console.log(`[Tool] Checking availability for: ${date}`);
-        let dateToCheck = date;
-        if (!date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          const nextDays = getNextBusinessDays(3);
-          dateToCheck = nextDays.join(',');
-        }
-        const slots = await checkAvailability(dateToCheck, calConfig);
-        if (slots.length === 0) {
-          return { available: false, message: 'No hay horarios disponibles para esa fecha.' };
-        }
-        const grouped: Record<string, string[]> = {};
-        for (const slot of slots) {
-          if (!grouped[slot.date]) grouped[slot.date] = [];
-          grouped[slot.date].push(slot.time);
-        }
-        const readable = Object.entries(grouped).map(([d, times]) => {
-          const dateObj = new Date(d + 'T12:00:00');
-          const dayName = dateObj.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
-          return `${dayName}: ${times.slice(0, 4).join(', ')}`;
-        }).join(' | ');
-        return { available: true, slots: readable, rawSlots: slots.slice(0, 8) };
-      }
-    }),
-
-    book_appointment: tool({
-      description: 'Agenda una cita en el calendario. Requiere fecha (YYYY-MM-DD), hora (HH:MM), y email del cliente.',
-      inputSchema: zodSchema(bookAppointmentSchema),
-      execute: async (params) => {
-        const { date, time, email } = params as z.infer<typeof bookAppointmentSchema>;
-        console.log(`[Tool] Booking appointment: ${date} ${time} for ${email}`);
-        const result = await createEvent({
-          date,
-          time,
-          name: clientName,
-          phone: clientPhone,
-          email
-        }, calConfig);
-        if (result.success) {
-          if (result.meetingUrl && clientPhone) {
-            const { sendWhatsAppMessage } = await import('@/lib/whatsapp/send');
-            await sendWhatsAppMessage(
-              clientPhone,
-              `Aquí está el link para nuestra llamada:\n${result.meetingUrl}\n\nTe llegará también la invitación a tu correo.`
-            );
-            console.log(`[Tool] Meeting link sent to ${clientPhone}: ${result.meetingUrl}`);
-          }
-          return {
-            success: true,
-            eventId: result.eventId,
-            meetingUrl: result.meetingUrl,
-            message: `Cita agendada exitosamente para ${date} a las ${time}. Se envió invitación a ${email} y el link de la reunión por WhatsApp.`
-          };
-        }
-        return {
-          success: false,
-          message: 'No se pudo agendar la cita. El horario puede no estar disponible.'
-        };
-      }
-    }),
-
-    send_brochure: tool({
-      description: 'Envía información detallada sobre el servicio de agentes de IA para WhatsApp. Usa cuando pidan más información, ejemplos o detalles.',
-      inputSchema: zodSchema(z.object({
-        reason: z.string().describe('Motivo por el que se envía el brochure')
-      })),
-      execute: async (params) => {
-        const { reason } = params as { reason: string };
-        console.log(`[Tool] Sending brochure: ${reason}`);
-        const brochureUrl = process.env.BROCHURE_URL || 'https://anthana.com/info';
-        const sent = await sendWhatsAppLink(
-          clientPhone,
-          brochureUrl,
-          '📄 Aquí tienes más información sobre nuestros agentes de IA para WhatsApp:'
-        );
-        return {
-          success: sent,
-          message: sent
-            ? 'Brochure enviado exitosamente. Pregunta si tiene dudas o quiere agendar demo.'
-            : 'No se pudo enviar el brochure.'
-        };
-      }
-    }),
-
-    escalate_to_human: tool({
-      description: 'Transfiere la conversación a un humano. SOLO usa cuando el cliente dice LITERALMENTE "quiero hablar con un humano" o "pásame con una persona". NUNCA la uses para objeciones, dudas, desconfianza, preguntas sobre estafas, o preguntas difíciles — resuélvelas tú mismo.',
-      inputSchema: zodSchema(z.object({
-        reason: z.string().describe('Motivo de la escalación'),
-        summary: z.string().describe('Resumen breve de la conversación')
-      })),
-      execute: async (params) => {
-        const { reason, summary } = params as { reason: string; summary: string };
-        console.log(`[Tool] Escalating to human: ${reason}`);
-        const escalated = await escalateToHuman({
-          clientPhone,
-          clientName,
-          reason,
-          conversationSummary: summary
-        });
-        return {
-          success: escalated,
-          message: escalated
-            ? 'Escalado exitosamente. El cliente será contactado por un humano pronto.'
-            : 'No se pudo escalar. Intenta resolver la situación.'
-        };
-      }
-    }),
-
-    send_payment_link: tool({
-      description: 'Envía un link de pago de Stripe al cliente por WhatsApp. Usa cuando el cliente confirmó que quiere comprar y ya dio su email.',
-      inputSchema: zodSchema(z.object({
-        email: z.string().describe('Email del cliente'),
-        productName: z.string().describe('Nombre del producto o servicio'),
-      })),
-      execute: async (params) => {
-        const { email, productName } = params as { email: string; productName: string };
-        const tenantId = agentConfig?.tenantId;
-
-        console.log(`[Tool] send_payment_link for ${email}, product: ${productName}, tenant: ${tenantId}`);
-        try {
-          const { sendPaymentLink } = await import('@/lib/whatsapp/send');
-          const waCreds = agentConfig?.whatsappCredentials;
-
-          // 1. Fixed payment link from products catalog
-          const catalog = agentConfig?.productsCatalog as Record<string, unknown> | undefined;
-          const fixedLink = catalog?.paymentLink as string | undefined;
-
-          if (fixedLink) {
-            console.log(`[Tool] Using fixed payment link: ${fixedLink}`);
-            const sent = await sendPaymentLink(clientPhone, fixedLink, productName, waCreds);
-            return {
-              success: true,
-              checkoutUrl: fixedLink,
-              message: sent
-                ? 'Link de pago enviado exitosamente por WhatsApp.'
-                : `Link de pago: ${fixedLink}`,
-            };
-          }
-
-          // 2. Dynamic checkout via tenant Stripe
-          if (tenantId) {
-            const { createTenantCheckoutSession } = await import('@/lib/stripe/checkout');
-            const { shortUrl } = await createTenantCheckoutSession({
-              tenantId, email, phone: clientPhone, amount: 27500, productName,
-            });
-            const sent = await sendPaymentLink(clientPhone, shortUrl, productName, waCreds);
-            return {
-              success: true,
-              checkoutUrl: shortUrl,
-              message: sent
-                ? 'Link de pago enviado exitosamente por WhatsApp.'
-                : `Link de pago: ${shortUrl}`,
-            };
-          }
-
-          return { success: false, message: 'No se pudo identificar el tenant.' };
-        } catch (error) {
-          console.error('[Tool] Payment link error:', error);
-          return { success: false, message: 'Error al crear el link de pago.' };
-        }
-      }
-    }),
-
-    ...createKnowledgeTools()
-  };
-
-  // Add custom tools from tenant config (same pattern as simple-agent.ts)
-  if (agentConfig?.customTools && agentConfig.customTools.length > 0) {
-    for (const customTool of agentConfig.customTools) {
-      (tools as Record<string, unknown>)[customTool.name] = tool({
-        description: customTool.description,
-        inputSchema: zodSchema(z.object({})),
-        execute: async () => {
-          console.log(`[Tool] Custom tool called: ${customTool.name}`);
-          return customTool.mockResponse || { success: true, message: `${customTool.displayName} executed` };
-        }
-      });
-    }
-    console.log(`[GraphGenerate] Added ${agentConfig.customTools.length} custom tools`);
-  }
-
-  // Track tool results via closures (reliable fallback if model text is empty after tool call)
+  // Track tool results via closures
   let appointmentBooked: SimpleAgentResult['appointmentBooked'] = undefined;
   let brochureSent = false;
   let escalatedToHumanResult: SimpleAgentResult['escalatedToHuman'] = undefined;
   let paymentLinkSent: SimpleAgentResult['paymentLinkSent'] = undefined;
   let toolResponseMessage = '';
 
-  try {
-    const result = await generateText({
-      model: resolveModel(agentConfig?.model, tracing),
-      system: systemPrompt,
-      messages: history,
-      tools,
-      maxOutputTokens: agentConfig?.maxResponseTokens || 200,
-      temperature: agentConfig?.temperature,
-      stopWhen: stepCountIs(3),
-      onStepFinish: async (step) => {
-        if (step.toolResults) {
-          for (const toolResult of step.toolResults) {
-            const output = toolResult.output as { success?: boolean; eventId?: string; meetingUrl?: string } | undefined;
-
-            if (toolResult.toolName === 'book_appointment' && output?.success) {
-              const toolCall = step.toolCalls?.find(tc => tc.toolName === 'book_appointment');
-              if (toolCall) {
-                const args = toolCall.input as { date: string; time: string; email: string };
-                appointmentBooked = {
-                  eventId: output.eventId || '',
-                  date: args.date,
-                  time: args.time,
-                  email: args.email,
-                  meetingUrl: output.meetingUrl
-                };
-                console.log(`[Tool] Appointment booked: ${JSON.stringify(appointmentBooked)}`);
-              }
-            }
-
-            if (toolResult.toolName === 'send_brochure' && output?.success) {
-              brochureSent = true;
-              console.log(`[Tool] Brochure sent`);
-            }
-
-            if (toolResult.toolName === 'send_payment_link') {
-              const paymentOutput = toolResult.output as { success?: boolean; checkoutUrl?: string; message?: string } | undefined;
-              if (paymentOutput?.success) {
-                toolResponseMessage = 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.';
-              } else if (paymentOutput?.message) {
-                toolResponseMessage = paymentOutput.message;
-              }
-            }
-
-            if (toolResult.toolName === 'escalate_to_human' && output?.success) {
-              const toolCall = step.toolCalls?.find(tc => tc.toolName === 'escalate_to_human');
-              if (toolCall) {
-                const args = toolCall.input as { reason: string; summary: string };
-                escalatedToHumanResult = { reason: args.reason, summary: args.summary };
-                console.log(`[Tool] Escalated to human: ${args.reason}`);
-              }
-            }
-          }
-        }
+  // Define tools (LangChain format)
+  const checkAvailabilityTool = langchainTool(
+    async ({ date }: { date: string }) => {
+      console.log(`[Tool] Checking availability for: ${date}`);
+      let dateToCheck = date;
+      if (!date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const nextDays = getNextBusinessDays(3);
+        dateToCheck = nextDays.join(',');
       }
-    });
+      const slots = await checkAvailability(dateToCheck, calConfig);
+      if (slots.length === 0) {
+        return JSON.stringify({ available: false, message: 'No hay horarios disponibles para esa fecha.' });
+      }
+      const grouped: Record<string, string[]> = {};
+      for (const slot of slots) {
+        if (!grouped[slot.date]) grouped[slot.date] = [];
+        grouped[slot.date].push(slot.time);
+      }
+      const readable = Object.entries(grouped).map(([d, times]) => {
+        const dateObj = new Date(d + 'T12:00:00');
+        const dayName = dateObj.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+        return `${dayName}: ${times.slice(0, 4).join(', ')}`;
+      }).join(' | ');
+      return JSON.stringify({ available: true, slots: readable, rawSlots: slots.slice(0, 8) });
+    },
+    {
+      name: 'check_availability',
+      description: 'Verifica disponibilidad en el calendario para una fecha específica. Usa formato YYYY-MM-DD.',
+      schema: z.object({
+        date: z.string().describe('Fecha en formato YYYY-MM-DD. Si no se especifica fecha exacta, usa los próximos días hábiles.'),
+      }),
+    }
+  );
 
-    let response = result.text.trim();
+  const bookAppointmentTool = langchainTool(
+    async ({ date, time, email }: { date: string; time: string; email: string }) => {
+      console.log(`[Tool] Booking appointment: ${date} ${time} for ${email}`);
+      const result = await createEvent({ date, time, name: clientName, phone: clientPhone, email }, calConfig);
+      if (result.success) {
+        if (result.meetingUrl && clientPhone) {
+          const { sendWhatsAppMessage } = await import('@/lib/whatsapp/send');
+          await sendWhatsAppMessage(
+            clientPhone,
+            `Aquí está el link para nuestra llamada:\n${result.meetingUrl}\n\nTe llegará también la invitación a tu correo.`
+          );
+          console.log(`[Tool] Meeting link sent to ${clientPhone}: ${result.meetingUrl}`);
+        }
+        appointmentBooked = { eventId: result.eventId || '', date, time, email, meetingUrl: result.meetingUrl };
+        console.log(`[Tool] Appointment booked: ${JSON.stringify(appointmentBooked)}`);
+        return JSON.stringify({
+          success: true,
+          eventId: result.eventId,
+          meetingUrl: result.meetingUrl,
+          message: `Cita agendada exitosamente para ${date} a las ${time}. Se envió invitación a ${email} y el link de la reunión por WhatsApp.`,
+        });
+      }
+      return JSON.stringify({ success: false, message: 'No se pudo agendar la cita. El horario puede no estar disponible.' });
+    },
+    {
+      name: 'book_appointment',
+      description: 'Agenda una cita en el calendario. Requiere fecha (YYYY-MM-DD), hora (HH:MM), y email del cliente.',
+      schema: z.object({
+        date: z.string().describe('Fecha de la cita en formato YYYY-MM-DD'),
+        time: z.string().describe('Hora de la cita en formato HH:MM (24h)'),
+        email: z.string().describe('Email del cliente para enviar la invitación'),
+      }),
+    }
+  );
+
+  const sendBrochureTool = langchainTool(
+    async ({ reason }: { reason: string }) => {
+      console.log(`[Tool] Sending brochure: ${reason}`);
+      const brochureUrl = process.env.BROCHURE_URL || 'https://anthana.com/info';
+      const sent = await sendWhatsAppLink(
+        clientPhone,
+        brochureUrl,
+        '📄 Aquí tienes más información sobre nuestros agentes de IA para WhatsApp:'
+      );
+      if (sent) brochureSent = true;
+      return JSON.stringify({
+        success: sent,
+        message: sent
+          ? 'Brochure enviado exitosamente. Pregunta si tiene dudas o quiere agendar demo.'
+          : 'No se pudo enviar el brochure.',
+      });
+    },
+    {
+      name: 'send_brochure',
+      description: 'Envía información detallada sobre el servicio de agentes de IA para WhatsApp. Usa cuando pidan más información, ejemplos o detalles.',
+      schema: z.object({
+        reason: z.string().describe('Motivo por el que se envía el brochure'),
+      }),
+    }
+  );
+
+  const escalateToHumanTool = langchainTool(
+    async ({ reason, summary }: { reason: string; summary: string }) => {
+      console.log(`[Tool] Escalating to human: ${reason}`);
+      const escalated = await escalateToHuman({
+        clientPhone,
+        clientName,
+        reason,
+        conversationSummary: summary,
+      });
+      if (escalated) {
+        escalatedToHumanResult = { reason, summary };
+        console.log(`[Tool] Escalated to human: ${reason}`);
+      }
+      return JSON.stringify({
+        success: escalated,
+        message: escalated
+          ? 'Escalado exitosamente. El cliente será contactado por un humano pronto.'
+          : 'No se pudo escalar. Intenta resolver la situación.',
+      });
+    },
+    {
+      name: 'escalate_to_human',
+      description: 'Transfiere la conversación a un humano. SOLO usa cuando el cliente dice LITERALMENTE "quiero hablar con un humano" o "pásame con una persona". NUNCA la uses para objeciones, dudas, desconfianza, preguntas sobre estafas, o preguntas difíciles — resuélvelas tú mismo.',
+      schema: z.object({
+        reason: z.string().describe('Motivo de la escalación'),
+        summary: z.string().describe('Resumen breve de la conversación'),
+      }),
+    }
+  );
+
+  const sendPaymentLinkTool = langchainTool(
+    async ({ email, productName }: { email: string; productName: string }) => {
+      const tenantId = agentConfig?.tenantId;
+      console.log(`[Tool] send_payment_link for ${email}, product: ${productName}, tenant: ${tenantId}`);
+      try {
+        const { sendPaymentLink } = await import('@/lib/whatsapp/send');
+        const waCreds = agentConfig?.whatsappCredentials;
+
+        const catalog = agentConfig?.productsCatalog as Record<string, unknown> | undefined;
+        const fixedLink = catalog?.paymentLink as string | undefined;
+
+        if (fixedLink) {
+          console.log(`[Tool] Using fixed payment link: ${fixedLink}`);
+          const sent = await sendPaymentLink(clientPhone, fixedLink, productName, waCreds);
+          toolResponseMessage = 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.';
+          return JSON.stringify({
+            success: true,
+            checkoutUrl: fixedLink,
+            message: sent ? 'Link de pago enviado exitosamente por WhatsApp.' : `Link de pago: ${fixedLink}`,
+          });
+        }
+
+        if (tenantId) {
+          const { createTenantCheckoutSession } = await import('@/lib/stripe/checkout');
+          const { shortUrl } = await createTenantCheckoutSession({
+            tenantId, email, phone: clientPhone, amount: 27500, productName,
+          });
+          const sent = await sendPaymentLink(clientPhone, shortUrl, productName, waCreds);
+          toolResponseMessage = 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.';
+          return JSON.stringify({
+            success: true,
+            checkoutUrl: shortUrl,
+            message: sent ? 'Link de pago enviado exitosamente por WhatsApp.' : `Link de pago: ${shortUrl}`,
+          });
+        }
+
+        return JSON.stringify({ success: false, message: 'No se pudo identificar el tenant.' });
+      } catch (error) {
+        console.error('[Tool] Payment link error:', error);
+        return JSON.stringify({ success: false, message: 'Error al crear el link de pago.' });
+      }
+    },
+    {
+      name: 'send_payment_link',
+      description: 'Envía un link de pago de Stripe al cliente por WhatsApp. Usa cuando el cliente confirmó que quiere comprar y ya dio su email.',
+      schema: z.object({
+        email: z.string().describe('Email del cliente'),
+        productName: z.string().describe('Nombre del producto o servicio'),
+      }),
+    }
+  );
+
+  // Collect all tools
+  const allTools: StructuredToolInterface[] = [checkAvailabilityTool, bookAppointmentTool, sendBrochureTool, escalateToHumanTool, sendPaymentLinkTool];
+
+  // Add custom tools from tenant config
+  if (agentConfig?.customTools && agentConfig.customTools.length > 0) {
+    for (const customTool of agentConfig.customTools) {
+      allTools.push(langchainTool(
+        async () => {
+          console.log(`[Tool] Custom tool called: ${customTool.name}`);
+          return JSON.stringify(customTool.mockResponse || { success: true, message: `${customTool.displayName} executed` });
+        },
+        {
+          name: customTool.name,
+          description: customTool.description,
+          schema: z.object({}),
+        }
+      ));
+    }
+    console.log(`[GraphGenerate] Added ${agentConfig.customTools.length} custom tools`);
+  }
+
+  try {
+    const model = new ChatAnthropic({
+      model: resolveChatModel(agentConfig?.model),
+      maxTokens: agentConfig?.maxResponseTokens || 200,
+      temperature: agentConfig?.temperature,
+    }).bindTools(allTools);
+
+    const lcMessages: BaseMessage[] = [
+      new SystemMessage(systemPrompt),
+      ...history.map(m => m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content)),
+    ];
+
+    const MAX_TOOL_ROUNDS = 3;
+    let responseText = '';
+    let totalTokens = 0;
+    const toolsCalled = new Set<string>();
+
+    for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
+      const aiResponse = await model.invoke(lcMessages, config);
+      totalTokens += aiResponse.usage_metadata?.total_tokens || 0;
+
+      const hasToolCalls = aiResponse.tool_calls && aiResponse.tool_calls.length > 0;
+
+      if (!hasToolCalls || round === MAX_TOOL_ROUNDS) {
+        responseText = extractTextContent(aiResponse.content);
+        break;
+      }
+
+      lcMessages.push(aiResponse);
+      for (const tc of aiResponse.tool_calls!) {
+        toolsCalled.add(tc.name);
+        const toolObj = allTools.find(t => t.name === tc.name);
+        const result = toolObj
+          ? await toolObj.invoke(tc.args)
+          : JSON.stringify({ error: 'Tool not found' });
+        lcMessages.push(new ToolMessage({
+          content: typeof result === 'string' ? result : JSON.stringify(result),
+          tool_call_id: tc.id || `tc_${round}`,
+        }));
+      }
+    }
+
+    let response = responseText.trim();
     response = response.replace(/\*+/g, '');
     response = response.replace(/^(Víctor|Victor):\s*/i, '');
 
@@ -820,14 +817,10 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
     const PROMISE_PATTERNS = [
       { pattern: /te muestro.*horarios|horarios.*disponibles|déjame.*horarios/i, tool: 'schedule_demo' },
     ];
-    const toolsCalled = new Set(
-      (result.steps?.flatMap((s: { toolCalls?: Array<{ toolName: string }> }) =>
-        s.toolCalls?.map(tc => tc.toolName) || []) || [])
-    );
-    for (const { pattern, tool } of PROMISE_PATTERNS) {
-      if (pattern.test(response) && !toolsCalled.has(tool)) {
+    for (const { pattern, tool: toolName } of PROMISE_PATTERNS) {
+      if (pattern.test(response) && !toolsCalled.has(toolName)) {
         showScheduleList = true;
-        console.log(`[GraphGenerate] Promise validation: response promises "${tool}" but didn't call it. Triggering schedule list.`);
+        console.log(`[GraphGenerate] Promise validation: response promises "${toolName}" but didn't call it. Triggering schedule list.`);
         break;
       }
     }
@@ -844,7 +837,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
     return {
       result: {
         response,
-        tokensUsed: result.usage?.totalTokens,
+        tokensUsed: totalTokens || undefined,
         appointmentBooked,
         brochureSent: brochureSent || undefined,
         paymentLinkSent,

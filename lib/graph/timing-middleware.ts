@@ -18,6 +18,8 @@
  *   printTimingSummary(result._nodeTimings);
  */
 
+import type { RunnableConfig } from '@langchain/core/runnables';
+
 export interface NodeTiming {
   node: string;
   durationMs: number;
@@ -27,7 +29,7 @@ export interface NodeTiming {
 // Add this to your ConversationState type:
 // _nodeTimings?: NodeTiming[];
 
-type NodeFn<S> = (state: S) => Promise<Partial<S>> | Partial<S>;
+type NodeFn<S> = (state: S, config?: RunnableConfig) => Promise<Partial<S>> | Partial<S>;
 
 /**
  * Wraps a LangGraph node function with timing instrumentation.
@@ -36,11 +38,11 @@ export function withTiming<S extends { _nodeTimings?: NodeTiming[] }>(
   nodeName: string,
   fn: NodeFn<S>
 ): NodeFn<S> {
-  return async (state: S): Promise<Partial<S>> => {
+  return async (state: S, config?: RunnableConfig): Promise<Partial<S>> => {
     const timings = state._nodeTimings ?? [];
     const start = performance.now();
 
-    const result = await fn(state);
+    const result = await fn(state, config);
 
     const durationMs = Math.round((performance.now() - start) * 10) / 10;
 

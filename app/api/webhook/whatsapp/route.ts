@@ -59,7 +59,6 @@ import {
 import { createCheckoutSession, getPlanDisplayName } from '@/lib/stripe/checkout';
 import { sendPaymentLink } from '@/lib/whatsapp/send';
 import { saveMessage, createAppointment, updateLeadStage, updateLeadIndustry } from '@/lib/memory/supabase';
-import { generateMemory, shouldGenerateMemory } from '@/lib/memory/generate';
 import { syncLeadToHubSpot } from '@/lib/integrations/hubspot';
 import { checkAvailability, createEvent, CalTenantConfig } from '@/lib/tools/calendar';
 import { ConversationContext } from '@/types';
@@ -1025,20 +1024,7 @@ export async function POST(request: NextRequest) {
           }).catch(err => console.error('[Webhook] HubSpot sync error:', err))
         );
 
-        // Generate memory if needed (skipped when LangGraph handles summarization)
-        if (process.env.USE_LANGGRAPH !== 'true') {
-          backgroundTasks.push(
-            (async () => {
-              if (await shouldGenerateMemory(context.conversation.startedAt, context.recentMessages.length + 2)) {
-                await generateMemory(context.lead.id, [
-                  ...context.recentMessages,
-                  { id: '', role: 'user', content: message.text, timestamp: new Date() },
-                  { id: '', role: 'assistant', content: result.response, timestamp: new Date() },
-                ]);
-              }
-            })().catch(err => console.error('[Webhook] memory generation error:', err))
-          );
-        }
+        // Memory generation handled by LangGraph persist node
 
         // Wait for all background tasks, none can crash the others
         const results = await Promise.allSettled(backgroundTasks);

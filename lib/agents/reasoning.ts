@@ -10,9 +10,12 @@
 
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
+import { withTracing } from '@posthog/ai/vercel';
+import { getPostHogServer } from '@/lib/analytics/posthog';
 import { Message, ConversationContext } from '@/types';
 import { detectSentiment, SentimentAnalysis } from './sentiment';
 import { detectIndustry, getIndustryContext, Industry } from './industry';
+import { TracingOptions } from './model';
 
 export interface ReasoningResult {
   analysis: string;
@@ -174,7 +177,8 @@ export async function generateReasoningFast(
  */
 export async function generateReasoningFull(
   message: string,
-  context: ConversationContext
+  context: ConversationContext,
+  tracing?: TracingOptions
 ): Promise<ReasoningResult> {
   // Get user messages once
   const userMessages = context.recentMessages.filter(m => m.role === 'user').slice(-5);
@@ -214,8 +218,17 @@ Proporciona un análisis BREVE (máximo 100 tokens) que incluya:
 Sé directo y conciso. No uses bullet points largos.`;
 
   try {
+    const baseModel = anthropic('claude-haiku-4-5-20251001');
+    const model = tracing
+      ? withTracing(baseModel, getPostHogServer(), {
+          posthogDistinctId: tracing.distinctId,
+          posthogTraceId: tracing.traceId,
+          posthogProperties: { ...tracing.properties, node: 'reasoning' },
+        })
+      : baseModel;
+
     const result = await generateText({
-      model: anthropic('claude-haiku-4-5-20251001'),
+      model,
       system: systemPrompt,
       prompt: 'Analiza y responde directamente.'
     });

@@ -7,6 +7,8 @@
 
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
+import { withTracing } from '@posthog/ai/vercel';
+import { getPostHogServer } from '@/lib/analytics/posthog';
 
 const DEMO_PROMPT = `Eres Loomi, un agente de ventas por WhatsApp. Eres rápido, amigable y directo.
 
@@ -48,7 +50,10 @@ export async function demoAgent(
     ];
 
     const result = await generateText({
-      model: anthropic('claude-haiku-4-5-20251001'),
+      model: withTracing(anthropic('claude-haiku-4-5-20251001'), getPostHogServer(), {
+        posthogDistinctId: 'demo_anonymous',
+        posthogProperties: { source: 'landing_demo' },
+      }),
       system: DEMO_PROMPT,
       messages,
       maxOutputTokens: 150,

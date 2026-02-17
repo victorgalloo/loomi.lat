@@ -8,6 +8,8 @@
  */
 
 import { StateGraph, END } from '@langchain/langgraph';
+import { LangChainCallbackHandler } from '@posthog/ai/langchain';
+import { getPostHogServer } from '@/lib/analytics/posthog';
 import { ConversationContext } from '@/types';
 import { SimpleAgentResult } from '@/lib/agents/simple-agent';
 import { GraphAgentConfig } from './state';
@@ -102,6 +104,14 @@ export async function processMessageGraph(
   console.log(`Turn: ${conversationState.turn_count + 1}, Phase: ${conversationState.phase}`);
   console.log(`[Graph] agentConfig present: ${!!agentConfig}, systemPrompt: ${!!agentConfig?.systemPrompt}, model: ${agentConfig?.model || 'default'}`);
 
+  // Build PostHog callback handler for graph-level tracing
+  const posthogCallback = new LangChainCallbackHandler({
+    client: getPostHogServer(),
+    distinctId: agentConfig?.tenantId || 'unknown',
+    traceId: context.conversation.id,
+    properties: { source: 'graph' },
+  });
+
   // Invoke the graph
   const graph = getCompiledGraph();
   const finalState = await graph.invoke({
@@ -120,7 +130,7 @@ export async function processMessageGraph(
     saidLater: false,
     result: null,
     _nodeTimings: [],
-  });
+  }, { callbacks: [posthogCallback] });
 
   // Print timing summary
   printTimingSummary(finalState._nodeTimings);

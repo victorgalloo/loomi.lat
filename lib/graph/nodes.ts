@@ -6,8 +6,10 @@
 import { generateText, stepCountIs } from 'ai';
 import { tool, zodSchema } from '@ai-sdk/provider-utils';
 import { anthropic } from '@ai-sdk/anthropic';
+import { withTracing } from '@posthog/ai/vercel';
+import { getPostHogServer } from '@/lib/analytics/posthog';
 import { z } from 'zod';
-import { resolveModel } from '@/lib/agents/model';
+import { resolveModel, TracingOptions } from '@/lib/agents/model';
 import { generateReasoningFast } from '@/lib/agents/reasoning';
 import { checkAvailability, createEvent, CalTenantConfig } from '@/lib/tools/calendar';
 import { getCalConfig } from '@/lib/integrations/tenant-integrations';
@@ -425,8 +427,18 @@ Formato: Texto corrido, sin bullets. Incluye solo información confirmada.
 Si hay resumen previo, actualízalo incorporando la nueva información.`;
 
   try {
+    // Wrap summarize model with PostHog tracing if tenant context available
+    const baseModel = anthropic('claude-haiku-4-5-20251001');
+    const summaryModel = state.agentConfig?.tenantId
+      ? withTracing(baseModel, getPostHogServer(), {
+          posthogDistinctId: state.agentConfig.tenantId,
+          posthogTraceId: state.context.conversation.id,
+          posthogProperties: { node: 'summarize' },
+        })
+      : baseModel;
+
     const result = await generateText({
-      model: anthropic('claude-haiku-4-5-20251001'),
+      model: summaryModel,
       system: summaryPrompt,
       prompt: 'Resume la conversación.',
       maxOutputTokens: 300,
@@ -477,6 +489,15 @@ function getNextBusinessDays(count: number): string[] {
 
 export async function generateNode(state: GraphStateType): Promise<Partial<GraphStateType>> {
   const { resolvedPhase, context, reasoning, conversationState, message, history, topicChanged, currentTopic, agentConfig, progressInstruction } = state;
+
+  // Build tracing options for PostHog LLM analytics
+  const tracing: TracingOptions | undefined = agentConfig?.tenantId
+    ? {
+        distinctId: agentConfig.tenantId,
+        traceId: context.conversation.id,
+        properties: { node: 'generate', phase: resolvedPhase },
+      }
+    : undefined;
 
   // Resolve Cal.com config for this tenant
   let calConfig: CalTenantConfig | undefined;
@@ -721,7 +742,7 @@ export async function generateNode(state: GraphStateType): Promise<Partial<Graph
 
   try {
     const result = await generateText({
-      model: resolveModel(agentConfig?.model),
+      model: resolveModel(agentConfig?.model, tracing),
       system: systemPrompt,
       messages: history,
       tools,

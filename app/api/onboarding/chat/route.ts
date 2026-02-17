@@ -1,7 +1,7 @@
 /**
  * Conversational Onboarding API
  *
- * Uses GPT to have a natural conversation that extracts:
+ * Uses Claude to have a natural conversation that extracts:
  * - Business name
  * - What they sell/offer
  * - Desired tone
@@ -12,8 +12,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getTenantIdForUser } from '@/lib/supabase/user-role';
-import { anthropic } from '@ai-sdk/anthropic';
-import { generateText } from 'ai';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { SystemMessage, HumanMessage, AIMessage } from '@langchain/core/messages';
+import { extractTextContent } from '@/lib/langchain/utils';
 
 const ONBOARDING_SYSTEM_PROMPT = `Eres un asistente que ayuda a configurar un agente de WhatsApp para negocios.
 
@@ -80,24 +81,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'message is required' }, { status: 400 });
     }
 
+    const model = new ChatAnthropic({
+      model: 'claude-sonnet-4-5-20250929',
+      maxTokens: 500,
+    });
+
     // Build messages for the onboarding conversation
     const messages = [
-      ...conversationHistory.map((msg: { role: string; content: string }) => ({
-        role: msg.role as 'user' | 'assistant',
-        content: msg.content.replace(/\[COMPLETE\][\s\S]*\[\/COMPLETE\]/, '').trim(),
-      })),
-      { role: 'user' as const, content: message },
+      new SystemMessage(ONBOARDING_SYSTEM_PROMPT),
+      ...conversationHistory.map((msg: { role: string; content: string }) =>
+        msg.role === 'user'
+          ? new HumanMessage(msg.content.replace(/\[COMPLETE\][\s\S]*\[\/COMPLETE\]/, '').trim())
+          : new AIMessage(msg.content.replace(/\[COMPLETE\][\s\S]*\[\/COMPLETE\]/, '').trim())
+      ),
+      new HumanMessage(message),
     ];
 
     // Generate response
-    const result = await generateText({
-      model: anthropic('claude-sonnet-4-5-20250929'),
-      system: ONBOARDING_SYSTEM_PROMPT,
-      messages,
-      maxOutputTokens: 500,
-    });
+    const result = await model.invoke(messages);
 
-    let response = result.text || '';
+    let response = extractTextContent(result.content) || '';
     let isComplete = false;
     let extractedConfig = null;
     let generatedPrompt = '';
@@ -113,22 +116,22 @@ export async function POST(request: NextRequest) {
         response = response.replace(/\[COMPLETE\][\s\S]*\[\/COMPLETE\]/, '').trim();
 
         // Generate the actual system prompt
-        const promptResult = await generateText({
-          model: anthropic('claude-sonnet-4-5-20250929'),
-          system: PROMPT_GENERATOR_SYSTEM,
-          messages: [{
-            role: 'user',
-            content: `Genera el system prompt para:
+        const promptModel = new ChatAnthropic({
+          model: 'claude-sonnet-4-5-20250929',
+          maxTokens: 800,
+        });
+
+        const promptResult = await promptModel.invoke([
+          new SystemMessage(PROMPT_GENERATOR_SYSTEM),
+          new HumanMessage(`Genera el system prompt para:
 - Negocio: ${extractedConfig.businessName}
 - Descripción: ${extractedConfig.businessDescription}
 - Productos/Servicios: ${extractedConfig.productsServices}
 - Tono: ${extractedConfig.tone}
-- Industria: ${extractedConfig.industry}`
-          }],
-          maxOutputTokens: 800,
-        });
+- Industria: ${extractedConfig.industry}`),
+        ]);
 
-        generatedPrompt = promptResult.text || '';
+        generatedPrompt = extractTextContent(promptResult.content) || '';
       } catch (e) {
         console.error('Error parsing config:', e);
       }

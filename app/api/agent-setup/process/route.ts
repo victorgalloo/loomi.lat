@@ -6,8 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateObject } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { HumanMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 
@@ -69,10 +69,13 @@ export async function POST(request: NextRequest) {
       ? `\n\nConfig existente del agente (para referencia):\n${JSON.stringify(existingConfig, null, 2)}`
       : '';
 
-    const result = await generateObject({
-      model: anthropic('claude-haiku-4-5-20251001'),
-      schema: ExtractedConfigSchema,
-      prompt: `Eres un experto en configurar agentes de ventas por WhatsApp. Analiza el siguiente contenido proporcionado por un negocio y extrae toda la información relevante para configurar su agente de IA.
+    const model = new ChatAnthropic({
+      model: 'claude-haiku-4-5-20251001',
+      temperature: 0.4,
+    });
+
+    const result = await model.withStructuredOutput(ExtractedConfigSchema).invoke([
+      new HumanMessage(`Eres un experto en configurar agentes de ventas por WhatsApp. Analiza el siguiente contenido proporcionado por un negocio y extrae toda la información relevante para configurar su agente de IA.
 
 ${contentHint}${existingConfigHint}
 
@@ -114,9 +117,8 @@ IMPORTANTE:
 - Todo en español
 - Sé específico para este negocio, no genérico
 - El system prompt debe ser detallado (mínimo 500 palabras)
-- Los objection handlers deben ser prácticos y accionables`,
-      temperature: 0.4,
-    });
+- Los objection handlers deben ser prácticos y accionables`)
+    ]);
 
     // Calculate confidence based on content length and richness
     const contentLength = rawContent.length;
@@ -146,12 +148,12 @@ IMPORTANTE:
 
     // Convert objectionHandlers from typed object to Record<string, string>
     const handlers: Record<string, string> = {};
-    for (const [key, value] of Object.entries(result.object.objectionHandlers)) {
+    for (const [key, value] of Object.entries(result.objectionHandlers)) {
       if (value) handlers[key] = value;
     }
 
     return NextResponse.json({
-      extracted: { ...result.object, objectionHandlers: handlers },
+      extracted: { ...result, objectionHandlers: handlers },
       confidence,
       suggestions,
     });

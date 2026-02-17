@@ -7,8 +7,8 @@
  * Now parametrized with TenantAnalysisContext instead of hardcoded Loomi content.
  */
 
-import { generateObject } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { HumanMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import {
   DEFAULT_PRODUCT_CONTEXT,
@@ -146,10 +146,13 @@ export async function analyzeMessage(
       ? `# CONTEXTO DEL NEGOCIO (extracto del prompt del agente)\n${ctx.systemPromptExcerpt}`
       : '# CONTEXTO\nAnaliza solo la conversacion.');
 
-  const result = await generateObject({
-    model: anthropic('claude-haiku-4-5-20251001'),
-    schema: AnalysisSchema,
-    prompt: `Eres un analista experto en ventas B2B. Analiza esta conversación y da instrucciones PRECISAS a ${ctx.agentName} (${ctx.agentRole}).
+  const model = new ChatAnthropic({
+    model: 'claude-haiku-4-5-20251001',
+    temperature: 0.3,
+  });
+
+  const result = await model.withStructuredOutput(AnalysisSchema).invoke([
+    new HumanMessage(`Eres un analista experto en ventas B2B. Analiza esta conversación y da instrucciones PRECISAS a ${ctx.agentName} (${ctx.agentRole}).
 
 ${contextBlock}
 
@@ -183,15 +186,14 @@ Analiza TODO y determina:
 
 Sé MUY específico en la instrucción. Ejemplo:
 - MAL: "Pregunta sobre su negocio"
-- BIEN: "Ya sabemos que tiene una tienda online. Pregunta: '¿Cuántos mensajes reciben al día más o menos?'"`,
-    temperature: 0.3,
-  });
+- BIEN: "Ya sabemos que tiene una tienda online. Pregunta: '¿Cuántos mensajes reciben al día más o menos?'"`)
+  ]);
 
-  console.log('[Análisis] Fase:', result.object.fase_actual);
-  console.log('[Análisis] Ya sabemos:', JSON.stringify(result.object.ya_sabemos));
-  console.log('[Análisis] Siguiente paso:', result.object.siguiente_paso);
+  console.log('[Análisis] Fase:', result.fase_actual);
+  console.log('[Análisis] Ya sabemos:', JSON.stringify(result.ya_sabemos));
+  console.log('[Análisis] Siguiente paso:', result.siguiente_paso);
 
-  return result.object;
+  return result;
 }
 
 export function generateSellerInstructions(

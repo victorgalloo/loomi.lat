@@ -3,14 +3,20 @@
  *
  * Usage: set -a && source .env.local && set +a && npx tsx scripts/generate-few-shot-embeddings.ts
  *
- * Reads the EXAMPLES from few-shot.ts, generates embeddings via OpenAI,
+ * Reads the EXAMPLES from few-shot.ts, generates embeddings via Azure OpenAI,
  * and writes them to lib/agents/few-shot-embeddings.json
  */
 
-import { openai } from '@ai-sdk/openai';
-import { embed } from 'ai';
+import { AzureOpenAIEmbeddings } from '@langchain/openai';
 import * as fs from 'fs';
 import * as path from 'path';
+
+const embeddings = new AzureOpenAIEmbeddings({
+  azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
+  azureOpenAIApiInstanceName: process.env.AZURE_RESOURCE_NAME ?? 'loomi',
+  azureOpenAIApiDeploymentName: 'text-embedding-3-small',
+  azureOpenAIApiVersion: '2024-02-15-preview',
+});
 
 // Manually define the examples data (same IDs/tags/context as few-shot.ts)
 // We extract just what we need for embedding generation
@@ -122,14 +128,11 @@ async function generateEmbeddings() {
     const text = `${example.context} | ${example.tags.join(', ')} | ${example.firstUserMessage}`;
     console.log(`  → ${example.id}: "${text.substring(0, 60)}..."`);
 
-    const result = await embed({
-      model: openai.embedding('text-embedding-3-small'),
-      value: text,
-    });
+    const embedding = await embeddings.embedQuery(text);
 
     results.push({
       id: example.id,
-      embedding: result.embedding,
+      embedding,
     });
   }
 

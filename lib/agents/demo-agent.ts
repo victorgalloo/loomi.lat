@@ -2,13 +2,12 @@
  * Demo Agent - Lightweight agent for landing page demos
  *
  * Fast, single API call, no multi-agent analysis
- * Uses gpt-4o-mini for speed
+ * Uses Claude Haiku for speed
  */
 
-import { generateText } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
-import { withTracing } from '@posthog/ai/vercel';
-import { getPostHogServer, flushPostHog } from '@/lib/analytics/posthog';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { HumanMessage, SystemMessage, AIMessage } from '@langchain/core/messages';
+import { extractTextContent } from '@/lib/langchain/utils';
 
 const DEMO_PROMPT = `Eres Loomi, un agente de ventas por WhatsApp. Eres rápido, amigable y directo.
 
@@ -41,29 +40,24 @@ export async function demoAgent(
   history: Array<{ role: 'user' | 'assistant'; content: string }>
 ): Promise<DemoAgentResult> {
   try {
-    const messages = [
-      ...history.slice(-10).map(m => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content
-      })),
-      { role: 'user' as const, content: message }
-    ];
-
-    const result = await generateText({
-      model: withTracing(anthropic('claude-haiku-4-5-20251001'), getPostHogServer(), {
-        posthogDistinctId: 'demo_anonymous',
-        posthogProperties: { source: 'landing_demo' },
-      }),
-      system: DEMO_PROMPT,
-      messages,
-      maxOutputTokens: 150,
+    const model = new ChatAnthropic({
+      model: 'claude-haiku-4-5-20251001',
+      maxTokens: 150,
     });
 
-    await flushPostHog();
+    const messages = [
+      new SystemMessage(DEMO_PROMPT),
+      ...history.slice(-10).map(m =>
+        m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content)
+      ),
+      new HumanMessage(message),
+    ];
+
+    const result = await model.invoke(messages);
 
     return {
-      response: result.text.trim(),
-      tokensUsed: result.usage?.totalTokens
+      response: extractTextContent(result.content).trim(),
+      tokensUsed: result.usage_metadata?.total_tokens,
     };
   } catch (error) {
     console.error('[DemoAgent] Error:', error);

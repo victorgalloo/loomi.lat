@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { generateObject } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { HumanMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 
 // ── AI Classification Schema ────────────────────────────────────────
@@ -44,7 +44,7 @@ const CLASSIFICATION_PRIORITY: Record<Exclude<Classification, 'bot_autoresponse'
 // ── Functions ────────────────────────────────────────────────────────
 
 /**
- * Classify a conversation using GPT-4o-mini with structured output.
+ * Classify a conversation using Haiku with structured output.
  * Falls back to 'warm' if the AI call fails.
  */
 export async function classifyConversationWithAI(messages: Message[]): Promise<Classification> {
@@ -53,12 +53,14 @@ export async function classifyConversationWithAI(messages: Message[]): Promise<C
     .join('\n');
 
   try {
-    const { object } = await generateObject({
-      model: anthropic('claude-haiku-4-5-20251001'),
-      schema: ClassificationSchema,
+    const model = new ChatAnthropic({
+      model: 'claude-haiku-4-5-20251001',
       temperature: 0.2,
-      maxOutputTokens: 100,
-      prompt: `Clasifica esta conversación post-broadcast de WhatsApp.
+      maxTokens: 100,
+    });
+
+    const result = await model.withStructuredOutput(ClassificationSchema).invoke([
+      new HumanMessage(`Clasifica esta conversación post-broadcast de WhatsApp.
 
 Categorías:
 - hot: El contacto muestra intención de compra (pregunta precios, quiere demo, pide cotización, quiere contratar, dice que le interesa)
@@ -67,10 +69,10 @@ Categorías:
 - bot_autoresponse: Respuesta automática de un sistema (fuera de horario, buzón de voz, número equivocado, auto-reply, contestadora)
 
 Mensajes de la conversación:
-${formatted}`,
-    });
+${formatted}`)
+    ]);
 
-    return object.classification;
+    return result.classification;
   } catch (error) {
     console.error('AI classification failed, defaulting to warm:', error);
     return 'warm';

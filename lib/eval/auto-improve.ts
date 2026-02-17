@@ -1,5 +1,6 @@
-import { generateText } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { HumanMessage } from '@langchain/core/messages';
+import { extractTextContent } from '@/lib/langchain/utils';
 import { EvalReport, ScenarioResult } from './runner';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -66,10 +67,12 @@ IMPORTANTE:
 - Prioriza los problemas que afectan más escenarios`;
 
   try {
-    const { text } = await generateText({
-      model: anthropic('claude-sonnet-4-5-20250929'),
-      prompt,
+    const model = new ChatAnthropic({
+      model: 'claude-sonnet-4-5-20250929',
     });
+
+    const result = await model.invoke([new HumanMessage(prompt)]);
+    const text = extractTextContent(result.content);
 
     // Extraer JSON de la respuesta
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -126,12 +129,12 @@ REGLAS:
 Responde SOLO con el nuevo prompt, sin explicaciones ni markdown.`;
 
   try {
-    const { text } = await generateText({
-      model: anthropic('claude-sonnet-4-5-20250929'),
-      prompt,
+    const model = new ChatAnthropic({
+      model: 'claude-sonnet-4-5-20250929',
     });
 
-    return text.trim();
+    const result = await model.invoke([new HumanMessage(prompt)]);
+    return extractTextContent(result.content).trim();
   } catch (error) {
     console.error('Error generando prompt mejorado:', error);
     return currentPrompt;

@@ -1,5 +1,5 @@
-import { generateObject } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { HumanMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { Scenario } from './scenarios';
 
@@ -52,13 +52,15 @@ INSTRUCCIONES:
 Sé estricto. Si no cumple un criterio marcado como "SÍ", baja el score significativamente.`;
 
   try {
-    const { object } = await generateObject({
-      model: anthropic('claude-haiku-4-5-20251001'),
-      schema: evaluationSchema,
-      prompt,
+    const model = new ChatAnthropic({
+      model: 'claude-haiku-4-5-20251001',
     });
 
-    return object;
+    const result = await model.withStructuredOutput(evaluationSchema).invoke([
+      new HumanMessage(prompt),
+    ]);
+
+    return result;
   } catch (error) {
     console.error('Evaluation error:', error);
     return {

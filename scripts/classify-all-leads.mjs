@@ -1,8 +1,8 @@
 import { config } from 'dotenv';
 config({ path: '.env.local' });
 import { createClient } from '@supabase/supabase-js';
-import { generateObject } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { HumanMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 
 const supabase = createClient(
@@ -43,12 +43,14 @@ async function classifyConversation(messages) {
     .join('\n');
 
   try {
-    const { object } = await generateObject({
-      model: anthropic('claude-haiku-4-5-20251001'),
-      schema: ClassificationSchema,
+    const model = new ChatAnthropic({
+      model: 'claude-haiku-4-5-20251001',
       temperature: 0.2,
-      maxOutputTokens: 150,
-      prompt: `Clasifica esta conversación post-broadcast de WhatsApp para un CURSO de Growth Rockstar ($1,295 USD).
+      maxTokens: 150,
+    });
+
+    const object = await model.withStructuredOutput(ClassificationSchema).invoke([
+      new HumanMessage(`Clasifica esta conversación post-broadcast de WhatsApp para un CURSO de Growth Rockstar ($1,295 USD).
 
 Categorías:
 - hot: Quiere comprar, pide link de pago, pregunta cómo pagar, dice "sí quiero", muestra intención clara de inscribirse, pide más info activamente
@@ -58,8 +60,8 @@ Categorías:
 - bot_autoresponse: Respuesta automática de un sistema empresarial, mensaje de fuera de horario, buzón automático
 
 Mensajes:
-${formatted}`
-    });
+${formatted}`)
+    ]);
 
     return object;
   } catch (error) {

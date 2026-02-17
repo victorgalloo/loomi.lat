@@ -41,16 +41,8 @@ function resolveChatModel(modelOverride?: string | null): string {
   return OPENAI_TO_CLAUDE[modelOverride] ?? 'claude-sonnet-4-5-20250929';
 }
 
-function extractTextContent(content: string | Array<Record<string, unknown>>): string {
-  if (typeof content === 'string') return content;
-  if (Array.isArray(content)) {
-    return content
-      .filter(b => b.type === 'text' && typeof b.text === 'string')
-      .map(b => b.text as string)
-      .join('');
-  }
-  return '';
-}
+// Re-export from shared utility
+import { extractTextContent } from '@/lib/langchain/utils';
 
 // ============================================
 // Keyword Sets (migrated from simple-agent.ts)

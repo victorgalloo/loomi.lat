@@ -3,8 +3,9 @@
  * Generates summaries of conversations for long-term context
  */
 
-import { generateText } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { SystemMessage, HumanMessage } from '@langchain/core/messages';
+import { extractTextContent } from '@/lib/langchain/utils';
 import { Message } from '@/types';
 import { saveLeadMemory, getLeadMemory } from './supabase';
 
@@ -64,13 +65,16 @@ Genera un resumen BREVE (máximo 100 palabras) que capture:
 Formato: Texto corrido, sin bullets. Incluye solo información confirmada.
 Si hay memoria previa, actualízala con la nueva información.`;
 
-    const result = await generateText({
-      model: anthropic('claude-haiku-4-5-20251001'),
-      system: systemPrompt,
-      prompt: 'Resume la conversación.'
+    const model = new ChatAnthropic({
+      model: 'claude-haiku-4-5-20251001',
     });
 
-    const newMemory = result.text.trim();
+    const result = await model.invoke([
+      new SystemMessage(systemPrompt),
+      new HumanMessage('Resume la conversación.'),
+    ]);
+
+    const newMemory = extractTextContent(result.content).trim();
 
     if (newMemory && newMemory.length > 10) {
       await saveLeadMemory(leadId, newMemory);

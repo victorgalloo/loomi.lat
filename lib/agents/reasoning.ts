@@ -8,14 +8,12 @@
  * - Parallel async operations (async-parallel)
  */
 
-import { generateText } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
-import { withTracing } from '@posthog/ai/vercel';
-import { getPostHogServer } from '@/lib/analytics/posthog';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { SystemMessage, HumanMessage } from '@langchain/core/messages';
+import { extractTextContent } from '@/lib/langchain/utils';
 import { Message, ConversationContext } from '@/types';
 import { detectSentiment, SentimentAnalysis } from './sentiment';
 import { detectIndustry, getIndustryContext, Industry } from './industry';
-import { TracingOptions } from './model';
 
 export interface ReasoningResult {
   analysis: string;
@@ -177,8 +175,7 @@ export async function generateReasoningFast(
  */
 export async function generateReasoningFull(
   message: string,
-  context: ConversationContext,
-  tracing?: TracingOptions
+  context: ConversationContext
 ): Promise<ReasoningResult> {
   // Get user messages once
   const userMessages = context.recentMessages.filter(m => m.role === 'user').slice(-5);
@@ -218,23 +215,17 @@ Proporciona un análisis BREVE (máximo 100 tokens) que incluya:
 Sé directo y conciso. No uses bullet points largos.`;
 
   try {
-    const baseModel = anthropic('claude-haiku-4-5-20251001');
-    const model = tracing
-      ? withTracing(baseModel, getPostHogServer(), {
-          posthogDistinctId: tracing.distinctId,
-          posthogTraceId: tracing.traceId,
-          posthogProperties: { ...tracing.properties, node: 'reasoning' },
-        })
-      : baseModel;
-
-    const result = await generateText({
-      model,
-      system: systemPrompt,
-      prompt: 'Analiza y responde directamente.'
+    const model = new ChatAnthropic({
+      model: 'claude-haiku-4-5-20251001',
     });
 
+    const result = await model.invoke([
+      new SystemMessage(systemPrompt),
+      new HumanMessage('Analiza y responde directamente.'),
+    ]);
+
     return {
-      analysis: result.text.trim(),
+      analysis: extractTextContent(result.content).trim(),
       sentiment,
       industry,
       suggestedAction: quickResult.suggestedAction,

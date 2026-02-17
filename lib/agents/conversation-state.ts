@@ -6,8 +6,8 @@
  * while maintaining fresh context for the agent.
  */
 
-import { generateObject } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { HumanMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 // Types defined inline (not yet exported from @/types)
 interface Message {
@@ -84,10 +84,13 @@ export async function generateConversationState(
     ? `\n\n# ESTADO ANTERIOR (actualiza, no reemplaces sin razon):\n${JSON.stringify(currentState, null, 2)}`
     : '';
 
-  const result = await generateObject({
-    model: anthropic('claude-haiku-4-5-20251001'),
-    schema: ConversationStateSchema,
-    prompt: `Analiza esta conversacion de ventas y genera un resumen estructurado del estado actual.
+  const model = new ChatAnthropic({
+    model: 'claude-haiku-4-5-20251001',
+    temperature: 0.2,
+  });
+
+  const result = await model.withStructuredOutput(ConversationStateSchema).invoke([
+    new HumanMessage(`Analiza esta conversacion de ventas y genera un resumen estructurado del estado actual.
 
 # CONTEXTO DEL LEAD
 - Nombre: ${leadContext?.name || 'desconocido'}
@@ -103,12 +106,11 @@ ${historyText}
 2. Lista TODOS los temas que se cubrieron (no pierdas ninguno)
 3. Identifica objeciones pendientes vs resueltas
 4. El summary debe ser conciso pero completo (max 3 oraciones)
-5. Si hay estado anterior, CONSERVA informacion relevante que siga vigente`,
-    temperature: 0.2,
-  });
+5. Si hay estado anterior, CONSERVA informacion relevante que siga vigente`)
+  ]);
 
   return {
-    ...result.object,
+    ...result,
     message_count_at_update: userMessageCount,
     last_updated: new Date().toISOString(),
   };

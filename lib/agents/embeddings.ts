@@ -3,12 +3,13 @@
  * Provides text embedding and cosine similarity for semantic matching
  */
 
-import { embed } from 'ai';
-import { createAzure } from '@ai-sdk/azure';
+import { AzureOpenAIEmbeddings } from '@langchain/openai';
 
-const azure = createAzure({
-  resourceName: process.env.AZURE_RESOURCE_NAME ?? 'loomi',
-  apiKey: process.env.AZURE_OPENAI_API_KEY ?? '',
+const embeddings = new AzureOpenAIEmbeddings({
+  azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
+  azureOpenAIApiInstanceName: process.env.AZURE_RESOURCE_NAME ?? 'loomi',
+  azureOpenAIApiDeploymentName: 'text-embedding-3-small',
+  azureOpenAIApiVersion: '2024-02-15-preview',
 });
 
 // Simple LRU cache for embeddings
@@ -32,7 +33,7 @@ function evictStaleEntries(): void {
 }
 
 /**
- * Generate embedding for text using OpenAI text-embedding-3-small
+ * Generate embedding for text using Azure text-embedding-3-small
  * Includes LRU cache with 15min TTL
  */
 export async function embedText(text: string): Promise<number[]> {
@@ -42,10 +43,7 @@ export async function embedText(text: string): Promise<number[]> {
     return cached.embedding;
   }
 
-  const result = await embed({
-    model: azure.embedding('text-embedding-3-small'),
-    value: text,
-  });
+  const result = await embeddings.embedQuery(text);
 
   // Evict stale entries if cache is full
   if (embeddingCache.size >= CACHE_MAX_SIZE) {
@@ -58,11 +56,11 @@ export async function embedText(text: string): Promise<number[]> {
   }
 
   embeddingCache.set(text, {
-    embedding: result.embedding,
+    embedding: result,
     timestamp: Date.now(),
   });
 
-  return result.embedding;
+  return result;
 }
 
 /**

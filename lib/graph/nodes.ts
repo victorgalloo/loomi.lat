@@ -490,14 +490,12 @@ function getNextBusinessDays(count: number): string[] {
 export async function generateNode(state: GraphStateType): Promise<Partial<GraphStateType>> {
   const { resolvedPhase, context, reasoning, conversationState, message, history, topicChanged, currentTopic, agentConfig, progressInstruction } = state;
 
-  // Build tracing options for PostHog LLM analytics
-  const tracing: TracingOptions | undefined = agentConfig?.tenantId
-    ? {
-        distinctId: agentConfig.tenantId,
-        traceId: context.conversation.id,
-        properties: { node: 'generate', phase: resolvedPhase },
-      }
-    : undefined;
+  // Build tracing options for PostHog LLM analytics (always trace)
+  const tracing: TracingOptions = {
+    distinctId: agentConfig?.tenantId || context.lead.id || 'anonymous',
+    traceId: context.conversation.id,
+    properties: { node: 'generate', phase: resolvedPhase },
+  };
 
   // Resolve Cal.com config for this tenant
   let calConfig: CalTenantConfig | undefined;

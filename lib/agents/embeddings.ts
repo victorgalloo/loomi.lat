@@ -4,7 +4,12 @@
  */
 
 import { embed } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { createAzure } from '@ai-sdk/azure';
+
+const azure = createAzure({
+  resourceName: process.env.AZURE_RESOURCE_NAME ?? 'loomi',
+  apiKey: process.env.AZURE_OPENAI_API_KEY ?? '',
+});
 
 // Simple LRU cache for embeddings
 const CACHE_MAX_SIZE = 100;
@@ -38,7 +43,7 @@ export async function embedText(text: string): Promise<number[]> {
   }
 
   const result = await embed({
-    model: openai.embedding('text-embedding-3-small'),
+    model: azure.embedding('text-embedding-3-small'),
     value: text,
   });
 

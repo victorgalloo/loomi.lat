@@ -58,7 +58,8 @@ async function transcribeWithWhisper(audioData: ArrayBuffer): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
-    throw new Error('No OpenAI API key available for transcription');
+    console.warn('[Audio] No OPENAI_API_KEY — Whisper transcription skipped');
+    return '';
   }
 
   const formData = new FormData();

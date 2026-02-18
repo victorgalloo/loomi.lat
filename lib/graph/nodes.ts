@@ -1,6 +1,16 @@
 /**
- * LangGraph Nodes
- * 5 nodes: analyze, route, summarize, generate, persist
+ * LangGraph Nodes — Simplified (v2)
+ *
+ * 2 nodes: generate, persist
+ *
+ * generate: Single LLM call that handles analysis + routing + response + tools.
+ * persist: Save conversation state to Supabase.
+ *
+ * What was removed:
+ * - analyzeNode (sentiment/industry detection via separate LLM call)
+ * - routeNode (280+ lines of keyword matching)
+ * - summarizeNode (separate summarization LLM call)
+ * All of this is now handled by the main LLM in a single invocation.
  */
 
 import { ChatAnthropic } from '@langchain/anthropic';
@@ -8,22 +18,17 @@ import { tool as langchainTool, type StructuredToolInterface } from '@langchain/
 import { HumanMessage, SystemMessage, AIMessage, ToolMessage, type BaseMessage } from '@langchain/core/messages';
 import type { RunnableConfig } from '@langchain/core/runnables';
 import { z } from 'zod';
-import { generateReasoningFast } from '@/lib/agents/reasoning';
 import { checkAvailability, createEvent, CalTenantConfig } from '@/lib/tools/calendar';
 import { getCalConfig } from '@/lib/integrations/tenant-integrations';
 import { sendWhatsAppLink, escalateToHuman } from '@/lib/whatsapp/send';
-import { SimpleAgentResult } from './state';
+import { SimpleAgentResult, SalesPhase } from './state';
 import { buildSystemPrompt } from './prompts';
 import { syncSummaryToLeadMemory } from './memory';
-import { analyzeProgress } from '@/lib/agents/progress-tracker';
 import { guardResponse } from '@/lib/agents/response-guard';
-import {
-  GraphStateType,
-  SalesPhase,
-  TopicCategory,
-  PersistedConversationState,
-  ObjectionEntry,
-} from './state';
+import { GraphStateType, PersistedConversationState } from './state';
+
+// Re-export from shared utility
+import { extractTextContent } from '@/lib/langchain/utils';
 
 // ============================================
 // Model helpers
@@ -41,449 +46,11 @@ function resolveChatModel(modelOverride?: string | null): string {
   return OPENAI_TO_CLAUDE[modelOverride] ?? 'claude-sonnet-4-5-20250929';
 }
 
-// Re-export from shared utility
-import { extractTextContent } from '@/lib/langchain/utils';
-
-// ============================================
-// Keyword Sets (migrated from simple-agent.ts)
-// ============================================
-
-const BUSINESS_KEYWORDS = new Set([
-  'tienda', 'negocio', 'vendo', 'empresa', 'servicios', 'consultorio',
-  'restaurante', 'clínica', 'agencia', 'tengo un', 'tengo una', 'trabajo en'
-]);
-
-const PAIN_KEYWORDS = new Set([
-  'no doy abasto', 'pierdo cliente', 'no alcanzo', 'muy ocupado',
-  'no puedo contestar', 'se me van', 'pierdo venta', 'no tengo tiempo'
-]);
-
-const REFERRAL_KEYWORDS = new Set(['me recomend', 'me dij', 'referido']);
-
-const DEMO_ACCEPT_KEYWORDS = new Set([
-  'sí', 'si', 'dale', 'me interesa', 'claro', 'perfecto', 'ok',
-  'va', 'sale', 'órale', 'bueno'
-]);
-
-const DEMO_PROPOSE_KEYWORDS = new Set(['quieres ver', 'te muestro', 'demo', '¿lo vemos']);
-
-const SCHEDULE_KEYWORDS = new Set([
-  'quiero agendar', 'agendemos', 'agenda', 'agendar demo', 'agendar llamada',
-  'agendar cita', 'quiero una demo', 'me interesa la demo', 'cuando podemos',
-  'cuándo podemos', 'programar', 'reservar'
-]);
-
-const LATER_KEYWORDS = new Set([
-  'luego', 'después', 'despues', 'ahorita no', 'al rato', 'otro día'
-]);
-
-const HORARIO_KEYWORDS = new Set([
-  'martes', 'miércoles', 'jueves', '10am', '3pm', '11am'
-]);
-
-const VOLUME_PATTERN = /\d+/;
-const TIME_PATTERN = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i;
-const EMAIL_PATTERN = /@.*\./;
-
-// Topic detection keyword sets
-const TOPIC_KEYWORDS: Record<TopicCategory, Set<string>> = {
-  precio: new Set(['precio', 'costo', 'cuánto', 'cuanto', 'inversión', 'pago', 'cobran', 'tarifa', 'plan', 'mensualidad', '$', 'dólares', 'dolares', 'usd']),
-  funcionalidad: new Set(['funciona', 'hace', 'puede', 'característica', 'feature', 'incluye', 'hace el bot', 'capacidad', 'qué hace']),
-  integraciones: new Set(['integra', 'conecta', 'crm', 'hubspot', 'zapier', 'api', 'shopify', 'woocommerce', 'sistema']),
-  competencia: new Set(['ya tengo', 'ya uso', 'otro', 'chatbot', 'manychat', 'respond.io', 'comparable', 'diferencia', 'vs']),
-  demo: new Set(['demo', 'agendar', 'llamada', 'mostrar', 'ver', 'reunión', 'cita']),
-  implementacion: new Set(['implementar', 'configurar', 'instalar', 'cuánto tarda', 'setup', 'tiempo', 'proceso']),
-  caso_de_uso: new Set(['mi negocio', 'mi empresa', 'para nosotros', 'sector', 'industria', 'ejemplo', 'caso']),
-  objecion: new Set(['caro', 'no creo', 'no funciona', 'después', 'luego', 'no sé', 'consultarlo', 'pensarlo']),
-  general: new Set([]),
-};
-
-// Objection category detection
-const OBJECTION_CATEGORIES: Record<string, Set<string>> = {
-  precio: new Set(['caro', 'costoso', 'precio', 'costo', 'inversión', 'mucho dinero']),
-  tiempo: new Set(['no tengo tiempo', 'muy ocupado', 'después', 'luego', 'ahorita no']),
-  competencia: new Set(['ya tengo', 'ya uso', 'otro chatbot', 'otro sistema']),
-  desconfianza: new Set(['no creo', 'no funciona', 'no estoy seguro', 'no sé si']),
-  autoridad: new Set(['consultar', 'mi jefe', 'mi socio', 'decisión']),
-  necesidad: new Set(['no necesito', 'no me interesa', 'no gracias', 'estamos bien']),
-};
-
-function containsAny(text: string, keywords: Set<string>): boolean {
-  for (const keyword of keywords) {
-    if (text.includes(keyword)) return true;
-  }
-  return false;
-}
-
-// ============================================
-// NODE 1: analyzeNode
-// ============================================
-
-export async function analyzeNode(state: GraphStateType): Promise<Partial<GraphStateType>> {
-  const reasoning = await generateReasoningFast(state.message, state.context);
-
-  const currentTopic = detectTopic(state.message);
-  const topicChanged = state.conversationState.previous_topic !== null &&
-    state.conversationState.previous_topic !== currentTopic &&
-    currentTopic !== 'general';
-
-  return {
-    reasoning,
-    sentiment: reasoning.sentiment.sentiment,
-    industry: reasoning.industry,
-    topicChanged,
-    currentTopic,
-  };
-}
-
-function detectTopic(message: string): TopicCategory {
-  const lower = message.toLowerCase();
-
-  let bestCategory: TopicCategory = 'general';
-  let bestScore = 0;
-
-  for (const [category, keywords] of Object.entries(TOPIC_KEYWORDS)) {
-    if (category === 'general') continue;
-    let score = 0;
-    for (const keyword of keywords) {
-      if (lower.includes(keyword)) score++;
-    }
-    if (score > bestScore) {
-      bestScore = score;
-      bestCategory = category as TopicCategory;
-    }
-  }
-
-  return bestCategory;
-}
-
-// ============================================
-// NODE 2: routeNode
-// ============================================
-
-export function routeNode(state: GraphStateType): Partial<GraphStateType> {
-  const history = state.history;
-  const currentMsg = state.message.toLowerCase();
-  const convState = { ...state.conversationState };
-
-  // Increment turn count
-  convState.turn_count += 1;
-
-  // --- State detection (migrated from simple-agent.ts lines 362-494) ---
-  let hasBusinessInfo = false;
-  let hasVolumeInfo = false;
-  let hasPainExpressed = false;
-  let isReferred = false;
-  let demoProposed = false;
-  let horariosGiven = false;
-  let userAcceptedDemo = false;
-  let userProposedTime = false;
-  let userGaveEmail = false;
-  let yaSinContexto = false;
-  let yaTieneAlgo = false;
-  let userWantsToSchedule = false;
-  let saidLater = false;
-  let proposedDateTime: { date?: string; time?: string } = {};
-
-  // Single pass through history
-  for (const msg of history) {
-    const c = msg.content.toLowerCase();
-    if (msg.role === 'user') {
-      if (!hasBusinessInfo && containsAny(c, BUSINESS_KEYWORDS)) hasBusinessInfo = true;
-      if (!hasVolumeInfo && VOLUME_PATTERN.test(c) && (c.includes('mensaje') || c.includes('cliente') || c.includes('día') || c.includes('diario'))) hasVolumeInfo = true;
-      if (!hasPainExpressed && containsAny(c, PAIN_KEYWORDS)) hasPainExpressed = true;
-      if (!isReferred && containsAny(c, REFERRAL_KEYWORDS)) isReferred = true;
-      if (demoProposed && !userAcceptedDemo && containsAny(c, DEMO_ACCEPT_KEYWORDS)) userAcceptedDemo = true;
-    } else {
-      if (!demoProposed && containsAny(c, DEMO_PROPOSE_KEYWORDS)) demoProposed = true;
-      if (!horariosGiven && containsAny(c, HORARIO_KEYWORDS)) horariosGiven = true;
-    }
-  }
-
-  // Detect in current message
-  if (!isReferred && containsAny(currentMsg, REFERRAL_KEYWORDS)) isReferred = true;
-  if (!hasPainExpressed && containsAny(currentMsg, PAIN_KEYWORDS)) hasPainExpressed = true;
-  if (!hasVolumeInfo && VOLUME_PATTERN.test(currentMsg) && !horariosGiven) hasVolumeInfo = true;
-  if (containsAny(currentMsg, SCHEDULE_KEYWORDS)) userWantsToSchedule = true;
-  if (containsAny(currentMsg, LATER_KEYWORDS)) saidLater = true;
-  if (demoProposed && containsAny(currentMsg, DEMO_ACCEPT_KEYWORDS)) userAcceptedDemo = true;
-
-  // Extract datetime
-  const DAY_MAP = new Map<string, number>([
-    ['lunes', 1], ['martes', 2], ['miércoles', 3], ['miercoles', 3],
-    ['jueves', 4], ['viernes', 5]
-  ]);
-
-  const extractDateTime = (text: string): { date?: string; time?: string } => {
-    const result: { date?: string; time?: string } = {};
-
-    for (const [dayName, dayNum] of DAY_MAP) {
-      if (text.includes(dayName)) {
-        const today = new Date();
-        const currentDay = today.getDay();
-        let daysToAdd = dayNum - currentDay;
-        if (daysToAdd <= 0) daysToAdd += 7;
-        const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() + daysToAdd);
-        result.date = targetDate.toISOString().split('T')[0];
-        break;
-      }
-    }
-
-    const timeMatch = text.match(TIME_PATTERN);
-    if (timeMatch) {
-      let hour = parseInt(timeMatch[1]);
-      const minutes = timeMatch[2] || '00';
-      const period = timeMatch[3]?.toLowerCase();
-      if (period === 'pm' && hour < 12) hour += 12;
-      if (period === 'am' && hour === 12) hour = 0;
-      result.time = `${String(hour).padStart(2, '0')}:${minutes}`;
-    }
-
-    return result;
-  };
-
-  // User proposed time
-  if (horariosGiven && (currentMsg.includes('jueves') || currentMsg.includes('viernes') ||
-      currentMsg.includes('lunes') || currentMsg.includes('martes') || currentMsg.includes('miércoles') ||
-      /\d+\s*(am|pm|:)/.test(currentMsg))) {
-    userProposedTime = true;
-    const extracted = extractDateTime(currentMsg);
-    if (extracted.date) proposedDateTime.date = extracted.date;
-    if (extracted.time) proposedDateTime.time = extracted.time;
-  }
-
-  // Search previous messages for datetime
-  if (!proposedDateTime.date || !proposedDateTime.time) {
-    for (let i = history.length - 2; i >= 0; i--) {
-      const msg = history[i];
-      if (msg.role === 'user') {
-        const c = msg.content.toLowerCase();
-        if (c.includes('lunes') || c.includes('martes') || c.includes('miércoles') ||
-            c.includes('jueves') || c.includes('viernes') || /\d+\s*(am|pm|:)/.test(c)) {
-          const extracted = extractDateTime(c);
-          if (!proposedDateTime.date && extracted.date) proposedDateTime.date = extracted.date;
-          if (!proposedDateTime.time && extracted.time) proposedDateTime.time = extracted.time;
-          if (proposedDateTime.date && proposedDateTime.time) break;
-        }
-      }
-    }
-  }
-
-  // Email detection
-  if (EMAIL_PATTERN.test(currentMsg)) {
-    userGaveEmail = true;
-  }
-
-  // "Ya" without context
-  if ((currentMsg.trim() === 'ya' || currentMsg.trim() === 'ya.') && !demoProposed && !hasBusinessInfo) {
-    yaSinContexto = true;
-  }
-
-  // "Ya tengo algo"
-  if (currentMsg.includes('ya tengo') || currentMsg.includes('tengo algo') || currentMsg.includes('ya uso')) {
-    yaTieneAlgo = true;
-  }
-
-  // --- Determine phase (same priority order as simple-agent.ts) ---
-  let resolvedPhase: SalesPhase;
-  if (userGaveEmail) resolvedPhase = 'confirmar_y_despedir';
-  else if (userProposedTime) resolvedPhase = 'pedir_email';
-  else if (horariosGiven) resolvedPhase = 'esperando_confirmacion';
-  else if (userAcceptedDemo || userWantsToSchedule || (demoProposed && (currentMsg.includes('sí') || currentMsg.includes('si') ||
-           currentMsg.includes('dale') || currentMsg.includes('me interesa')))) resolvedPhase = 'dar_horarios';
-  else if (demoProposed) resolvedPhase = 'esperando_aceptacion';
-  else if (yaSinContexto) resolvedPhase = 'pedir_clarificacion_ya';
-  else if (yaTieneAlgo) resolvedPhase = 'preguntar_que_tiene';
-  else if (isReferred || hasPainExpressed) resolvedPhase = 'proponer_demo_urgente';
-  else if (hasBusinessInfo && hasVolumeInfo) resolvedPhase = 'listo_para_demo';
-  else if (hasBusinessInfo) resolvedPhase = 'preguntando_volumen';
-  else resolvedPhase = 'discovery';
-
-  // --- Accumulate lead_info ---
-  if (hasBusinessInfo && !convState.lead_info.business_type) {
-    // Extract business type from current or recent messages
-    for (let i = history.length - 1; i >= 0; i--) {
-      if (history[i].role === 'user' && containsAny(history[i].content.toLowerCase(), BUSINESS_KEYWORDS)) {
-        convState.lead_info = { ...convState.lead_info, business_type: history[i].content.substring(0, 100) };
-        break;
-      }
-    }
-  }
-  if (hasVolumeInfo && !convState.lead_info.volume) {
-    const volumeMatch = currentMsg.match(/\d+/);
-    if (volumeMatch) {
-      convState.lead_info = { ...convState.lead_info, volume: volumeMatch[0] };
-    }
-  }
-  if (hasPainExpressed) {
-    for (const kw of PAIN_KEYWORDS) {
-      if (currentMsg.includes(kw) && !convState.lead_info.pain_points.includes(kw)) {
-        convState.lead_info = {
-          ...convState.lead_info,
-          pain_points: [...convState.lead_info.pain_points, kw],
-        };
-      }
-    }
-  }
-  if (isReferred && !convState.lead_info.referral_source) {
-    convState.lead_info = { ...convState.lead_info, referral_source: 'referido' };
-  }
-  if (yaTieneAlgo && !convState.lead_info.current_solution) {
-    convState.lead_info = { ...convState.lead_info, current_solution: currentMsg.substring(0, 100) };
-  }
-
-  // --- Accumulate objections ---
-  for (const [category, keywords] of Object.entries(OBJECTION_CATEGORIES)) {
-    if (containsAny(currentMsg, keywords)) {
-      const alreadyExists = convState.objections.some(
-        o => o.category === category && !o.addressed
-      );
-      if (!alreadyExists) {
-        const newObjection: ObjectionEntry = {
-          category,
-          text: currentMsg.substring(0, 150),
-          addressed: false,
-        };
-        convState.objections = [...convState.objections, newObjection];
-      }
-    }
-  }
-
-  // --- Accumulate topics_covered ---
-  const currentTopic = state.currentTopic;
-  if (currentTopic !== 'general' && !convState.topics_covered.includes(currentTopic)) {
-    convState.topics_covered = [...convState.topics_covered, currentTopic];
-  }
-
-  // --- Update proposed_datetime ---
-  if (proposedDateTime.date || proposedDateTime.time) {
-    convState.proposed_datetime = {
-      ...convState.proposed_datetime,
-      ...proposedDateTime,
-    };
-  }
-
-  // --- Update awaiting_email ---
-  convState.awaiting_email = resolvedPhase === 'pedir_email' || resolvedPhase === 'esperando_confirmacion';
-
-  // --- Update previous_topic ---
-  convState.previous_topic = currentTopic;
-
-  // --- Update phase ---
-  convState.phase = resolvedPhase;
-
-  // --- Progress tracking (anti-loop) ---
-  const progress = analyzeProgress({
-    history,
-    currentMessage: state.message,
-    turnCount: convState.turn_count,
-    existingAskCounts: convState.ask_counts,
-  });
-  convState.ask_counts = progress.askCounts;
-  convState.stalled_turns = progress.stalledTurns;
-
-  // Build progress instruction for generateNode
-  let progressInstruction = '';
-  if (progress.progressInstruction) {
-    progressInstruction = progress.progressInstruction;
-  }
-  if (progress.pivotInstruction) {
-    progressInstruction += (progressInstruction ? '\n' : '') + progress.pivotInstruction;
-  }
-
-  // --- Calculate needsSummary ---
-  const needsSummary = convState.turn_count >= 5 &&
-    (convState.turn_count - convState.last_summary_turn >= 5);
-
-  return {
-    resolvedPhase,
-    needsSummary,
-    saidLater,
-    progressInstruction,
-    conversationState: convState,
-  };
-}
-
-// ============================================
-// NODE 3: summarizeNode (conditional)
-// ============================================
-
-export async function summarizeNode(state: GraphStateType, config?: RunnableConfig): Promise<Partial<GraphStateType>> {
-  const history = state.history;
-  const convState = { ...state.conversationState };
-
-  // Take last 10 messages
-  const recentHistory = history.slice(-10);
-  const conversationText = recentHistory
-    .map(m => `${m.role === 'user' ? 'Cliente' : 'Vendedor'}: ${m.content}`)
-    .join('\n');
-
-  const leadInfoText = [];
-  const li = convState.lead_info;
-  if (li.business_type) leadInfoText.push(`Negocio: ${li.business_type}`);
-  if (li.volume) leadInfoText.push(`Volumen: ${li.volume} mensajes`);
-  if (li.pain_points.length > 0) leadInfoText.push(`Dolores: ${li.pain_points.join(', ')}`);
-  if (li.current_solution) leadInfoText.push(`Solución actual: ${li.current_solution}`);
-
-  const summaryPrompt = `Eres un asistente que resume conversaciones de ventas para un agente de IA.
-
-${convState.summary ? `RESUMEN PREVIO:\n${convState.summary}\n\n` : ''}${leadInfoText.length > 0 ? `INFO DEL LEAD:\n${leadInfoText.join('\n')}\n\n` : ''}CONVERSACIÓN RECIENTE:
-${conversationText}
-
-Genera un resumen actualizado de máximo 150 palabras que capture:
-1. Tipo de negocio y contexto del cliente
-2. Necesidades y dolores expresados
-3. Nivel de interés y etapa de la conversación
-4. Objeciones mencionadas y si fueron abordadas
-5. Productos/beneficios discutidos
-6. Próximos pasos acordados o pendientes
-
-Formato: Texto corrido, sin bullets. Incluye solo información confirmada.
-Si hay resumen previo, actualízalo incorporando la nueva información.`;
-
-  try {
-    const model = new ChatAnthropic({
-      model: 'claude-haiku-4-5-20251001',
-      maxTokens: 300,
-    });
-
-    const result = await model.invoke([
-      new SystemMessage(summaryPrompt),
-      new HumanMessage('Resume la conversación.'),
-    ], config);
-
-    const newSummary = extractTextContent(result.content).trim();
-
-    if (newSummary && newSummary.length > 10) {
-      convState.summary = newSummary;
-      convState.last_summary_turn = convState.turn_count;
-
-      // Sync to lead_memory for compatibility
-      await syncSummaryToLeadMemory(state.context.lead.id, newSummary);
-
-      console.log(`[GraphSummarize] Updated summary at turn ${convState.turn_count}: ${newSummary.substring(0, 50)}...`);
-    }
-  } catch (error) {
-    console.error('[GraphSummarize] Error generating summary:', error);
-    // Non-fatal, continue without updating summary
-  }
-
-  return {
-    conversationState: convState,
-  };
-}
-
-// ============================================
-// NODE 4: generateNode
-// ============================================
-
 function getNextBusinessDays(count: number): string[] {
   const dates: string[] = [];
   const today = new Date();
   let daysAdded = 0;
   let currentDate = new Date(today);
-
   while (daysAdded < count) {
     currentDate.setDate(currentDate.getDate() + 1);
     const dayOfWeek = currentDate.getDay();
@@ -492,44 +59,50 @@ function getNextBusinessDays(count: number): string[] {
       daysAdded++;
     }
   }
-
   return dates;
 }
 
-export async function generateNode(state: GraphStateType, config?: RunnableConfig): Promise<Partial<GraphStateType>> {
-  const { resolvedPhase, context, reasoning, conversationState, message, history, topicChanged, currentTopic, agentConfig, progressInstruction } = state;
+// ============================================
+// Phase inference from LLM structured output
+// ============================================
 
-  // Resolve Cal.com config for this tenant
+function inferPhaseFromResponse(
+  response: string,
+  toolsCalled: Set<string>,
+  prevPhase: SalesPhase
+): SalesPhase {
+  const lower = response.toLowerCase();
+
+  if (toolsCalled.has('book_appointment')) return 'closed';
+  if (toolsCalled.has('check_availability') || /horario|disponib|agenda/.test(lower)) return 'scheduling';
+  if (/demo|te muestro|20 min|llamada/.test(lower)) return 'demo_proposed';
+  if (/qué tipo|a qué te dedicas|cuántos mensajes|volumen/.test(lower)) return 'qualification';
+  if (prevPhase === 'closed') return 'closed';
+
+  return prevPhase;
+}
+
+// ============================================
+// NODE 1: generateNode (main — single LLM call)
+// ============================================
+
+export async function generateNode(state: GraphStateType, config?: RunnableConfig): Promise<Partial<GraphStateType>> {
+  const { context, conversationState, message, history, agentConfig } = state;
+
+  // Resolve Cal.com config
   let calConfig: CalTenantConfig | undefined;
   if (agentConfig?.tenantId) {
     const cfg = await getCalConfig(agentConfig.tenantId);
     if (cfg) calConfig = { apiKey: cfg.accessToken, eventTypeId: cfg.eventTypeId, tenantId: agentConfig.tenantId };
   }
 
-  // Deterministic path: show schedule list
-  if (resolvedPhase === 'dar_horarios') {
-    console.log('[GraphGenerate] User accepted demo, triggering schedule list');
-    return {
-      result: {
-        response: 'Perfecto, déjame mostrarte los horarios disponibles.',
-        showScheduleList: true,
-        detectedIndustry: reasoning && reasoning.industry !== 'generic' ? reasoning.industry : undefined,
-      },
-    };
-  }
-
-  // Build system prompt
+  // Build system prompt (simplified — no more separate analysis sections)
   const systemPrompt = await buildSystemPrompt({
     message,
     context,
     history,
     conversationState,
-    reasoning: reasoning!,
-    topicChanged,
-    currentTopic,
-    resolvedPhase,
     agentConfig,
-    progressInstruction,
   });
 
   // Client info for tools
@@ -542,8 +115,12 @@ export async function generateNode(state: GraphStateType, config?: RunnableConfi
   let escalatedToHumanResult: SimpleAgentResult['escalatedToHuman'] = undefined;
   let paymentLinkSent: SimpleAgentResult['paymentLinkSent'] = undefined;
   let toolResponseMessage = '';
+  let showScheduleList = false;
 
-  // Define tools (LangChain format)
+  // ============================================
+  // Define tools (same as before — these work well)
+  // ============================================
+
   const checkAvailabilityTool = langchainTool(
     async ({ date }: { date: string }) => {
       console.log(`[Tool] Checking availability for: ${date}`);
@@ -572,7 +149,7 @@ export async function generateNode(state: GraphStateType, config?: RunnableConfi
       name: 'check_availability',
       description: 'Verifica disponibilidad en el calendario para una fecha específica. Usa formato YYYY-MM-DD.',
       schema: z.object({
-        date: z.string().describe('Fecha en formato YYYY-MM-DD. Si no se especifica fecha exacta, usa los próximos días hábiles.'),
+        date: z.string().describe('Fecha en formato YYYY-MM-DD. Si no se especifica, usa los próximos días hábiles.'),
       }),
     }
   );
@@ -588,26 +165,24 @@ export async function generateNode(state: GraphStateType, config?: RunnableConfi
             clientPhone,
             `Aquí está el link para nuestra llamada:\n${result.meetingUrl}\n\nTe llegará también la invitación a tu correo.`
           );
-          console.log(`[Tool] Meeting link sent to ${clientPhone}: ${result.meetingUrl}`);
         }
         appointmentBooked = { eventId: result.eventId || '', date, time, email, meetingUrl: result.meetingUrl };
-        console.log(`[Tool] Appointment booked: ${JSON.stringify(appointmentBooked)}`);
         return JSON.stringify({
           success: true,
           eventId: result.eventId,
           meetingUrl: result.meetingUrl,
-          message: `Cita agendada exitosamente para ${date} a las ${time}. Se envió invitación a ${email} y el link de la reunión por WhatsApp.`,
+          message: `Cita agendada para ${date} a las ${time}. Invitación enviada a ${email}.`,
         });
       }
-      return JSON.stringify({ success: false, message: 'No se pudo agendar la cita. El horario puede no estar disponible.' });
+      return JSON.stringify({ success: false, message: 'No se pudo agendar. El horario puede no estar disponible.' });
     },
     {
       name: 'book_appointment',
-      description: 'Agenda una cita en el calendario. Requiere fecha (YYYY-MM-DD), hora (HH:MM), y email del cliente.',
+      description: 'Agenda una cita. Requiere fecha (YYYY-MM-DD), hora (HH:MM), y email del cliente.',
       schema: z.object({
-        date: z.string().describe('Fecha de la cita en formato YYYY-MM-DD'),
-        time: z.string().describe('Hora de la cita en formato HH:MM (24h)'),
-        email: z.string().describe('Email del cliente para enviar la invitación'),
+        date: z.string().describe('Fecha YYYY-MM-DD'),
+        time: z.string().describe('Hora HH:MM (24h)'),
+        email: z.string().describe('Email del cliente'),
       }),
     }
   );
@@ -624,16 +199,14 @@ export async function generateNode(state: GraphStateType, config?: RunnableConfi
       if (sent) brochureSent = true;
       return JSON.stringify({
         success: sent,
-        message: sent
-          ? 'Brochure enviado exitosamente. Pregunta si tiene dudas o quiere agendar demo.'
-          : 'No se pudo enviar el brochure.',
+        message: sent ? 'Brochure enviado. Pregunta si tiene dudas.' : 'No se pudo enviar.',
       });
     },
     {
       name: 'send_brochure',
-      description: 'Envía información detallada sobre el servicio de agentes de IA para WhatsApp. Usa cuando pidan más información, ejemplos o detalles.',
+      description: 'Envía información detallada del servicio. Usa cuando pidan más info o ejemplos.',
       schema: z.object({
-        reason: z.string().describe('Motivo por el que se envía el brochure'),
+        reason: z.string().describe('Motivo por el que se envía'),
       }),
     }
   );
@@ -642,28 +215,20 @@ export async function generateNode(state: GraphStateType, config?: RunnableConfi
     async ({ reason, summary }: { reason: string; summary: string }) => {
       console.log(`[Tool] Escalating to human: ${reason}`);
       const escalated = await escalateToHuman({
-        clientPhone,
-        clientName,
-        reason,
-        conversationSummary: summary,
+        clientPhone, clientName, reason, conversationSummary: summary,
       });
-      if (escalated) {
-        escalatedToHumanResult = { reason, summary };
-        console.log(`[Tool] Escalated to human: ${reason}`);
-      }
+      if (escalated) escalatedToHumanResult = { reason, summary };
       return JSON.stringify({
         success: escalated,
-        message: escalated
-          ? 'Escalado exitosamente. El cliente será contactado por un humano pronto.'
-          : 'No se pudo escalar. Intenta resolver la situación.',
+        message: escalated ? 'Escalado. El cliente será contactado pronto.' : 'No se pudo escalar.',
       });
     },
     {
       name: 'escalate_to_human',
-      description: 'Transfiere la conversación a un humano. SOLO usa cuando el cliente dice LITERALMENTE "quiero hablar con un humano" o "pásame con una persona". NUNCA la uses para objeciones, dudas, desconfianza, preguntas sobre estafas, o preguntas difíciles — resuélvelas tú mismo.',
+      description: 'Transfiere a un humano. SOLO cuando el cliente dice LITERALMENTE "quiero hablar con un humano". NUNCA para objeciones o dudas.',
       schema: z.object({
         reason: z.string().describe('Motivo de la escalación'),
-        summary: z.string().describe('Resumen breve de la conversación'),
+        summary: z.string().describe('Resumen de la conversación'),
       }),
     }
   );
@@ -671,23 +236,17 @@ export async function generateNode(state: GraphStateType, config?: RunnableConfi
   const sendPaymentLinkTool = langchainTool(
     async ({ email, productName }: { email: string; productName: string }) => {
       const tenantId = agentConfig?.tenantId;
-      console.log(`[Tool] send_payment_link for ${email}, product: ${productName}, tenant: ${tenantId}`);
+      console.log(`[Tool] send_payment_link for ${email}, product: ${productName}`);
       try {
         const { sendPaymentLink } = await import('@/lib/whatsapp/send');
         const waCreds = agentConfig?.whatsappCredentials;
-
         const catalog = agentConfig?.productsCatalog as Record<string, unknown> | undefined;
         const fixedLink = catalog?.paymentLink as string | undefined;
 
         if (fixedLink) {
-          console.log(`[Tool] Using fixed payment link: ${fixedLink}`);
           const sent = await sendPaymentLink(clientPhone, fixedLink, productName, waCreds);
           toolResponseMessage = 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.';
-          return JSON.stringify({
-            success: true,
-            checkoutUrl: fixedLink,
-            message: sent ? 'Link de pago enviado exitosamente por WhatsApp.' : `Link de pago: ${fixedLink}`,
-          });
+          return JSON.stringify({ success: true, checkoutUrl: fixedLink, message: sent ? 'Link enviado.' : `Link: ${fixedLink}` });
         }
 
         if (tenantId) {
@@ -697,54 +256,48 @@ export async function generateNode(state: GraphStateType, config?: RunnableConfi
           });
           const sent = await sendPaymentLink(clientPhone, shortUrl, productName, waCreds);
           toolResponseMessage = 'Listo, te mandé el link de pago por aquí. Cualquier duda me dices.';
-          return JSON.stringify({
-            success: true,
-            checkoutUrl: shortUrl,
-            message: sent ? 'Link de pago enviado exitosamente por WhatsApp.' : `Link de pago: ${shortUrl}`,
-          });
+          return JSON.stringify({ success: true, checkoutUrl: shortUrl, message: sent ? 'Link enviado.' : `Link: ${shortUrl}` });
         }
 
         return JSON.stringify({ success: false, message: 'No se pudo identificar el tenant.' });
       } catch (error) {
         console.error('[Tool] Payment link error:', error);
-        return JSON.stringify({ success: false, message: 'Error al crear el link de pago.' });
+        return JSON.stringify({ success: false, message: 'Error al crear el link.' });
       }
     },
     {
       name: 'send_payment_link',
-      description: 'Envía un link de pago de Stripe al cliente por WhatsApp. Usa cuando el cliente confirmó que quiere comprar y ya dio su email.',
+      description: 'Envía link de pago Stripe por WhatsApp. Usa cuando el cliente confirmó compra y dio email.',
       schema: z.object({
         email: z.string().describe('Email del cliente'),
-        productName: z.string().describe('Nombre del producto o servicio'),
+        productName: z.string().describe('Nombre del producto'),
       }),
     }
   );
 
   // Collect all tools
-  const allTools: StructuredToolInterface[] = [checkAvailabilityTool, bookAppointmentTool, sendBrochureTool, escalateToHumanTool, sendPaymentLinkTool];
+  const allTools: StructuredToolInterface[] = [
+    checkAvailabilityTool, bookAppointmentTool, sendBrochureTool,
+    escalateToHumanTool, sendPaymentLinkTool,
+  ];
 
   // Add custom tools from tenant config
   if (agentConfig?.customTools && agentConfig.customTools.length > 0) {
     for (const customTool of agentConfig.customTools) {
       allTools.push(langchainTool(
         async () => {
-          console.log(`[Tool] Custom tool called: ${customTool.name}`);
+          console.log(`[Tool] Custom tool: ${customTool.name}`);
           return JSON.stringify(customTool.mockResponse || { success: true, message: `${customTool.displayName} executed` });
         },
-        {
-          name: customTool.name,
-          description: customTool.description,
-          schema: z.object({}),
-        }
+        { name: customTool.name, description: customTool.description, schema: z.object({}) }
       ));
     }
-    console.log(`[GraphGenerate] Added ${agentConfig.customTools.length} custom tools`);
   }
 
   try {
     const model = new ChatAnthropic({
       model: resolveChatModel(agentConfig?.model),
-      maxTokens: agentConfig?.maxResponseTokens || 200,
+      maxTokens: agentConfig?.maxResponseTokens || 250,
       temperature: agentConfig?.temperature,
     }).bindTools(allTools);
 
@@ -787,43 +340,59 @@ export async function generateNode(state: GraphStateType, config?: RunnableConfi
     response = response.replace(/\*+/g, '');
     response = response.replace(/^(Víctor|Victor):\s*/i, '');
 
-    // Closure fallback: if model generated no text but a tool ran, use tool's message
+    // Closure fallback
     if (!response && toolResponseMessage) {
-      console.log(`[GraphGenerate] Using tool closure fallback: "${toolResponseMessage}"`);
       response = toolResponseMessage;
     }
-
     if (!response) {
       response = '¿En qué más te puedo ayudar?';
     }
 
-    // Phase 3D: Response guard (length enforcement)
+    // Response guard (length enforcement)
     const guarded = guardResponse(response, 3);
     response = guarded.response;
     if (guarded.wasGuarded) {
-      console.log(`[GraphGenerate] Response guarded: ${guarded.reason}`);
+      console.log(`[Generate] Response guarded: ${guarded.reason}`);
     }
 
-    // Phase 5B: Promise-action validation
-    let showScheduleList = false;
+    // Promise-action validation
     const PROMISE_PATTERNS = [
       { pattern: /te muestro.*horarios|horarios.*disponibles|déjame.*horarios/i, tool: 'schedule_demo' },
     ];
     for (const { pattern, tool: toolName } of PROMISE_PATTERNS) {
       if (pattern.test(response) && !toolsCalled.has(toolName)) {
         showScheduleList = true;
-        console.log(`[GraphGenerate] Promise validation: response promises "${toolName}" but didn't call it. Triggering schedule list.`);
         break;
       }
     }
 
-    console.log('=== GRAPH RESPONSE ===');
-    console.log(response);
+    console.log(`=== RESPONSE (${totalTokens} tokens) ===\n${response}`);
 
-    // Track products offered if brochure was sent
+    // Infer phase from response + tools called
     const updatedState = { ...state.conversationState };
+    updatedState.phase = inferPhaseFromResponse(response, toolsCalled, updatedState.phase);
+
+    // Track products offered
     if (brochureSent && !updatedState.products_offered.includes('brochure')) {
       updatedState.products_offered = [...updatedState.products_offered, 'brochure'];
+    }
+
+    // Auto-summarize every 5 turns (inline, no separate LLM call — just accumulate context)
+    if (updatedState.turn_count >= 5 && updatedState.turn_count - updatedState.last_summary_turn >= 5) {
+      // Build a lightweight summary from accumulated lead_info
+      const li = updatedState.lead_info;
+      const summaryParts: string[] = [];
+      if (li.business_type) summaryParts.push(`Negocio: ${li.business_type}`);
+      if (li.volume) summaryParts.push(`Volumen: ${li.volume}`);
+      if (li.pain_points.length > 0) summaryParts.push(`Dolores: ${li.pain_points.join(', ')}`);
+      if (li.current_solution) summaryParts.push(`Solución actual: ${li.current_solution}`);
+      summaryParts.push(`Fase: ${updatedState.phase}`);
+      summaryParts.push(`Turno: ${updatedState.turn_count}`);
+
+      const newSummary = summaryParts.join('. ');
+      updatedState.summary = newSummary;
+      updatedState.last_summary_turn = updatedState.turn_count;
+      await syncSummaryToLeadMemory(context.lead.id, newSummary);
     }
 
     return {
@@ -834,25 +403,22 @@ export async function generateNode(state: GraphStateType, config?: RunnableConfi
         brochureSent: brochureSent || undefined,
         paymentLinkSent,
         escalatedToHuman: escalatedToHumanResult,
-        detectedIndustry: reasoning && reasoning.industry !== 'generic' ? reasoning.industry : undefined,
-        saidLater: state.saidLater,
         showScheduleList: showScheduleList || undefined,
+        saidLater: /luego|después|despues|ahorita no|al rato|otro día/i.test(message) || undefined,
       },
       conversationState: updatedState,
     };
 
   } catch (error) {
-    console.error('Graph agent error:', error);
+    console.error('Generate error:', error);
     return {
-      result: {
-        response: 'Perdón, tuve un problema. ¿Me repites?'
-      },
+      result: { response: 'Perdón, tuve un problema. ¿Me repites?' },
     };
   }
 }
 
 // ============================================
-// NODE 5: persistNode
+// NODE 2: persistNode (unchanged)
 // ============================================
 
 export async function persistNode(state: GraphStateType): Promise<Partial<GraphStateType>> {

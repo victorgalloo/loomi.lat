@@ -1,11 +1,12 @@
 /**
- * LangGraph State Schema
- * Defines the Annotation combining ephemeral inputs with persisted conversation state
+ * LangGraph State Schema — Simplified (v2)
+ *
+ * Removed: analyzeNode outputs, routeNode keyword matching, redundant phase tracking.
+ * The LLM now decides phase + response in a single invocation.
  */
 
 import { Annotation } from '@langchain/langgraph';
 import { ConversationContext } from '@/types';
-import { ReasoningResult } from '@/lib/agents/reasoning';
 import { AgentConfig } from '@/lib/tenant/context';
 import { NodeTiming } from './timing-middleware';
 
@@ -34,26 +35,20 @@ export interface SimpleAgentResult {
   showScheduleList?: boolean;
 }
 
-// Extended type matching what the webhook attaches (knowledgeContext + customTools)
 export type GraphAgentConfig = AgentConfig & {
   knowledgeContext?: string;
   customTools?: Array<{ name: string; description: string; displayName: string; mockResponse?: unknown }>;
   whatsappCredentials?: { phoneNumberId: string; accessToken: string; tenantId?: string };
 };
 
-// The 11 sales phases matching simple-agent.ts state machine
+// Simplified phase — used for persistence/analytics, NOT for routing decisions
 export type SalesPhase =
   | 'discovery'
-  | 'preguntando_volumen'
-  | 'proponer_demo_urgente'
-  | 'listo_para_demo'
-  | 'dar_horarios'
-  | 'esperando_aceptacion'
-  | 'esperando_confirmacion'
-  | 'pedir_email'
-  | 'confirmar_y_despedir'
-  | 'pedir_clarificacion_ya'
-  | 'preguntar_que_tiene';
+  | 'qualification'
+  | 'demo_proposed'
+  | 'scheduling'
+  | 'closing'
+  | 'closed';
 
 export interface LeadInfo {
   business_type: string | null;
@@ -108,19 +103,7 @@ export const DEFAULT_PERSISTED_STATE: PersistedConversationState = {
   stalled_turns: 0,
 };
 
-// Topic categories for detection
-export type TopicCategory =
-  | 'precio'
-  | 'funcionalidad'
-  | 'integraciones'
-  | 'competencia'
-  | 'demo'
-  | 'implementacion'
-  | 'caso_de_uso'
-  | 'objecion'
-  | 'general';
-
-// Full graph state (Annotation)
+// Full graph state — simplified to 2 nodes: generate → persist
 export const GraphState = Annotation.Root({
   // Inputs (set once at invocation)
   message: Annotation<string>,
@@ -130,19 +113,6 @@ export const GraphState = Annotation.Root({
 
   // Persisted state (loaded from / saved to Supabase)
   conversationState: Annotation<PersistedConversationState>,
-
-  // Analysis (set by analyzeNode)
-  reasoning: Annotation<ReasoningResult | null>,
-  sentiment: Annotation<string | null>,
-  industry: Annotation<string | null>,
-  topicChanged: Annotation<boolean>,
-  currentTopic: Annotation<TopicCategory>,
-
-  // Routing (set by routeNode)
-  resolvedPhase: Annotation<SalesPhase>,
-  needsSummary: Annotation<boolean>,
-  saidLater: Annotation<boolean>,
-  progressInstruction: Annotation<string>,
 
   // Output (set by generateNode)
   result: Annotation<SimpleAgentResult | null>,

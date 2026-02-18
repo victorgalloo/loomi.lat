@@ -1,10 +1,13 @@
 /**
- * LangGraph Graph Compilation + Entry Point
+ * LangGraph Graph — Simplified (v2)
  *
- * Graph topology:
- * START → [analyze] → [route] → {needsSummary?} → [summarize] → [generate] → [persist] → END
- *                                      ↓ no
- *                                [generate] → [persist] → END
+ * Graph topology: START → [generate] → [persist] → END
+ *
+ * Previous: START → analyze → route → summarize? → generate → persist → END (3 LLM calls)
+ * Now: START → generate → persist → END (1 LLM call)
+ *
+ * The LLM handles analysis, routing, and response generation in a single invocation
+ * via a well-structured system prompt + native tool use.
  */
 
 import { StateGraph, END } from '@langchain/langgraph';
@@ -14,7 +17,7 @@ import { ConversationContext } from '@/types';
 import { GraphAgentConfig, SimpleAgentResult } from './state';
 import { GraphState, DEFAULT_PERSISTED_STATE, PersistedConversationState } from './state';
 import { loadConversationState } from './memory';
-import { analyzeNode, routeNode, summarizeNode, generateNode, persistNode } from './nodes';
+import { generateNode, persistNode } from './nodes';
 import { withTiming, printTimingSummary } from './timing-middleware';
 
 // Compiled graph singleton
@@ -22,20 +25,9 @@ let compiledGraph: ReturnType<ReturnType<typeof buildGraph>['compile']> | null =
 
 function buildGraph() {
   const graph = new StateGraph(GraphState)
-    .addNode('analyze', withTiming('analyze', analyzeNode))
-    .addNode('route', withTiming('route', routeNode))
-    .addNode('summarize', withTiming('summarize', summarizeNode))
     .addNode('generate', withTiming('generate', generateNode))
     .addNode('persist', withTiming('persist', persistNode))
-    .addEdge('__start__', 'analyze')
-    .addEdge('analyze', 'route')
-    .addConditionalEdges('route', (state) => {
-      return state.needsSummary ? 'summarize' : 'generate';
-    }, {
-      summarize: 'summarize',
-      generate: 'generate',
-    })
-    .addEdge('summarize', 'generate')
+    .addEdge('__start__', 'generate')
     .addEdge('generate', 'persist')
     .addEdge('persist', END);
 
@@ -50,11 +42,7 @@ function getCompiledGraph() {
 }
 
 /**
- * Entry point that replaces simpleAgent().
- * Same signature: (message, context) → SimpleAgentResult
- *
- * @param preloadedState - Optional state preloaded from the RPC call.
- *   When provided, skips the separate loadConversationState() query (~50-200ms savings).
+ * Entry point — same signature as before for backwards compatibility.
  */
 export async function processMessageGraph(
   message: string,
@@ -62,7 +50,6 @@ export async function processMessageGraph(
   agentConfig?: GraphAgentConfig,
   preloadedState?: PersistedConversationState
 ): Promise<SimpleAgentResult> {
-  // Use preloaded state if available, otherwise load from Supabase
   const conversationState = preloadedState ?? await loadConversationState(
     context.conversation.id,
     context.lead.id
@@ -74,7 +61,6 @@ export async function processMessageGraph(
 
   for (let i = 0; i < recentSlice.length; i++) {
     const m = recentSlice[i];
-    // Detect large time gaps (>2 hours) between messages and inject a system note
     if (i > 0 && m.timestamp) {
       const prev = recentSlice[i - 1];
       if (prev.timestamp) {
@@ -99,42 +85,31 @@ export async function processMessageGraph(
 
   history.push({ role: 'user', content: message });
 
-  console.log('=== GRAPH INVOCATION ===');
-  console.log(`Turn: ${conversationState.turn_count + 1}, Phase: ${conversationState.phase}`);
-  console.log(`[Graph] agentConfig present: ${!!agentConfig}, systemPrompt: ${!!agentConfig?.systemPrompt}, model: ${agentConfig?.model || 'default'}`);
+  // Increment turn count
+  const updatedState = { ...conversationState, turn_count: conversationState.turn_count + 1 };
 
-  // Build PostHog callback handler for graph-level tracing
+  console.log(`=== GRAPH v2 | Turn: ${updatedState.turn_count} | Phase: ${updatedState.phase} ===`);
+
+  // PostHog tracing
   const posthogCallback = new LangChainCallbackHandler({
     client: getPostHogServer(),
     distinctId: agentConfig?.tenantId || 'unknown',
     traceId: context.conversation.id,
-    properties: { source: 'graph' },
+    properties: { source: 'graph-v2' },
   });
 
-  // Invoke the graph
   const graph = getCompiledGraph();
   const finalState = await graph.invoke({
     message,
     context,
     history,
     agentConfig,
-    conversationState,
-    reasoning: null,
-    sentiment: null,
-    industry: null,
-    topicChanged: false,
-    currentTopic: 'general' as const,
-    resolvedPhase: conversationState.phase,
-    needsSummary: false,
-    saidLater: false,
+    conversationState: updatedState,
     result: null,
     _nodeTimings: [],
   }, { callbacks: [posthogCallback] });
 
-  // Print timing summary
   printTimingSummary(finalState._nodeTimings);
-
-  // Flush PostHog events before serverless function returns
   await flushPostHog();
 
   if (!finalState.result) {

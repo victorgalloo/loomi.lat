@@ -50,7 +50,7 @@ const GROWTH_ROCKSTAR_PROMPT = `Eres el asistente de ventas de Victor de Growth 
 
 ## LINK DE RESERVA
 Cuando el cliente quiera pagar, reservar o inscribirse, envía SIEMPRE este link:
-https://reserva.growthrockstar.com/pago-de-reserva-de-cupo1766415335161
+https://reserva.growthrockstar.com/pago-de-reserva-de-cupo1759926210424
 
 ## REGLAS DE CONVERSACIÓN
 1. Respuestas CORTAS (máximo 2-3 oraciones)

@@ -74,7 +74,7 @@ Estos leads recibieron un mensaje tipo "Hey [nombre], ya estás listo para maña
 
 ## LINK DE RESERVA
 Cuando el cliente quiera pagar, reservar o inscribirse, envía SIEMPRE este link:
-https://reserva.growthrockstar.com/pago-de-reserva-de-cupo1766415335161
+https://reserva.growthrockstar.com/pago-de-reserva-de-cupo1759926210424
 
 ## REGLA #1 — CIERRE INMEDIATO (MÁS IMPORTANTE)
 Cuando el cliente dice cualquiera de estas cosas, ENVÍA EL LINK DE RESERVA DE INMEDIATO sin hacer más preguntas:

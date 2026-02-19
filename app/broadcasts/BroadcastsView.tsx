@@ -14,9 +14,11 @@ interface MetaTemplate {
     text?: string;
     format?: string;
     buttons?: Array<{ type: string; text: string }>;
-    example?: { body_text?: string[][] };
+    example?: { body_text?: string[][]; header_handle?: string[] };
   }>;
 }
+
+type HeaderMediaType = 'IMAGE' | 'VIDEO' | 'DOCUMENT' | null;
 
 interface Campaign {
   id: string;
@@ -175,6 +177,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
   const [isDragging, setIsDragging] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
+  const [formHeaderMediaUrl, setFormHeaderMediaUrl] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -238,21 +241,33 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
 
   const templateVariables = selectedTemplate ? extractVariables(selectedTemplate) : [];
 
+  // Detect media header (IMAGE, VIDEO, DOCUMENT)
+  const headerMediaType: HeaderMediaType = selectedTemplate
+    ? (selectedTemplate.components.find(c => c.type === 'HEADER' && c.format && c.format !== 'TEXT')?.format as HeaderMediaType) || null
+    : null;
+
   // Build template_components for API
   // Variables with source 'csv_name' will have text: '{{csv_name}}' as placeholder
   const buildTemplateComponents = () => {
-    if (!selectedTemplate || templateVariables.length === 0) return undefined;
+    if (!selectedTemplate) return undefined;
 
-    const components: Array<{
-      type: string;
-      parameters: Array<{ type: string; text: string }>;
-    }> = [];
+    const components: Array<Record<string, unknown>> = [];
 
-    // Group by type
+    // Media header (DOCUMENT, IMAGE, VIDEO)
+    if (headerMediaType && formHeaderMediaUrl) {
+      const mediaType = headerMediaType.toLowerCase() as 'image' | 'video' | 'document';
+      components.push({
+        type: 'header',
+        parameters: [{
+          type: mediaType,
+          [mediaType]: { link: formHeaderMediaUrl },
+        }],
+      });
+    }
+
+    // Text header variables
     const headerVars = templateVariables.filter(v => v.type === 'header');
-    const bodyVars = templateVariables.filter(v => v.type === 'body');
-
-    if (headerVars.length > 0) {
+    if (headerVars.length > 0 && !headerMediaType) {
       components.push({
         type: 'header',
         parameters: headerVars.map(v => {
@@ -266,6 +281,8 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
       });
     }
 
+    // Body variables
+    const bodyVars = templateVariables.filter(v => v.type === 'body');
     if (bodyVars.length > 0) {
       components.push({
         type: 'body',
@@ -280,7 +297,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
       });
     }
 
-    return components;
+    return components.length > 0 ? components : undefined;
   };
 
   const resetModal = () => {
@@ -291,6 +308,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
     setFormLanguage('');
     setFormVariables({});
     setFormVariableSource({});
+    setFormHeaderMediaUrl('');
     setCsvFile(null);
     setCsvPreview([]);
     setCsvTotal(0);
@@ -595,6 +613,27 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     </div>
                   )}
 
+                  {/* Media Header (DOCUMENT, IMAGE, VIDEO) */}
+                  {selectedTemplate && headerMediaType && (
+                    <div className="rounded-2xl border border-terminal-yellow/30 bg-terminal-yellow/5 p-3">
+                      <label className="block text-label text-foreground mb-2">
+                        Header: {headerMediaType === 'DOCUMENT' ? 'PDF / Documento' : headerMediaType === 'IMAGE' ? 'Imagen' : 'Video'}
+                      </label>
+                      <p className="text-xs text-muted mb-2">
+                        {lang === 'es'
+                          ? `Este template requiere un ${headerMediaType === 'DOCUMENT' ? 'documento' : headerMediaType === 'IMAGE' ? 'imagen' : 'video'} en el header. Pega la URL pública del archivo.`
+                          : `This template requires a ${headerMediaType.toLowerCase()} header. Paste the public URL of the file.`}
+                      </p>
+                      <input
+                        type="url"
+                        value={formHeaderMediaUrl}
+                        onChange={e => setFormHeaderMediaUrl(e.target.value)}
+                        placeholder="https://example.com/file.pdf"
+                        className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm font-mono text-foreground placeholder:text-muted focus:outline-none focus:border-foreground/30 focus:ring-2 focus:ring-info/30"
+                      />
+                    </div>
+                  )}
+
                   {/* Template Variables */}
                   {selectedTemplate && (
                     <div>
@@ -823,6 +862,10 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     });
                     if (missingVars) {
                       setError(t.variablesRequired);
+                      return;
+                    }
+                    if (headerMediaType && !formHeaderMediaUrl.trim()) {
+                      setError(lang === 'es' ? 'Agrega la URL del archivo para el header' : 'Add the file URL for the header');
                       return;
                     }
                     setError('');

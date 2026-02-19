@@ -99,12 +99,16 @@ export async function POST(
 
       return baseComponents.map(comp => ({
         ...comp,
-        parameters: comp.parameters.map(param => ({
-          ...param,
-          text: param.text === '{{csv_name}}'
-            ? (recipient.name || 'Cliente')
-            : param.text,
-        })),
+        parameters: comp.parameters.map(param => {
+          // Skip media parameters (image, document, video) — they don't have text
+          if (!param.text) return param;
+          return {
+            ...param,
+            text: param.text === '{{csv_name}}'
+              ? (recipient.name || 'Cliente')
+              : param.text,
+          };
+        }),
       }));
     };
 

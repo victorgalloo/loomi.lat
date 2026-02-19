@@ -284,6 +284,11 @@ export async function sendTemplateMessage(
   credentials?: TenantCredentials
 ): Promise<SendTemplateResult> {
   try {
+    // Filter out components with empty parameters to avoid #132012
+    const validComponents = components?.filter(comp =>
+      comp.parameters.length > 0 && comp.parameters.every(p => p.text !== '')
+    );
+
     const payload: Record<string, unknown> = {
       messaging_product: 'whatsapp',
       to: phone,
@@ -291,9 +296,11 @@ export async function sendTemplateMessage(
       template: {
         name: templateName,
         language: { code: language },
-        ...(components && components.length > 0 ? { components } : {})
+        ...(validComponents && validComponents.length > 0 ? { components: validComponents } : {})
       }
     };
+
+    console.log('[WhatsApp] Template payload:', JSON.stringify(payload, null, 2));
 
     const response = await fetchWithTimeout(getApiUrl(credentials?.phoneNumberId), {
       method: 'POST',
@@ -304,10 +311,14 @@ export async function sendTemplateMessage(
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[WhatsApp] Template send error:', errorText);
+      console.error('[WhatsApp] Template payload was:', JSON.stringify(payload, null, 2));
       let errorMsg = `HTTP ${response.status}`;
       try {
         const errorJson = JSON.parse(errorText);
         errorMsg = errorJson?.error?.message || errorMsg;
+        if (errorJson?.error?.error_data) {
+          console.error('[WhatsApp] Error details:', JSON.stringify(errorJson.error.error_data));
+        }
       } catch {
         // keep default
       }

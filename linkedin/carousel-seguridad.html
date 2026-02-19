@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrusel — Seguridad</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1A1A1A;
+      font-family: 'Inter', -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 48px;
+      padding: 48px;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    .label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #555;
+      margin-bottom: -36px;
+      align-self: flex-start;
+      margin-left: calc(50% - 540px);
+    }
+    .slide {
+      width: 1080px;
+      height: 1350px;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       SLIDE 1 — HOOK (dark terminal)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    #slide-1 {
+      background: #0A0A0A;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 90px 100px;
+    }
+    .s1-prompt {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 500;
+      color: #00FF41;
+      margin-bottom: 40px;
+      letter-spacing: -0.3px;
+    }
+    .s1-prompt .blink {
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+    .s1-hero {
+      font-size: 66px;
+      font-weight: 900;
+      color: #FAFAFA;
+      line-height: 1.06;
+      letter-spacing: -3.5px;
+      max-width: 850px;
+    }
+    .s1-hero .green {
+      color: #00FF41;
+    }
+    .s1-sub {
+      margin-top: 36px;
+      font-size: 22px;
+      font-weight: 500;
+      color: #888;
+      letter-spacing: -0.3px;
+    }
+    .s1-footer {
+      position: absolute;
+      bottom: 48px;
+      left: 100px;
+      right: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .s1-handle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+      color: #00FF41;
+    }
+    .s1-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .s1-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #222;
+    }
+    .s1-dots span:first-child { background: #00FF41; }
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       SLIDE 2 — HISTORIA (light)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    #slide-2 {
+      background: #F5F7F5;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 90px 100px;
+    }
+    #slide-2::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: #00CC33;
+    }
+    .s2-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: #FFF;
+      background: #0A0A0A;
+      padding: 8px 16px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 32px;
+      width: fit-content;
+    }
+    .s2-logo {
+      height: 52px;
+      margin-bottom: 28px;
+      object-fit: contain;
+    }
+    .s2-title {
+      font-size: 48px;
+      font-weight: 900;
+      color: #0A0A0A;
+      letter-spacing: -2.5px;
+      margin-bottom: 28px;
+      line-height: 1.1;
+    }
+    .s2-body {
+      font-size: 22px;
+      font-weight: 500;
+      color: #444;
+      line-height: 1.65;
+      letter-spacing: -0.3px;
+      max-width: 720px;
+    }
+    .s2-terminal {
+      margin-top: 36px;
+      background: #0A0A0A;
+      border-radius: 14px;
+      padding: 28px 32px;
+      max-width: 700px;
+    }
+    .s2-terminal-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .s2-terminal-bar span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .s2-terminal-bar span:nth-child(1) { background: #FF5F56; }
+    .s2-terminal-bar span:nth-child(2) { background: #FFBD2E; }
+    .s2-terminal-bar span:nth-child(3) { background: #27C93F; }
+    .s2-terminal-line {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 17px;
+      font-weight: 500;
+      color: #00FF41;
+      line-height: 2;
+    }
+    .s2-terminal-line .dim {
+      color: #555;
+    }
+    .s2-footer {
+      position: absolute;
+      bottom: 48px;
+      left: 100px;
+      right: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .s2-handle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+      color: #999;
+    }
+    .s2-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .s2-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #DDD;
+    }
+    .s2-dots span:nth-child(2) { background: #0A0A0A; }
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       SLIDE 3 — DATO DURO (dark, impact)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    #slide-3 {
+      background: #0A0A0A;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 90px 100px;
+    }
+    #slide-3::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,255,65,0.015) 2px,
+        rgba(0,255,65,0.015) 4px
+      );
+      pointer-events: none;
+    }
+    .s3-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 600;
+      color: #00FF41;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 32px;
+      position: relative;
+      z-index: 1;
+    }
+    .s3-zero {
+      font-size: 280px;
+      font-weight: 900;
+      color: #00FF41;
+      line-height: 0.8;
+      letter-spacing: -14px;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 0 80px rgba(0,255,65,0.25);
+    }
+    .s3-label {
+      font-size: 60px;
+      font-weight: 900;
+      color: #FAFAFA;
+      letter-spacing: -3px;
+      margin-top: 4px;
+      position: relative;
+      z-index: 1;
+    }
+    .s3-lines {
+      margin-top: 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    .s3-lines p {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 500;
+      color: #888;
+      letter-spacing: -0.3px;
+    }
+    .s3-lines p .strike {
+      text-decoration: line-through;
+      color: #555;
+    }
+    .s3-box {
+      margin-top: 48px;
+      background: rgba(0,255,65,0.08);
+      border: 1px solid rgba(0,255,65,0.25);
+      color: #00FF41;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 17px;
+      font-weight: 600;
+      padding: 20px 36px;
+      border-radius: 10px;
+      letter-spacing: -0.2px;
+      position: relative;
+      z-index: 1;
+    }
+    .s3-handle {
+      position: absolute;
+      bottom: 48px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+      color: #444;
+      z-index: 1;
+    }
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       SLIDE 4 — REFLEXION (light)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    #slide-4 {
+      background: #F5F7F5;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 90px 100px;
+    }
+    .s4-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: #0A0A0A;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin-bottom: 44px;
+    }
+    .s4-hero {
+      font-size: 48px;
+      font-weight: 900;
+      color: #0A0A0A;
+      line-height: 1.2;
+      letter-spacing: -2.5px;
+      max-width: 780px;
+    }
+    .s4-hero .green {
+      color: #00993D;
+      text-decoration: underline;
+      text-decoration-thickness: 4px;
+      text-underline-offset: 8px;
+      text-decoration-color: #00CC33;
+    }
+    .s4-sub {
+      margin-top: 36px;
+      font-size: 22px;
+      font-weight: 500;
+      color: #666;
+      letter-spacing: -0.3px;
+    }
+    .s4-tag {
+      margin-top: 48px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: #FFF;
+      background: #0A0A0A;
+      padding: 12px 28px;
+      border-radius: 8px;
+    }
+    .s4-footer {
+      position: absolute;
+      bottom: 48px;
+      left: 100px;
+      right: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .s4-handle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+      color: #999;
+    }
+    .s4-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .s4-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #DDD;
+    }
+    .s4-dots span:nth-child(4) { background: #0A0A0A; }
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       SLIDE 5 — CONCEPTOS (dark terminal)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    #slide-5 {
+      background: #0A0A0A;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 80px 90px;
+    }
+    .s5-title {
+      font-size: 44px;
+      font-weight: 900;
+      color: #FAFAFA;
+      letter-spacing: -2px;
+      margin-bottom: 48px;
+    }
+    .s5-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .s5-card {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      background: rgba(0,255,65,0.04);
+      border: 1px solid rgba(0,255,65,0.15);
+      border-radius: 14px;
+      padding: 28px 32px;
+    }
+    .s5-card-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 26px;
+      background: rgba(0,255,65,0.1);
+    }
+    .s5-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .s5-card-term {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: #00FF41;
+      letter-spacing: -0.5px;
+    }
+    .s5-card-meaning {
+      font-size: 19px;
+      font-weight: 500;
+      color: #AAA;
+      letter-spacing: -0.2px;
+    }
+    .s5-handle {
+      position: absolute;
+      bottom: 48px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+      color: #444;
+    }
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       SLIDE 6 — ACCION (light, centered)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    #slide-6 {
+      background: #F5F7F5;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 80px 90px;
+    }
+    .s6-title {
+      font-size: 46px;
+      font-weight: 900;
+      color: #0A0A0A;
+      letter-spacing: -2.5px;
+      margin-bottom: 48px;
+    }
+    .s6-title .green {
+      color: #00993D;
+    }
+    .s6-items {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .s6-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      background: #FFF;
+      border: 1.5px solid #E0E0E0;
+      border-radius: 14px;
+      padding: 22px 28px;
+    }
+    .s6-num {
+      width: 40px;
+      height: 40px;
+      background: #0A0A0A;
+      color: #00FF41;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .s6-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .s6-main {
+      font-size: 21px;
+      font-weight: 700;
+      color: #0A0A0A;
+      letter-spacing: -0.3px;
+    }
+    .s6-hint {
+      font-size: 16px;
+      font-weight: 500;
+      color: #888;
+      letter-spacing: -0.2px;
+    }
+    .s6-closing {
+      margin-top: 36px;
+      font-size: 19px;
+      font-weight: 700;
+      color: #999;
+      letter-spacing: -0.2px;
+    }
+    .s6-footer {
+      position: absolute;
+      bottom: 48px;
+      left: 90px;
+      right: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .s6-handle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+      color: #999;
+    }
+    .s6-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .s6-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #DDD;
+    }
+    .s6-dots span:nth-child(6) { background: #0A0A0A; }
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       SLIDE 7 — CTA (dark, strong close)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    #slide-7 {
+      background: #0A0A0A;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 90px 100px;
+    }
+    #slide-7::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(0,255,65,0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .s7-hero {
+      font-size: 54px;
+      font-weight: 900;
+      color: #FAFAFA;
+      line-height: 1.15;
+      letter-spacing: -3px;
+      max-width: 700px;
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+    }
+    .s7-hero .green {
+      color: #00FF41;
+    }
+    .s7-body {
+      font-size: 20px;
+      font-weight: 500;
+      color: #888;
+      line-height: 1.65;
+      max-width: 540px;
+      letter-spacing: -0.2px;
+      margin-bottom: 48px;
+      position: relative;
+      z-index: 1;
+    }
+    .s7-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(0,255,65,0.06);
+      border: 1.5px solid rgba(0,255,65,0.25);
+      padding: 22px 40px;
+      border-radius: 14px;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    .s7-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      background: #00CC33;
+      color: #000;
+      padding: 6px 14px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+    }
+    .s7-badge-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: #FAFAFA;
+      letter-spacing: -0.3px;
+    }
+    .s7-badge-sub {
+      font-size: 16px;
+      font-weight: 500;
+      color: #666;
+      margin-bottom: 44px;
+      position: relative;
+      z-index: 1;
+    }
+    .s7-divider {
+      width: 40px;
+      height: 2px;
+      background: #222;
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 1;
+    }
+    .s7-handle-box {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      font-weight: 700;
+      color: #00FF41;
+      letter-spacing: -0.5px;
+      position: relative;
+      z-index: 1;
+    }
+
+    @media print {
+      body { padding: 0; gap: 0; background: white; }
+      .label { display: none; }
+      .slide { page-break-after: always; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════ SLIDE 1 — HOOK (dark terminal) ═══════════ -->
+  <p class="label">01</p>
+  <div class="slide" id="slide-1">
+    <div class="s1-prompt">$ scan --target random-website.com<span class="blink">_</span></div>
+    <h1 class="s1-hero">Encontr&eacute; tus datos en <span class="green">5 minutos.</span></h1>
+    <p class="s1-sub">No soy hacker. Solo s&eacute; googlear.</p>
+    <div class="s1-footer">
+      <div class="s1-handle">@victorgalloo</div>
+      <div class="s1-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 2 — CONTEXTO / OPENCLAW (light) ═══════════ -->
+  <p class="label">02</p>
+  <div class="slide" id="slide-2">
+    <div class="s2-tag">context</div>
+    <img class="s2-logo" src="openclaw-logo-dark.png" alt="OpenClaw">
+    <h2 class="s2-title">La apunt&eacute; a un sitio random.</h2>
+    <p class="s2-body">OpenClaw es un escaner web gratis y open source. Cualquiera lo puede usar. Lo que encontr&eacute;:</p>
+    <div class="s2-terminal">
+      <div class="s2-terminal-bar"><span></span><span></span><span></span></div>
+      <div class="s2-terminal-line">
+        <span class="dim">$</span> found: nombres completos<br>
+        <span class="dim">$</span> found: correos<br>
+        <span class="dim">$</span> found: tel&eacute;fonos<br>
+        <span class="dim">$</span> found: historial de compras<br>
+        <span class="dim">//</span> todo sin contrase&ntilde;a
+      </div>
+    </div>
+    <div class="s2-footer">
+      <div class="s2-handle">@victorgalloo</div>
+      <div class="s2-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 3 — DATO (dark) ═══════════ -->
+  <p class="label">03</p>
+  <div class="slide" id="slide-3">
+    <p class="s3-eyebrow">status: exposed</p>
+    <div class="s3-zero">0</div>
+    <div class="s3-label">barreras</div>
+    <div class="s3-lines">
+      <p><span class="strike">login</span> &mdash; no hab&iacute;a</p>
+      <p><span class="strike">auth</span> &mdash; no exist&iacute;a</p>
+      <p><span class="strike">firewall</span> &mdash; nada</p>
+    </div>
+    <div class="s3-box">cualquiera con wifi pod&iacute;a ver todo</div>
+    <div class="s3-handle">@victorgalloo</div>
+  </div>
+
+  <!-- ═══════════ SLIDE 4 — REFLEXION (light) ═══════════ -->
+  <p class="label">04</p>
+  <div class="slide" id="slide-4">
+    <div class="s4-icon">&#x1F4A1;</div>
+    <h2 class="s4-hero">
+      Esa empresa tiene clientes reales.<br>
+      Con datos reales.<br>
+      Datos como <span class="green">los tuyos.</span>
+    </h2>
+    <p class="s4-sub">Y ni ellos sab&iacute;an que estaban expuestos.</p>
+    <div class="s4-tag">let that sink in</div>
+    <div class="s4-footer">
+      <div class="s4-handle">@victorgalloo</div>
+      <div class="s4-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 5 — CONCEPTOS (dark) ═══════════ -->
+  <p class="label">05</p>
+  <div class="slide" id="slide-5">
+    <h2 class="s5-title">Te lo explico sin choro:</h2>
+    <div class="s5-cards">
+      <div class="s5-card">
+        <div class="s5-card-icon">&#x1F513;</div>
+        <div class="s5-card-body">
+          <div class="s5-card-term">API sin auth</div>
+          <div class="s5-card-meaning">Tu casa sin llave. Entra quien quiera.</div>
+        </div>
+      </div>
+      <div class="s5-card">
+        <div class="s5-card-icon">&#x1F512;</div>
+        <div class="s5-card-body">
+          <div class="s5-card-term">HTTPS &ne; seguridad</div>
+          <div class="s5-card-meaning">El candadito protege el camino, no tu info.</div>
+        </div>
+      </div>
+      <div class="s5-card">
+        <div class="s5-card-icon">&#x1F511;</div>
+        <div class="s5-card-body">
+          <div class="s5-card-term">Token filtrado</div>
+          <div class="s5-card-meaning">Tu llave digital. Se filtra y ya eres otro.</div>
+        </div>
+      </div>
+    </div>
+    <div class="s5-handle">@victorgalloo</div>
+  </div>
+
+  <!-- ═══════════ SLIDE 6 — ACCION (light) ═══════════ -->
+  <p class="label">06</p>
+  <div class="slide" id="slide-6">
+    <h2 class="s6-title">Haz esto hoy. <span class="green">Neta.</span></h2>
+    <div class="s6-items">
+      <div class="s6-item">
+        <div class="s6-num">1</div>
+        <div class="s6-content">
+          <div class="s6-main">Activa doble factor de autenticaci&oacute;n</div>
+          <div class="s6-hint">En todo. No ma&ntilde;ana. Hoy.</div>
+        </div>
+      </div>
+      <div class="s6-item">
+        <div class="s6-num">2</div>
+        <div class="s6-content">
+          <div class="s6-main">Deja de reciclar contrase&ntilde;as</div>
+          <div class="s6-hint">Una diferente para cada cuenta.</div>
+        </div>
+      </div>
+      <div class="s6-item">
+        <div class="s6-num">3</div>
+        <div class="s6-content">
+          <div class="s6-main">Usa un password manager</div>
+          <div class="s6-hint">Bitwarden es gratis y funciona.</div>
+        </div>
+      </div>
+      <div class="s6-item">
+        <div class="s6-num">4</div>
+        <div class="s6-content">
+          <div class="s6-main">Revisa permisos de tus apps</div>
+          <div class="s6-hint">Checa qu&eacute; tiene acceso a tus cuentas.</div>
+        </div>
+      </div>
+      <div class="s6-item">
+        <div class="s6-num">5</div>
+        <div class="s6-content">
+          <div class="s6-main">Googlea &ldquo;OWASP Top 10&rdquo;</div>
+          <div class="s6-hint">Si tienes negocio digital, es b&aacute;sico.</div>
+        </div>
+      </div>
+    </div>
+    <p class="s6-closing">No es paranoia. Es no ser negligente.</p>
+    <div class="s6-footer">
+      <div class="s6-handle">@victorgalloo</div>
+      <div class="s6-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 7 — CTA (dark) ═══════════ -->
+  <p class="label">07</p>
+  <div class="slide" id="slide-7">
+    <h2 class="s7-hero">Tus datos son <span class="green">tu pedo.</span></h2>
+    <p class="s7-body">Las empresas la van a cagar. Los sistemas se van a romper. Lo &uacute;nico que controlas es no poner las cosas f&aacute;cil.</p>
+    <div class="s7-badge">
+      <span class="s7-pill">GRATIS</span>
+      <span class="s7-badge-text">Te reviso tu sitio &rarr; DM</span>
+    </div>
+    <p class="s7-badge-sub">Sin costo. Sin compromiso. Puro valor.</p>
+    <div class="s7-divider"></div>
+    <div class="s7-handle-box">@victorgalloo</div>
+  </div>
+
+</body>
+</html>

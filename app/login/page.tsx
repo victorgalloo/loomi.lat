@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Sun, Moon, ArrowRight, Loader2 } from "lucide-react";
+import Image from "next/image";
 
 type Mode = "login" | "signup";
 
@@ -324,7 +325,11 @@ function LoginContent() {
           </div>
 
           {/* Powered by */}
-          <div className="mt-12 pt-6 border-t border-border text-center">
+          <div className="mt-12 pt-6 border-t border-border flex flex-col items-center gap-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-surface">
+              <Image src="/logos/meta-logo.png" alt="Meta" width={50} height={16} className="object-contain opacity-60" />
+              <span className="text-muted text-xs font-mono">Tech Provider</span>
+            </div>
             <p className="text-xs text-muted">
               powered by{' '}
               <Link

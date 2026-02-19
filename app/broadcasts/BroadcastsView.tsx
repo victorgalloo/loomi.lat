@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, DragEvent, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Search, Send, Upload, ChevronRight, X, FileText, AlertTriangle, Loader2, ExternalLink } from 'lucide-react';
+import StatCard from '@/components/dashboard/StatCard';
 
 interface MetaTemplate {
   name: string;
@@ -87,7 +88,7 @@ const i18n: Record<Lang, Record<string, string>> = {
     back: 'back',
     next: 'next',
     creating: 'creating...',
-    createCampaign: './create-campaign',
+    createCampaign: 'Create Campaign',
     nameRequired: 'Campaign name is required',
     selectTemplate: 'Select a template',
     csvRequired: 'Upload a CSV with at least 1 valid contact',
@@ -136,7 +137,7 @@ const i18n: Record<Lang, Record<string, string>> = {
     back: 'atrás',
     next: 'siguiente',
     creating: 'creando...',
-    createCampaign: './crear-campaña',
+    createCampaign: 'Crear Campaña',
     nameRequired: 'Nombre de campaña es requerido',
     selectTemplate: 'Selecciona un template',
     csvRequired: 'Sube un CSV con al menos 1 contacto válido',
@@ -378,31 +379,20 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
     <div className="max-w-4xl mx-auto px-6 py-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-medium text-foreground font-mono">./broadcasts_</h1>
+        <h1 className="text-xl font-semibold text-foreground">Broadcasts</h1>
         <button
           onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
-          className="text-xs font-mono text-muted hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
+          className="text-xs text-muted hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
         >
           {lang === 'en' ? 'ES' : 'EN'}
         </button>
       </div>
 
-      {/* Stats Bar */}
-      <div className="flex items-center gap-6 text-sm pb-6 mb-6 border-b border-border">
-        <div>
-          <span className="text-muted">{t.campaigns}</span>
-          <span className="ml-2 font-mono text-foreground">{totalCampaigns}</span>
-        </div>
-        <span className="text-border">·</span>
-        <div>
-          <span className="text-muted">{t.sent}</span>
-          <span className="ml-2 font-mono text-terminal-green">{totalSent.toLocaleString()}</span>
-        </div>
-        <span className="text-border">·</span>
-        <div>
-          <span className="text-muted">{t.failed}</span>
-          <span className="ml-2 font-mono text-terminal-red">{totalFailed.toLocaleString()}</span>
-        </div>
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <StatCard label={t.campaigns} value={totalCampaigns} />
+        <StatCard label={t.sent} value={totalSent.toLocaleString()} />
+        <StatCard label={t.failed} value={totalFailed.toLocaleString()} />
       </div>
 
       {/* Actions Bar */}
@@ -410,7 +400,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm hover:opacity-90 transition-opacity"
           >
             <Plus className="w-4 h-4" />
             {t.newCampaign}
@@ -422,7 +412,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-sm text-muted hover:text-foreground hover:border-foreground/30 transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            <span className="font-mono">templates</span>
+            <span>templates</span>
           </a>
         </div>
         <div className="relative">
@@ -448,7 +438,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
             {!searchQuery && (
               <button
                 onClick={() => setShowModal(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm hover:opacity-90 transition-opacity"
               >
                 <Plus className="w-4 h-4" />
                 {t.createFirst}
@@ -504,8 +494,8 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                   <div className="w-2.5 h-2.5 rounded-full bg-terminal-yellow" />
                   <div className="w-2.5 h-2.5 rounded-full bg-terminal-green" />
                 </div>
-                <span className="text-sm font-mono text-foreground ml-2">
-                  ./new-campaign_{modalStep === 'config' ? '1' : modalStep === 'csv' ? '2' : '3'}/3
+                <span className="text-sm text-foreground ml-2">
+                  Nueva Campaña — {modalStep === 'config' ? '1' : modalStep === 'csv' ? '2' : '3'}/3
                 </span>
               </div>
               <button onClick={resetModal} className="text-muted hover:text-foreground transition-colors">
@@ -838,7 +828,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     setError('');
                     setModalStep('csv');
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
+                  className="px-3 py-1.5 rounded-xl bg-foreground text-background text-sm hover:opacity-90 transition-opacity"
                 >
                   {t.next}
                 </button>
@@ -854,7 +844,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     setError('');
                     setModalStep('confirm');
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity"
+                  className="px-3 py-1.5 rounded-xl bg-foreground text-background text-sm hover:opacity-90 transition-opacity"
                 >
                   {t.next}
                 </button>
@@ -864,7 +854,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                 <button
                   onClick={handleSubmit}
                   disabled={creating}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm font-mono hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                   {creating ? t.creating : t.createCampaign}

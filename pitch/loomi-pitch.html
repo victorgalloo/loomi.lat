@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOOMI_ Pitch Deck</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A0A0A;
+      --fg: #FAFAFA;
+      --surface: #141414;
+      --surface-2: #1C1C1C;
+      --border: #2A2A2A;
+      --muted: #6B6B6B;
+      --muted-light: #8A8A8A;
+      --red: #FF5F56;
+      --yellow: #FFBD2E;
+      --green: #27C93F;
+      --accent: #FAFAFA;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    @page {
+      size: 1280px 720px;
+      margin: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .slide {
+      width: 1280px;
+      height: 720px;
+      padding: 60px 80px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+      background: var(--bg);
+    }
+
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(39, 201, 63, 0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(250, 250, 250, 0.02) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* Traffic light dots */
+    .dots {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+    .dots span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .dot-red { background: var(--red); }
+    .dot-yellow { background: var(--yellow); }
+    .dot-green { background: var(--green); }
+
+    /* Typography */
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    h1 {
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 52px;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+
+    h2 {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 40px;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 24px;
+      line-height: 1.3;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: var(--muted-light);
+      line-height: 1.6;
+      max-width: 640px;
+    }
+
+    .label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* Logo */
+    .logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--fg);
+    }
+    .logo .cursor {
+      color: var(--green);
+    }
+
+    /* Slide footer */
+    .slide-footer {
+      position: absolute;
+      bottom: 30px;
+      left: 80px;
+      right: 80px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .slide-footer .logo { font-size: 14px; }
+    .slide-footer .page-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Grid layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 24px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+    }
+
+    /* Metric */
+    .metric {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+    }
+    .metric-value {
+      font-size: 48px;
+      line-height: 1;
+      color: var(--green);
+    }
+    .metric-label {
+      font-size: 14px;
+      color: var(--muted-light);
+      margin-top: 8px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+    }
+
+    /* Tag / Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted-light);
+    }
+    .badge-green {
+      border-color: rgba(39, 201, 63, 0.3);
+      color: var(--green);
+    }
+
+    /* Separator */
+    .sep {
+      color: var(--border);
+      margin: 0 12px;
+    }
+
+    /* Stat bar */
+    .stat-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: var(--muted-light);
+    }
+    .stat-bar .value {
+      color: var(--fg);
+      font-weight: 600;
+    }
+
+    /* Feature item */
+    .feature-item {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .feature-item .icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .feature-item h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .feature-item p {
+      font-size: 14px;
+      color: var(--muted-light);
+      line-height: 1.5;
+    }
+
+    /* Comparison table */
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+    .compare-table th {
+      text-align: left;
+      padding: 14px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .compare-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted-light);
+    }
+    .compare-table td:first-child {
+      color: var(--fg);
+      font-weight: 500;
+    }
+    .compare-table .check { color: var(--green); font-size: 18px; }
+    .compare-table .cross { color: var(--red); font-size: 18px; }
+
+    /* Pricing card */
+    .pricing-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .pricing-card.popular {
+      border-color: var(--green);
+      position: relative;
+    }
+    .pricing-card.popular::after {
+      content: 'Popular';
+      position: absolute;
+      top: -10px;
+      right: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background: var(--green);
+      color: var(--bg);
+      padding: 2px 10px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .pricing-card .plan-name {
+      font-weight: 600;
+      font-size: 18px;
+    }
+    .pricing-card .price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 36px;
+      font-weight: 700;
+    }
+    .pricing-card .price span {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .pricing-card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .pricing-card li {
+      font-size: 13px;
+      color: var(--muted-light);
+      padding-left: 18px;
+      position: relative;
+    }
+    .pricing-card li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+
+    /* Timeline */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 8px;
+      bottom: 8px;
+      width: 1px;
+      background: var(--border);
+    }
+    .timeline-item {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .timeline-dot {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--green);
+      z-index: 1;
+    }
+    .timeline-content h4 {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+    .timeline-content p {
+      font-size: 14px;
+      color: var(--muted-light);
+    }
+
+    /* Quote */
+    .quote {
+      font-size: 20px;
+      font-style: italic;
+      line-height: 1.6;
+      color: var(--fg);
+      position: relative;
+      padding-left: 24px;
+      border-left: 2px solid var(--green);
+    }
+    .quote-author {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 12px;
+      font-style: normal;
+    }
+
+    /* CTA button style */
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--fg);
+      color: var(--bg);
+      font-weight: 600;
+      font-size: 16px;
+      padding: 14px 32px;
+      border-radius: 10px;
+      text-decoration: none;
+      border: none;
+    }
+
+    .cta-btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--fg);
+      font-weight: 500;
+      font-size: 16px;
+      padding: 14px 32px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    /* Grow */
+    .grow { flex: 1; }
+
+    /* Flex helpers */
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .items-start { align-items: flex-start; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    .gap-8 { gap: 8px; }
+    .gap-12 { gap: 12px; }
+    .gap-16 { gap: 16px; }
+    .gap-20 { gap: 20px; }
+    .gap-24 { gap: 24px; }
+    .gap-32 { gap: 32px; }
+    .gap-40 { gap: 40px; }
+    .gap-48 { gap: 48px; }
+    .mt-auto { margin-top: auto; }
+    .mb-8 { margin-bottom: 8px; }
+    .mb-12 { margin-bottom: 12px; }
+    .mb-16 { margin-bottom: 16px; }
+    .mb-24 { margin-bottom: 24px; }
+    .mb-32 { margin-bottom: 32px; }
+    .mb-40 { margin-bottom: 40px; }
+
+    .text-green { color: var(--green); }
+    .text-muted { color: var(--muted); }
+    .text-muted-light { color: var(--muted-light); }
+    .text-red { color: var(--red); }
+    .text-yellow { color: var(--yellow); }
+
+    /* Decorative grid bg */
+    .grid-bg {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+
+    /* Glow effect */
+    .glow-green {
+      box-shadow: 0 0 60px rgba(39, 201, 63, 0.08);
+    }
+
+    @media print {
+      .slide { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================ -->
+<!-- SLIDE 1: COVER -->
+<!-- ============================================ -->
+<div class="slide" style="justify-content: center; align-items: center; text-align: center;">
+  <div class="grid-bg"></div>
+  <div style="position: relative; z-index: 1;">
+    <div class="dots" style="justify-content: center; margin-bottom: 32px;">
+      <span class="dot-red"></span>
+      <span class="dot-yellow"></span>
+      <span class="dot-green"></span>
+    </div>
+    <div class="mono" style="font-size: 72px; font-weight: 700; letter-spacing: -0.04em; margin-bottom: 24px;">
+      loomi<span class="text-green">_</span>
+    </div>
+    <h1 style="font-size: 36px; font-weight: 600; margin-bottom: 16px; letter-spacing: -0.02em;">
+      El agente de IA que vende por WhatsApp 24/7
+    </h1>
+    <p class="subtitle" style="max-width: 520px; margin: 0 auto 40px; font-size: 16px;">
+      Automatiza ventas, califica leads y agenda demos.<br>Sin código. En 5 minutos.
+    </p>
+    <div class="flex items-center justify-center gap-24" style="margin-bottom: 48px;">
+      <div class="stat-bar">
+        <span class="value text-green">$45K</span><span class="sep">|</span>revenue verificado
+      </div>
+      <div class="stat-bar">
+        <span class="value">200+</span><span class="sep">|</span>empresas
+      </div>
+      <div class="stat-bar">
+        <span class="value">Pre-seed</span><span class="sep">|</span>stage
+      </div>
+    </div>
+    <div class="flex items-center justify-center gap-12">
+      <span class="badge badge-green">Meta Tech Provider</span>
+      <span class="badge">LATAM + MENA</span>
+      <span class="badge">TAM $23B+</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 2: PROBLEM -->
+<!-- ============================================ -->
+<div class="slide">
+  <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+  <span class="label mb-16">01 &mdash; El problema</span>
+  <h2 style="margin-bottom: 40px; max-width: 700px;">
+    Las empresas pierden ventas<br>
+    <span class="text-muted">cada minuto que no contestan WhatsApp</span>
+  </h2>
+  <div class="grid-3 grow" style="align-items: start;">
+    <div class="card flex flex-col gap-16">
+      <div style="font-size: 48px;">💬</div>
+      <div>
+        <h3 style="font-size: 20px; margin-bottom: 8px;">+50 mensajes/día</h3>
+        <p style="font-size: 14px; color: var(--muted-light); line-height: 1.6;">
+          Los equipos de ventas no alcanzan a responder. Leads se enfrían en minutos.
+        </p>
+      </div>
+      <div class="mono text-red" style="font-size: 32px; font-weight: 700;">78%</div>
+      <p style="font-size: 13px; color: var(--muted);">de leads no reciben respuesta en la primera hora</p>
+    </div>
+    <div class="card flex flex-col gap-16">
+      <div style="font-size: 48px;">🤖</div>
+      <div>
+        <h3 style="font-size: 20px; margin-bottom: 8px;">Chatbots inútiles</h3>
+        <p style="font-size: 14px; color: var(--muted-light); line-height: 1.6;">
+          Flujos rígidos que se rompen cuando el cliente pregunta algo fuera del menú.
+        </p>
+      </div>
+      <div class="mono text-yellow" style="font-size: 32px; font-weight: 700;">3/10</div>
+      <p style="font-size: 13px; color: var(--muted);">leads interactúan con chatbots de flujo hasta el final</p>
+    </div>
+    <div class="card flex flex-col gap-16">
+      <div style="font-size: 48px;">📉</div>
+      <div>
+        <h3 style="font-size: 20px; margin-bottom: 8px;">No-shows y sin seguimiento</h3>
+        <p style="font-size: 14px; color: var(--muted-light); line-height: 1.6;">
+          35% de no-shows en demos. Cero follow-up automatizado. Dinero en la mesa.
+        </p>
+      </div>
+      <div class="mono text-red" style="font-size: 32px; font-weight: 700;">$800+</div>
+      <p style="font-size: 13px; color: var(--muted);">USD/mes costo de un vendedor en LATAM</p>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span class="logo">loomi<span class="cursor">_</span></span>
+    <span class="page-num">02 / 12</span>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 3: SOLUTION -->
+<!-- ============================================ -->
+<div class="slide">
+  <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+  <span class="label mb-16">02 &mdash; La solución</span>
+  <h2 style="margin-bottom: 12px;">
+    IA que entiende, vende y agenda
+  </h2>
+  <p class="subtitle" style="margin-bottom: 48px;">
+    No es un chatbot. Es un agente de ventas con inteligencia artificial real que trabaja 24/7 en WhatsApp.
+  </p>
+  <div class="grid-2" style="flex: 1;">
+    <div class="flex flex-col gap-24">
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot">1</div>
+          <div class="timeline-content">
+            <h4>Lead escribe por WhatsApp</h4>
+            <p>"Hola, vi su anuncio en Instagram"</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot">2</div>
+          <div class="timeline-content">
+            <h4>Loomi analiza y responde</h4>
+            <p>Razona contexto, detecta intención y personaliza respuesta</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot">3</div>
+          <div class="timeline-content">
+            <h4>Califica y maneja objeciones</h4>
+            <p>Entiende dudas, compara con competencia, resuelve</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot">4</div>
+          <div class="timeline-content">
+            <h4>Agenda demo o cierra venta</h4>
+            <p>Integración Cal.com + Stripe para cerrar sin intervención</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card glow-green" style="background: var(--surface); display: flex; flex-direction: column; gap: 16px; padding: 32px;">
+      <div class="flex items-center gap-8 mb-8">
+        <span class="dot-red" style="width: 8px; height: 8px;"></span>
+        <span class="dot-yellow" style="width: 8px; height: 8px;"></span>
+        <span class="dot-green" style="width: 8px; height: 8px;"></span>
+        <span class="mono" style="font-size: 12px; color: var(--muted); margin-left: 8px;">WhatsApp Chat</span>
+      </div>
+      <!-- Chat simulation -->
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="align-self: flex-start; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px 12px 12px 4px; padding: 12px 16px; max-width: 80%; font-size: 14px;">
+          Hola, vi su anuncio. ¿Cuánto cuesta el plan básico?
+        </div>
+        <div style="align-self: flex-end; background: rgba(39, 201, 63, 0.1); border: 1px solid rgba(39, 201, 63, 0.2); border-radius: 12px 12px 4px 12px; padding: 12px 16px; max-width: 80%; font-size: 14px;">
+          ¡Hola! El Starter está en $199/mes. ¿Cuántos mensajes reciben al día por WhatsApp? Así te digo cuál plan les conviene mejor 😊
+        </div>
+        <div style="align-self: flex-start; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px 12px 12px 4px; padding: 12px 16px; max-width: 80%; font-size: 14px;">
+          Como 80 mensajes, pero no damos abasto
+        </div>
+        <div style="align-self: flex-end; background: rgba(39, 201, 63, 0.1); border: 1px solid rgba(39, 201, 63, 0.2); border-radius: 12px 12px 4px 12px; padding: 12px 16px; max-width: 80%; font-size: 14px;">
+          80 al día es bastante. Con Loomi atenderías todos 24/7. ¿Te agendo una demo de 15 min para que lo veas funcionando?
+        </div>
+      </div>
+      <div class="flex items-center gap-8" style="margin-top: auto;">
+        <span class="badge badge-green" style="font-size: 11px;">reasoning()</span>
+        <span class="badge" style="font-size: 11px;">sentiment: interested</span>
+        <span class="badge" style="font-size: 11px;">0.8s</span>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span class="logo">loomi<span class="cursor">_</span></span>
+    <span class="page-num">03 / 12</span>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 4: KEY METRICS -->
+<!-- ============================================ -->
+<div class="slide">
+  <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+  <span class="label mb-16">03 &mdash; Resultados</span>
+  <h2 style="margin-bottom: 48px;">
+    Números que hablan solos
+  </h2>
+  <div class="grid-4" style="margin-bottom: 48px;">
+    <div class="card" style="text-align: center; padding: 32px 20px;">
+      <div class="metric-value">0.8s</div>
+      <div class="metric-label">Tiempo de respuesta</div>
+    </div>
+    <div class="card" style="text-align: center; padding: 32px 20px;">
+      <div class="metric-value">100%</div>
+      <div class="metric-label">Leads atendidos 24/7</div>
+    </div>
+    <div class="card" style="text-align: center; padding: 32px 20px;">
+      <div class="metric-value">3x</div>
+      <div class="metric-label">Más demos agendadas</div>
+    </div>
+    <div class="card" style="text-align: center; padding: 32px 20px;">
+      <div class="metric-value" style="color: var(--red);">-78%</div>
+      <div class="metric-label">Reducción no-shows</div>
+    </div>
+  </div>
+  <div class="grid-3">
+    <div class="card flex flex-col gap-12">
+      <div class="quote" style="font-size: 15px; padding-left: 16px;">
+        +340% demos agendadas sin contratar a nadie
+      </div>
+      <div class="flex items-center gap-12">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 14px;">MG</div>
+        <div>
+          <div style="font-size: 14px; font-weight: 500;">María González</div>
+          <div style="font-size: 12px; color: var(--muted);">ModaLab MX</div>
+        </div>
+      </div>
+    </div>
+    <div class="card flex flex-col gap-12">
+      <div class="quote" style="font-size: 15px; padding-left: 16px;">
+        85% de leads llegan pre-calificados al vendedor
+      </div>
+      <div class="flex items-center gap-12">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 14px;">CR</div>
+        <div>
+          <div style="font-size: 14px; font-weight: 500;">Carlos Ruiz</div>
+          <div style="font-size: 12px; color: var(--muted);">TechConsulting</div>
+        </div>
+      </div>
+    </div>
+    <div class="card flex flex-col gap-12">
+      <div class="quote" style="font-size: 15px; padding-left: 16px;">
+        De 35% no-shows a 8%. Increíble seguimiento
+      </div>
+      <div class="flex items-center gap-12">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 14px;">AM</div>
+        <div>
+          <div style="font-size: 14px; font-weight: 500;">Ana Martínez</div>
+          <div style="font-size: 12px; color: var(--muted);">ClinicaDent</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span class="logo">loomi<span class="cursor">_</span></span>
+    <span class="page-num">04 / 12</span>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 5: FEATURES (6 capabilities) -->
+<!-- ============================================ -->
+<div class="slide">
+  <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+  <span class="label mb-16">04 &mdash; Capacidades</span>
+  <h2 style="margin-bottom: 40px;">
+    No es un chatbot.<br><span class="text-muted">Es un sistema inteligente.</span>
+  </h2>
+  <div class="grid-3 grow" style="align-content: start;">
+    <div class="card flex flex-col gap-12">
+      <span class="mono text-green" style="font-size: 14px;">reasoning()</span>
+      <h3 style="font-size: 18px;">Piensa antes de responder</h3>
+      <p style="font-size: 13px; color: var(--muted-light); line-height: 1.6;">
+        Chain-of-thought analiza intención, detecta objeciones y personaliza cada respuesta.
+      </p>
+    </div>
+    <div class="card flex flex-col gap-12">
+      <span class="mono text-green" style="font-size: 14px;">schedule()</span>
+      <h3 style="font-size: 18px;">Agenda sin intervención</h3>
+      <p style="font-size: 13px; color: var(--muted-light); line-height: 1.6;">
+        Integración nativa con Cal.com. Detecta interés, ofrece horarios y agenda demos.
+      </p>
+    </div>
+    <div class="card flex flex-col gap-12">
+      <span class="mono text-green" style="font-size: 14px;">followUp()</span>
+      <h3 style="font-size: 18px;">Nunca pierde un lead</h3>
+      <p style="font-size: 13px; color: var(--muted-light); line-height: 1.6;">
+        Secuencias automatizadas: recordatorios pre-demo, post-demo y re-engagement.
+      </p>
+    </div>
+    <div class="card flex flex-col gap-12">
+      <span class="mono text-green" style="font-size: 14px;">sentiment()</span>
+      <h3 style="font-size: 18px;">Lee emociones</h3>
+      <p style="font-size: 13px; color: var(--muted-light); line-height: 1.6;">
+        Analiza tono emocional en tiempo real. Adapta respuestas para frustrados, escépticos y entusiasmados.
+      </p>
+    </div>
+    <div class="card flex flex-col gap-12">
+      <span class="mono text-green" style="font-size: 14px;">pipeline()</span>
+      <h3 style="font-size: 18px;">CRM integrado</h3>
+      <p style="font-size: 13px; color: var(--muted-light); line-height: 1.6;">
+        Pipeline visual Kanban. Ve cada lead, su etapa, historial completo y contexto centralizado.
+      </p>
+    </div>
+    <div class="card flex flex-col gap-12">
+      <span class="mono text-green" style="font-size: 14px;">track()</span>
+      <h3 style="font-size: 18px;">Cierra el loop con Meta</h3>
+      <p style="font-size: 13px; color: var(--muted-light); line-height: 1.6;">
+        Meta CAPI server-side. Reporta conversiones reales y optimiza ads con datos verdaderos.
+      </p>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span class="logo">loomi<span class="cursor">_</span></span>
+    <span class="page-num">05 / 12</span>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 6: VS COMPETITION -->
+<!-- ============================================ -->
+<div class="slide">
+  <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+  <span class="label mb-16">05 &mdash; Competencia</span>
+  <h2 style="margin-bottom: 40px;">
+    Loomi vs. el resto
+  </h2>
+  <div style="flex: 1;">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th style="width: 30%; color: var(--muted);">Capacidad</th>
+          <th style="width: 23%;"><span class="mono text-green">loomi_</span></th>
+          <th style="width: 23%; color: var(--muted-light);">Wati / ManyChat</th>
+          <th style="width: 23%; color: var(--muted-light);">Vendedor humano</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Conversación natural</td>
+          <td><span class="check">&#10003;</span> IA contextual</td>
+          <td><span class="cross">&#10007;</span> Flujos rígidos</td>
+          <td><span class="check">&#10003;</span> Natural</td>
+        </tr>
+        <tr>
+          <td>Disponibilidad 24/7</td>
+          <td><span class="check">&#10003;</span> Siempre</td>
+          <td><span class="check">&#10003;</span> Siempre</td>
+          <td><span class="cross">&#10007;</span> 8-10 hrs</td>
+        </tr>
+        <tr>
+          <td>Manejo de objeciones</td>
+          <td><span class="check">&#10003;</span> Inteligente</td>
+          <td><span class="cross">&#10007;</span> No puede</td>
+          <td><span class="check">&#10003;</span> Variable</td>
+        </tr>
+        <tr>
+          <td>Detección de emociones</td>
+          <td><span class="check">&#10003;</span> Tiempo real</td>
+          <td><span class="cross">&#10007;</span> No</td>
+          <td><span style="color: var(--yellow);">~</span> Subjetivo</td>
+        </tr>
+        <tr>
+          <td>Escalación a humano</td>
+          <td><span class="check">&#10003;</span> Automática</td>
+          <td><span style="color: var(--yellow);">~</span> Manual</td>
+          <td>N/A</td>
+        </tr>
+        <tr>
+          <td>Setup time</td>
+          <td class="text-green" style="font-weight: 600;">5 minutos</td>
+          <td>Horas/días</td>
+          <td>Semanas</td>
+        </tr>
+        <tr>
+          <td>Costo mensual</td>
+          <td><span class="mono text-green">$199</span></td>
+          <td><span class="mono">$49-99</span></td>
+          <td><span class="mono text-red">$800-1,500</span></td>
+        </tr>
+        <tr>
+          <td>Chats simultáneos</td>
+          <td class="text-green" style="font-weight: 600;">Ilimitados</td>
+          <td>Ilimitados</td>
+          <td style="color: var(--red);">1-3</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="slide-footer">
+    <span class="logo">loomi<span class="cursor">_</span></span>
+    <span class="page-num">06 / 12</span>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 7: HOW IT WORKS -->
+<!-- ============================================ -->
+<div class="slide">
+  <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+  <span class="label mb-16">06 &mdash; Producto</span>
+  <h2 style="margin-bottom: 12px;">
+    Setup en 5 minutos. Sin código.
+  </h2>
+  <p class="subtitle" style="margin-bottom: 40px;">
+    Dashboard completo para configurar, monitorear y optimizar tu agente.
+  </p>
+  <div class="grid-2 grow">
+    <div class="flex flex-col gap-24">
+      <div class="flex gap-16 items-start">
+        <div style="min-width: 48px; height: 48px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;">
+          <span class="mono text-green" style="font-size: 18px;">1</span>
+        </div>
+        <div>
+          <h3 style="font-size: 18px; margin-bottom: 6px;">Conecta WhatsApp</h3>
+          <p style="font-size: 14px; color: var(--muted-light);">Vincula tu número de WhatsApp Business en un click. API oficial de Meta.</p>
+        </div>
+      </div>
+      <div class="flex gap-16 items-start">
+        <div style="min-width: 48px; height: 48px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;">
+          <span class="mono text-green" style="font-size: 18px;">2</span>
+        </div>
+        <div>
+          <h3 style="font-size: 18px; margin-bottom: 6px;">Configura tu agente</h3>
+          <p style="font-size: 14px; color: var(--muted-light);">Personaliza prompt, sube tu knowledge base y define herramientas custom.</p>
+        </div>
+      </div>
+      <div class="flex gap-16 items-start">
+        <div style="min-width: 48px; height: 48px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;">
+          <span class="mono text-green" style="font-size: 18px;">3</span>
+        </div>
+        <div>
+          <h3 style="font-size: 18px; margin-bottom: 6px;">Integra Cal.com + Stripe</h3>
+          <p style="font-size: 14px; color: var(--muted-light);">Agenda demos y cobra automáticamente. Integración nativa.</p>
+        </div>
+      </div>
+      <div class="flex gap-16 items-start">
+        <div style="min-width: 48px; height: 48px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;">
+          <span class="mono text-green" style="font-size: 18px;">4</span>
+        </div>
+        <div>
+          <h3 style="font-size: 18px; margin-bottom: 6px;">Monitorea en tiempo real</h3>
+          <p style="font-size: 14px; color: var(--muted-light);">CRM Kanban, conversaciones, analytics. Todo centralizado.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="background: var(--surface); padding: 24px;">
+      <div class="flex items-center gap-8 mb-16">
+        <span class="dot-red" style="width: 8px; height: 8px;"></span>
+        <span class="dot-yellow" style="width: 8px; height: 8px;"></span>
+        <span class="dot-green" style="width: 8px; height: 8px;"></span>
+        <span class="mono" style="font-size: 12px; color: var(--muted); margin-left: 8px;">Dashboard</span>
+      </div>
+      <!-- Dashboard mockup -->
+      <div style="display: flex; gap: 16px; height: 100%;">
+        <!-- Sidebar -->
+        <div style="width: 160px; background: var(--bg); border-radius: 8px; padding: 16px; border: 1px solid var(--border);">
+          <div class="mono" style="font-size: 11px; color: var(--green); margin-bottom: 16px;">loomi_</div>
+          <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">CONFIGURAR</div>
+          <div style="font-size: 12px; color: var(--fg); padding: 6px 8px; background: var(--surface-2); border-radius: 6px; margin-bottom: 4px;">Agente</div>
+          <div style="font-size: 12px; color: var(--muted-light); padding: 6px 8px; margin-bottom: 4px;">Prompt</div>
+          <div style="font-size: 12px; color: var(--muted-light); padding: 6px 8px; margin-bottom: 4px;">Knowledge</div>
+          <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px; margin-top: 12px;">MONITOREAR</div>
+          <div style="font-size: 12px; color: var(--muted-light); padding: 6px 8px; margin-bottom: 4px;">CRM</div>
+          <div style="font-size: 12px; color: var(--muted-light); padding: 6px 8px; margin-bottom: 4px;">Conversaciones</div>
+          <div style="font-size: 12px; color: var(--muted-light); padding: 6px 8px;">Analytics</div>
+        </div>
+        <!-- Main content area -->
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+          <!-- Stats row -->
+          <div style="display: flex; gap: 8px; font-size: 12px;">
+            <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px; flex: 1; text-align: center;">
+              <div class="mono text-green" style="font-size: 20px; font-weight: 700;">247</div>
+              <div style="color: var(--muted); font-size: 10px;">leads</div>
+            </div>
+            <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px; flex: 1; text-align: center;">
+              <div class="mono" style="font-size: 20px; font-weight: 700; color: var(--fg);">89%</div>
+              <div style="color: var(--muted); font-size: 10px;">calificados</div>
+            </div>
+            <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px; flex: 1; text-align: center;">
+              <div class="mono" style="font-size: 20px; font-weight: 700; color: var(--fg);">34</div>
+              <div style="color: var(--muted); font-size: 10px;">demos hoy</div>
+            </div>
+          </div>
+          <!-- Kanban preview -->
+          <div style="flex: 1; display: flex; gap: 8px;">
+            <div style="flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+              <div style="font-size: 10px; color: var(--muted); margin-bottom: 8px;">NUEVO</div>
+              <div style="background: var(--surface-2); border-radius: 4px; padding: 8px; margin-bottom: 6px; font-size: 11px;">
+                <div style="font-weight: 500;">Ana López</div>
+                <div style="color: var(--muted); font-size: 10px;">hace 2 min</div>
+              </div>
+              <div style="background: var(--surface-2); border-radius: 4px; padding: 8px; font-size: 11px;">
+                <div style="font-weight: 500;">Pedro M.</div>
+                <div style="color: var(--muted); font-size: 10px;">hace 5 min</div>
+              </div>
+            </div>
+            <div style="flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+              <div style="font-size: 10px; color: var(--yellow); margin-bottom: 8px;">CALIFICADO</div>
+              <div style="background: var(--surface-2); border-radius: 4px; padding: 8px; margin-bottom: 6px; font-size: 11px;">
+                <div style="font-weight: 500;">María G.</div>
+                <div style="color: var(--muted); font-size: 10px;">80 msg/día</div>
+              </div>
+            </div>
+            <div style="flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+              <div style="font-size: 10px; color: var(--green); margin-bottom: 8px;">DEMO</div>
+              <div style="background: var(--surface-2); border-radius: 4px; padding: 8px; font-size: 11px;">
+                <div style="font-weight: 500;">Carlos R.</div>
+                <div style="color: var(--muted); font-size: 10px;">Mañana 3pm</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span class="logo">loomi<span class="cursor">_</span></span>
+    <span class="page-num">07 / 12</span>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 8: TECH / AI ARCHITECTURE -->
+<!-- ============================================ -->
+<div class="slide">
+  <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+  <span class="label mb-16">07 &mdash; Tecnología</span>
+  <h2 style="margin-bottom: 12px;">
+    Multi-agent AI System
+  </h2>
+  <p class="subtitle" style="margin-bottom: 24px;">
+    Arquitectura de IA de múltiples capas. No es un wrapper de ChatGPT.
+  </p>
+  <div class="grid-2 grow">
+    <div class="flex flex-col gap-8">
+      <!-- Architecture diagram as styled boxes -->
+      <div class="card" style="padding: 16px;">
+        <div class="mono" style="font-size: 11px; color: var(--green); margin-bottom: 10px;">CAPA 1: ANÁLISIS</div>
+        <div class="flex gap-8">
+          <div style="flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center;">
+            <div class="mono" style="font-size: 11px; color: var(--yellow);">analyze</div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 3px;">Intención + Fase</div>
+          </div>
+          <div style="flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center;">
+            <div class="mono" style="font-size: 11px; color: var(--yellow);">sentiment</div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 3px;">Emociones</div>
+          </div>
+          <div style="flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center;">
+            <div class="mono" style="font-size: 11px; color: var(--yellow);">route</div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 3px;">Fast/Full path</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align: center; color: var(--border); font-size: 16px; line-height: 1;">↓</div>
+      <div class="card" style="padding: 16px;">
+        <div class="mono" style="font-size: 11px; color: var(--green); margin-bottom: 10px;">CAPA 2: GENERACIÓN</div>
+        <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+          <div class="mono" style="font-size: 13px; color: var(--fg);">generate()</div>
+          <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">GPT-5.2 + System Prompt + Few-Shot + Knowledge + Tools</div>
+        </div>
+      </div>
+      <div style="text-align: center; color: var(--border); font-size: 16px; line-height: 1;">↓</div>
+      <div class="card" style="padding: 16px;">
+        <div class="mono" style="font-size: 11px; color: var(--green); margin-bottom: 10px;">CAPA 3: ACCIÓN</div>
+        <div class="flex gap-8">
+          <div style="flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center;">
+            <div class="mono" style="font-size: 11px;">persist</div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 3px;">Memoria</div>
+          </div>
+          <div style="flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center;">
+            <div class="mono" style="font-size: 11px;">tools</div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 3px;">Cal.com, Stripe</div>
+          </div>
+          <div style="flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center;">
+            <div class="mono" style="font-size: 11px;">handoff</div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 3px;">Escalación</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-col gap-12">
+      <div class="card flex flex-col gap-12" style="padding: 20px;">
+        <h3 style="font-size: 15px;">Stack de IA</h3>
+        <div class="flex flex-col gap-10">
+          <div class="flex items-center justify-between" style="font-size: 13px;">
+            <span>GPT-5.2</span>
+            <span class="badge" style="font-size: 11px;">Generación principal</span>
+          </div>
+          <div style="height: 1px; background: var(--border);"></div>
+          <div class="flex items-center justify-between" style="font-size: 13px;">
+            <span>Claude Haiku 4.5</span>
+            <span class="badge" style="font-size: 11px;">Análisis rápido</span>
+          </div>
+          <div style="height: 1px; background: var(--border);"></div>
+          <div class="flex items-center justify-between" style="font-size: 13px;">
+            <span>LangGraph</span>
+            <span class="badge" style="font-size: 11px;">Orquestación</span>
+          </div>
+          <div style="height: 1px; background: var(--border);"></div>
+          <div class="flex items-center justify-between" style="font-size: 13px;">
+            <span>Supabase pgvector</span>
+            <span class="badge" style="font-size: 11px;">Embeddings</span>
+          </div>
+        </div>
+      </div>
+      <div class="card flex flex-col gap-12" style="padding: 20px;">
+        <h3 style="font-size: 15px;">Infraestructura</h3>
+        <div class="flex flex-col gap-10">
+          <div class="flex items-center justify-between" style="font-size: 13px;">
+            <span>Next.js 14</span>
+            <span class="text-muted" style="font-size: 12px;">App Router + Edge</span>
+          </div>
+          <div style="height: 1px; background: var(--border);"></div>
+          <div class="flex items-center justify-between" style="font-size: 13px;">
+            <span>Supabase</span>
+            <span class="text-muted" style="font-size: 12px;">DB + Auth + Realtime</span>
+          </div>
+          <div style="height: 1px; background: var(--border);"></div>
+          <div class="flex items-center justify-between" style="font-size: 13px;">
+            <span>Vercel</span>
+            <span class="text-muted" style="font-size: 12px;">Deploy + CDN</span>
+          </div>
+          <div style="height: 1px; background: var(--border);"></div>
+          <div class="flex items-center justify-between" style="font-size: 13px;">
+            <span>Stripe</span>
+            <span class="text-muted" style="font-size: 12px;">Pagos + Connect</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span class="logo">loomi<span class="cursor">_</span></span>
+    <span class="page-num">08 / 12</span>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 9: MARKET -->
+<!-- ============================================ -->
+<div class="slide">
+  <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+  <span class="label mb-16">08 &mdash; Mercado</span>
+  <h2 style="margin-bottom: 40px;">
+    WhatsApp commerce crece <span class="text-green">+40% YoY</span>
+  </h2>
+  <div class="grid-2 grow" style="align-items: start;">
+    <div class="flex flex-col gap-24">
+      <div>
+        <div class="label mb-12">Tamaño del mercado</div>
+        <div class="flex flex-col gap-16">
+          <div>
+            <div class="flex items-center gap-12">
+              <div class="mono" style="font-size: 40px; font-weight: 700; color: var(--fg);">$23B+</div>
+              <div class="badge">TAM</div>
+            </div>
+            <p style="font-size: 14px; color: var(--muted-light); margin-top: 4px;">Conversational commerce LATAM + MENA</p>
+          </div>
+          <div style="height: 1px; background: var(--border);"></div>
+          <div>
+            <div class="flex items-center gap-12">
+              <div class="mono" style="font-size: 40px; font-weight: 700; color: var(--fg);">$4.2B</div>
+              <div class="badge">SAM</div>
+            </div>
+            <p style="font-size: 14px; color: var(--muted-light); margin-top: 4px;">WhatsApp AI agents para SMBs</p>
+          </div>
+          <div style="height: 1px; background: var(--border);"></div>
+          <div>
+            <div class="flex items-center gap-12">
+              <div class="mono" style="font-size: 40px; font-weight: 700; color: var(--fg);">$180M</div>
+              <div class="badge">SOM</div>
+            </div>
+            <p style="font-size: 14px; color: var(--muted-light); margin-top: 4px;">México + Colombia + Chile (Year 3)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-col gap-20">
+      <div class="card">
+        <div class="label mb-12">Por qué ahora</div>
+        <div class="flex flex-col gap-16">
+          <div class="flex gap-12 items-start">
+            <span class="text-green" style="font-size: 18px; line-height: 1.4;">&#10003;</span>
+            <div>
+              <div style="font-size: 15px; font-weight: 500;">WhatsApp es el #1 en LATAM</div>
+              <div style="font-size: 13px; color: var(--muted-light);">96% de penetración en México. El canal de ventas real.</div>
+            </div>
+          </div>
+          <div class="flex gap-12 items-start">
+            <span class="text-green" style="font-size: 18px; line-height: 1.4;">&#10003;</span>
+            <div>
+              <div style="font-size: 15px; font-weight: 500;">IA lista para producción</div>
+              <div style="font-size: 13px; color: var(--muted-light);">GPT-5 y Claude 4 hacen posible agentes que realmente venden.</div>
+            </div>
+          </div>
+          <div class="flex gap-12 items-start">
+            <span class="text-green" style="font-size: 18px; line-height: 1.4;">&#10003;</span>
+            <div>
+              <div style="font-size: 15px; font-weight: 500;">Competencia obsoleta</div>
+              <div style="font-size: 13px; color: var(--muted-light);">Wati/ManyChat son chatbots de flujo. No entienden contexto.</div>
+            </div>
+          </div>
+          <div class="flex gap-12 items-start">
+            <span class="text-green" style="font-size: 18px; line-height: 1.4;">&#10003;</span>
+            <div>
+              <div style="font-size: 15px; font-weight: 500;">Meta CAPI cierra el loop</div>
+              <div style="font-size: 13px; color: var(--muted-light);">Por primera vez, puedes atribuir ventas de WhatsApp a ads.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span class="logo">loomi<span class="cursor">_</span></span>
+    <span class="page-num">09 / 12</span>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 10: PRICING -->
+<!-- ============================================ -->
+<div class="slide">
+  <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+  <span class="label mb-16">09 &mdash; Pricing</span>
+  <h2 style="margin-bottom: 12px;">
+    ROI desde el primer mes
+  </h2>
+  <p class="subtitle" style="margin-bottom: 36px;">
+    Un vendedor cuesta $800-1,500 USD/mes. Loomi desde $199, trabaja 24/7 y atiende chats ilimitados.
+  </p>
+  <div class="grid-4 grow" style="align-items: start;">
+    <div class="pricing-card">
+      <div class="plan-name">Starter</div>
+      <div class="price">$199<span>/mes</span></div>
+      <div style="font-size: 13px; color: var(--muted);">100 mensajes/día</div>
+      <ul>
+        <li>1 WhatsApp</li>
+        <li>Agente IA completo</li>
+        <li>Cal.com integrado</li>
+        <li>Knowledge base</li>
+      </ul>
+    </div>
+    <div class="pricing-card popular">
+      <div class="plan-name">Growth</div>
+      <div class="price">$349<span>/mes</span></div>
+      <div style="font-size: 13px; color: var(--muted);">300 mensajes/día</div>
+      <ul>
+        <li>3 WhatsApp</li>
+        <li>CRM Kanban</li>
+        <li>Meta CAPI</li>
+        <li>Analytics avanzados</li>
+        <li>Follow-ups auto</li>
+      </ul>
+    </div>
+    <div class="pricing-card">
+      <div class="plan-name">Business</div>
+      <div class="price">$599<span>/mes</span></div>
+      <div style="font-size: 13px; color: var(--muted);">1,000 mensajes/día</div>
+      <ul>
+        <li>10 WhatsApp</li>
+        <li>API acceso</li>
+        <li>Onboarding dedicado</li>
+        <li>SLA 99.9%</li>
+        <li>Soporte prioritario</li>
+      </ul>
+    </div>
+    <div class="pricing-card">
+      <div class="plan-name">Enterprise</div>
+      <div class="price" style="font-size: 28px;">Custom</div>
+      <div style="font-size: 13px; color: var(--muted);">Mensajes ilimitados</div>
+      <ul>
+        <li>Self-hosted option</li>
+        <li>Account manager</li>
+        <li>Custom integrations</li>
+        <li>White-label</li>
+        <li>SLA personalizado</li>
+      </ul>
+    </div>
+  </div>
+  <div style="text-align: center; margin-top: 16px;">
+    <span class="badge badge-green" style="font-size: 13px;">14 días gratis &middot; Sin tarjeta &middot; Breakeven: 2-3 cierres/mes</span>
+  </div>
+  <div class="slide-footer">
+    <span class="logo">loomi<span class="cursor">_</span></span>
+    <span class="page-num">10 / 12</span>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 11: TEAM + TRACTION -->
+<!-- ============================================ -->
+<div class="slide">
+  <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+  <span class="label mb-16">10 &mdash; Equipo & Tracción</span>
+  <div class="grid-2 grow" style="align-items: start;">
+    <div class="flex flex-col gap-24">
+      <div>
+        <h2 style="margin-bottom: 24px;">El equipo</h2>
+        <div class="flex flex-col gap-16">
+          <div class="flex gap-16 items-center">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600;">VG</div>
+            <div>
+              <div style="font-size: 16px; font-weight: 600;">Victor Gallo</div>
+              <div style="font-size: 13px; color: var(--muted-light);">CEO / Product & Engineering</div>
+            </div>
+          </div>
+          <div class="flex gap-16 items-center">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600;">CC</div>
+            <div>
+              <div style="font-size: 16px; font-weight: 600;">Carlos Cardona</div>
+              <div style="font-size: 13px; color: var(--muted-light);">Co-founder</div>
+            </div>
+          </div>
+          <div class="flex gap-16 items-center">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600;">JC</div>
+            <div>
+              <div style="font-size: 16px; font-weight: 600;">JJ Cardona</div>
+              <div style="font-size: 13px; color: var(--muted-light);">Anthana · Growth</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-col gap-16">
+      <h2>Tracción</h2>
+      <div class="card flex flex-col gap-14" style="padding: 22px;">
+        <div class="flex items-center justify-between">
+          <span style="font-size: 14px;">Revenue verificado</span>
+          <span class="mono text-green" style="font-size: 22px; font-weight: 700;">$45K</span>
+        </div>
+        <div style="height: 1px; background: var(--border);"></div>
+        <div class="flex items-center justify-between">
+          <span style="font-size: 14px;">Empresas activas</span>
+          <span class="mono" style="font-size: 22px; font-weight: 700;">200+</span>
+        </div>
+        <div style="height: 1px; background: var(--border);"></div>
+        <div class="flex items-center justify-between">
+          <span style="font-size: 14px;">Stage</span>
+          <span class="badge">Pre-seed</span>
+        </div>
+        <div style="height: 1px; background: var(--border);"></div>
+        <div class="flex items-center justify-between">
+          <span style="font-size: 14px;">Mercados</span>
+          <span style="font-size: 13px; color: var(--muted-light);">LATAM + MENA</span>
+        </div>
+      </div>
+      <div class="card" style="padding: 20px;">
+        <div class="label mb-8">Roadmap</div>
+        <div class="flex flex-col gap-10">
+          <div class="flex items-center gap-12">
+            <span class="badge badge-green" style="font-size: 11px; min-width: 44px; justify-content: center;">Q1</span>
+            <span style="font-size: 13px;">Meta CAPI + Broadcasts masivos</span>
+          </div>
+          <div class="flex items-center gap-12">
+            <span class="badge" style="font-size: 11px; min-width: 44px; justify-content: center;">Q2</span>
+            <span style="font-size: 13px;">Multi-channel (Instagram DM, Telegram)</span>
+          </div>
+          <div class="flex items-center gap-12">
+            <span class="badge" style="font-size: 11px; min-width: 44px; justify-content: center;">Q3</span>
+            <span style="font-size: 13px;">Voice AI + Video demos automáticas</span>
+          </div>
+          <div class="flex items-center gap-12">
+            <span class="badge" style="font-size: 11px; min-width: 44px; justify-content: center;">Q4</span>
+            <span style="font-size: 13px;">Marketplace de agentes verticales</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span class="logo">loomi<span class="cursor">_</span></span>
+    <span class="page-num">11 / 12</span>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 12: CLOSING / ASK -->
+<!-- ============================================ -->
+<div class="slide" style="justify-content: center; align-items: center; text-align: center;">
+  <div class="grid-bg"></div>
+  <div style="position: relative; z-index: 1;">
+    <div class="dots" style="justify-content: center; margin-bottom: 32px;">
+      <span class="dot-red"></span>
+      <span class="dot-yellow"></span>
+      <span class="dot-green"></span>
+    </div>
+    <div class="mono" style="font-size: 56px; font-weight: 700; margin-bottom: 24px; letter-spacing: -0.04em;">
+      loomi<span class="text-green">_</span>
+    </div>
+    <h2 style="font-size: 32px; margin-bottom: 16px; font-weight: 600;">
+      ¿Cuántos leads perdiste hoy?
+    </h2>
+    <p style="font-size: 18px; color: var(--muted-light); margin-bottom: 48px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+      Cada mensaje sin contestar es una venta que se fue con tu competencia.
+    </p>
+    <div class="flex items-center justify-center gap-16 mb-40">
+      <div class="cta-btn">Agendar demo</div>
+      <div class="cta-btn-outline">loomi.lat</div>
+    </div>
+    <div class="flex items-center justify-center gap-24" style="margin-bottom: 32px;">
+      <div class="stat-bar">
+        <span class="value">victor@loomi.lat</span>
+      </div>
+      <div class="stat-bar">
+        <span class="sep">|</span><span class="value">loomi.lat</span>
+      </div>
+    </div>
+    <div class="flex items-center justify-center gap-12">
+      <span class="badge badge-green">Meta Tech Provider</span>
+      <span class="badge">Pre-seed · $45K revenue</span>
+    </div>
+    <div style="margin-top: 48px; font-size: 13px; color: var(--muted);">
+      made with love in mexico 🇲🇽
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

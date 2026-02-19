@@ -102,18 +102,18 @@ export default function PromptEditorForm({ initialConfig, onSave }: PromptEditor
     <div className="max-w-3xl mx-auto px-6 py-12">
       {/* Header with navigation */}
       <div className="mb-10">
-        <div className="flex items-center gap-2 mb-4 font-mono">
+        <div className="flex items-center gap-2 mb-4">
           <Link
             href="/dashboard/agent"
             className="text-sm text-muted hover:text-foreground"
           >
-            ./agente
+            Agente
           </Link>
           <span className="text-sm text-border">/</span>
-          <span className="text-sm text-foreground">prompt</span>
+          <span className="text-sm text-foreground">Prompt</span>
         </div>
-        <h1 className="text-xl font-medium text-foreground font-mono">
-          ./prompt-personalizado_
+        <h1 className="text-xl font-semibold text-foreground">
+          Prompt Personalizado
         </h1>
         <p className="text-sm mt-1 text-muted">
           Personaliza el comportamiento del agente con un prompt custom
@@ -125,35 +125,35 @@ export default function PromptEditorForm({ initialConfig, onSave }: PromptEditor
         <button
           type="button"
           onClick={() => setActiveTab('prompt')}
-          className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors font-mono ${
+          className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
             activeTab === 'prompt'
               ? 'bg-foreground text-background'
               : 'text-muted hover:text-foreground hover:bg-surface'
           }`}
         >
-          system prompt
+          System Prompt
         </button>
         <button
           type="button"
           onClick={() => setActiveTab('examples')}
-          className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors font-mono ${
+          className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
             activeTab === 'examples'
               ? 'bg-foreground text-background'
               : 'text-muted hover:text-foreground hover:bg-surface'
           }`}
         >
-          ejemplos ({config.fewShotExamples.length})
+          Ejemplos ({config.fewShotExamples.length})
         </button>
         <button
           type="button"
           onClick={() => setActiveTab('products')}
-          className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors font-mono ${
+          className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
             activeTab === 'products'
               ? 'bg-foreground text-background'
               : 'text-muted hover:text-foreground hover:bg-surface'
           }`}
         >
-          productos
+          Productos
         </button>
       </div>
 
@@ -163,7 +163,7 @@ export default function PromptEditorForm({ initialConfig, onSave }: PromptEditor
           <div className="space-y-4">
             <div>
               <label className="block text-label font-medium mb-2.5 text-muted">
-                system prompt
+                System Prompt
                 <span className="ml-2 text-xs text-muted/50">
                   (deja vacío para usar el prompt por defecto)
                 </span>
@@ -202,7 +202,7 @@ Define el tono y estilo de respuestas...
             {/* Existing Examples */}
             {config.fewShotExamples.length > 0 && (
               <div className="space-y-4">
-                <label className="block text-label font-medium mb-2.5 text-muted">ejemplos guardados</label>
+                <label className="block text-label font-medium mb-2.5 text-muted">Ejemplos guardados</label>
                 {config.fewShotExamples.map((example) => (
                   <div
                     key={example.id}
@@ -220,9 +220,9 @@ Define el tono y estilo de respuestas...
                       <button
                         type="button"
                         onClick={() => removeExample(example.id)}
-                        className="text-xs text-terminal-red hover:text-terminal-red/80 font-mono"
+                        className="text-xs text-terminal-red hover:text-terminal-red/80"
                       >
-                        eliminar
+                        Eliminar
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-1 mb-2">
@@ -245,7 +245,7 @@ Define el tono y estilo de respuestas...
 
             {/* Add New Example */}
             <div className="p-4 rounded-2xl border border-border bg-surface">
-              <label className="block text-label font-medium mb-2.5 text-muted">agregar nuevo ejemplo</label>
+              <label className="block text-label font-medium mb-2.5 text-muted">Agregar nuevo ejemplo</label>
               <div className="space-y-3">
                 <input
                   type="text"
@@ -290,7 +290,7 @@ Agente: Hola! Qué bueno que escribiste. ¿Qué te interesa saber sobre Bitcoin?
                   disabled={!newExample.id || !newExample.context || !newExample.conversation}
                   className="px-4 py-2 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-surface text-muted hover:text-foreground border border-border"
                 >
-                  agregar ejemplo
+                  Agregar ejemplo
                 </button>
               </div>
             </div>
@@ -302,7 +302,7 @@ Agente: Hola! Qué bueno que escribiste. ¿Qué te interesa saber sobre Bitcoin?
           <div className="space-y-4">
             <div>
               <label className="block text-label font-medium mb-2.5 text-muted">
-                catálogo de productos (JSON)
+                Catálogo de productos (JSON)
               </label>
               <textarea
                 value={JSON.stringify(config.productsCatalog, null, 2)}
@@ -337,22 +337,22 @@ Agente: Hola! Qué bueno que escribiste. ¿Qué te interesa saber sobre Bitcoin?
         {/* Submit */}
         <div className="pt-6 border-t border-border">
           <div className="flex items-center justify-between">
-            <span className={`text-sm text-info font-mono ${saved ? 'opacity-100' : 'opacity-0'}`}>
-              guardado
+            <span className={`text-sm text-info ${saved ? 'opacity-100' : 'opacity-0'}`}>
+              Guardado
             </span>
             <div className="flex gap-3">
               <Link
                 href="/dashboard/agent"
-                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border font-mono"
+                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
               >
-                config básica
+                Config básica
               </Link>
               <button
                 type="submit"
                 disabled={isSaving}
-                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90 font-mono"
+                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90"
               >
-                {isSaving ? 'guardando...' : './guardar'}
+                {isSaving ? 'Guardando...' : 'Guardar'}
               </button>
             </div>
           </div>

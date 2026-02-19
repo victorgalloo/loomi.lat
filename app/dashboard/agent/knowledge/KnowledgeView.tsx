@@ -108,20 +108,20 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
     <div className="max-w-3xl mx-auto px-6 py-12">
       {/* Header */}
       <div className="mb-10">
-        <div className="flex items-center gap-2 mb-4 font-mono">
+        <div className="flex items-center gap-2 mb-4">
           <Link
             href="/dashboard/agent"
             className="text-sm text-muted hover:text-foreground"
           >
-            ./agente
+            Agente
           </Link>
           <span className="text-sm text-border">/</span>
-          <span className="text-sm text-foreground">knowledge</span>
+          <span className="text-sm text-foreground">Knowledge</span>
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-medium text-foreground font-mono">
-              ./knowledge-base_
+            <h1 className="text-xl font-semibold text-foreground">
+              Knowledge Base
             </h1>
             <p className="text-sm mt-1 text-muted">
               Documentos que tu agente usa como base de conocimiento
@@ -132,7 +132,7 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-foreground text-background hover:bg-foreground/90"
           >
             <Plus className="w-4 h-4" />
-            agregar
+            Agregar
           </button>
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
       {showForm && (
         <form onSubmit={handleCreate} className="mb-8 p-4 rounded-2xl border border-border bg-surface">
           <label className="block text-label font-medium mb-3 text-muted">
-            nuevo documento
+            Nuevo documento
           </label>
           <div className="space-y-3">
             <input
@@ -176,14 +176,14 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
                 onClick={() => setShowForm(false)}
                 className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
               >
-                cancelar
+                Cancelar
               </button>
               <button
                 type="submit"
                 disabled={isCreating || !docName.trim() || !docContent.trim()}
-                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90 font-mono"
+                className="px-4 py-2 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90"
               >
-                {isCreating ? 'guardando...' : './guardar'}
+                {isCreating ? 'Guardando...' : 'Guardar'}
               </button>
             </div>
           </div>
@@ -216,10 +216,10 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-muted flex-shrink-0" />
-                    <span className="text-sm font-medium text-foreground font-mono truncate">
+                    <span className="text-sm font-medium text-foreground truncate">
                       {doc.name}
                     </span>
-                    <span className="px-2 py-0.5 text-xs rounded bg-surface-2 text-muted font-mono flex-shrink-0">
+                    <span className="px-2 py-0.5 text-xs rounded bg-surface-2 text-muted flex-shrink-0">
                       {doc.docType}
                     </span>
                   </div>
@@ -261,24 +261,24 @@ export default function KnowledgeView({ tenantId }: KnowledgeViewProps) {
       )}
 
       {/* Footer nav */}
-      <div className="mt-10 pt-6 border-t border-border flex gap-3 font-mono">
+      <div className="mt-10 pt-6 border-t border-border flex gap-3">
         <Link
           href="/dashboard/agent"
           className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
         >
-          config básica
+          Config Basica
         </Link>
         <Link
           href="/dashboard/agent/prompt"
           className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
         >
-          prompt
+          Prompt
         </Link>
         <Link
           href="/dashboard/agent/tools"
           className="px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-surface text-muted hover:text-foreground border border-border"
         >
-          tools
+          Tools
         </Link>
       </div>
     </div>

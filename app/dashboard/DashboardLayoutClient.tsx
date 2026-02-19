@@ -7,17 +7,19 @@ import DashboardShell from '@/components/dashboard/DashboardShell';
 interface DashboardLayoutClientProps {
   children: ReactNode;
   userName?: string;
+  tenantName?: string;
   isConnected?: boolean;
 }
 
 export default function DashboardLayoutClient({
   children,
   userName,
+  tenantName,
   isConnected,
 }: DashboardLayoutClientProps) {
   return (
     <ThemeProvider>
-      <DashboardShell userName={userName} isConnected={isConnected}>
+      <DashboardShell userName={userName} tenantName={tenantName} isConnected={isConnected}>
         {children}
       </DashboardShell>
     </ThemeProvider>

@@ -41,8 +41,8 @@ export default function SettingsView({ tenant, whatsapp }: SettingsViewProps) {
   return (
     <div className="max-w-xl mx-auto px-6 py-12">
       <div className="mb-10">
-        <h1 className="text-xl font-medium text-foreground font-mono">
-          ./settings_
+        <h1 className="text-xl font-semibold text-foreground">
+          Settings
         </h1>
         <p className="text-sm mt-1 text-muted">
           Administra tu cuenta

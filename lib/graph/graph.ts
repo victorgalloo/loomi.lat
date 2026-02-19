@@ -11,7 +11,7 @@
  */
 
 import { StateGraph, END } from '@langchain/langgraph';
-import { LangChainCallbackHandler } from '@posthog/ai/langchain';
+import { LangChainCallbackHandler } from '@posthog/ai';
 import { getPostHogServer, flushPostHog } from '@/lib/analytics/posthog';
 import { ConversationContext } from '@/types';
 import { GraphAgentConfig, SimpleAgentResult } from './state';

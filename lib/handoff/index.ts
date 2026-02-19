@@ -6,7 +6,7 @@
  */
 
 import { sendWhatsAppMessage } from '@/lib/whatsapp/send';
-import { pauseBot } from '@/lib/bot-pause';
+
 import { getSupabase } from '@/lib/memory/supabase';
 
 // ===========================================
@@ -388,11 +388,6 @@ export async function executeHandoff(context: HandoffContext): Promise<HandoffRe
 
   console.log(`[Handoff] ${handoffId} | Priority: ${context.priority} | Reason: ${context.reason}`);
   console.log(`[Handoff] Operator notified: ${operatorResult} | Client notified: ${clientResult}`);
-
-  // Auto-pause bot when handoff occurs
-  if (context.conversationId) {
-    await pauseBot(context.conversationId, 'handoff');
-  }
 
   // Track handoff in database
   try {

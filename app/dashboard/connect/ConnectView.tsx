@@ -139,8 +139,8 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold text-foreground font-mono">
-            ./whatsapp_
+          <h1 className="text-xl font-semibold text-foreground">
+            Conexión WhatsApp
           </h1>
           <span className={`flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full font-medium ${
             isConnected
@@ -159,7 +159,7 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
           <p className="text-label uppercase tracking-wider text-muted">
             estado
           </p>
-          <p className={`text-xl font-semibold mt-1 font-mono ${isConnected ? 'text-info' : 'text-terminal-yellow'}`}>
+          <p className={`text-xl font-semibold mt-1 ${isConnected ? 'text-info' : 'text-terminal-yellow'}`}>
             {isConnected ? 'activo' : 'pendiente'}
           </p>
         </div>
@@ -171,7 +171,7 @@ export default function ConnectView({ isConnected, whatsappAccounts, pendingTwil
               <p className="text-label uppercase tracking-wider text-muted">
                 números
               </p>
-              <p className="text-sm font-mono mt-1 text-foreground">
+              <p className="text-sm mt-1 text-foreground">
                 {whatsappAccounts.length}
               </p>
             </div>

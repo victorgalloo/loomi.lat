@@ -28,15 +28,24 @@ export default async function DashboardLayout({
 
   const tenantId = await getTenantIdForUser(user.email);
   let isConnected = false;
+  let tenantName: string | undefined;
 
   if (tenantId) {
     const whatsappAccounts = await getWhatsAppAccounts(tenantId);
     isConnected = whatsappAccounts.some(a => a.status === 'active');
+
+    const supabaseTenant = await supabase
+      .from('tenants')
+      .select('company_name')
+      .eq('id', tenantId)
+      .single();
+    tenantName = supabaseTenant.data?.company_name || undefined;
   }
 
   return (
     <DashboardLayoutClient
       userName={user.email}
+      tenantName={tenantName}
       isConnected={isConnected}
     >
       {children}

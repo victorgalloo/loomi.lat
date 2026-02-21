@@ -34,16 +34,18 @@ import { extractTextContent } from '@/lib/langchain/utils';
 // Model helpers
 // ============================================
 
+const DEFAULT_MODEL = 'claude-sonnet-4-6';
+
 const OPENAI_TO_CLAUDE: Record<string, string> = {
   'gpt-4o-mini': 'claude-haiku-4-5-20251001',
-  'gpt-4o': 'claude-sonnet-4-5-20250929',
-  'gpt-5.2-chat-latest': 'claude-sonnet-4-5-20250929',
+  'gpt-4o': DEFAULT_MODEL,
+  'gpt-5.2-chat-latest': DEFAULT_MODEL,
 };
 
 function resolveChatModel(modelOverride?: string | null): string {
-  if (!modelOverride) return 'claude-sonnet-4-5-20250929';
+  if (!modelOverride) return DEFAULT_MODEL;
   if (modelOverride.startsWith('claude-')) return modelOverride;
-  return OPENAI_TO_CLAUDE[modelOverride] ?? 'claude-sonnet-4-5-20250929';
+  return OPENAI_TO_CLAUDE[modelOverride] ?? DEFAULT_MODEL;
 }
 
 function getNextBusinessDays(count: number): string[] {
@@ -410,7 +412,11 @@ export async function generateNode(state: GraphStateType, config?: RunnableConfi
     };
 
   } catch (error) {
-    console.error('Generate error:', error);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const errStack = error instanceof Error ? error.stack?.split('\n').slice(0, 3).join('\n') : '';
+    console.error(`[Generate] ERROR: ${errMsg}`);
+    if (errStack) console.error(`[Generate] Stack: ${errStack}`);
+    console.error(`[Generate] Tenant: ${agentConfig?.tenantId || 'default'} | Model: ${resolveChatModel(agentConfig?.model)} | Turn: ${conversationState.turn_count}`);
     return {
       result: { response: 'Perdón, tuve un problema. ¿Me repites?' },
     };

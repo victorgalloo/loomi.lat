@@ -23,10 +23,20 @@ export async function loadConversationState(
     .single();
 
   if (data && !error) {
+    const rawLi = data.lead_info;
+    const safeLeadInfo = rawLi && typeof rawLi === 'object'
+      ? {
+          business_type: rawLi.business_type ?? null,
+          volume: rawLi.volume ?? null,
+          pain_points: Array.isArray(rawLi.pain_points) ? rawLi.pain_points : [],
+          current_solution: rawLi.current_solution ?? null,
+          referral_source: rawLi.referral_source ?? null,
+        }
+      : { ...DEFAULT_PERSISTED_STATE.lead_info };
     return {
       phase: data.phase,
       turn_count: data.turn_count,
-      lead_info: data.lead_info,
+      lead_info: safeLeadInfo,
       topics_covered: data.topics_covered || [],
       products_offered: data.products_offered || [],
       objections: data.objections || [],

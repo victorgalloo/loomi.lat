@@ -158,12 +158,14 @@ export async function buildSystemPrompt(params: BuildPromptParams): Promise<stri
     contextParts.push(`⚠️ YA TIENE CITA AGENDADA — No proponer otra.`);
   }
 
-  // Lead info
+  // Lead info (defensive — lead_info can be null/partial from DB)
   const li = conversationState.lead_info;
-  if (li.business_type) contextParts.push(`Tipo de negocio: ${li.business_type}`);
-  if (li.volume) contextParts.push(`Volumen mensajes: ${li.volume}`);
-  if (li.pain_points.length > 0) contextParts.push(`Dolores: ${li.pain_points.join(', ')}`);
-  if (li.current_solution) contextParts.push(`Solución actual: ${li.current_solution}`);
+  if (li) {
+    if (li.business_type) contextParts.push(`Tipo de negocio: ${li.business_type}`);
+    if (li.volume) contextParts.push(`Volumen mensajes: ${li.volume}`);
+    if (li.pain_points?.length > 0) contextParts.push(`Dolores: ${li.pain_points.join(', ')}`);
+    if (li.current_solution) contextParts.push(`Solución actual: ${li.current_solution}`);
+  }
 
   // Anti-repetition
   if (conversationState.topics_covered.length > 0) {

@@ -26,7 +26,19 @@ import { AgentConfig } from '@/lib/tenant/context';
 import { CustomToolDef } from '@/lib/tenant/knowledge';
 import { decrypt } from '@/lib/crypto';
 import { CalTenantConfig } from '@/lib/tools/calendar';
-import { PersistedConversationState } from '@/lib/graph/state';
+import { PersistedConversationState, DEFAULT_PERSISTED_STATE } from '@/lib/graph/state';
+
+/** Ensure lead_info has all required fields (DB can return null/partial JSONB) */
+function ensureLeadInfo(raw: PersistedConversationState['lead_info'] | null): PersistedConversationState['lead_info'] {
+  if (!raw) return { ...DEFAULT_PERSISTED_STATE.lead_info };
+  return {
+    business_type: raw.business_type ?? null,
+    volume: raw.volume ?? null,
+    pain_points: Array.isArray(raw.pain_points) ? raw.pain_points : [],
+    current_solution: raw.current_solution ?? null,
+    referral_source: raw.referral_source ?? null,
+  };
+}
 
 // Números de prueba - se auto-resetean en cada mensaje para siempre empezar como contacto nuevo
 const TEST_PHONE_NUMBERS = new Set<string>([
@@ -311,7 +323,7 @@ export async function getWebhookContext(
     conversationState = {
       phase: csRaw.phase as PersistedConversationState['phase'],
       turn_count: (csRaw.turn_count as number) || 0,
-      lead_info: (csRaw.lead_info as PersistedConversationState['lead_info']),
+      lead_info: ensureLeadInfo(csRaw.lead_info as PersistedConversationState['lead_info'] | null),
       topics_covered: (csRaw.topics_covered as string[]) || [],
       products_offered: (csRaw.products_offered as string[]) || [],
       objections: (csRaw.objections as PersistedConversationState['objections']) || [],

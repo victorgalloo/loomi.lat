@@ -124,14 +124,17 @@ export async function sendWhatsAppMessage(
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('[WhatsApp] Send error:', error);
+      const errorText = await response.text();
+      console.error(`🔴 [WhatsApp] Send FAILED (HTTP ${response.status}) to ${phone}:`, errorText);
+      if (response.status === 401 || response.status === 403) {
+        console.error('🔴 [WhatsApp] TOKEN EXPIRED OR INVALID - Update access token in whatsapp_accounts table or WHATSAPP_ACCESS_TOKEN env var');
+      }
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('[WhatsApp] Send error:', error);
+    console.error(`🔴 [WhatsApp] Send FAILED to ${phone}:`, error);
     return false;
   }
 }

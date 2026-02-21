@@ -574,6 +574,7 @@ export async function POST(request: NextRequest) {
         accessToken: tenantData.accessToken,
         tenantId: tenantData.tenantId
       };
+      console.log(`[Webhook] Tenant resolved: ${tenantData.tenantId} (token: ${tenantData.accessToken?.substring(0, 10)}...)`);
     } else if (message.phoneNumberId) {
       console.log(`[Webhook] No tenant found for phone_number_id ${message.phoneNumberId}, using env vars`);
     }
@@ -965,8 +966,11 @@ export async function POST(request: NextRequest) {
       }
 
       // Send response (saveMessage deferred to waitUntil)
-      await sendWhatsAppMessage(message.phone, result.response, credentials);
+      const waSent = await sendWhatsAppMessage(message.phone, result.response, credentials);
       const t3 = performance.now();
+      if (!waSent) {
+        console.error(`🔴 [Webhook] FAILED to send WhatsApp message to ${message.phone} (credentials: ${credentials ? 'tenant' : 'env'})`);
+      }
       console.log(`⏱️ [Webhook] Preprocess: ${(t1 - t0).toFixed(0)}ms | Pipeline: ${(t2! - t1).toFixed(0)}ms | WA send: ${(t3 - t2!).toFixed(0)}ms | TOTAL: ${(t3 - t0).toFixed(0)}ms`);
 
       // Background operations (non-blocking, isolated with allSettled)

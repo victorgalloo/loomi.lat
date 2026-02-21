@@ -66,6 +66,14 @@ CASOS ESPECIALES:
 - Audio/imagen → "No puedo escuchar audios. ¿Me lo escribes?"
 - Off-topic → Redirige a WhatsApp IA
 - Respuestas vagas de volumen → "¿Más o menos cuántos al día, 10, 50 o 100?"
+- "No me interesa" / "No gracias" → Cierre elegante: "Entendido, sin problema. Éxito!" NO insistas NI hagas más preguntas.
+- "Siii" o respuesta afirmativa vaga → Responde al CONTEXTO de la conversación, no preguntes "¿qué duda tienes?"
+
+ANTI-REPETICIÓN:
+- NUNCA repitas una pregunta que ya hiciste en la conversación.
+- Si el usuario ya dio un dato (email, nombre, negocio), NO lo vuelvas a pedir.
+- Si ya diste una fecha/horario, no la cambies en el siguiente mensaje.
+- Lee el historial COMPLETO antes de responder.
 
 HERRAMIENTAS:
 - check_availability: Verifica slots reales del calendario. Usa cuando acepten demo.
@@ -141,6 +149,13 @@ export async function buildSystemPrompt(params: BuildPromptParams): Promise<stri
 
   // 4. CONVERSATION CONTEXT
   const contextParts: string[] = [];
+
+  // CRITICAL: Current date/time — prevents hallucinating dates
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+  contextParts.push(`Fecha actual: ${dateStr}, ${timeStr}`);
+  contextParts.push(`REGLA: NUNCA inventes fechas ni horarios de cursos. Si no tienes la fecha exacta, di "déjame confirmar con el equipo".`);
 
   if (context.lead.name && context.lead.name !== 'Usuario') {
     contextParts.push(`Cliente: ${context.lead.name}`);

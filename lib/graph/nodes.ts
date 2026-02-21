@@ -69,9 +69,16 @@ function getNextBusinessDays(count: number): string[] {
 function inferPhaseFromResponse(
   response: string,
   toolsCalled: Set<string>,
-  prevPhase: SalesPhase
+  prevPhase: SalesPhase,
+  userMessage?: string
 ): SalesPhase {
   const lower = response.toLowerCase();
+  const userLower = (userMessage || '').toLowerCase();
+
+  // Detect user rejection/disinterest
+  if (/no (me )?interes|no gracias|no quiero|no necesito|no estoy interesado/i.test(userLower)) {
+    return 'closed';
+  }
 
   if (toolsCalled.has('book_appointment')) return 'closed';
   if (toolsCalled.has('check_availability') || /horario|disponib|agenda/.test(lower)) return 'scheduling';
@@ -370,7 +377,7 @@ export async function generateNode(state: GraphStateType, config?: RunnableConfi
 
     // Infer phase from response + tools called
     const updatedState = { ...state.conversationState };
-    updatedState.phase = inferPhaseFromResponse(response, toolsCalled, updatedState.phase);
+    updatedState.phase = inferPhaseFromResponse(response, toolsCalled, updatedState.phase, message);
 
     // Track products offered
     if (brochureSent && !updatedState.products_offered.includes('brochure')) {
@@ -411,8 +418,23 @@ export async function generateNode(state: GraphStateType, config?: RunnableConfi
 
   } catch (error) {
     console.error('Generate error:', error);
+    
+    // Smart fallback based on what the user said — NEVER expose errors to the user
+    const lower = message.toLowerCase().trim();
+    let fallback: string;
+    
+    if (/no (me )?interes|no gracias|no quiero|no necesito/i.test(lower)) {
+      fallback = 'Entendido, sin problema. Si en algún momento te interesa, aquí estoy. Éxito!';
+    } else if (/hola|buenos|buenas|hey|qué tal/i.test(lower)) {
+      fallback = 'Hola! ¿En qué te puedo ayudar?';
+    } else if (/precio|costo|cuánto/i.test(lower)) {
+      fallback = 'Con gusto te paso la info. Dame un momento y te comparto los detalles.';
+    } else {
+      fallback = 'Dame un momento, te respondo enseguida.';
+    }
+    
     return {
-      result: { response: 'Perdón, tuve un problema. ¿Me repites?' },
+      result: { response: fallback },
     };
   }
 }

@@ -65,7 +65,7 @@ export async function GET(
       .from('broadcast_recipients')
       .select('phone, name')
       .eq('campaign_id', id)
-      .eq('status', 'sent');
+      .in('status', ['sent', 'delivered', 'read']);
 
     if (!recipients || recipients.length === 0) {
       return NextResponse.json({ conversations: [], noResponse: [] });

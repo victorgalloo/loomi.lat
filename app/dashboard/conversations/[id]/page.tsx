@@ -3,6 +3,8 @@ import { redirect, notFound } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import ConversationDetailView from "./ConversationDetailView";
 
+export const dynamic = 'force-dynamic';
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

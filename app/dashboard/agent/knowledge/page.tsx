@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import KnowledgeView from "./KnowledgeView";
 
+export const dynamic = 'force-dynamic';
+
 export default async function KnowledgePage() {
   const supabase = await createClient();
 

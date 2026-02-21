@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import AnalyticsView from "./AnalyticsView";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AnalyticsPage() {
   const supabase = await createClient();
 

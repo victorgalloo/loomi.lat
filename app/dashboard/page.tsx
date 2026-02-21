@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import TenantDashboard from "@/components/dashboard/TenantDashboard";
 import { getTenantById, getWhatsAppAccounts, getOrCreateTenant } from "@/lib/tenant/context";
+
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   const supabase = await createClient();
 

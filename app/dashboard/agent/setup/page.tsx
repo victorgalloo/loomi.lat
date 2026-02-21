@@ -4,6 +4,8 @@ import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import { getAgentConfig, updateAgentConfig, AgentConfig } from "@/lib/tenant/context";
 import AgentSetupWizard from "./AgentSetupWizard";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AgentSetupPage() {
   const supabase = await createClient();
 

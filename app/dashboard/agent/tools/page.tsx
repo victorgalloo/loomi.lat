@@ -4,6 +4,8 @@ import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import { getIntegrations } from "@/lib/integrations/tenant-integrations";
 import IntegrationsView from "./IntegrationsView";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ToolsPage() {
   const supabase = await createClient();
 

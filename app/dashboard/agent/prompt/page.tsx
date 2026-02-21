@@ -5,6 +5,8 @@ import { getAgentConfig, updateAgentConfig } from "@/lib/tenant/context";
 import PromptEditorForm from "./PromptEditorForm";
 import type { FewShotExample } from "@/lib/tenant/context";
 
+export const dynamic = 'force-dynamic';
+
 export default async function PromptEditorPage() {
   const supabase = await createClient();
 

@@ -5,6 +5,8 @@ import { getWhatsAppAccounts, getTenantById } from "@/lib/tenant/context";
 import { getProvisionedNumbers } from "@/lib/twilio/numbers";
 import ConnectView from "./ConnectView";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ConnectPage() {
   const supabase = await createClient();
 

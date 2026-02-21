@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
 import CRMView from "./CRMView";
 
+export const dynamic = 'force-dynamic';
+
 export default async function CRMPage() {
   const supabase = await createClient();
 

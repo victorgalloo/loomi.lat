@@ -626,7 +626,12 @@ export async function POST(request: NextRequest) {
       }
 
       // Check if bot is paused (operator has taken control) — from RPC result
-      if (botPaused) {
+      // If auto_reply_enabled, always respond (ignore pause state and auto-resume)
+      if (botPaused && agentConfig?.autoReplyEnabled !== false) {
+        console.log(`[Webhook] Bot was paused but auto_reply_enabled, auto-resuming conversation ${context.conversation.id}`);
+        const { resumeBot } = await import('@/lib/bot-pause');
+        resumeBot(context.conversation.id).catch(e => console.error('[Webhook] Resume error:', e));
+      } else if (botPaused) {
         console.log(`[Webhook] Bot paused for conversation ${context.conversation.id}, saving message only`);
         await saveMessage(context.conversation.id, 'user', message.text, context.lead.id);
         return NextResponse.json({ status: 'bot_paused' });
@@ -825,11 +830,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Check for handoff triggers before calling agent (with context for false-positive prevention)
-      const handoffTrigger = detectHandoffTrigger(
+      // Skip handoff detection entirely when auto_reply_enabled — bot always responds
+      const skipHandoff = agentConfig?.autoReplyEnabled !== false;
+      const handoffTrigger = skipHandoff ? null : detectHandoffTrigger(
         message.text,
         context.recentMessages.map(m => ({ role: m.role, content: m.content }))
       );
-      const hasRepeatedFailures = detectRepeatedFailures(
+      const hasRepeatedFailures = skipHandoff ? false : detectRepeatedFailures(
         context.recentMessages.map(m => ({ role: m.role, content: m.content }))
       );
 

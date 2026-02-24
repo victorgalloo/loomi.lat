@@ -1,14 +1,14 @@
 /**
  * POST /api/conversations/[id]/reply
  * Send a reply from the dashboard to a lead via WhatsApp
- * Auto-pauses the bot for this conversation.
+ * Auto-pauses the bot for this conversation (unless auto_reply_enabled).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getTenantIdForUser } from '@/lib/supabase/user-role';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/send';
-import { getTenantCredentials } from '@/lib/tenant/context';
+import { getTenantCredentials, getAgentConfig } from '@/lib/tenant/context';
 import { saveMessage } from '@/lib/memory/supabase';
 import { pauseBot } from '@/lib/bot-pause';
 
@@ -72,10 +72,13 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });
     }
 
-    // Save message to DB and pause bot in parallel
+    // Save message to DB; only pause bot if auto_reply is disabled
+    const agentCfg = await getAgentConfig(tenantId);
+    const shouldPause = agentCfg?.autoReplyEnabled === false;
+
     await Promise.all([
       saveMessage(conversationId, 'assistant', message, lead.id),
-      pauseBot(conversationId, user.email)
+      shouldPause ? pauseBot(conversationId, user.email) : Promise.resolve(),
     ]);
 
     return NextResponse.json({ status: 'sent' });

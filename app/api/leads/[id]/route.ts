@@ -70,7 +70,8 @@ export async function PATCH(
           email: currentLead.contact_email,
           name: currentLead.name,
           value: currentLead.deal_value || 0,
-          currency: 'MXN'
+          currency: 'MXN',
+          tenantId
         });
       } catch (err) {
         console.error('[Meta] Failed to track customer won:', err);

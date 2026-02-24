@@ -73,6 +73,8 @@ import { getTenantFromPhoneNumberId, AgentConfig } from '@/lib/tenant/context';
 import { isAutoResponder } from '@/lib/whatsapp/autoresponder';
 import { transcribeWhatsAppAudio } from '@/lib/whatsapp/audio';
 import { trackDemoScheduled } from '@/lib/integrations/meta-conversions';
+import { redis } from '@/lib/ratelimit';
+import { suppressBotForBroadcast } from '@/lib/bot-pause';
 
 // Webhook timeout guard: Vercel kills functions at 30s, so we race at 25s
 const WEBHOOK_TIMEOUT_MS = 25000;
@@ -607,7 +609,7 @@ export async function POST(request: NextRequest) {
         getWebhookContext(message, tenantId),                      // 1 RPC call
       ]);
 
-      const { context, botPaused, conversationState: preloadedConversationState } = webhookCtx;
+      const { context, botPaused, broadcastSuppressed, conversationState: preloadedConversationState } = webhookCtx;
       agentConfig = webhookCtx.agentConfig;
       calConfig = webhookCtx.calConfig;
 
@@ -616,6 +618,26 @@ export async function POST(request: NextRequest) {
         console.log(`[Webhook] Could not acquire lock for ${message.phone}, saving message only`);
         await saveMessage(context.conversation.id, 'user', message.text, context.lead.id);
         return NextResponse.json({ status: 'queued_no_response' });
+      }
+
+      // ============================================
+      // BROADCAST SUPPRESS CHECK (strongest gate — overrides auto_reply_enabled)
+      // ============================================
+      let isSuppressed = broadcastSuppressed;
+      if (!isSuppressed && tenantId) {
+        // Check Redis for phones registered during broadcast send
+        const campaignId = await redis.hget(`suppress_phones:${tenantId}`, message.phone) as string | null;
+        if (campaignId) {
+          // First time this phone replies — mark the conversation as suppressed
+          await suppressBotForBroadcast(context.conversation.id, campaignId);
+          isSuppressed = true;
+          console.log(`[Webhook] Phone ${message.phone} matched suppress list, campaign ${campaignId}`);
+        }
+      }
+      if (isSuppressed) {
+        console.log(`[Webhook] Broadcast suppressed for conversation ${context.conversation.id}, saving message only`);
+        await saveMessage(context.conversation.id, 'user', message.text, context.lead.id);
+        return NextResponse.json({ status: 'broadcast_suppressed' });
       }
 
       // Check for auto-responder messages (first interaction only)
@@ -775,7 +797,8 @@ export async function POST(request: NextRequest) {
                 phone: context.lead.phone,
                 leadId: context.lead.id,
                 name: context.lead.name,
-                email
+                email,
+                tenantId
               });
             } catch (err) {
               console.error('[Webhook] After error:', err);

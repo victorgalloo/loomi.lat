@@ -155,11 +155,21 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     };
     const value = planPrices[plan || 'starter'] || 199;
 
+    // Look up tenant_id from lead
+    const { data: leadRow } = await getSupabase()
+      .from('leads')
+      .select('id, tenant_id')
+      .eq('phone', customerPhone)
+      .limit(1)
+      .single();
+
     trackCustomerWon({
       phone: customerPhone,
       email: customerEmail || undefined,
+      leadId: leadRow?.id,
       value,
-      currency: 'MXN'
+      currency: 'MXN',
+      tenantId: leadRow?.tenant_id ?? undefined
     }).catch((err) => {
       console.error('[Meta] Failed to track customer won:', err);
     });

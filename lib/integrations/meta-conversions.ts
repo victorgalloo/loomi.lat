@@ -119,6 +119,7 @@ interface ConversionEventParams {
   value?: number;
   currency?: string;
   eventSourceUrl?: string;
+  tenantId?: string;
 }
 
 interface MetaEventPayload {
@@ -267,7 +268,8 @@ async function queueFailedEvent(
       payload: params,
       status: 'pending',
       attempts: MAX_RETRIES,
-      last_error: errorMessage
+      last_error: errorMessage,
+      tenant_id: params.tenantId || null
     });
 
     console.log(`[Meta] Event queued for retry: ${params.eventName}`);
@@ -289,6 +291,7 @@ export async function trackLeadQualified(params: {
   leadId?: string;
   name?: string;
   email?: string;
+  tenantId?: string;
 }): Promise<void> {
   console.log(`[Meta] Tracking lead qualified: ${params.phone}`);
 
@@ -297,7 +300,8 @@ export async function trackLeadQualified(params: {
     phone: params.phone,
     leadId: params.leadId,
     name: params.name,
-    email: params.email
+    email: params.email,
+    tenantId: params.tenantId
   });
 }
 
@@ -310,6 +314,7 @@ export async function trackDemoScheduled(params: {
   leadId?: string;
   name?: string;
   email?: string;
+  tenantId?: string;
 }): Promise<void> {
   console.log(`[Meta] Tracking demo scheduled: ${params.phone}`);
 
@@ -318,7 +323,8 @@ export async function trackDemoScheduled(params: {
     phone: params.phone,
     leadId: params.leadId,
     name: params.name,
-    email: params.email
+    email: params.email,
+    tenantId: params.tenantId
   });
 }
 
@@ -333,6 +339,7 @@ export async function trackCustomerWon(params: {
   email?: string;
   value?: number;
   currency?: string;
+  tenantId?: string;
 }): Promise<void> {
   console.log(`[Meta] Tracking customer won: ${params.phone}`);
 
@@ -343,7 +350,8 @@ export async function trackCustomerWon(params: {
     name: params.name,
     email: params.email,
     value: params.value,
-    currency: params.currency || 'MXN'
+    currency: params.currency || 'MXN',
+    tenantId: params.tenantId
   });
 }
 

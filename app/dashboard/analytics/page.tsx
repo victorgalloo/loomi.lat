@@ -40,7 +40,11 @@ export default async function AnalyticsPage() {
     messagesResult,
     appointmentsResult,
     qualifiedResult,
-    stageResult
+    stageResult,
+    wonLeadsResult,
+    demoLeadsResult,
+    capiEventsResult,
+    capiAllResult
   ] = await Promise.all([
     // Total leads
     supabase.from("leads")
@@ -78,6 +82,30 @@ export default async function AnalyticsPage() {
     // Stage breakdown
     supabase.from("leads")
       .select("stage")
+      .eq("tenant_id", tenantId),
+
+    // Won leads with deal values
+    supabase.from("leads")
+      .select("id, deal_value")
+      .eq("tenant_id", tenantId)
+      .eq("stage", "Ganado"),
+
+    // Demo leads (Hot stage or Demo Agendada)
+    supabase.from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .in("stage", ["Hot", "Demo Agendada"]),
+
+    // CAPI recent events (last 10)
+    supabase.from("conversion_events_queue")
+      .select("id, event_name, phone, status, created_at, sent_at, last_error")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(10),
+
+    // CAPI all events for status counts
+    supabase.from("conversion_events_queue")
+      .select("status")
       .eq("tenant_id", tenantId)
   ]);
 
@@ -93,6 +121,21 @@ export default async function AnalyticsPage() {
     ? Math.round((conversationsResult.count || 0) / totalLeadsResult.count * 100)
     : 0;
 
+  // Funnel data
+  const wonLeads = wonLeadsResult.data || [];
+  const wonCount = wonLeads.length;
+  const totalDealValue = wonLeads.reduce((sum, l) => sum + (l.deal_value || 0), 0);
+  const demoCount = (demoLeadsResult.count || 0) + wonCount; // demos include won
+
+  // CAPI status counts
+  const capiStatuses = capiAllResult.data || [];
+  const capiCounts = { sent: 0, pending: 0, failed: 0 };
+  capiStatuses.forEach((e) => {
+    if (e.status === 'sent') capiCounts.sent++;
+    else if (e.status === 'pending') capiCounts.pending++;
+    else if (e.status === 'failed') capiCounts.failed++;
+  });
+
   return (
     <AnalyticsView
       data={{
@@ -103,7 +146,25 @@ export default async function AnalyticsPage() {
         appointmentsBooked: appointmentsResult.count || 0,
         qualifiedLeads: qualifiedResult.count || 0,
         responseRate: Math.min(responseRate, 100),
-        stageBreakdown
+        stageBreakdown,
+        funnel: {
+          total: totalLeadsResult.count || 0,
+          qualified: qualifiedResult.count || 0,
+          demo: demoCount,
+          won: wonCount,
+          totalDealValue
+        },
+        capi: {
+          counts: capiCounts,
+          events: (capiEventsResult.data || []).map((e) => ({
+            id: e.id,
+            eventName: e.event_name,
+            phone: e.phone,
+            status: e.status,
+            createdAt: e.created_at,
+            lastError: e.last_error
+          }))
+        }
       }}
     />
   );

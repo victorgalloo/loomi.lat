@@ -233,8 +233,15 @@ export async function saveLeadQualification(
 
   console.log(`[Supabase] Lead ${leadId} qualified with:`, qualification);
 
+  // Look up tenant_id for the lead to associate with CAPI event
+  const { data: leadRow } = await supabase
+    .from('leads')
+    .select('tenant_id')
+    .eq('id', leadId)
+    .single();
+
   // Track conversion event for Meta (non-blocking)
-  trackLeadQualified({ phone }).catch((err) => {
+  trackLeadQualified({ phone, leadId, tenantId: leadRow?.tenant_id ?? undefined }).catch((err) => {
     console.error('[Meta] Failed to track lead qualified:', err);
   });
 }

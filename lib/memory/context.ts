@@ -140,6 +140,7 @@ export interface WebhookContextResult {
   agentConfig: AgentConfig | undefined;
   calConfig: CalTenantConfig | undefined;
   botPaused: boolean;
+  broadcastSuppressed: boolean;
   conversationState: PersistedConversationState | undefined;
 }
 
@@ -169,7 +170,7 @@ export async function getWebhookContext(
     console.error('[Context] RPC get_webhook_context failed, falling back to individual queries:', error);
     // Fallback to the original multi-query approach
     const context = await getConversationContext(message, tenantId);
-    return { context, agentConfig: undefined, calConfig: undefined, botPaused: false, conversationState: undefined };
+    return { context, agentConfig: undefined, calConfig: undefined, botPaused: false, broadcastSuppressed: false, conversationState: undefined };
   }
 
   const r = data as Record<string, unknown>;
@@ -342,6 +343,7 @@ export async function getWebhookContext(
     agentConfig,
     calConfig,
     botPaused: (r.botPaused as boolean) || false,
+    broadcastSuppressed: (r.broadcastSuppressed as boolean) || false,
     conversationState,
   };
 }

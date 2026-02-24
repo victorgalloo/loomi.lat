@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getTenantIdForUser } from '@/lib/supabase/user-role';
 import { sendTemplateMessage, type TemplateComponent } from '@/lib/whatsapp/send';
 import { getTenantCredentials } from '@/lib/tenant/context';
+import { redis } from '@/lib/ratelimit';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -91,6 +92,11 @@ export async function POST(
       return NextResponse.json({ message: 'No pending recipients' });
     }
 
+    // Collect all recipient phones for suppress registration (before test recipient is shifted)
+    const allRecipientPhones = campaign.suppress_bot
+      ? recipients.map((r: { phone: string }) => r.phone)
+      : [];
+
     const baseComponents = campaign.template_components as TemplateComponent[] | null;
 
     // Helper to replace {{csv_name}} with recipient's name
@@ -154,6 +160,18 @@ export async function POST(
       .from('broadcast_campaigns')
       .update({ status: 'sending', started_at: new Date().toISOString() })
       .eq('id', id);
+
+    // Register suppress phones in Redis if campaign has suppress_bot enabled
+    if (campaign.suppress_bot && allRecipientPhones.length > 0) {
+      const suppressKey = `suppress_phones:${tenantId}`;
+      const phoneMap: Record<string, string> = {};
+      for (const phone of allRecipientPhones) {
+        phoneMap[phone] = id;
+      }
+      await redis.hset(suppressKey, phoneMap);
+      await redis.expire(suppressKey, 7 * 86400);
+      console.log(`[Broadcast] Registered ${allRecipientPhones.length} suppress phones for tenant ${tenantId}`);
+    }
 
     for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
       const batch = recipients.slice(i, i + BATCH_SIZE);

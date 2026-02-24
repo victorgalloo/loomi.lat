@@ -99,6 +99,8 @@ const i18n: Record<Lang, Record<string, string>> = {
     createError: 'Error creating campaign',
     csvOnly: 'Only .csv or .txt files accepted',
     templateLoadError: 'Could not load templates',
+    suppressBot: 'disable bot for replies',
+    suppressBotDesc: 'Recipient replies will be saved but the bot will NOT auto-respond',
   },
   es: {
     campaigns: 'campañas',
@@ -148,6 +150,8 @@ const i18n: Record<Lang, Record<string, string>> = {
     createError: 'Error al crear campaña',
     csvOnly: 'Solo se aceptan archivos .csv o .txt',
     templateLoadError: 'No se pudieron cargar los templates',
+    suppressBot: 'desactivar bot en respuestas',
+    suppressBotDesc: 'Las respuestas se guardan pero el bot NO responde automáticamente',
   },
 };
 
@@ -178,6 +182,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const [formHeaderMediaUrl, setFormHeaderMediaUrl] = useState('');
+  const [formSuppressBot, setFormSuppressBot] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -309,6 +314,7 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
     setFormVariables({});
     setFormVariableSource({});
     setFormHeaderMediaUrl('');
+    setFormSuppressBot(false);
     setCsvFile(null);
     setCsvPreview([]);
     setCsvTotal(0);
@@ -364,6 +370,9 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
       const components = buildTemplateComponents();
       if (components) {
         formData.append('components', JSON.stringify(components));
+      }
+      if (formSuppressBot) {
+        formData.append('suppressBot', 'true');
       }
       if (csvFile) {
         formData.append('csv', csvFile);
@@ -699,6 +708,28 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                     </div>
                   )}
 
+                  {/* Suppress Bot Toggle */}
+                  <div
+                    onClick={() => setFormSuppressBot(prev => !prev)}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-2xl border cursor-pointer transition-colors ${
+                      formSuppressBot
+                        ? 'border-terminal-red/30 bg-terminal-red/5'
+                        : 'border-border hover:border-foreground/20'
+                    }`}
+                  >
+                    <div>
+                      <span className={`text-sm ${formSuppressBot ? 'text-terminal-red' : 'text-foreground'}`}>
+                        {t.suppressBot}
+                      </span>
+                      <p className="text-xs text-muted mt-0.5">{t.suppressBotDesc}</p>
+                    </div>
+                    <div className={`w-9 h-5 rounded-full transition-colors flex items-center ${
+                      formSuppressBot ? 'bg-terminal-red justify-end' : 'bg-surface-2 justify-start'
+                    }`}>
+                      <div className="w-4 h-4 rounded-full bg-white mx-0.5" />
+                    </div>
+                  </div>
+
                 </div>
               )}
 
@@ -796,6 +827,14 @@ export default function BroadcastsView({ campaigns: initialCampaigns, tenantId }
                       <span className="text-label text-muted">{t.recipients}</span>
                       <span className="text-sm font-mono text-info">{csvTotal.toLocaleString()}</span>
                     </div>
+                    {formSuppressBot && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-label text-muted">bot</span>
+                        <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-terminal-red/10 text-terminal-red border border-terminal-red/20">
+                          sin bot
+                        </span>
+                      </div>
+                    )}
                     {templateVariables.length > 0 && (
                       <div className="pt-2 border-t border-border/50">
                         <span className="text-xs text-muted block mb-2">{t.variables}</span>

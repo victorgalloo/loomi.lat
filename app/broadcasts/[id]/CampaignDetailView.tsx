@@ -16,6 +16,7 @@ interface Campaign {
   total_recipients: number;
   sent_count: number;
   failed_count: number;
+  suppress_bot: boolean;
   started_at: string | null;
   completed_at: string | null;
   created_at: string;
@@ -160,6 +161,7 @@ export default function CampaignDetailView({
           total_recipients: data.total_recipients,
           sent_count: data.sent_count,
           failed_count: data.failed_count,
+          suppress_bot: data.suppress_bot ?? false,
           started_at: data.started_at,
           completed_at: data.completed_at,
           created_at: data.created_at,
@@ -231,6 +233,11 @@ export default function CampaignDetailView({
               <span className={`text-xs font-mono px-2 py-0.5 rounded-full border ${campaignStatusColors[campaign.status] || 'bg-surface-2 text-muted border-border'}`}>
                 {campaignStatusLabel}
               </span>
+              {campaign.suppress_bot && (
+                <span className="text-xs font-mono px-2 py-0.5 rounded-full border bg-terminal-red/10 text-terminal-red border-terminal-red/20">
+                  sin bot
+                </span>
+              )}
             </div>
           </div>
         </div>

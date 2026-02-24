@@ -119,6 +119,7 @@ export async function POST(request: NextRequest) {
     const language = (formData.get('language') as string) || 'es';
     const componentsRaw = formData.get('components') as string;
     const csvFile = formData.get('csv') as File | null;
+    const suppressBot = formData.get('suppressBot') === 'true';
 
     if (!name || !templateName) {
       return NextResponse.json({ error: 'name and templateName are required' }, { status: 400 });
@@ -157,6 +158,7 @@ export async function POST(request: NextRequest) {
         template_components: templateComponents,
         status: 'draft',
         total_recipients: recipients.length,
+        suppress_bot: suppressBot,
       })
       .select()
       .single();

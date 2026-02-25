@@ -15,6 +15,7 @@ export interface ParsedWhatsAppMessage {
   flowResponseJson?: string;   // JSON response from WhatsApp Flow
   mediaId?: string;            // Media ID for audio/image/video/document messages
   mediaType?: string;          // Original message type (audio, voice, image, etc.)
+  referralSourceId?: string;   // CTWA: source_id from Click-to-WhatsApp Ad referral
 }
 
 /**
@@ -53,6 +54,7 @@ export function parseWhatsAppWebhook(body: unknown): ParsedWhatsAppMessage | nul
               video?: { id: string; mime_type?: string; caption?: string };
               document?: { id: string; mime_type?: string; filename?: string; caption?: string };
               sticker?: { id: string; mime_type?: string };
+              referral?: { source_url?: string; source_id?: string; source_type?: string };
             }>;
             contacts?: Array<{
               profile?: { name: string };
@@ -161,6 +163,12 @@ export function parseWhatsAppWebhook(body: unknown): ParsedWhatsAppMessage | nul
         text = `[${message.type}]`;
     }
 
+    // Extract CTWA referral data (Click-to-WhatsApp Ad)
+    const referralSourceId = message.referral?.source_id || undefined;
+    if (referralSourceId) {
+      console.log(`[WhatsApp] CTWA referral detected: source_id=${referralSourceId}`);
+    }
+
     return {
       phone,
       name,
@@ -172,7 +180,8 @@ export function parseWhatsAppWebhook(body: unknown): ParsedWhatsAppMessage | nul
       interactiveType,
       flowResponseJson,
       mediaId,
-      mediaType
+      mediaType,
+      referralSourceId,
     };
 
   } catch (error) {

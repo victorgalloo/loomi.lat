@@ -164,6 +164,7 @@ export async function getWebhookContext(
     p_name: message.name || 'Usuario',
     p_tenant_id: tenantId ?? null,
     p_is_test: isTest,
+    p_referral_source_id: message.referralSourceId ?? null,
   });
 
   if (error || !data) {
@@ -188,6 +189,8 @@ export async function getWebhookContext(
     challenge: leadData.challenge as string | undefined,
     createdAt: new Date(leadData.created_at as string),
     lastInteraction: new Date(leadData.created_at as string),
+    serviceWindowStart: leadData.service_window_start ? new Date(leadData.service_window_start as string) : null,
+    serviceWindowType: (leadData.service_window_type as 'standard' | 'ctwa' | null) ?? null,
   };
 
   // Parse conversation

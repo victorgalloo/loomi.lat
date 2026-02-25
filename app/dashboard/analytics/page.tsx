@@ -44,7 +44,10 @@ export default async function AnalyticsPage() {
     wonLeadsResult,
     demoLeadsResult,
     capiEventsResult,
-    capiAllResult
+    capiAllResult,
+    windowStandardResult,
+    windowCtwaResult,
+    windowMessagesResult
   ] = await Promise.all([
     // Total leads
     supabase.from("leads")
@@ -106,7 +109,29 @@ export default async function AnalyticsPage() {
     // CAPI all events for status counts
     supabase.from("conversion_events_queue")
       .select("status")
+      .eq("tenant_id", tenantId),
+
+    // Service window: active standard windows (24h)
+    supabase.from("leads")
+      .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenantId)
+      .eq("service_window_type", "standard")
+      .gte("service_window_start", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
+
+    // Service window: active CTWA windows (72h)
+    supabase.from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .eq("service_window_type", "ctwa")
+      .gte("service_window_start", new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString()),
+
+    // Messages this month with window tag
+    supabase.from("messages")
+      .select("in_service_window")
+      .eq("tenant_id", tenantId)
+      .eq("role", "assistant")
+      .not("in_service_window", "is", null)
+      .gte("created_at", startOfMonth.toISOString())
   ]);
 
   // Calculate stage breakdown
@@ -134,6 +159,15 @@ export default async function AnalyticsPage() {
     if (e.status === 'sent') capiCounts.sent++;
     else if (e.status === 'pending') capiCounts.pending++;
     else if (e.status === 'failed') capiCounts.failed++;
+  });
+
+  // Service window metrics
+  const windowMessages = windowMessagesResult.data || [];
+  let windowFree = 0;
+  let windowPaid = 0;
+  windowMessages.forEach((m) => {
+    if (m.in_service_window === true) windowFree++;
+    else windowPaid++;
   });
 
   return (
@@ -164,6 +198,12 @@ export default async function AnalyticsPage() {
             createdAt: e.created_at,
             lastError: e.last_error
           }))
+        },
+        serviceWindow: {
+          activeStandard: windowStandardResult.count || 0,
+          activeCtwa: windowCtwaResult.count || 0,
+          freeMessages: windowFree,
+          paidMessages: windowPaid,
         }
       }}
     />

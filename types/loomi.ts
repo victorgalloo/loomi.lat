@@ -20,6 +20,8 @@ export interface Lead {
   challenge?: string;
   messageVolume?: string;
   isQualified?: boolean;
+  serviceWindowStart?: Date | null;
+  serviceWindowType?: 'standard' | 'ctwa' | null;
 }
 
 export interface Conversation {

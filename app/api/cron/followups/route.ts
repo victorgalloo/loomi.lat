@@ -15,6 +15,7 @@ import { getPendingFollowUps, markFollowUpSent, markFollowUpFailed, scheduleReen
 import { sendWhatsAppMessage } from '@/lib/whatsapp/send';
 import { saveMessage, getLeadById } from '@/lib/memory/supabase';
 import { getActiveConversation } from '@/lib/memory/context';
+import { isInServiceWindow } from '@/lib/whatsapp/service-window';
 import { FollowUp } from '@/lib/followups/types';
 
 // Stages that should skip re-engagement (Set for O(1) lookup)
@@ -102,12 +103,13 @@ async function processFollowUp(followUp: FollowUp): Promise<{ success: boolean; 
     await markFollowUpSent(followUp.id);
 
     // Non-blocking: Save message and schedule next re-engagement
+    const windowActive = isInServiceWindow(lead.serviceWindowStart, lead.serviceWindowType);
     (async () => {
       try {
         // Save message to conversation history
         const conversation = await getActiveConversation(followUp.leadId);
         if (conversation) {
-          await saveMessage(conversation.id, 'assistant', followUp.message, followUp.leadId);
+          await saveMessage(conversation.id, 'assistant', followUp.message, followUp.leadId, windowActive);
         }
 
         // Schedule next re-engagement if applicable

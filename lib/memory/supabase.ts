@@ -99,7 +99,9 @@ export async function getLeadById(leadId: string): Promise<Lead | null> {
     industry: data.industry,
     stage: data.stage,
     createdAt: new Date(data.created_at),
-    lastInteraction: new Date(data.last_interaction)
+    lastInteraction: new Date(data.last_interaction),
+    serviceWindowStart: data.service_window_start ? new Date(data.service_window_start) : null,
+    serviceWindowType: data.service_window_type ?? null,
   };
 }
 
@@ -319,17 +321,25 @@ export async function saveMessage(
   conversationId: string,
   role: 'user' | 'assistant',
   content: string,
-  leadId?: string
+  leadId?: string,
+  inServiceWindow?: boolean
 ): Promise<string> {
   const supabase = getSupabase();
 
+  const insertData: Record<string, unknown> = {
+    conversation_id: conversationId,
+    role,
+    content,
+  };
+
+  // Only tag outgoing (assistant) messages with window status
+  if (role === 'assistant' && inServiceWindow !== undefined) {
+    insertData.in_service_window = inServiceWindow;
+  }
+
   const { data, error } = await supabase
     .from('messages')
-    .insert({
-      conversation_id: conversationId,
-      role,
-      content
-    })
+    .insert(insertData)
     .select('id')
     .single();
 

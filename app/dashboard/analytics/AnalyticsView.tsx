@@ -1,6 +1,6 @@
 'use client';
 
-import { Target, BarChart3, Filter, Radio } from 'lucide-react';
+import { Target, BarChart3, Filter, Radio, Clock } from 'lucide-react';
 import StatCard from '@/components/dashboard/StatCard';
 
 interface CapiEvent {
@@ -31,6 +31,12 @@ interface AnalyticsData {
   capi: {
     counts: { sent: number; pending: number; failed: number };
     events: CapiEvent[];
+  };
+  serviceWindow: {
+    activeStandard: number;
+    activeCtwa: number;
+    freeMessages: number;
+    paidMessages: number;
   };
 }
 
@@ -77,7 +83,10 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
     cold: 'Cold',
   };
 
-  const { funnel, capi } = data;
+  const { funnel, capi, serviceWindow } = data;
+
+  const totalTagged = serviceWindow.freeMessages + serviceWindow.paidMessages;
+  const savingsRate = totalTagged > 0 ? Math.round((serviceWindow.freeMessages / totalTagged) * 100) : 0;
 
   // Funnel steps with conversion rates
   const funnelSteps = [
@@ -305,6 +314,36 @@ export default function AnalyticsView({ data }: AnalyticsViewProps) {
             No hay eventos CAPI registrados
           </p>
         )}
+      </div>
+
+      {/* Service Windows */}
+      <div className="mt-8 pt-8 border-t border-border">
+        <h3 className="text-sm font-medium mb-4 flex items-center gap-2 text-foreground">
+          <Clock className="w-4 h-4 text-muted" />
+          Service Windows
+        </h3>
+
+        <div className="flex items-center gap-1 text-sm mb-4">
+          <span className="text-terminal-green">Ventanas activas</span>
+          <span className="text-terminal-green tabular-nums font-medium">{serviceWindow.activeStandard + serviceWindow.activeCtwa}</span>
+          <span className="text-muted mx-1">·</span>
+          <span className="text-muted">Standard</span>
+          <span className="text-foreground tabular-nums font-medium">{serviceWindow.activeStandard}</span>
+          <span className="text-muted mx-1">·</span>
+          <span className="text-muted">CTWA</span>
+          <span className="text-foreground tabular-nums font-medium">{serviceWindow.activeCtwa}</span>
+        </div>
+
+        <div className="flex items-center gap-1 text-sm">
+          <span className="text-terminal-green">Gratis</span>
+          <span className="text-terminal-green tabular-nums font-medium">{serviceWindow.freeMessages}</span>
+          <span className="text-muted mx-1">·</span>
+          <span className="text-terminal-yellow">Fuera de ventana</span>
+          <span className="text-terminal-yellow tabular-nums font-medium">{serviceWindow.paidMessages}</span>
+          <span className="text-muted mx-1">·</span>
+          <span className="text-muted">Ahorro</span>
+          <span className="text-foreground tabular-nums font-medium">{savingsRate}%</span>
+        </div>
       </div>
 
       {/* Coming Soon */}

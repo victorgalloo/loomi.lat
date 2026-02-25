@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loomi - Carrusel Facebook</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1a1a;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    padding: 40px;
+  }
+
+  .slide-label {
+    color: #6B6B6B;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    margin-bottom: -28px;
+  }
+
+  .slide {
+    width: 1080px;
+    height: 1080px;
+    background: #0A0A0A;
+    border-radius: 0;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 80px;
+  }
+
+  /* Traffic light dots */
+  .dots {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 48px;
+  }
+  .dots span {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+  }
+  .dot-red { background: #FF5F56; }
+  .dot-yellow { background: #FFBD2E; }
+  .dot-green { background: #27C93F; }
+
+  /* Brand */
+  .brand {
+    font-family: 'JetBrains Mono', monospace;
+    color: #FAFAFA;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  /* Typography */
+  h1 {
+    font-family: 'Inter', sans-serif;
+    color: #FAFAFA;
+    font-size: 72px;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+  h2 {
+    font-family: 'Inter', sans-serif;
+    color: #FAFAFA;
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+  h3 {
+    font-family: 'Inter', sans-serif;
+    color: #FAFAFA;
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    color: #8A8A8A;
+    font-size: 28px;
+    line-height: 1.4;
+    font-weight: 400;
+  }
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .green { color: #27C93F; }
+  .yellow { color: #FFBD2E; }
+  .red { color: #FF5F56; }
+  .muted { color: #6B6B6B; }
+  .white { color: #FAFAFA; }
+
+  /* Bottom brand watermark */
+  .watermark {
+    position: absolute;
+    bottom: 48px;
+    left: 80px;
+    right: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .watermark .brand {
+    font-size: 22px;
+    color: #3A3A3A;
+  }
+  .watermark .url {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: #3A3A3A;
+  }
+
+  /* Slide-specific */
+  .stat-big {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 96px;
+    font-weight: 700;
+    color: #27C93F;
+    line-height: 1;
+  }
+  .stat-row {
+    display: flex;
+    gap: 48px;
+    align-items: flex-start;
+  }
+  .stat-item {
+    flex: 1;
+  }
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 64px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .stat-label {
+    color: #8A8A8A;
+    font-size: 22px;
+    line-height: 1.3;
+  }
+
+  /* Feature list */
+  .feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .feature-icon {
+    font-family: 'JetBrains Mono', monospace;
+    color: #27C93F;
+    font-size: 22px;
+    min-width: 28px;
+    padding-top: 4px;
+  }
+  .feature-text {
+    color: #FAFAFA;
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .feature-text span {
+    color: #8A8A8A;
+    font-weight: 400;
+  }
+
+  /* Chat bubble */
+  .chat-area {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .bubble {
+    padding: 20px 28px;
+    border-radius: 20px;
+    font-size: 24px;
+    line-height: 1.4;
+    max-width: 75%;
+  }
+  .bubble-user {
+    background: #27C93F;
+    color: #0A0A0A;
+    align-self: flex-end;
+    border-bottom-right-radius: 6px;
+    font-weight: 500;
+  }
+  .bubble-agent {
+    background: #1C1C1C;
+    color: #FAFAFA;
+    align-self: flex-start;
+    border-bottom-left-radius: 6px;
+    border: 1px solid #2A2A2A;
+  }
+  .bubble-time {
+    font-size: 16px;
+    color: #6B6B6B;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Plan cards */
+  .plans-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .plan-card {
+    background: #141414;
+    border: 1px solid #2A2A2A;
+    border-radius: 16px;
+    padding: 36px;
+    position: relative;
+  }
+  .plan-card.featured {
+    border-color: #27C93F;
+  }
+  .plan-card.featured::after {
+    content: 'POPULAR';
+    position: absolute;
+    top: -12px;
+    right: 24px;
+    background: #27C93F;
+    color: #0A0A0A;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+  .plan-name {
+    color: #8A8A8A;
+    font-size: 18px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .plan-price {
+    font-family: 'JetBrains Mono', monospace;
+    color: #FAFAFA;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .plan-price small {
+    font-size: 22px;
+    color: #6B6B6B;
+    font-weight: 400;
+  }
+  .plan-features {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .plan-feat {
+    color: #8A8A8A;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .plan-feat::before {
+    content: '>';
+    color: #27C93F;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+  }
+
+  /* CTA button */
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: #FAFAFA;
+    color: #0A0A0A;
+    font-family: 'Inter', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    padding: 24px 48px;
+    border-radius: 14px;
+    letter-spacing: -0.01em;
+  }
+  .cta-btn-outline {
+    background: transparent;
+    border: 2px solid #2A2A2A;
+    color: #FAFAFA;
+  }
+
+  /* Separator */
+  .sep {
+    width: 64px;
+    height: 3px;
+    background: #27C93F;
+    margin: 24px 0;
+  }
+
+  /* Tag */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #141414;
+    border: 1px solid #2A2A2A;
+    border-radius: 100px;
+    padding: 10px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: #8A8A8A;
+  }
+  .tag .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #27C93F;
+    animation: none;
+  }
+
+  /* VS comparison */
+  .vs-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+  .vs-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .vs-divider {
+    color: #3A3A3A;
+    font-size: 28px;
+    font-weight: 700;
+    align-self: center;
+    padding-top: 48px;
+  }
+  .vs-item {
+    font-size: 24px;
+    line-height: 1.4;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .vs-x { color: #FF5F56; }
+  .vs-check { color: #27C93F; }
+
+  /* Spacer helper */
+  .spacer { flex: 1; }
+  .gap-24 { gap: 24px; }
+  .gap-32 { gap: 32px; }
+  .gap-40 { gap: 40px; }
+  .gap-48 { gap: 48px; }
+  .mt-auto { margin-top: auto; }
+  .mb-24 { margin-bottom: 24px; }
+  .mb-32 { margin-bottom: 32px; }
+  .mb-40 { margin-bottom: 40px; }
+  .mb-48 { margin-bottom: 48px; }
+
+  /* Terminal prompt line */
+  .terminal-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    color: #6B6B6B;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .terminal-line .prompt {
+    color: #27C93F;
+  }
+  .terminal-line .cursor {
+    display: inline-block;
+    width: 12px;
+    height: 26px;
+    background: #FAFAFA;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  /* Industry cards */
+  .industry-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .industry-card {
+    background: #141414;
+    border: 1px solid #2A2A2A;
+    border-radius: 16px;
+    padding: 32px;
+  }
+  .industry-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: #FAFAFA;
+    margin-bottom: 8px;
+  }
+  .industry-stat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .industry-desc {
+    color: #6B6B6B;
+    font-size: 18px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== SLIDE 1: HOOK ========== -->
+<p class="slide-label">Slide 1 — Hook</p>
+<div class="slide">
+  <div class="dots">
+    <span class="dot-red"></span>
+    <span class="dot-yellow"></span>
+    <span class="dot-green"></span>
+  </div>
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+    <div class="tag mb-32">
+      <span class="dot"></span>
+      WhatsApp AI Agent
+    </div>
+
+    <h1 style="margin-bottom: 32px;">
+      Tu agente de IA<br>
+      que vende por<br>
+      WhatsApp <span class="green">24/7</span>
+    </h1>
+
+    <p class="subtitle" style="max-width: 700px;">
+      Responde en menos de 1 segundo.<br>
+      Califica leads. Agenda demos. Cierra ventas.
+    </p>
+
+    <div style="margin-top: 48px; display: flex; gap: 20px; align-items: center;">
+      <div class="cta-btn">Empezar gratis</div>
+      <span class="muted" style="font-size: 20px;">14 días gratis · sin tarjeta</span>
+    </div>
+  </div>
+
+  <div class="watermark">
+    <span class="brand">loomi_</span>
+    <span class="url">loomi.lat</span>
+  </div>
+</div>
+
+<!-- ========== SLIDE 2: PROBLEMA ========== -->
+<p class="slide-label">Slide 2 — Problema</p>
+<div class="slide">
+  <div class="dots">
+    <span class="dot-red"></span>
+    <span class="dot-yellow"></span>
+    <span class="dot-green"></span>
+  </div>
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+    <p class="mono red" style="font-size: 22px; margin-bottom: 24px;">// el problema</p>
+
+    <h2 style="margin-bottom: 40px;">
+      El <span class="red">78%</span> de los leads<br>
+      compra con quien<br>
+      responde primero
+    </h2>
+
+    <div style="background: #141414; border: 1px solid #2A2A2A; border-radius: 16px; padding: 40px; display: flex; flex-direction: column; gap: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: #8A8A8A; font-size: 24px;">Tu equipo responde en</span>
+        <span class="mono red" style="font-size: 36px; font-weight: 700;">~4 hrs</span>
+      </div>
+      <div style="height: 1px; background: #2A2A2A;"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: #8A8A8A; font-size: 24px;">Loomi responde en</span>
+        <span class="mono green" style="font-size: 36px; font-weight: 700;">0.8s</span>
+      </div>
+    </div>
+
+    <p class="subtitle" style="margin-top: 32px;">
+      Cada minuto sin responder = dinero que pierdes.
+    </p>
+  </div>
+
+  <div class="watermark">
+    <span class="brand">loomi_</span>
+    <span class="url">loomi.lat</span>
+  </div>
+</div>
+
+<!-- ========== SLIDE 3: QUÉ HACE ========== -->
+<p class="slide-label">Slide 3 — Qué hace</p>
+<div class="slide">
+  <div class="dots">
+    <span class="dot-red"></span>
+    <span class="dot-yellow"></span>
+    <span class="dot-green"></span>
+  </div>
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+    <p class="mono green" style="font-size: 22px; margin-bottom: 24px;">// no es un chatbot</p>
+
+    <h2 style="margin-bottom: 48px;">
+      Es un agente de IA<br>
+      que <span class="green">piensa</span> antes<br>
+      de responder
+    </h2>
+
+    <div class="feature-list">
+      <div class="feature-item">
+        <span class="feature-icon">></span>
+        <div class="feature-text">
+          Entiende contexto <span>· no usa flujos rígidos</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">></span>
+        <div class="feature-text">
+          Califica leads <span>· detecta intención de compra</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">></span>
+        <div class="feature-text">
+          Agenda demos <span>· integración directa con Cal.com</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">></span>
+        <div class="feature-text">
+          Detecta emociones <span>· adapta el tono en tiempo real</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">></span>
+        <div class="feature-text">
+          CRM integrado <span>· pipeline Kanban visual</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">></span>
+        <div class="feature-text">
+          Meta CAPI <span>· tracking server-side para campañas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="watermark">
+    <span class="brand">loomi_</span>
+    <span class="url">loomi.lat</span>
+  </div>
+</div>
+
+<!-- ========== SLIDE 4: DEMO CONVERSACIÓN ========== -->
+<p class="slide-label">Slide 4 — Así se ve</p>
+<div class="slide">
+  <div class="dots">
+    <span class="dot-red"></span>
+    <span class="dot-yellow"></span>
+    <span class="dot-green"></span>
+  </div>
+
+  <div style="flex:1; display:flex; flex-direction:column;">
+    <p class="mono green" style="font-size: 22px; margin-bottom: 24px;">// conversación real</p>
+    <h3 style="margin-bottom: 40px;">Así vende Loomi por ti</h3>
+
+    <div class="chat-area" style="flex:1; justify-content: center; display: flex; flex-direction: column; gap: 20px;">
+      <div class="bubble bubble-user">
+        Hola, vi su anuncio. ¿Cuánto cuesta el plan pro?
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="bubble bubble-agent" style="max-width: 80%;">
+          ¡Hola! El plan Pro incluye 3 líneas de WhatsApp, CRM Kanban y analytics avanzado por $3,499/mes. ¿Te gustaría agendar una demo para verlo en acción? Tengo disponibilidad mañana a las 10am o 3pm.
+        </div>
+      </div>
+
+      <div class="bubble bubble-user">
+        Mañana a las 10 va perfecto
+      </div>
+
+      <div class="bubble bubble-agent" style="max-width: 80%;">
+        Listo, demo agendada para mañana a las 10am. Te acabo de enviar la confirmación con el link de Zoom. ¿Alguna duda antes de la llamada?
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 16px; margin-top: 8px;">
+        <span class="tag">
+          <span class="dot"></span>
+          Lead calificado · Demo agendada · 0.8s
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="watermark">
+    <span class="brand">loomi_</span>
+    <span class="url">loomi.lat</span>
+  </div>
+</div>
+
+<!-- ========== SLIDE 5: RESULTADOS ========== -->
+<p class="slide-label">Slide 5 — Resultados</p>
+<div class="slide">
+  <div class="dots">
+    <span class="dot-red"></span>
+    <span class="dot-yellow"></span>
+    <span class="dot-green"></span>
+  </div>
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+    <p class="mono green" style="font-size: 22px; margin-bottom: 24px;">// resultados reales</p>
+    <h2 style="margin-bottom: 56px;">Números que importan</h2>
+
+    <div class="stat-row" style="margin-bottom: 48px;">
+      <div class="stat-item">
+        <div class="stat-value green">+340%</div>
+        <div class="stat-label">más demos<br>agendadas</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value green">-78%</div>
+        <div class="stat-label">menos<br>no-shows</div>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-item">
+        <div class="stat-value green">85%</div>
+        <div class="stat-label">leads pre-calificados<br>antes de la llamada</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value green">0.8s</div>
+        <div class="stat-label">tiempo de<br>respuesta</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="watermark">
+    <span class="brand">loomi_</span>
+    <span class="url">loomi.lat</span>
+  </div>
+</div>
+
+<!-- ========== SLIDE 6: INDUSTRIAS ========== -->
+<p class="slide-label">Slide 6 — Industrias</p>
+<div class="slide">
+  <div class="dots">
+    <span class="dot-red"></span>
+    <span class="dot-yellow"></span>
+    <span class="dot-green"></span>
+  </div>
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+    <p class="mono green" style="font-size: 22px; margin-bottom: 24px;">// para tu industria</p>
+    <h2 style="margin-bottom: 48px;">Funciona para ti</h2>
+
+    <div class="industry-grid">
+      <div class="industry-card">
+        <div class="industry-name">SaaS</div>
+        <div class="industry-stat green">+340%</div>
+        <div class="industry-desc">más demos agendadas<br>Califica, agenda, reduce churn</div>
+      </div>
+      <div class="industry-card">
+        <div class="industry-name">Ecommerce</div>
+        <div class="industry-stat green">+28%</div>
+        <div class="industry-desc">más conversión<br>Responde dudas, recupera carritos</div>
+      </div>
+      <div class="industry-card">
+        <div class="industry-name">Clínicas</div>
+        <div class="industry-stat green">-78%</div>
+        <div class="industry-desc">menos no-shows<br>Agenda, confirma, recuerda</div>
+      </div>
+      <div class="industry-card">
+        <div class="industry-name">Consultoras</div>
+        <div class="industry-stat green">85%</div>
+        <div class="industry-desc">leads pre-calificados<br>Filtra antes de tu llamada</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="watermark">
+    <span class="brand">loomi_</span>
+    <span class="url">loomi.lat</span>
+  </div>
+</div>
+
+<!-- ========== SLIDE 7: PRECIOS ========== -->
+<p class="slide-label">Slide 7 — Precios</p>
+<div class="slide">
+  <div class="dots">
+    <span class="dot-red"></span>
+    <span class="dot-yellow"></span>
+    <span class="dot-green"></span>
+  </div>
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+    <p class="mono green" style="font-size: 22px; margin-bottom: 24px;">// planes</p>
+    <h2 style="margin-bottom: 16px;">Desde <span class="mono green">$1,999</span><small class="muted" style="font-size: 32px;">/mes</small></h2>
+    <p class="subtitle mb-40">Un vendedor humano te cuesta $15,000-$30,000/mes.</p>
+
+    <div class="plans-grid">
+      <div class="plan-card">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">$1,999<small>/mes</small></div>
+        <div class="plan-features">
+          <div class="plan-feat">1 WhatsApp</div>
+          <div class="plan-feat">100 msgs/día</div>
+          <div class="plan-feat">Agente IA completo</div>
+          <div class="plan-feat">Cal.com integrado</div>
+        </div>
+      </div>
+      <div class="plan-card featured">
+        <div class="plan-name">Growth</div>
+        <div class="plan-price">$3,499<small>/mes</small></div>
+        <div class="plan-features">
+          <div class="plan-feat">3 WhatsApp</div>
+          <div class="plan-feat">300 msgs/día</div>
+          <div class="plan-feat">CRM Kanban</div>
+          <div class="plan-feat">Meta CAPI + Analytics</div>
+        </div>
+      </div>
+      <div class="plan-card">
+        <div class="plan-name">Business</div>
+        <div class="plan-price">$5,999<small>/mes</small></div>
+        <div class="plan-features">
+          <div class="plan-feat">10 WhatsApp</div>
+          <div class="plan-feat">1,000 msgs/día</div>
+          <div class="plan-feat">API access</div>
+          <div class="plan-feat">SLA 99.9%</div>
+        </div>
+      </div>
+      <div class="plan-card">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price" style="font-size: 36px;">Custom</div>
+        <div class="plan-features">
+          <div class="plan-feat">WhatsApp ilimitados</div>
+          <div class="plan-feat">Mensajes ilimitados</div>
+          <div class="plan-feat">Self-hosted</div>
+          <div class="plan-feat">Account manager</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 32px; text-align: center;">
+      <span class="muted" style="font-size: 20px;">14 días gratis · sin tarjeta · -20% pago anual</span>
+    </div>
+  </div>
+
+  <div class="watermark">
+    <span class="brand">loomi_</span>
+    <span class="url">loomi.lat</span>
+  </div>
+</div>
+
+<!-- ========== SLIDE 8: CTA FINAL ========== -->
+<p class="slide-label">Slide 8 — CTA</p>
+<div class="slide">
+  <div class="dots">
+    <span class="dot-red"></span>
+    <span class="dot-yellow"></span>
+    <span class="dot-green"></span>
+  </div>
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+    <div class="terminal-line mb-48">
+      <span class="prompt">$</span> loomi --start
+      <span class="cursor"></span>
+    </div>
+
+    <h1 style="margin-bottom: 24px;">
+      ¿Cuántos leads<br>
+      <span class="red">perdiste</span> hoy?
+    </h1>
+
+    <p class="subtitle mb-48" style="max-width: 600px;">
+      Empieza gratis. Setup en 5 minutos.<br>
+      Tu agente vende mientras duermes.
+    </p>
+
+    <div style="display: flex; gap: 20px; align-items: center; flex-direction: column;">
+      <div class="cta-btn" style="font-size: 32px; padding: 28px 56px;">
+        Empezar gratis
+      </div>
+      <span class="muted" style="font-size: 22px;">loomi.lat · 14 días gratis · sin tarjeta</span>
+    </div>
+  </div>
+
+  <div class="watermark">
+    <span class="brand">loomi_</span>
+    <span class="url">loomi.lat</span>
+  </div>
+</div>
+
+</body>
+</html>

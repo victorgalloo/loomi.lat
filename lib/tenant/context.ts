@@ -273,35 +273,51 @@ export async function getTenantById(tenantId: string): Promise<Tenant | null> {
 
 /**
  * Get tenant by email (for dashboard authentication)
+ * Checks tenants.email first, then tenant_members for invited users
  */
 export async function getTenantByEmail(email: string): Promise<Tenant | null> {
   const supabase = getSupabase();
 
+  // Primary: direct tenant owner
   const { data, error } = await supabase
     .from('tenants')
     .select('*')
     .eq('email', email)
     .single();
 
-  if (error || !data) {
+  if (!error && data) {
+    return {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      companyName: data.company_name,
+      metaBusinessId: data.meta_business_id || null,
+      subscriptionTier: data.subscription_tier,
+      subscriptionStatus: data.subscription_status,
+      settings: data.settings,
+      createdAt: new Date(data.created_at)
+    };
+  }
+
+  // Secondary: invited member — look up via tenant_members
+  const { data: membership } = await supabase
+    .from('tenant_members')
+    .select('tenant_id')
+    .eq('email', email)
+    .limit(1)
+    .single();
+
+  if (!membership) {
     return null;
   }
 
-  return {
-    id: data.id,
-    name: data.name,
-    email: data.email,
-    companyName: data.company_name,
-    metaBusinessId: data.meta_business_id || null,
-    subscriptionTier: data.subscription_tier,
-    subscriptionStatus: data.subscription_status,
-    settings: data.settings,
-    createdAt: new Date(data.created_at)
-  };
+  return getTenantById(membership.tenant_id);
 }
 
 /**
  * Get or create tenant by email
+ * If the user is an invited member (exists in tenant_members), returns their tenant
+ * without creating a new one
  */
 export async function getOrCreateTenant(
   email: string,
@@ -310,7 +326,7 @@ export async function getOrCreateTenant(
 ): Promise<Tenant> {
   const supabase = getSupabase();
 
-  // Try to get existing tenant first
+  // Try to get existing tenant first (checks tenants.email + tenant_members)
   let tenant = await getTenantByEmail(email);
   if (tenant) {
     return tenant;
@@ -331,6 +347,17 @@ export async function getOrCreateTenant(
     console.error('[Tenant] Error creating tenant:', error);
     throw error;
   }
+
+  // Also create owner membership record
+  await supabase
+    .from('tenant_members')
+    .insert({
+      tenant_id: data.id,
+      email,
+      role: 'owner',
+      joined_at: new Date().toISOString(),
+    })
+    .single();
 
   return {
     id: data.id,
@@ -453,6 +480,58 @@ export async function updateAgentConfig(
     agentName: data.agent_name || null,
     agentRole: data.agent_role || null,
   };
+}
+
+// Types for tenant members
+export interface TenantMember {
+  id: string;
+  tenantId: string;
+  email: string;
+  role: 'owner' | 'admin' | 'member';
+  invitedAt: string;
+  joinedAt: string | null;
+}
+
+/**
+ * Get all members for a tenant
+ */
+export async function getTenantMembers(tenantId: string): Promise<TenantMember[]> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from('tenant_members')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .order('created_at', { ascending: true });
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data.map(d => ({
+    id: d.id,
+    tenantId: d.tenant_id,
+    email: d.email,
+    role: d.role,
+    invitedAt: d.invited_at,
+    joinedAt: d.joined_at,
+  }));
+}
+
+/**
+ * Get a member's role within a specific tenant
+ */
+export async function getMemberRole(tenantId: string, email: string): Promise<'owner' | 'admin' | 'member' | null> {
+  const supabase = getSupabase();
+
+  const { data } = await supabase
+    .from('tenant_members')
+    .select('role')
+    .eq('tenant_id', tenantId)
+    .eq('email', email)
+    .single();
+
+  return data?.role ?? null;
 }
 
 /**

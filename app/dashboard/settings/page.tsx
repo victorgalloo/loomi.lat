@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
-import { getTenantById, getWhatsAppAccounts } from "@/lib/tenant/context";
+import { getUserRole, getTenantIdForUser, getMemberRoleForUser } from "@/lib/supabase/user-role";
+import { getTenantById, getWhatsAppAccounts, getTenantMembers } from "@/lib/tenant/context";
 import SettingsView from "./SettingsView";
 
 export const dynamic = 'force-dynamic';
@@ -27,8 +27,12 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
-  const tenant = await getTenantById(tenantId);
-  const whatsappAccounts = await getWhatsAppAccounts(tenantId);
+  const [tenant, whatsappAccounts, members, memberRole] = await Promise.all([
+    getTenantById(tenantId),
+    getWhatsAppAccounts(tenantId),
+    getTenantMembers(tenantId),
+    getMemberRoleForUser(user.email),
+  ]);
 
   if (!tenant) {
     redirect("/login");
@@ -53,6 +57,13 @@ export default async function SettingsPage() {
         businessName: primaryAccount?.businessName || null,
         totalNumbers: activeAccounts.length,
       }}
+      members={members.map(m => ({
+        id: m.id,
+        email: m.email,
+        role: m.role,
+        joinedAt: m.joinedAt,
+      }))}
+      currentUserRole={memberRole || 'owner'}
     />
   );
 }

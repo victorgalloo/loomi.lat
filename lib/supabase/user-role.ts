@@ -1,17 +1,30 @@
 import { createClient } from "@/lib/supabase/server";
 
 export type UserRole = "admin" | "client" | "tenant";
+export type MemberRole = "owner" | "admin" | "member";
 
 /**
  * Determines if a user is an admin, client, or tenant
- * Tenant: user email is linked to a tenant in tenants table
+ * Tenant: user email is linked to a tenant via tenants.email OR tenant_members
  * Client: user email is linked to a client via auth_email in clients table
  * Admin: user email is not linked to any client or tenant
  */
 export async function getUserRole(userEmail: string): Promise<UserRole> {
   const supabase = await createClient();
 
-  // First check if user is a tenant (multi-tenant dashboard user)
+  // Check tenant_members first (covers both owners and invited members)
+  const { data: membership } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("email", userEmail)
+    .limit(1)
+    .single();
+
+  if (membership) {
+    return "tenant";
+  }
+
+  // Fallback: check tenants.email directly (in case backfill hasn't run)
   const { data: tenant } = await supabase
     .from("tenants")
     .select("id")
@@ -62,11 +75,25 @@ export async function getClientIdForUser(userEmail: string): Promise<string | nu
 
 /**
  * Gets the tenant ID for a user if they are a tenant
+ * Checks tenant_members first, then falls back to tenants.email
  * Returns null if user is not a tenant
  */
 export async function getTenantIdForUser(userEmail: string): Promise<string | null> {
   const supabase = await createClient();
 
+  // Check tenant_members first (covers owners + invited members)
+  const { data: membership } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("email", userEmail)
+    .limit(1)
+    .single();
+
+  if (membership) {
+    return membership.tenant_id;
+  }
+
+  // Fallback: direct tenants.email lookup
   const { data, error } = await supabase
     .from("tenants")
     .select("id")
@@ -78,5 +105,26 @@ export async function getTenantIdForUser(userEmail: string): Promise<string | nu
   }
 
   return data.id;
+}
+
+/**
+ * Gets the member role for a user within their tenant
+ * Returns null if user has no membership record
+ */
+export async function getMemberRoleForUser(userEmail: string): Promise<MemberRole | null> {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("tenant_members")
+    .select("role")
+    .eq("email", userEmail)
+    .limit(1)
+    .single();
+
+  if (!data) {
+    return null;
+  }
+
+  return data.role as MemberRole;
 }
 

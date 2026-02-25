@@ -179,8 +179,6 @@ export default function ConversationsView({ conversations: initialConversations,
     };
   }, [tenantId]);
 
-  const CLASSIFICATION_ORDER: Record<string, number> = { hot: 0, warm: 1, cold: 2, bot_autoresponse: 3 };
-
   const filteredConversations = conversations.filter(conv => {
     const matchesSearch = !searchQuery ||
       conv.leadName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -191,9 +189,6 @@ export default function ConversationsView({ conversations: initialConversations,
 
     return matchesSearch && matchesFilter;
   }).sort((a, b) => {
-    const orderA = a.broadcastClassification ? (CLASSIFICATION_ORDER[a.broadcastClassification] ?? 4) : 4;
-    const orderB = b.broadcastClassification ? (CLASSIFICATION_ORDER[b.broadcastClassification] ?? 4) : 4;
-    if (orderA !== orderB) return orderA - orderB;
     return new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime();
   });
 

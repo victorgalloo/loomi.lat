@@ -322,7 +322,8 @@ export async function saveMessage(
   role: 'user' | 'assistant',
   content: string,
   leadId?: string,
-  inServiceWindow?: boolean
+  inServiceWindow?: boolean,
+  media?: { url: string; type: string; filename?: string }
 ): Promise<string> {
   const supabase = getSupabase();
 
@@ -335,6 +336,13 @@ export async function saveMessage(
   // Only tag outgoing (assistant) messages with window status
   if (role === 'assistant' && inServiceWindow !== undefined) {
     insertData.in_service_window = inServiceWindow;
+  }
+
+  // Media attachment fields
+  if (media) {
+    insertData.media_url = media.url;
+    insertData.media_type = media.type;
+    if (media.filename) insertData.media_filename = media.filename;
   }
 
   const { data, error } = await supabase

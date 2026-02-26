@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserRole, getTenantIdForUser } from "@/lib/supabase/user-role";
@@ -69,5 +70,9 @@ export default async function ConversationsPage() {
     })
   );
 
-  return <ConversationsView conversations={conversations} tenantId={tenantId} />;
+  return (
+    <Suspense>
+      <ConversationsView conversations={conversations} tenantId={tenantId} />
+    </Suspense>
+  );
 }

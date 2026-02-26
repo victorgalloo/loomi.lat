@@ -7,6 +7,7 @@ export async function middleware(request: NextRequest) {
   const publicRoutes = [
     '/',           // Landing page
     '/login',      // Login page
+    '/auth',       // Auth callbacks (magic link)
     '/api',        // API routes handle their own auth
     '/demo',       // Demo/sandbox pages
   ];

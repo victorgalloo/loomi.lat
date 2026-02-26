@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { Sun, Moon, ArrowRight, Loader2 } from "lucide-react";
+import { Sun, Moon, ArrowRight, Loader2, Mail, CheckCircle } from "lucide-react";
 import Image from "next/image";
 
-type Mode = "login" | "signup";
+type Mode = "login" | "signup" | "magic";
 
 function LoginContent() {
   const [mode, setMode] = useState<Mode>("login");
@@ -16,7 +16,9 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   useEffect(() => {
@@ -24,7 +26,13 @@ function LoginContent() {
     if (stored) {
       document.documentElement.setAttribute('data-theme', stored);
     }
-  }, []);
+    // Show error from magic link callback
+    const urlError = searchParams.get('error');
+    if (urlError === 'magic_link_expired') {
+      setError('El magic link expiró o es inválido. Solicita uno nuevo.');
+      setMode('magic');
+    }
+  }, [searchParams]);
 
   const toggleTheme = () => {
     const current = document.documentElement.getAttribute('data-theme');
@@ -142,9 +150,39 @@ function LoginContent() {
     }
   };
 
+  const handleMagicLink = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (otpError) {
+        setError(otpError.message === "For security purposes, you can only request this once every 60 seconds"
+          ? "Espera 60 segundos antes de solicitar otro link"
+          : "Error al enviar el magic link");
+        setIsLoading(false);
+        return;
+      }
+
+      setMagicLinkSent(true);
+      setIsLoading(false);
+    } catch {
+      setError("Error inesperado");
+      setIsLoading(false);
+    }
+  };
+
   const switchMode = (newMode: Mode) => {
     setMode(newMode);
     setError(null);
+    setMagicLinkSent(false);
   };
 
   return (
@@ -190,12 +228,14 @@ function LoginContent() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-semibold text-foreground font-mono">
-              {mode === "login" ? "login_" : "signup_"}
+              {mode === "login" ? "login_" : mode === "signup" ? "signup_" : "magic_link_"}
             </h1>
             <p className="mt-2 text-sm text-muted">
               {mode === "login"
                 ? "Accede a tu dashboard"
-                : "Crea tu cuenta y conecta tu agente"}
+                : mode === "signup"
+                ? "Crea tu cuenta y conecta tu agente"
+                : "Recibe un link de acceso en tu email"}
             </p>
           </div>
 
@@ -214,6 +254,17 @@ function LoginContent() {
             </button>
             <button
               type="button"
+              onClick={() => switchMode("magic")}
+              className={`flex-1 py-2 text-sm font-mono rounded-md transition-colors ${
+                mode === "magic"
+                  ? "bg-foreground text-background"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              ./magic_link
+            </button>
+            <button
+              type="button"
               onClick={() => switchMode("signup")}
               className={`flex-1 py-2 text-sm font-mono rounded-md transition-colors ${
                 mode === "signup"
@@ -226,76 +277,141 @@ function LoginContent() {
           </div>
 
           {/* Form */}
-          <form onSubmit={mode === "login" ? handleLogin : handleSignup} className="space-y-4">
-            {mode === "signup" && (
+          {mode === "magic" ? (
+            magicLinkSent ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-terminal-green/10 border border-terminal-green/20 text-center space-y-2">
+                  <CheckCircle className="w-8 h-8 text-terminal-green mx-auto" />
+                  <p className="text-sm text-foreground font-medium">
+                    Link enviado a <span className="font-mono">{email}</span>
+                  </p>
+                  <p className="text-xs text-muted">
+                    Revisa tu bandeja de entrada (y spam). El link expira en 1 hora.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setMagicLinkSent(false); setEmail(""); }}
+                  className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 bg-surface border border-border text-foreground hover:bg-surface-2"
+                >
+                  Usar otro email
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleMagicLink} className="space-y-4">
+                <div>
+                  <label className="block text-label font-medium mb-2.5 text-muted">
+                    email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    placeholder="tu@email.com"
+                    className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-info/30"
+                  />
+                </div>
+
+                {error && (
+                  <div className="p-3 rounded-xl text-sm bg-terminal-red/10 text-terminal-red border border-terminal-red/20">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Mail className="w-4 h-4" />
+                      Enviar magic link
+                    </>
+                  )}
+                </button>
+
+                <p className="text-xs text-muted text-center">
+                  Sin contraseña — recibes un link de acceso directo
+                </p>
+              </form>
+            )
+          ) : (
+            <form onSubmit={mode === "login" ? handleLogin : handleSignup} className="space-y-4">
+              {mode === "signup" && (
+                <div>
+                  <label className="block text-label font-medium mb-2.5 text-muted">
+                    nombre
+                  </label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    placeholder="Tu nombre o empresa"
+                    className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-info/30"
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="block text-label font-medium mb-2.5 text-muted">
-                  nombre
+                  email
                 </label>
                 <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isLoading}
-                  placeholder="Tu nombre o empresa"
+                  placeholder="tu@email.com"
                   className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-info/30"
                 />
               </div>
-            )}
 
-            <div>
-              <label className="block text-label font-medium mb-2.5 text-muted">
-                email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-                placeholder="tu@email.com"
-                className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-info/30"
-              />
-            </div>
-
-            <div>
-              <label className="block text-label font-medium mb-2.5 text-muted">
-                password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={isLoading}
-                placeholder="••••••••"
-                minLength={6}
-                className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-info/30"
-              />
-            </div>
-
-            {error && (
-              <div className="p-3 rounded-xl text-sm bg-terminal-red/10 text-terminal-red border border-terminal-red/20">
-                {error}
+              <div>
+                <label className="block text-label font-medium mb-2.5 text-muted">
+                  password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  placeholder="••••••••"
+                  minLength={6}
+                  className="w-full px-3.5 py-3 rounded-xl text-sm outline-none transition-all duration-200 bg-surface border border-border text-foreground placeholder:text-muted focus:border-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-info/30"
+                />
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90"
-            >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  {mode === "login" ? "./continuar" : "./crear_cuenta"}
-                  <ArrowRight className="w-4 h-4" />
-                </>
+              {error && (
+                <div className="p-3 rounded-xl text-sm bg-terminal-red/10 text-terminal-red border border-terminal-red/20">
+                  {error}
+                </div>
               )}
-            </button>
-          </form>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:bg-foreground/90"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    {mode === "login" ? "./continuar" : "./crear_cuenta"}
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+          )}
 
           {/* Switch mode link */}
           <div className="mt-8 text-center">
@@ -310,9 +426,19 @@ function LoginContent() {
                     regístrate
                   </button>
                 </>
-              ) : (
+              ) : mode === "signup" ? (
                 <>
                   ¿Ya tienes cuenta?{' '}
+                  <button
+                    onClick={() => switchMode("login")}
+                    className="text-info hover:underline"
+                  >
+                    inicia sesión
+                  </button>
+                </>
+              ) : (
+                <>
+                  ¿Prefieres usar contraseña?{' '}
                   <button
                     onClick={() => switchMode("login")}
                     className="text-info hover:underline"

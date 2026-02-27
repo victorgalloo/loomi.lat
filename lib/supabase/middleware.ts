@@ -8,9 +8,19 @@ export async function updateSession(request: NextRequest) {
     },
   })
 
-  // Use provided Supabase credentials with fallback
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xsnpjpdrznbmyikcflvm.supabase.co'
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_pmHXinzemWKUEDO0aoJ9ag_TWZjjTIZ'
+  const { pathname } = request.nextUrl
+
+  // Public routes — skip Supabase session refresh for performance
+  const publicPrefixes = ['/', '/auth', '/api', '/demo']
+  const isPublic = publicPrefixes.some(
+    (r) => pathname === r || pathname.startsWith(`${r}/`)
+  )
+  if (isPublic && pathname !== '/login') {
+    return response
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
   const supabase = createServerClient(
     supabaseUrl,
@@ -37,8 +47,6 @@ export async function updateSession(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-
-  const { pathname } = request.nextUrl
 
   // Protected routes - redirect to login if not authenticated
   const protectedRoutes = ['/dashboard', '/onboarding']

@@ -1,42 +1,8 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import { type NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
-
-  // Public routes that don't need authentication
-  const publicRoutes = [
-    '/',           // Landing page
-    '/login',      // Login page
-    '/auth',       // Auth callbacks (magic link)
-    '/api',        // API routes handle their own auth
-    '/demo',       // Demo/sandbox pages
-  ];
-
-  // Check if the current path is a public route
-  const isPublicRoute = publicRoutes.some(route =>
-    pathname === route || pathname.startsWith(`${route}/`)
-  );
-
-  // Skip auth check for public routes
-  if (isPublicRoute) {
-    return NextResponse.next();
-  }
-
-  // For protected routes (dashboard), check for Supabase auth cookie
-  // The cookie name follows the pattern: sb-<project-ref>-auth-token
-  const authCookie = request.cookies.getAll().find(cookie =>
-    cookie.name.includes('auth-token') || cookie.name.includes('sb-')
-  );
-
-  // If no auth cookie and trying to access protected route, redirect to login
-  if (!authCookie && (pathname.startsWith('/dashboard') || pathname.startsWith('/partners'))) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('redirectedFrom', pathname)
-    return NextResponse.redirect(url)
-  }
-
-  return NextResponse.next();
+  return await updateSession(request)
 }
 
 export const config = {

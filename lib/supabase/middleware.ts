@@ -11,11 +11,11 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public routes — skip Supabase session refresh for performance
-  const publicPrefixes = ['/', '/auth', '/api', '/demo']
+  const publicPrefixes = ['/auth', '/api', '/demo']
   const isPublic = publicPrefixes.some(
     (r) => pathname === r || pathname.startsWith(`${r}/`)
   )
-  if (isPublic && pathname !== '/login') {
+  if (isPublic) {
     return response
   }
 
@@ -60,8 +60,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // If already authenticated and trying to access login, redirect to dashboard
-  if (pathname === '/login' && user) {
+  // If already authenticated and on landing or login, redirect to dashboard
+  if ((pathname === '/' || pathname === '/login') && user) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)

@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
     );
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    if (error) {
+      console.error("[AuthCallback] exchangeCodeForSession failed:", error.message, { code: code.slice(0, 8) + "..." });
+    } else {
+      console.log("[AuthCallback] exchangeCodeForSession success, redirecting to setup-tenant-redirect");
       return response;
     }
   }
@@ -60,11 +63,19 @@ export async function GET(request: NextRequest) {
       token_hash,
       type: type as "magiclink" | "email",
     });
-    if (!error) {
+    if (error) {
+      console.error("[AuthCallback] verifyOtp failed:", error.message, { token_hash: token_hash.slice(0, 8) + "...", type });
+    } else {
+      console.log("[AuthCallback] verifyOtp success, redirecting to setup-tenant-redirect");
       return response;
     }
   }
 
+  if (!code && !token_hash) {
+    console.error("[AuthCallback] No code or token_hash in searchParams:", Object.fromEntries(searchParams.entries()));
+  }
+
   // Error — redirect to login with error
+  console.error("[AuthCallback] Falling through to error redirect");
   return NextResponse.redirect(errorUrl);
 }

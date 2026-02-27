@@ -164,9 +164,10 @@ function LoginContent() {
       });
 
       if (otpError) {
+        console.error('[MagicLink] Error:', otpError.message, otpError);
         setError(otpError.message === "For security purposes, you can only request this once every 60 seconds"
           ? "Espera 60 segundos antes de solicitar otro link"
-          : "Error al enviar el magic link");
+          : `Error: ${otpError.message}`);
         setIsLoading(false);
         return;
       }

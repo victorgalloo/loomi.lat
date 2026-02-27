@@ -19,8 +19,11 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user?.email) {
+      console.error("[SetupTenantRedirect] No user or email after getUser()", { userId: user?.id, email: user?.email });
       return NextResponse.redirect(`${origin}/login`);
     }
+
+    console.log("[SetupTenantRedirect] User authenticated:", user.email);
 
     const name = user.user_metadata?.name || user.email;
     const tenant = await getOrCreateTenant(user.email, name);
@@ -50,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.redirect(`${origin}/dashboard`);
   } catch (error) {
-    console.error("[SetupTenantRedirect] Error:", error);
+    console.error("[SetupTenantRedirect] Caught error, redirecting to /login:", error instanceof Error ? error.message : error);
     return NextResponse.redirect(`${origin}/login`);
   }
 }

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getTenantIdForUser, getMemberRoleForUser } from '@/lib/supabase/user-role';
 import { getSupabase } from '@/lib/memory/supabase';
 
 /**
@@ -19,18 +18,27 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const tenantId = await getTenantIdForUser(user.email);
-    if (!tenantId) {
+    const db = getSupabase();
+
+    // Use service role to check caller's membership (avoids RLS recursion issues)
+    const { data: callerMembership } = await db
+      .from('tenant_members')
+      .select('tenant_id, role')
+      .eq('email', user.email)
+      .limit(1)
+      .single();
+
+    if (!callerMembership) {
       return NextResponse.json({ error: 'No tenant found' }, { status: 403 });
     }
 
+    const tenantId = callerMembership.tenant_id;
+    const callerRole = callerMembership.role;
+
     // Only owner/admin can remove
-    const callerRole = await getMemberRoleForUser(user.email);
-    if (!callerRole || callerRole === 'member') {
+    if (callerRole === 'member') {
       return NextResponse.json({ error: 'Solo owners y admins pueden remover miembros' }, { status: 403 });
     }
-
-    const db = getSupabase();
 
     // Get the member being removed
     const { data: target } = await db
@@ -97,14 +105,24 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const tenantId = await getTenantIdForUser(user.email);
-    if (!tenantId) {
+    const db = getSupabase();
+
+    // Use service role to check caller's membership (avoids RLS recursion issues)
+    const { data: callerMembership } = await db
+      .from('tenant_members')
+      .select('tenant_id, role')
+      .eq('email', user.email)
+      .limit(1)
+      .single();
+
+    if (!callerMembership) {
       return NextResponse.json({ error: 'No tenant found' }, { status: 403 });
     }
 
+    const tenantId = callerMembership.tenant_id;
+
     // Only owner can change roles
-    const callerRole = await getMemberRoleForUser(user.email);
-    if (callerRole !== 'owner') {
+    if (callerMembership.role !== 'owner') {
       return NextResponse.json({ error: 'Solo el owner puede cambiar roles' }, { status: 403 });
     }
 
@@ -115,8 +133,6 @@ export async function PATCH(
     if (!role || !allowedRoles.includes(role)) {
       return NextResponse.json({ error: 'Rol debe ser admin o member' }, { status: 400 });
     }
-
-    const db = getSupabase();
 
     // Get the target member
     const { data: target } = await db

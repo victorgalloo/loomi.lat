@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getTenantIdForUser, getMemberRoleForUser } from '@/lib/supabase/user-role';
 import { getSupabase } from '@/lib/memory/supabase';
 
 /**
@@ -15,16 +14,24 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const tenantId = await getTenantIdForUser(user.email);
-    if (!tenantId) {
+    const db = getSupabase();
+
+    // Use service role to find caller's tenant (avoids RLS recursion issues)
+    const { data: callerMembership } = await db
+      .from('tenant_members')
+      .select('tenant_id')
+      .eq('email', user.email)
+      .limit(1)
+      .single();
+
+    if (!callerMembership) {
       return NextResponse.json({ error: 'No tenant found' }, { status: 403 });
     }
 
-    const db = getSupabase();
     const { data: members, error } = await db
       .from('tenant_members')
       .select('id, tenant_id, email, role, invited_at, joined_at')
-      .eq('tenant_id', tenantId)
+      .eq('tenant_id', callerMembership.tenant_id)
       .order('created_at', { ascending: true });
 
     if (error) {
@@ -52,14 +59,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const tenantId = await getTenantIdForUser(user.email);
-    if (!tenantId) {
+    const db = getSupabase();
+
+    // Use service role to check caller's membership (avoids RLS recursion issues)
+    const { data: callerMembership } = await db
+      .from('tenant_members')
+      .select('tenant_id, role')
+      .eq('email', user.email)
+      .limit(1)
+      .single();
+
+    if (!callerMembership) {
       return NextResponse.json({ error: 'No tenant found' }, { status: 403 });
     }
 
+    const tenantId = callerMembership.tenant_id;
+    const callerRole = callerMembership.role;
+
     // Only owner/admin can invite
-    const callerRole = await getMemberRoleForUser(user.email);
-    if (!callerRole || callerRole === 'member') {
+    if (callerRole === 'member') {
       return NextResponse.json({ error: 'Solo owners y admins pueden invitar miembros' }, { status: 403 });
     }
 
@@ -82,8 +100,6 @@ export async function POST(request: NextRequest) {
     if (role === 'admin' && callerRole !== 'owner') {
       return NextResponse.json({ error: 'Solo el owner puede invitar admins' }, { status: 403 });
     }
-
-    const db = getSupabase();
 
     // Check for duplicate
     const { data: existing } = await db

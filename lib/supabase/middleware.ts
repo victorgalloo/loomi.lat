@@ -11,7 +11,7 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public routes — skip Supabase session refresh for performance
-  const publicPrefixes = ['/auth', '/api', '/demo']
+  const publicPrefixes = ['/api', '/demo']
   const isPublic = publicPrefixes.some(
     (r) => pathname === r || pathname.startsWith(`${r}/`)
   )

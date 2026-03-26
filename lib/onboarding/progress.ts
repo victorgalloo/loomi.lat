@@ -87,7 +87,7 @@ export async function getOnboardingStatus(
     return null;
   }
 
-  return data?.onboarding_status || DEFAULT_STATUS;
+  return (data as { onboarding_status: OnboardingStatus } | null)?.onboarding_status || DEFAULT_STATUS;
 }
 
 /**

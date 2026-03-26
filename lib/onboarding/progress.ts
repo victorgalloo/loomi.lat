@@ -7,10 +7,17 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || ''
-);
+// Lazy singleton — defers initialization until first use so build-time imports don't fail
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || ''
+    );
+  }
+  return _supabase;
+}
 
 export type OnboardingStep =
   | 'industry'      // Step 1: Select industry
@@ -69,7 +76,7 @@ const STEP_ORDER: OnboardingStep[] = [
 export async function getOnboardingStatus(
   tenantId: string
 ): Promise<OnboardingStatus | null> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('tenants')
     .select('onboarding_status')
     .eq('id', tenantId)
@@ -94,7 +101,7 @@ export async function initializeOnboarding(
     startedAt: new Date().toISOString(),
   };
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('tenants')
     .update({ onboarding_status: status })
     .eq('id', tenantId);
@@ -122,7 +129,7 @@ export async function updateOnboardingStatus(
     ...updates,
   };
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('tenants')
     .update({ onboarding_status: updated })
     .eq('id', tenantId);
@@ -165,7 +172,7 @@ export async function completeStep(
     completedAt: nextStep === 'complete' ? new Date().toISOString() : null,
   };
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('tenants')
     .update({ onboarding_status: updated })
     .eq('id', tenantId);
@@ -216,7 +223,7 @@ export async function resetOnboarding(
     startedAt: new Date().toISOString(),
   };
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('tenants')
     .update({ onboarding_status: status })
     .eq('id', tenantId);

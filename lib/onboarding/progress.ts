@@ -103,7 +103,7 @@ export async function initializeOnboarding(
 
   const { error } = await getSupabase()
     .from('tenants')
-    .update({ onboarding_status: status })
+    .update({ onboarding_status: status } as any)
     .eq('id', tenantId);
 
   if (error) {
@@ -131,7 +131,7 @@ export async function updateOnboardingStatus(
 
   const { error } = await getSupabase()
     .from('tenants')
-    .update({ onboarding_status: updated })
+    .update({ onboarding_status: updated } as any)
     .eq('id', tenantId);
 
   if (error) {
@@ -174,7 +174,7 @@ export async function completeStep(
 
   const { error } = await getSupabase()
     .from('tenants')
-    .update({ onboarding_status: updated })
+    .update({ onboarding_status: updated } as any)
     .eq('id', tenantId);
 
   if (error) {
@@ -225,7 +225,7 @@ export async function resetOnboarding(
 
   const { error } = await getSupabase()
     .from('tenants')
-    .update({ onboarding_status: status })
+    .update({ onboarding_status: status } as any)
     .eq('id', tenantId);
 
   if (error) {

@@ -76,7 +76,7 @@ const STEP_ORDER: OnboardingStep[] = [
 export async function getOnboardingStatus(
   tenantId: string
 ): Promise<OnboardingStatus | null> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await (getSupabase() as any)
     .from('tenants')
     .select('onboarding_status')
     .eq('id', tenantId)
@@ -101,9 +101,9 @@ export async function initializeOnboarding(
     startedAt: new Date().toISOString(),
   };
 
-  const { error } = await getSupabase()
+  const { error } = await (getSupabase() as any)
     .from('tenants')
-    .update({ onboarding_status: status } as any)
+    .update({ onboarding_status: status })
     .eq('id', tenantId);
 
   if (error) {
@@ -129,9 +129,9 @@ export async function updateOnboardingStatus(
     ...updates,
   };
 
-  const { error } = await getSupabase()
+  const { error } = await (getSupabase() as any)
     .from('tenants')
-    .update({ onboarding_status: updated } as any)
+    .update({ onboarding_status: updated })
     .eq('id', tenantId);
 
   if (error) {
@@ -172,9 +172,9 @@ export async function completeStep(
     completedAt: nextStep === 'complete' ? new Date().toISOString() : null,
   };
 
-  const { error } = await getSupabase()
+  const { error } = await (getSupabase() as any)
     .from('tenants')
-    .update({ onboarding_status: updated } as any)
+    .update({ onboarding_status: updated })
     .eq('id', tenantId);
 
   if (error) {
@@ -223,9 +223,9 @@ export async function resetOnboarding(
     startedAt: new Date().toISOString(),
   };
 
-  const { error } = await getSupabase()
+  const { error } = await (getSupabase() as any)
     .from('tenants')
-    .update({ onboarding_status: status } as any)
+    .update({ onboarding_status: status })
     .eq('id', tenantId);
 
   if (error) {

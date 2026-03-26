@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { getTenantIdForUser } from '@/lib/supabase/user-role';
 import { purchaseNumber, mockPurchaseNumber } from '@/lib/twilio/numbers';
-
-const adminSupabase = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || ''
-);
 
 export async function POST(request: NextRequest) {
   try {

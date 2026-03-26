@@ -21,13 +21,12 @@ import {
 } from '@/lib/onboarding/templates';
 import { completeStep, getOnboardingStatus } from '@/lib/onboarding/progress';
 
-// Admin client for writes
-const adminSupabase = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || ''
-);
-
 export async function POST(request: NextRequest) {
+  // Admin client for writes - initialized inside handler so env vars are available at runtime
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || ''
+  );
   try {
     // Get authenticated user from session
     const supabase = await createClient();
